@@ -328,3 +328,33 @@ def plot_corrected_spectra_comparison(df_ref_grouped, df_corrected, spectral_col
     plt.tight_layout()
     
     return fig
+
+def plot_baseline_spectrum(baseline_spectrum, lamp_name):
+    """
+    Crea gráfico del espectro de baseline.
+    
+    Args:
+        baseline_spectrum (np.array): Espectro del baseline
+        lamp_name (str): Nombre de la lámpara
+        
+    Returns:
+        matplotlib.figure.Figure: Figura con el gráfico
+    """
+    fig, ax = plt.subplots(figsize=(12, 4))
+    
+    ax.plot(
+        range(1, len(baseline_spectrum) + 1), 
+        baseline_spectrum, 
+        linewidth=PLOT_CONFIG['linewidth_default']
+    )
+    ax.set_title(
+        f"Baseline original de {lamp_name}", 
+        fontsize=12, 
+        fontweight='bold'
+    )
+    ax.set_xlabel("Canal espectral")
+    ax.set_ylabel("Intensidad")
+    ax.grid(True, alpha=PLOT_CONFIG['alpha_grid'])
+    plt.tight_layout()
+    
+    return fig
