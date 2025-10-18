@@ -108,3 +108,47 @@ def plot_wstd_difference(df_wstd_grouped, spectral_cols):
     
     plt.tight_layout()
     return fig
+
+def plot_kit_spectra(df_ref_grouped, df_new_grouped, spectral_cols, 
+                     lamp_ref, lamp_new, common_ids):
+    """
+    Crea gráfico comparativo de espectros del kit.
+    
+    Args:
+        df_ref_grouped (pd.DataFrame): Mediciones de referencia
+        df_new_grouped (pd.DataFrame): Mediciones nuevas
+        spectral_cols (list): Columnas espectrales
+        lamp_ref (str): Nombre lámpara referencia
+        lamp_new (str): Nombre lámpara nueva
+        common_ids (list): IDs comunes
+        
+    Returns:
+        matplotlib.figure.Figure: Figura con el gráfico
+    """
+    fig, ax = plt.subplots(figsize=PLOT_CONFIG['figsize_default'])
+    
+    for id_ in common_ids:
+        ax.plot(
+            range(1, len(spectral_cols) + 1), 
+            df_ref_grouped.loc[id_],
+            label=f"{lamp_ref} - {id_}", 
+            alpha=0.7, 
+            linewidth=PLOT_CONFIG['linewidth_thin']
+        )
+        ax.plot(
+            range(1, len(spectral_cols) + 1), 
+            df_new_grouped.loc[id_],
+            linestyle="--", 
+            label=f"{lamp_new} - {id_}", 
+            alpha=0.7, 
+            linewidth=PLOT_CONFIG['linewidth_thin']
+        )
+    
+    ax.set_title("Espectros promedio por muestra")
+    ax.set_xlabel("Canal espectral")
+    ax.set_ylabel("Absorbancia")
+    ax.grid(True, alpha=PLOT_CONFIG['alpha_grid'])
+    ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.tight_layout()
+    
+    return fig
