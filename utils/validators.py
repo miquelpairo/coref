@@ -2,6 +2,7 @@
 Funciones de validación
 """
 import streamlit as st
+from config import MESSAGES
 
 
 def validate_wstd_measurements(df_wstd, lamps):
@@ -17,6 +18,23 @@ def validate_wstd_measurements(df_wstd, lamps):
     """
     if len(lamps) == 0:
         st.error("❌ No se detectaron lámparas en las mediciones WSTD")
+        return False
+    
+    return True
+
+
+def validate_common_samples(common_ids):
+    """
+    Valida que existan muestras comunes entre lámparas.
+    
+    Args:
+        common_ids (list): Lista de IDs comunes
+        
+    Returns:
+        bool: True si hay muestras comunes
+    """
+    if len(common_ids) == 0:
+        st.error(MESSAGES['error_no_common_samples'])
         return False
     
     return True
