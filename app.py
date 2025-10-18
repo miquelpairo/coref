@@ -53,3 +53,37 @@ def main():
 
 if __name__ == "__main__":
     main()
+```
+
+---
+
+## 📁 Estructura Final del Proyecto:
+```
+baseline_adjustment_tool/
+│
+├── app.py                          # ✅ Archivo principal
+├── config.py                       # ✅ Configuración
+├── session_manager.py              # ✅ Gestión de sesión
+│
+├── ui/
+│   ├── __init__.py
+│   ├── sidebar.py                  # ✅ Barra lateral
+│   ├── step_00_client_info.py     # ✅ Paso -1
+│   ├── step_01_backup.py          # ✅ Paso 0
+│   ├── step_02_wstd.py            # ✅ Paso 1
+│   ├── step_03_kit.py             # ✅ Paso 2
+│   ├── step_04_correction.py      # ✅ Paso 3
+│   ├── step_05_baseline.py        # ✅ Paso 4
+│   ├── step_06_export.py          # ✅ Paso 5
+│   └── utilities.py               # ✅ Utilidades
+│
+├── core/
+│   ├── __init__.py
+│   ├── file_handlers.py           # ✅ Manejo de archivos
+│   ├── spectral_processing.py     # ✅ Procesamiento espectral
+│   └── report_generator.py        # ✅ Generación de informes
+│
+└── utils/
+    ├── __init__.py
+    ├── validators.py              # ✅ Validaciones
+    └── plotting.py                # ✅ Gráficos
