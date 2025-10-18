@@ -4,6 +4,9 @@ Manejo de archivos (lectura y escritura)
 import pandas as pd
 import numpy as np
 import io
+import json
+from datetime import datetime
+from config import DEFAULT_CSV_METADATA
 
 
 def load_tsv_file(file):
@@ -67,8 +70,6 @@ def load_csv_baseline(file):
         tuple: (df, spectrum) donde df es el DataFrame completo
                y spectrum es el array de datos espectrales
     """
-    import json
-    
     df = pd.read_csv(file)
     
     if 'data' not in df.columns:
@@ -78,3 +79,50 @@ def load_csv_baseline(file):
     spectrum = np.array(json.loads(data_string))
     
     return df, spectrum
+
+
+def export_ref_file(spectrum, header):
+    """
+    Exporta un espectro como archivo .ref binario.
+    
+    Args:
+        spectrum (np.array): Espectro a exportar
+        header (np.array): Cabecera del sensor (3 valores)
+        
+    Returns:
+        bytes: Contenido del archivo .ref en bytes
+    """
+    final_ref = np.concatenate([header, spectrum.astype(np.float32)])
+    ref_bytes = io.BytesIO()
+    ref_bytes.write(final_ref.astype(np.float32).tobytes())
+    ref_bytes.seek(0)
+    return ref_bytes.getvalue()
+
+
+def export_csv_file(spectrum, df_baseline=None):
+    """
+    Exporta un espectro como archivo CSV.
+    
+    Args:
+        spectrum (np.array): Espectro a exportar
+        df_baseline (pd.DataFrame, optional): DataFrame base con metadatos.
+                                              Si es None, usa valores por defecto.
+        
+    Returns:
+        str: Contenido del archivo CSV
+    """
+    if df_baseline is not None:
+        # Preservar metadatos originales
+        df_export = df_baseline.copy()
+        df_export['data'] = json.dumps(spectrum.tolist())
+    else:
+        # Usar metadatos por defecto
+        metadata = DEFAULT_CSV_METADATA.copy()
+        metadata['time_stamp'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        metadata['nir_pixels'] = len(spectrum)
+        metadata['data'] = json.dumps(spectrum.tolist())
+        df_export = pd.DataFrame([metadata])
+    
+    csv_bytes = io.StringIO()
+    df_export.to_csv(csv_bytes, index=False)
+    return csv_bytes.getvalue()
