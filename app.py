@@ -11,6 +11,7 @@ from ui.step_04_correction import render_correction_step
 from ui.step_05_baseline_and_export import render_baseline_and_export_step
 from ui.step_06_validation import render_validation_step
 from ui.utilities import render_utilities_section
+from auth import check_password, logout
 
 
 def main():
@@ -18,6 +19,10 @@ def main():
     
     # Configuracion de la pagina
     st.set_page_config(**PAGE_CONFIG)
+
+    # Verificar autenticacion
+    if not check_password():
+        st.stop()
     
     # Inicializar estado de sesion
     initialize_session_state()
@@ -43,9 +48,15 @@ def main():
         )
         st.session_state._scroll_to_top = False
     
-    # Header principal
-    st.title("Baseline Adjustment Tool")
-    st.markdown("### Asistente para ajuste de linea base en espectrometros NIR")
+    # Header principal con boton de logout
+    col1, col2 = st.columns([5, 1])
+    with col1:
+        st.title("Baseline Adjustment Tool")
+        st.markdown("### Asistente para ajuste de linea base en espectrometros NIR")
+    with col2:
+        st.markdown("")  # Espaciado
+        if st.button("Cerrar Sesion", use_container_width=True):
+            logout()
     
     # Sidebar con progreso
     render_sidebar()
