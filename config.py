@@ -130,16 +130,13 @@ INSTRUCTIONS = {
 
     1. **Prepara el White Standard** (referencia blanca del kit de calibración)
     2. En el equipo NIR, **NO tomes línea base** (medir como muestra normal)
-    3. **Mide el White Standard 2-3 veces** para verificar repetibilidad
-    4. **Exporta el archivo TSV** con todas las mediciones
+    3. **Mide el White Standard y asígnale un ID identificable** en el equipo
+    4. **Exporta el archivo TSV** con las mediciones
     5. **En la aplicación, selecciona manualmente** las filas que corresponden a las mediciones de referencia
 
     **¿Por qué este paso?** Si el sistema está bien calibrado, las mediciones del White Standard 
     sin línea base deberían estar muy cercanas a 0 en todo el espectro. Esto nos permite 
     diagnosticar el estado del equipo antes de realizar el ajuste.
-    
-    **Nota:** Ya no es necesario usar un ID específico. Puedes usar cualquier identificador 
-    y luego seleccionar las filas correspondientes en la tabla interactiva.
     """,
     
     'kit': """
