@@ -106,50 +106,112 @@ def render_wstd_step():
 
 def plot_wstd_individual(df_wstd, spectral_cols, selected_indices):
     """
-    Crea gráfico con cada medición WSTD individual.
+    Crea gráfico con cada medición WSTD individual y sus diferencias.
     """
-    fig = go.Figure()
+    from plotly.subplots import make_subplots
+    
+    # Crear subplots (2 filas)
+    fig = make_subplots(
+        rows=2, cols=1,
+        subplot_titles=(
+            'Espectros WSTD - Desviación respecto a referencia ideal',
+            'Diferencias entre mediciones WSTD'
+        ),
+        vertical_spacing=0.12
+    )
     
     channels = list(range(1, len(spectral_cols) + 1))
     
-    # Añadir cada medición como línea separada
+    # Subplot 1: Espectros individuales
     for i, (idx, row) in enumerate(df_wstd.iterrows()):
         spectrum = row[spectral_cols].values
-        
-        # Usar índice original de fila + ID para identificar
         label = f"Fila {selected_indices[i]}: {row['ID']}"
         
-        fig.add_trace(go.Scatter(
-            x=channels,
-            y=spectrum,
-            mode='lines',
-            name=label,
-            line=dict(width=1.5),
-            hovertemplate=f'{label}<br>Canal: %{{x}}<br>Desviación: %{{y:.6f}}<extra></extra>'
-        ))
+        fig.add_trace(
+            go.Scatter(
+                x=channels,
+                y=spectrum,
+                mode='lines',
+                name=label,
+                line=dict(width=1.5),
+                hovertemplate=f'{label}<br>Canal: %{{x}}<br>Desviación: %{{y:.6f}}<extra></extra>'
+            ),
+            row=1, col=1
+        )
     
-    # Línea de referencia en y=0
+    # Línea de referencia en y=0 para subplot 1
     fig.add_hline(
         y=0, 
         line_dash="dash", 
         line_color="gray", 
-        opacity=0.7,
-        annotation_text="Referencia (y=0)",
-        annotation_position="right"
+        opacity=0.5,
+        row=1, col=1
     )
     
+    # Subplot 2: Diferencias entre mediciones
+    if len(df_wstd) >= 2:
+        spectra_list = [row[spectral_cols].values for idx, row in df_wstd.iterrows()]
+        
+        # Si hay 2 mediciones, mostrar su diferencia
+        if len(df_wstd) == 2:
+            diff = spectra_list[0] - spectra_list[1]
+            label_diff = f"Fila {selected_indices[0]} - Fila {selected_indices[1]}"
+            
+            fig.add_trace(
+                go.Scatter(
+                    x=channels,
+                    y=diff,
+                    mode='lines',
+                    name=label_diff,
+                    line=dict(width=2, color='red'),
+                    hovertemplate=f'{label_diff}<br>Canal: %{{x}}<br>Diferencia: %{{y:.6f}}<extra></extra>',
+                    showlegend=False
+                ),
+                row=2, col=1
+            )
+        
+        # Si hay más de 2, mostrar diferencias respecto a la primera
+        else:
+            for i in range(1, len(spectra_list)):
+                diff = spectra_list[0] - spectra_list[i]
+                label_diff = f"Fila {selected_indices[0]} - Fila {selected_indices[i]}"
+                
+                fig.add_trace(
+                    go.Scatter(
+                        x=channels,
+                        y=diff,
+                        mode='lines',
+                        name=label_diff,
+                        line=dict(width=1.5),
+                        hovertemplate=f'{label_diff}<br>Canal: %{{x}}<br>Diferencia: %{{y:.6f}}<extra></extra>',
+                        showlegend=False
+                    ),
+                    row=2, col=1
+                )
+        
+        # Línea de referencia en y=0 para subplot 2
+        fig.add_hline(
+            y=0, 
+            line_dash="dash", 
+            line_color="gray", 
+            opacity=0.5,
+            row=2, col=1
+        )
+    
+    # Layout
+    fig.update_xaxes(title_text="Canal espectral", row=1, col=1)
+    fig.update_xaxes(title_text="Canal espectral", row=2, col=1)
+    fig.update_yaxes(title_text="Desviación", row=1, col=1)
+    fig.update_yaxes(title_text="Diferencia", row=2, col=1)
+    
     fig.update_layout(
-        title='Espectros WSTD - Desviación respecto a referencia ideal',
-        xaxis_title='Canal espectral',
-        yaxis_title='Desviación',
-        height=600,
+        height=800,
+        showlegend=True,
         hovermode='closest',
-        template='plotly_white',
-        showlegend=True
+        template='plotly_white'
     )
     
     return fig
-
 
 def render_diagnostic_metrics(df_wstd, spectral_cols, selected_indices):
     """

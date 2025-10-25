@@ -206,8 +206,124 @@ def generate_wstd_section(wstd_data):
             </p>
         </div>
     """
+    
+    # NUEVO: Añadir gráficos
+    html += generate_wstd_charts(df_wstd, spectral_cols)
+    
     return html
 
+
+def generate_wstd_charts(df_wstd, spectral_cols):
+    """
+    Genera los gráficos de WSTD para el reporte.
+    
+    Args:
+        df_wstd (pd.DataFrame): DataFrame con mediciones WSTD
+        spectral_cols (list): Lista de columnas espectrales
+        
+    Returns:
+        str: HTML con los gráficos embebidos
+    """
+    import plotly.graph_objects as go
+    from plotly.subplots import make_subplots
+    
+    html = "<h2>📊 Gráficos de Diagnóstico WSTD</h2>"
+    
+    # Crear el gráfico
+    fig = make_subplots(
+        rows=2, cols=1,
+        subplot_titles=(
+            'Espectros WSTD - Desviación respecto a referencia ideal',
+            'Diferencias entre mediciones WSTD'
+        ),
+        vertical_spacing=0.12
+    )
+    
+    channels = list(range(1, len(spectral_cols) + 1))
+    selected_indices = df_wstd.index.tolist()
+    
+    # Subplot 1: Espectros individuales
+    for i, (idx, row) in enumerate(df_wstd.iterrows()):
+        spectrum = row[spectral_cols].values
+        label = f"Fila {idx}: {row['ID']}"
+        
+        fig.add_trace(
+            go.Scatter(
+                x=channels,
+                y=spectrum,
+                mode='lines',
+                name=label,
+                line=dict(width=1.5),
+                hovertemplate=f'{label}<br>Canal: %{{x}}<br>Desviación: %{{y:.6f}}<extra></extra>'
+            ),
+            row=1, col=1
+        )
+    
+    # Línea de referencia en y=0 para subplot 1
+    fig.add_hline(y=0, line_dash="dash", line_color="gray", opacity=0.5, row=1, col=1)
+    
+    # Subplot 2: Diferencias entre mediciones
+    if len(df_wstd) >= 2:
+        spectra_list = [row[spectral_cols].values for idx, row in df_wstd.iterrows()]
+        
+        if len(df_wstd) == 2:
+            diff = spectra_list[0] - spectra_list[1]
+            label_diff = f"Fila {selected_indices[0]} - Fila {selected_indices[1]}"
+            
+            fig.add_trace(
+                go.Scatter(
+                    x=channels,
+                    y=diff,
+                    mode='lines',
+                    name=label_diff,
+                    line=dict(width=2, color='red'),
+                    hovertemplate=f'{label_diff}<br>Canal: %{{x}}<br>Diferencia: %{{y:.6f}}<extra></extra>',
+                    showlegend=False
+                ),
+                row=2, col=1
+            )
+        else:
+            for i in range(1, len(spectra_list)):
+                diff = spectra_list[0] - spectra_list[i]
+                label_diff = f"Fila {selected_indices[0]} - Fila {selected_indices[i]}"
+                
+                fig.add_trace(
+                    go.Scatter(
+                        x=channels,
+                        y=diff,
+                        mode='lines',
+                        name=label_diff,
+                        line=dict(width=1.5),
+                        hovertemplate=f'{label_diff}<br>Canal: %{{x}}<br>Diferencia: %{{y:.6f}}<extra></extra>',
+                        showlegend=False
+                    ),
+                    row=2, col=1
+                )
+        
+        fig.add_hline(y=0, line_dash="dash", line_color="gray", opacity=0.5, row=2, col=1)
+    
+    # Layout
+    fig.update_xaxes(title_text="Canal espectral", row=1, col=1)
+    fig.update_xaxes(title_text="Canal espectral", row=2, col=1)
+    fig.update_yaxes(title_text="Desviación", row=1, col=1)
+    fig.update_yaxes(title_text="Diferencia", row=2, col=1)
+    
+    fig.update_layout(
+        height=800,
+        showlegend=True,
+        hovermode='closest',
+        template='plotly_white'
+    )
+    
+    # Convertir a HTML
+    html += fig.to_html(
+        include_plotlyjs='cdn',
+        div_id='wstd_charts',
+        config={'displayModeBar': True, 'responsive': True}
+    )
+    
+    return html
+    
 def generate_process_details(lamp_ref, lamp_new, n_spectral, n_samples, origin):
     """
     Genera la sección de detalles del proceso.

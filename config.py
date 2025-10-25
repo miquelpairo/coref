@@ -27,7 +27,7 @@ BASELINE_PATHS = {
 
 # Extensiones de archivo soportadas
 SUPPORTED_EXTENSIONS = {
-    'tsv': ['tsv', 'txt', 'csv'],  # Agregado 'txt' y 'csv'
+    'tsv': ['tsv', 'txt', 'csv'],
     'baseline': ['ref', 'csv'],
     'ref': ['ref']
 }
@@ -85,7 +85,7 @@ DEFAULT_CSV_METADATA = {
 
 # Identificadores especiales
 SPECIAL_IDS = {
-    'wstd': 'WSTD'  # White Standard ID
+    'wstd': 'WSTD'  # White Standard ID (ya no es obligatorio)
 }
 
 # Configuración de gráficos
@@ -128,19 +128,18 @@ INSTRUCTIONS = {
     'wstd': """
     ### Instrucciones para el diagnóstico WSTD:
 
-    1. **Prepara el White Standard** (referencia blanca del kit)
+    1. **Prepara el White Standard** (referencia blanca del kit de calibración)
     2. En el equipo NIR, **NO tomes línea base** (medir como muestra normal)
-    3. **Mide el White Standard con la lámpara de referencia**
-       - ID: WSTD
-       - Note: nombre de tu lámpara de referencia (ej: L1, LampOld)
-    4. **Cambia a la lámpara nueva** en el equipo
-    5. **Mide el White Standard con la lámpara nueva**
-       - ID: WSTD
-       - Note: nombre de tu lámpara nueva (ej: L2, LampNew)
-    6. **Exporta el archivo TSV** con ambas mediciones
+    3. **Mide el White Standard 2-3 veces** para verificar repetibilidad
+    4. **Exporta el archivo TSV** con todas las mediciones
+    5. **En la aplicación, selecciona manualmente** las filas que corresponden a las mediciones de referencia
 
     **¿Por qué este paso?** Si el sistema está bien calibrado, las mediciones del White Standard 
-    sin línea base deberían estar muy cercanas a 0 en todo el espectro.
+    sin línea base deberían estar muy cercanas a 0 en todo el espectro. Esto nos permite 
+    diagnosticar el estado del equipo antes de realizar el ajuste.
+    
+    **Nota:** Ya no es necesario usar un ID específico. Puedes usar cualquier identificador 
+    y luego seleccionar las filas correspondientes en la tabla interactiva.
     """,
     
     'kit': """
@@ -220,13 +219,13 @@ img { max-width: 100%; height: auto; margin: 20px 0; }
 """
 
 # Información de versión
-VERSION = "2.0.0"
-VERSION_DATE = "2025-01-24"
+VERSION = "2.1.0"
+VERSION_DATE = "2025-01-25"
 VERSION_NOTES = """
-Versión 2.0.0 - Cambios principales:
-- Procesamiento con dos archivos TSV separados (referencia y nueva lámpara)
-- Gráficos interactivos con Plotly
+Versión 2.1.0 - Cambios principales:
+- WSTD: Selección manual de filas mediante checkboxes (ya no requiere ID específico)
+- WSTD: Visualización individual de cada medición con gráficos de diferencias
+- Gráficos WSTD incluidos en el reporte HTML con Plotly interactivo
+- Mejoras en la usabilidad del paso de diagnóstico inicial
 - Arquitectura modular mejorada
-- Paso de validación agregado
-- Mejoras en la generación de informes
 """
