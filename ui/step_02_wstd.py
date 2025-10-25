@@ -5,6 +5,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import io
+import plotly.graph_objects as go
 from config import INSTRUCTIONS, MESSAGES, SPECIAL_IDS, WSTD_THRESHOLDS, DIAGNOSTIC_STATUS
 from session_manager import save_wstd_data, go_to_next_step
 from core.file_handlers import load_tsv_file, get_spectral_columns
@@ -16,7 +17,7 @@ def render_wstd_step():
     """
     Renderiza el paso de diagnostico inicial con WSTD (Paso 1).
     """
-    st.markdown("## PASO 3 DE 7: Diagnostico Inicial")
+    st.markdown("## PASO 3 DE 7: Diagnóstico Inicial")
     st.markdown(INSTRUCTIONS['wstd'])
     st.markdown("---")
     
@@ -26,91 +27,167 @@ def render_wstd_step():
         key="wstd_upload"
     )
     
-    # Marcar cambios sin guardar si se sube archivo
     if wstd_file:
         st.session_state.unsaved_changes = True
     
     col_skip1, col_skip2 = st.columns([3, 1])
     with col_skip2:
         if st.button("Omitir paso", key="skip_step1"):
-            st.session_state.unsaved_changes = False  # Limpiar flag tambi��n al omitir
+            st.session_state.unsaved_changes = False
             go_to_next_step()
     
     if wstd_file:
         try:
             df = load_tsv_file(wstd_file)
-            df_wstd = df[df["ID"].str.upper() == SPECIAL_IDS['wstd']].copy()
             
-            if len(df_wstd) == 0:
-                st.error(MESSAGES['error_no_wstd'])
-                st.info("Verifica que hayas etiquetado correctamente las mediciones del White Standard.")
+            st.markdown("### Selecciona las filas que corresponden a la referencia externa (WSTD)")
+            st.info("Marca las casillas de las mediciones que corresponden al White Standard.")
+            
+            # Crear tabla con índice visible
+            df_display = df[['ID', 'Note']].copy()
+            df_display.insert(0, 'Seleccionar', False)
+            
+            if 'wstd_selected_rows' not in st.session_state:
+                st.session_state.wstd_selected_rows = []
+            
+            edited_df = st.data_editor(
+                df_display,
+                hide_index=False,
+                use_container_width=True,
+                disabled=['ID', 'Note'],
+                key='wstd_row_selector'
+            )
+            
+            selected_indices = edited_df[edited_df['Seleccionar'] == True].index.tolist()
+            
+            if len(selected_indices) == 0:
+                st.warning("⚠️ No has seleccionado ninguna fila. Por favor, marca las mediciones WSTD.")
                 return
+            
+            df_wstd = df.loc[selected_indices].copy()
+            
+            st.success(f"✅ {len(df_wstd)} filas seleccionadas para análisis WSTD")
+            
+            # Mostrar info detallada
+            st.write("**Filas seleccionadas:**")
+            display_df = df_wstd[['ID', 'Note']].copy()
+            display_df.insert(0, 'Índice fila', selected_indices)
+            st.dataframe(display_df, use_container_width=True)
             
             spectral_cols = get_spectral_columns(df)
             df_wstd[spectral_cols] = df_wstd[spectral_cols].apply(pd.to_numeric, errors="coerce")
-            lamps = [lamp for lamp in df_wstd["Note"].unique() if pd.notna(lamp)]
             
-            if not validate_wstd_measurements(df_wstd, lamps):
-                return
-            
-            st.success(MESSAGES['success_file_loaded'])
-            st.write(f"**Mediciones WSTD encontradas:** {len(df_wstd)}")
-            st.write(f"**Lamparas detectadas:** {', '.join(lamps)}")
             st.write(f"**Canales espectrales:** {len(spectral_cols)}")
             
-            df_wstd_grouped = df_wstd.groupby("Note")[spectral_cols].mean()
-            
-            st.markdown("### Diagnostico Visual")
-            fig = plot_wstd_spectra(df_wstd_grouped, spectral_cols, lamps)
+            st.markdown("### Diagnóstico Visual")
+            fig = plot_wstd_individual(df_wstd, spectral_cols, selected_indices)
             st.plotly_chart(fig, use_container_width=True)
             
-            st.markdown("### Metricas de Diagnostico")
-            render_diagnostic_metrics(df_wstd_grouped, lamps)
+            st.markdown("### Métricas de Diagnóstico")
+            render_diagnostic_metrics(df_wstd, spectral_cols, selected_indices)
             
             save_wstd_data(
                 df=df_wstd,
-                grouped=df_wstd_grouped,
+                grouped=None,
                 spectral_cols=spectral_cols,
-                lamps=lamps
+                lamps=None
             )
             
-            # Bot��n de navegaci��n
             st.markdown("---")
             if st.button("Continuar al Paso 4", type="primary", use_container_width=True):
-                st.session_state.unsaved_changes = False  # Limpiar flag
+                st.session_state.unsaved_changes = False
                 go_to_next_step()
                 
         except Exception as e:
             st.error(f"Error al procesar el archivo: {str(e)}")
+            import traceback
+            st.code(traceback.format_exc())
 
 
-def render_diagnostic_metrics(df_wstd_grouped, lamps):
+def plot_wstd_individual(df_wstd, spectral_cols, selected_indices):
     """
-    Renderiza las metricas de diagnostico para cada lampara.
+    Crea gráfico con cada medición WSTD individual.
     """
-    cols = st.columns(len(df_wstd_grouped))
+    fig = go.Figure()
     
-    for i, lamp in enumerate(df_wstd_grouped.index):
-        spectrum = df_wstd_grouped.loc[lamp].values
+    channels = list(range(1, len(spectral_cols) + 1))
+    
+    # Añadir cada medición como línea separada
+    for i, (idx, row) in enumerate(df_wstd.iterrows()):
+        spectrum = row[spectral_cols].values
         
-        with cols[i]:
-            st.markdown(f"**{lamp}**")
+        # Usar índice original de fila + ID para identificar
+        label = f"Fila {selected_indices[i]}: {row['ID']}"
+        
+        fig.add_trace(go.Scatter(
+            x=channels,
+            y=spectrum,
+            mode='lines',
+            name=label,
+            line=dict(width=1.5),
+            hovertemplate=f'{label}<br>Canal: %{{x}}<br>Desviación: %{{y:.6f}}<extra></extra>'
+        ))
+    
+    # Línea de referencia en y=0
+    fig.add_hline(
+        y=0, 
+        line_dash="dash", 
+        line_color="gray", 
+        opacity=0.7,
+        annotation_text="Referencia (y=0)",
+        annotation_position="right"
+    )
+    
+    fig.update_layout(
+        title='Espectros WSTD - Desviación respecto a referencia ideal',
+        xaxis_title='Canal espectral',
+        yaxis_title='Desviación',
+        height=600,
+        hovermode='closest',
+        template='plotly_white',
+        showlegend=True
+    )
+    
+    return fig
+
+
+def render_diagnostic_metrics(df_wstd, spectral_cols, selected_indices):
+    """
+    Renderiza las métricas de diagnóstico para cada medición individual.
+    """
+    num_measurements = len(df_wstd)
+    cols = st.columns(min(num_measurements, 4))
+    
+    for i, (idx, row) in enumerate(df_wstd.iterrows()):
+        spectrum = row[spectral_cols].values
+        
+        col_idx = i % 4
+        if i > 0 and col_idx == 0:
+            cols = st.columns(min(num_measurements - i, 4))
+        
+        with cols[col_idx]:
+            label = f"Fila {selected_indices[i]}: {row['ID']}"
+            st.markdown(f"**{label}**")
             
             max_val = np.max(np.abs(spectrum))
             mean_val = np.mean(np.abs(spectrum))
             std_val = np.std(spectrum)
             
-            st.metric("Desv. maxima", f"{max_val:.4f}")
-            st.metric("Desv. media", f"{mean_val:.4f}")
-            st.metric("Desv. estandar", f"{std_val:.4f}")
+            st.metric("Desv. máxima", f"{max_val:.6f}")
+            st.metric("Desv. media", f"{mean_val:.6f}")
+            st.metric("Desv. estándar", f"{std_val:.6f}")
             
             status = get_diagnostic_status(max_val)
             display_diagnostic_status(status)
+            
+            # Mostrar algunos valores del espectro para debug
+            with st.expander("Ver primeros valores"):
+                st.write(f"Primeros 5 canales: {spectrum[:5]}")
 
 
 def get_diagnostic_status(max_deviation):
     """
-    Determina el estado del diagnostico basado en la desviacion maxima.
+    Determina el estado del diagnóstico basado en la desviación máxima.
     """
     if max_deviation < WSTD_THRESHOLDS['good']:
         return 'good'
@@ -122,7 +199,7 @@ def get_diagnostic_status(max_deviation):
 
 def display_diagnostic_status(status):
     """
-    Muestra el estado del diagnostico con el formato apropiado.
+    Muestra el estado del diagnóstico con el formato apropiado.
     """
     status_config = DIAGNOSTIC_STATUS[status]
     icon = status_config['icon']

@@ -40,7 +40,7 @@ def generate_html_report(kit_data, baseline_data, ref_corrected, origin):
     html = start_html_document(client_data)
     
     # Agregar diagnóstico WSTD si existe
-    if wstd_data and 'grouped' in wstd_data:
+    if wstd_data and 'df' in wstd_data and wstd_data['df'] is not None:
         html += generate_wstd_section(wstd_data)
     
     # Detalles del proceso
@@ -155,7 +155,8 @@ def generate_wstd_section(wstd_data):
     Returns:
         str: HTML de la sección WSTD
     """
-    df_wstd_grouped = wstd_data['grouped']
+    df_wstd = wstd_data['df']
+    spectral_cols = wstd_data['spectral_cols']
     
     html = """
         <div class="warning-box">
@@ -163,7 +164,7 @@ def generate_wstd_section(wstd_data):
             <p><strong>Estado del sistema ANTES del ajuste:</strong></p>
             <table>
                 <tr>
-                    <th>Lámpara</th>
+                    <th>ID</th>
                     <th>Desv. Máxima</th>
                     <th>Desv. Media</th>
                     <th>Desv. Estándar</th>
@@ -171,8 +172,9 @@ def generate_wstd_section(wstd_data):
                 </tr>
     """
     
-    for lamp in df_wstd_grouped.index:
-        spectrum = df_wstd_grouped.loc[lamp].values
+    # Iterar sobre cada medición individual
+    for idx, row in df_wstd.iterrows():
+        spectrum = row[spectral_cols].values
         max_val = np.max(np.abs(spectrum))
         mean_val = np.mean(np.abs(spectrum))
         std_val = np.std(spectrum)
@@ -187,7 +189,7 @@ def generate_wstd_section(wstd_data):
         
         html += f"""
             <tr>
-                <td><strong>{lamp}</strong></td>
+                <td><strong>{row['ID']}</strong></td>
                 <td>{max_val:.6f}</td>
                 <td>{mean_val:.6f}</td>
                 <td>{std_val:.6f}</td>
@@ -205,7 +207,6 @@ def generate_wstd_section(wstd_data):
         </div>
     """
     return html
-
 
 def generate_process_details(lamp_ref, lamp_new, n_spectral, n_samples, origin):
     """

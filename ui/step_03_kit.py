@@ -21,7 +21,7 @@ def render_kit_step():
     Renderiza el paso de medicion del Standard Kit (Paso 3).
     Ahora con archivos separados para referencia y nueva lampara.
     """
-    st.markdown("## PASO 3 DE 6: Medicion del Standard Kit")
+    st.markdown("## PASO 4 DE 7: Medicion del Standard Kit")
     
     st.info("""
     **Nuevo proceso con archivos separados:**
@@ -44,7 +44,7 @@ def render_kit_step():
     # ==========================================
     # UPLOADER 1: TSV REFERENCIA
     # ==========================================
-    st.markdown("### 1?? Archivo de Referencia")
+    st.markdown("### 1️ Archivo de Referencia")
     ref_file = st.file_uploader(
         "Sube el TSV de REFERENCIA (archivo maestro)",
         type=["tsv", "txt", "csv"],
@@ -55,7 +55,7 @@ def render_kit_step():
     # ==========================================
     # UPLOADER 2: TSV NUEVA LAMPARA
     # ==========================================
-    st.markdown("### 2?? Archivo de Nueva Lampara")
+    st.markdown("### 2️ Archivo de Nueva Lampara")
     new_file = st.file_uploader(
         "Sube el TSV de la NUEVA lampara",
         type=["tsv", "txt", "csv"],
@@ -113,12 +113,12 @@ def render_kit_step():
             
             col1, col2 = st.columns(2)
             with col1:
-                st.markdown("**?? Archivo de Referencia:**")
+                st.markdown("**📁 Archivo de Referencia:**")
                 st.write(f"- Mediciones: {len(df_ref_kit)}")
                 st.write(f"- Muestras unicas: {len(df_ref_kit['ID'].unique())}")
             
             with col2:
-                st.markdown("**?? Archivo Nueva Lampara:**")
+                st.markdown("**📁 Archivo Nueva Lampara:**")
                 st.write(f"- Mediciones: {len(df_new_kit)}")
                 st.write(f"- Muestras unicas: {len(df_new_kit['ID'].unique())}")
             
