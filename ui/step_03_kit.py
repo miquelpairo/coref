@@ -18,64 +18,115 @@ from utils.validators import validate_common_samples
 
 def render_kit_step():
     """
-    Renderiza el paso de medicion del Standard Kit (Paso 2).
+    Renderiza el paso de medicion del Standard Kit (Paso 3).
+    Ahora con archivos separados para referencia y nueva lampara.
     """
-    st.markdown("## PASO 4 DE 7: Medicion del Standard Kit")
-    st.markdown(INSTRUCTIONS['kit'])
+    st.markdown("## PASO 3 DE 6: Medicion del Standard Kit")
+    
+    st.info("""
+    **Nuevo proceso con archivos separados:**
+    
+    1. **TSV Referencia**: Archivo maestro con mediciones historicas (puede ser antiguo)
+    2. **TSV Nueva Lampara**: Mediciones recientes que quieres ajustar
+    
+    Los archivos se compararan por ID de muestra.
+    """)
+    
     st.markdown("---")
     
-    kit_file = st.file_uploader(
-        "Sube el archivo TSV con las mediciones del Standard Kit", 
-        type="tsv", 
-        key="kit_upload"
-    )
-    
+    # Boton omitir
     col_skip1, col_skip2 = st.columns([3, 1])
     with col_skip2:
-        if st.button("Omitir paso", key="skip_step2"):
-            st.session_state.unsaved_changes = False  # Limpiar flag
+        if st.button("Omitir paso", key="skip_step3"):
+            st.session_state.unsaved_changes = False
             go_to_next_step()
     
-    if kit_file:
+    # ==========================================
+    # UPLOADER 1: TSV REFERENCIA
+    # ==========================================
+    st.markdown("### 1?? Archivo de Referencia")
+    ref_file = st.file_uploader(
+        "Sube el TSV de REFERENCIA (archivo maestro)",
+        type=["tsv", "txt", "csv"],
+        key="ref_kit_upload",
+        help="Archivo historico con mediciones bien calibradas"
+    )
+    
+    # ==========================================
+    # UPLOADER 2: TSV NUEVA LAMPARA
+    # ==========================================
+    st.markdown("### 2?? Archivo de Nueva Lampara")
+    new_file = st.file_uploader(
+        "Sube el TSV de la NUEVA lampara",
+        type=["tsv", "txt", "csv"],
+        key="new_kit_upload",
+        help="Mediciones recientes que quieres ajustar"
+    )
+    
+    # ==========================================
+    # PROCESAR SI AMBOS ARCHIVOS ESTAN SUBIDOS
+    # ==========================================
+    if ref_file and new_file:
         # Marcar cambios sin guardar
         st.session_state.unsaved_changes = True
         
         try:
-            # Cargar archivo
-            df = load_tsv_file(kit_file)
+            # Cargar ambos archivos
+            df_ref = load_tsv_file(ref_file)
+            df_new = load_tsv_file(new_file)
             
-            # Obtener columnas espectrales
-            spectral_cols = get_spectral_columns(df)
+            # Obtener columnas espectrales (deben ser iguales en ambos)
+            spectral_cols_ref = get_spectral_columns(df_ref)
+            spectral_cols_new = get_spectral_columns(df_new)
             
-            # Convertir columnas espectrales a numerico
-            df[spectral_cols] = df[spectral_cols].apply(pd.to_numeric, errors="coerce")
-            
-            # Filtrar muestras (excluir WSTD)
-            df_kit = df[df["ID"].str.upper() != "WSTD"].copy()
-            
-            if len(df_kit) == 0:
-                st.error(MESSAGES['error_no_samples'])
+            # Validar que tengan las mismas columnas espectrales
+            if len(spectral_cols_ref) != len(spectral_cols_new):
+                st.error(f"""
+                Los archivos tienen diferente numero de canales espectrales:
+                - Referencia: {len(spectral_cols_ref)} canales
+                - Nueva: {len(spectral_cols_new)} canales
+                
+                Asegurate de usar archivos del mismo equipo.
+                """)
                 return
             
-            # Obtener informacion basica
-            lamp_options = [lamp for lamp in df_kit["Note"].unique() if pd.notna(lamp)]
-            sample_ids = df_kit["ID"].unique()
+            spectral_cols = spectral_cols_ref  # Usar las del archivo de referencia
+            
+            # Convertir a numerico
+            df_ref[spectral_cols] = df_ref[spectral_cols].apply(pd.to_numeric, errors="coerce")
+            df_new[spectral_cols] = df_new[spectral_cols].apply(pd.to_numeric, errors="coerce")
+            
+            # Filtrar muestras (excluir WSTD)
+            df_ref_kit = df_ref[df_ref["ID"].str.upper() != "WSTD"].copy()
+            df_new_kit = df_new[df_new["ID"].str.upper() != "WSTD"].copy()
+            
+            if len(df_ref_kit) == 0:
+                st.error("No se encontraron muestras en el archivo de REFERENCIA")
+                return
+            
+            if len(df_new_kit) == 0:
+                st.error("No se encontraron muestras en el archivo de NUEVA lampara")
+                return
             
             # Mostrar informacion
-            st.success(MESSAGES['success_file_loaded'])
-            st.write(f"**Total de mediciones:** {len(df_kit)}")
-            st.write(f"**Muestras unicas:** {len(sample_ids)}")
-            st.write(f"**Lamparas detectadas:** {', '.join(lamp_options)}")
+            st.success("Archivos cargados correctamente")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown("**?? Archivo de Referencia:**")
+                st.write(f"- Mediciones: {len(df_ref_kit)}")
+                st.write(f"- Muestras unicas: {len(df_ref_kit['ID'].unique())}")
+            
+            with col2:
+                st.markdown("**?? Archivo Nueva Lampara:**")
+                st.write(f"- Mediciones: {len(df_new_kit)}")
+                st.write(f"- Muestras unicas: {len(df_new_kit['ID'].unique())}")
+            
             st.write(f"**Canales espectrales:** {len(spectral_cols)}")
             
-            # Seleccion de lamparas
-            st.markdown("### Identificacion de Lamparas")
-            lamp_ref, lamp_new = render_lamp_selection(lamp_options)
-            
-            # Agrupar mediciones por lampara
-            df_ref_grouped, df_new_grouped = group_measurements_by_lamp(
-                df_kit, spectral_cols, lamp_ref, lamp_new
-            )
+            # Agrupar por ID (promedio de mediciones repetidas)
+            df_ref_grouped = df_ref_kit.groupby("ID")[spectral_cols].mean()
+            df_new_grouped = df_new_kit.groupby("ID")[spectral_cols].mean()
             
             # Encontrar muestras comunes
             common_ids = find_common_samples(df_ref_grouped, df_new_grouped)
@@ -87,25 +138,25 @@ def render_kit_step():
             df_ref_grouped = df_ref_grouped.loc[common_ids]
             df_new_grouped = df_new_grouped.loc[common_ids]
             
-            st.success(f"Se encontraron {len(common_ids)} muestras comunes entre ambas lamparas")
+            st.success(f"Se encontraron {len(common_ids)} muestras comunes entre ambos archivos")
             
             # Seleccion de muestras para correccion
-            render_sample_selection(df_kit, common_ids, lamp_ref, lamp_new)
+            render_sample_selection_simple(common_ids)
             
             # Visualizacion de espectros
-            render_spectra_visualization(
-                df_ref_grouped, df_new_grouped, 
-                spectral_cols, lamp_ref, lamp_new, common_ids
+            render_spectra_visualization_simple(
+                df_ref_grouped, df_new_grouped,
+                spectral_cols, common_ids
             )
             
-            # Guardar datos
+            # Guardar datos (sin nombres de lamparas)
             save_kit_data(
-                df=df_kit,
+                df=df_new_kit,  # Guardamos el df de la nueva lampara para el paso 6
                 df_ref_grouped=df_ref_grouped,
                 df_new_grouped=df_new_grouped,
                 spectral_cols=spectral_cols,
-                lamp_ref=lamp_ref,
-                lamp_new=lamp_new,
+                lamp_ref="Referencia",  # Nombre generico
+                lamp_new="Nueva",       # Nombre generico
                 common_ids=common_ids
             )
             
@@ -114,90 +165,52 @@ def render_kit_step():
             col_continue, col_skip = st.columns([3, 1])
             with col_continue:
                 if st.button("Continuar al Paso 5", type="primary", use_container_width=True):
-                    st.session_state.unsaved_changes = False  # Limpiar flag
+                    st.session_state.unsaved_changes = False
                     go_to_next_step()
             with col_skip:
-                if st.button("Omitir", key="skip_after_step2", use_container_width=True):
-                    st.session_state.unsaved_changes = False  # Limpiar flag
+                if st.button("Omitir", key="skip_after_step3", use_container_width=True):
+                    st.session_state.unsaved_changes = False
                     go_to_next_step()
                     
         except Exception as e:
-            st.error(f"Error al procesar el archivo: {str(e)}")
-
-def render_lamp_selection(lamp_options):
-    """
-    Renderiza los selectores para identificar lamparas.
-    
-    Args:
-        lamp_options (list): Lista de lamparas disponibles
-        
-    Returns:
-        tuple: (lamp_ref, lamp_new) nombres de las lamparas seleccionadas
-    """
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        lamp_ref = st.selectbox(
-            "Selecciona la lampara de REFERENCIA", 
-            lamp_options, 
-            index=0, 
-            key="lamp_ref_select"
-        )
-    
-    with col2:
-        lamp_new = st.selectbox(
-            "Selecciona la lampara NUEVA", 
-            lamp_options, 
-            index=min(1, len(lamp_options)-1), 
-            key="lamp_new_select"
-        )
-    
-    return lamp_ref, lamp_new
+            st.error(f"Error al procesar los archivos: {str(e)}")
+            import traceback
+            st.error(traceback.format_exc())
+            
 
 
-def render_sample_selection(df, common_ids, lamp_ref, lamp_new):
-    """
-    Renderiza la interfaz de seleccion de muestras para la correccion.
+
+
     
-    Args:
-        df (pd.DataFrame): DataFrame completo con mediciones
-        common_ids (list): Lista de IDs comunes
-        lamp_ref (str): Nombre de la lampara de referencia
-        lamp_new (str): Nombre de la lampara nueva
+def render_sample_selection_simple(common_ids):
+    """
+    Renderiza seleccion de muestras sin nombres de lamparas especificos.
     """
     st.markdown("### Seleccion de muestras para calcular la correccion")
     
-    # Inicializar seleccion si no existe
+    # Inicializar seleccion
     if 'selected_ids' not in st.session_state:
         st.session_state.selected_ids = list(common_ids)
     
     if 'pending_selection' not in st.session_state:
         st.session_state.pending_selection = list(st.session_state.selected_ids)
     
-    # Construir tabla de muestras
+    # Tabla de muestras
     df_samples = pd.DataFrame({
         'ID': list(common_ids),
-        f'Mediciones {lamp_ref}': [
-            len(df[(df['ID'] == i) & (df['Note'] == lamp_ref)]) 
-            for i in common_ids
-        ],
-        f'Mediciones {lamp_new}': [
-            len(df[(df['ID'] == i) & (df['Note'] == lamp_new)]) 
-            for i in common_ids
-        ],
         'Usar en correccion': [
             i in st.session_state.pending_selection 
             for i in common_ids
         ]
     })
     
-    with st.expander("Ver muestras emparejadas"):
+    with st.expander("Ver y seleccionar muestras"):
         with st.form("form_select_samples", clear_on_submit=False):
             edited = st.data_editor(
                 df_samples,
                 use_container_width=True,
                 hide_index=True,
-                disabled=[f'Mediciones {lamp_ref}', f'Mediciones {lamp_new}'],
+                disabled=['ID'],
                 key="editor_select_samples"
             )
             
@@ -207,69 +220,54 @@ def render_sample_selection(df, common_ids, lamp_ref, lamp_new):
             btn_invert = col_c.form_submit_button("Invertir seleccion")
             btn_confirm = col_d.form_submit_button("Confirmar seleccion", type="primary")
         
-        # Gestionar botones
         if btn_all:
-            update_pending_selection(list(common_ids))
+            st.session_state.pending_selection = list(common_ids)
             st.rerun()
         
         if btn_none:
-            update_pending_selection([])
+            st.session_state.pending_selection = []
             st.rerun()
         
         if btn_invert:
             inverted = [i for i in common_ids if i not in st.session_state.pending_selection]
-            update_pending_selection(inverted)
+            st.session_state.pending_selection = inverted
             st.rerun()
         
         if btn_confirm:
-            # Confirmar lo que esta marcado en la tabla
             pending = edited.loc[edited['Usar en correccion'], 'ID'].tolist()
-            update_pending_selection(pending)
-            update_selected_samples(pending)
+            st.session_state.pending_selection = pending
+            st.session_state.selected_ids = pending
             st.success(f"Seleccion confirmada: {len(st.session_state.selected_ids)} muestras.")
         else:
-            # Sincronizar previsualizacion con la tabla
             if isinstance(edited, pd.DataFrame):
                 try:
                     pending = edited.loc[edited['Usar en correccion'], 'ID'].tolist()
-                    update_pending_selection(pending)
+                    st.session_state.pending_selection = pending
                 except Exception:
                     pass
         
         st.caption(
-            f"Seleccionadas (pendiente/previa a confirmar): {len(st.session_state.pending_selection)} - "
+            f"Seleccionadas (pendiente): {len(st.session_state.pending_selection)} - "
             f"Confirmadas: {len(st.session_state.get('selected_ids', []))}"
         )
 
 
-def render_spectra_visualization(df_ref_grouped, df_new_grouped, spectral_cols, 
-                                lamp_ref, lamp_new, common_ids):
+def render_spectra_visualization_simple(df_ref_grouped, df_new_grouped, 
+                                       spectral_cols, common_ids):
     """
-    Renderiza la visualizacion de espectros por muestra.
-    
-    Args:
-        df_ref_grouped (pd.DataFrame): Mediciones de referencia agrupadas
-        df_new_grouped (pd.DataFrame): Mediciones nuevas agrupadas
-        spectral_cols (list): Lista de columnas espectrales
-        lamp_ref (str): Nombre de lampara de referencia
-        lamp_new (str): Nombre de lampara nueva
-        common_ids (list): IDs comunes
+    Visualizacion de espectros sin nombres de lamparas especificos.
     """
     with st.expander("Ver espectros promedio por muestra"):
-        # Obtener las muestras seleccionadas (confirmadas o pendientes)
         selected_ids = st.session_state.get('selected_ids', list(common_ids))
-        
-        # Si no hay ninguna seleccionada, mostrar todas
         ids_to_plot = selected_ids if len(selected_ids) > 0 else list(common_ids)
         
-        # Informaci¨®n sobre qu¨¦ se est¨¢ mostrando
         if len(ids_to_plot) < len(common_ids):
-            st.info(f"?? Mostrando {len(ids_to_plot)} de {len(common_ids)} muestras disponibles (solo seleccionadas)")
-        else:
-            st.info(f"?? Mostrando todas las {len(ids_to_plot)} muestras")
+            st.info(f"Mostrando {len(ids_to_plot)} de {len(common_ids)} muestras (solo seleccionadas)")
         
         fig = plot_kit_spectra(
-            df_ref_grouped, df_new_grouped, 
-            spectral_cols, lamp_ref, lamp_new, ids_to_plot  # ¡û Cambio aqu¨ª
+            df_ref_grouped, df_new_grouped,
+            spectral_cols, 
+            "Referencia", "Nueva",  # Nombres genericos
+            ids_to_plot
         )
         st.plotly_chart(fig, use_container_width=True)

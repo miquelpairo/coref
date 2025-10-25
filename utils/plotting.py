@@ -333,71 +333,69 @@ def plot_baseline_comparison(baseline_original, baseline_corrected, spectral_col
     return fig
 
 
-def plot_corrected_spectra_comparison(df_ref_grouped, df_corrected, spectral_cols, 
-                                      lamp_ref, lamp_new, sample_ids, 
-                                      title="Comparación de espectros"):
+def plot_corrected_spectra_comparison(df_ref, df_corrected, spectral_cols,
+                                     lamp_ref, lamp_new, sample_ids, title):
     """
-    Crea gráfico comparando espectros de referencia vs corregidos.
+    Crea grafico comparando espectros de referencia vs corregidos.
     
     Args:
-        df_ref_grouped (pd.DataFrame): Espectros de referencia
-        df_corrected (pd.DataFrame): Espectros corregidos
+        df_ref (pd.DataFrame): Espectros de referencia (indexado por ID)
+        df_corrected (pd.DataFrame): Espectros corregidos (indexado por ID)
         spectral_cols (list): Columnas espectrales
-        lamp_ref (str): Nombre lámpara referencia
-        lamp_new (str): Nombre lámpara nueva
-        sample_ids (list): IDs de muestras a graficar
-        title (str): Título del gráfico
+        lamp_ref (str): Nombre lampara referencia
+        lamp_new (str): Nombre lampara nueva
+        sample_ids (list): IDs a graficar
+        title (str): Titulo del grafico
         
     Returns:
-        plotly.graph_objects.Figure: Figura con el gráfico
+        plotly.graph_objects.Figure: Figura con el grafico
     """
+    import plotly.graph_objects as go
+    
     fig = go.Figure()
     
     channels = list(range(1, len(spectral_cols) + 1))
     
-    colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', 
-              '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
-    
-    for idx, id_ in enumerate(sample_ids):
-        color = colors[idx % len(colors)]
+    # Graficar espectros por muestra
+    for id_ in sample_ids:
+        # Espectro de referencia
+        if id_ in df_ref.index:
+            spec_ref = df_ref.loc[id_, spectral_cols].astype(float).values
+            
+            fig.add_trace(go.Scatter(
+                x=channels,
+                y=spec_ref,
+                mode='lines',
+                name=f'{id_} ({lamp_ref})',
+                line=dict(width=1.5, dash='solid'),
+                hovertemplate=f'{id_} ({lamp_ref})<br>Canal: %{{x}}<br>Valor: %{{y:.4f}}<extra></extra>'
+            ))
         
-        spec_ref = df_ref_grouped.loc[id_].values
-        spec_corr = df_corrected[df_corrected['ID'] == id_][spectral_cols].astype(float).mean().values
-        
-        # Referencia
-        fig.add_trace(go.Scatter(
-            x=channels,
-            y=spec_ref,
-            mode='lines',
-            name=f'{lamp_ref} - {id_}',
-            line=dict(width=1.5, color=color),
-            opacity=0.85,
-            hovertemplate=f'{lamp_ref} - {id_}<br>Canal: %{{x}}<br>Absorbancia: %{{y:.4f}}<extra></extra>'
-        ))
-        
-        # Corregido
-        fig.add_trace(go.Scatter(
-            x=channels,
-            y=spec_corr,
-            mode='lines',
-            name=f'{lamp_new} corregido - {id_}',
-            line=dict(width=1.5, dash='dash', color=color),
-            opacity=0.85,
-            hovertemplate=f'{lamp_new} corregido - {id_}<br>Canal: %{{x}}<br>Absorbancia: %{{y:.4f}}<extra></extra>'
-        ))
+        # Espectro corregido
+        if id_ in df_corrected.index:
+            spec_corr = df_corrected.loc[id_, spectral_cols].astype(float).values
+            
+            fig.add_trace(go.Scatter(
+                x=channels,
+                y=spec_corr,
+                mode='lines',
+                name=f'{id_} ({lamp_new})',
+                line=dict(width=1.5, dash='dash'),
+                hovertemplate=f'{id_} ({lamp_new})<br>Canal: %{{x}}<br>Valor: %{{y:.4f}}<extra></extra>'
+            ))
     
     fig.update_layout(
         title=title,
         xaxis_title='Canal espectral',
         yaxis_title='Absorbancia',
-        height=700,
+        height=600,
         hovermode='closest',
         template='plotly_white',
         legend=dict(
             yanchor="top",
             y=0.99,
             xanchor="left",
-            x=1.05
+            x=1.02
         )
     )
     

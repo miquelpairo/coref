@@ -8,15 +8,15 @@ PAGE_CONFIG = {
     "layout": "wide"
 }
 
-# Definición de pasos del proceso
+# Definición de pasos del proceso (DICCIONARIO como en sidebar.py)
 STEPS = {
-    1: "Info del Cliente",
-    2: "Backup",
-    3: "Diagnostico WSTD",
-    4: "Medicion del Kit",
-    5: "Calculo de Correccion",
-    6: "Baseline y Exportacion",
-    7: "Validacion"
+    1: "Datos del cliente",
+    2: "Backup de archivos",
+    3: "Diagnóstico WSTD",
+    4: "Medición del Standard Kit",
+    5: "Cálculo de corrección",
+    6: "Baseline y Exportación",
+    7: "Validación"
 }
 
 # Rutas de archivos baseline
@@ -27,16 +27,16 @@ BASELINE_PATHS = {
 
 # Extensiones de archivo soportadas
 SUPPORTED_EXTENSIONS = {
-    'tsv': ['tsv'],
+    'tsv': ['tsv', 'txt', 'csv'],  # Agregado 'txt' y 'csv'
     'baseline': ['ref', 'csv'],
     'ref': ['ref']
 }
 
 # Umbrales de diagnóstico para WSTD
 WSTD_THRESHOLDS = {
-    'good': 0.01,      # Bien ajustado
-    'warning': 0.05,   # Desviación moderada
-    'bad': float('inf')  # Requiere ajuste
+    'good': 0.01,           # Bien ajustado
+    'warning': 0.05,        # Desviación moderada
+    'bad': float('inf')     # Requiere ajuste
 }
 
 # Estados de diagnóstico
@@ -108,7 +108,7 @@ INSTRUCTIONS = {
     """,
     
     'backup': """
-    ### ⚠️ ATENCIÓN: Backup de Archivos Baseline
+    ### Advertencia: Backup de Archivos Baseline
 
     **Antes de continuar con este proceso, es CRÍTICO que realices una copia de seguridad manual 
     de los archivos baseline actuales.**
@@ -118,74 +118,79 @@ INSTRUCTIONS = {
     """,
     
     'backup_procedure': """
-    ### 📋 Procedimiento recomendado para el backup:
+    ### Procedimiento recomendado para el backup:
     1. Copia toda la carpeta correspondiente a tu versión de software
     2. Pégala en una ubicación segura (Desktop, carpeta de backups, etc.)
-    3. Renombra la carpeta con la fecha actual (ej: `SX-Suite_Backup_2025-01-15`)
+    3. Renombra la carpeta con la fecha actual (ej: SX-Suite_Backup_2025-01-15)
     4. Verifica que la copia se realizó correctamente
     """,
     
     'wstd': """
-    ### 📋 Instrucciones para el técnico:
+    ### Instrucciones para el diagnóstico WSTD:
 
     1. **Prepara el White Standard** (referencia blanca del kit)
     2. En el equipo NIR, **NO tomes línea base** (medir como muestra normal)
-    3. **Mide el White Standard con la lámpara de referencia** (la que está en uso actualmente)
-       - 📝 ID: `WSTD`
-       - 📝 Note: nombre de tu lámpara de referencia (ej: "L1", "LampOld", etc.)
+    3. **Mide el White Standard con la lámpara de referencia**
+       - ID: WSTD
+       - Note: nombre de tu lámpara de referencia (ej: L1, LampOld)
     4. **Cambia a la lámpara nueva** en el equipo
     5. **Mide el White Standard con la lámpara nueva**
-       - 📝 ID: `WSTD`
-       - 📝 Note: nombre de tu lámpara nueva (ej: "L2", "LampNew", etc.)
+       - ID: WSTD
+       - Note: nombre de tu lámpara nueva (ej: L2, LampNew)
     6. **Exporta el archivo TSV** con ambas mediciones
 
-    ℹ️ **¿Por qué este paso?** Si el sistema está bien calibrado, las mediciones del White Standard 
-    sin línea base deberían estar muy cercanas a 0 en todo el espectro. Este diagnóstico nos muestra 
-    el estado actual del sistema antes del ajuste.
+    **¿Por qué este paso?** Si el sistema está bien calibrado, las mediciones del White Standard 
+    sin línea base deberían estar muy cercanas a 0 en todo el espectro.
     """,
     
     'kit': """
-    ### 📋 Instrucciones para el técnico:
+    ### Instrucciones para medición del Standard Kit:
 
-    1. **Toma línea base con la lámpara NUEVA** usando el White Reference
-    2. **Mide todas las muestras del Standard Kit con la lámpara de REFERENCIA**
-       - 📝 Usa IDs consistentes para cada muestra (ej: "Sample01", "Sample02", "Soja_A", etc.)
-       - 📝 Note: nombre de tu lámpara de referencia (el mismo del Paso 1)
-    3. **Mide las MISMAS muestras con la lámpara NUEVA**
-       - 📝 **Usa exactamente las mismas IDs** que en el paso anterior
-       - 📝 Note: nombre de tu lámpara nueva (el mismo del Paso 1)
-    4. **Exporta el archivo TSV** con todas las mediciones
+    **NUEVO PROCESO CON DOS ARCHIVOS SEPARADOS:**
 
-    ⚠️ **Importante:** Es crítico que uses las mismas IDs para las mismas muestras en ambas lámparas. 
-    El script emparejará las mediciones por ID.
+    **Archivo 1 - TSV de Referencia (histórico):**
+    - Mediciones bien calibradas con lámpara de referencia
+    - Puede ser un archivo antiguo de tu base de datos
+    - Debe incluir IDs de muestra consistentes
 
-    💡 **Tip:** Se recomienda medir entre 10-20 muestras representativas de tu rango analítico habitual.
+    **Archivo 2 - TSV de Nueva Lámpara:**
+    - Toma línea base con la lámpara NUEVA
+    - Mide las MISMAS muestras que en el archivo de referencia
+    - Usa exactamente los MISMOS IDs de muestra
+    - Exporta el archivo TSV
+
+    **Importante:** Los archivos se emparejarán por ID de muestra, así que usa identificadores 
+    consistentes (ej: Sample01, Sample02, Soja_A, etc.)
+
+    **Recomendación:** 10-20 muestras representativas de tu rango analítico.
     """,
     
     'baseline_load': """
-    ### 📋 Instrucciones:
+    ### Instrucciones para cargar baseline:
 
-    Necesitas cargar el archivo baseline actual de la lámpara **{lamp_name}** que tomaste en el Paso 2.
+    Necesitas cargar el archivo baseline actual de la lámpara nueva que tomaste antes de 
+    medir el Standard Kit.
 
     Este archivo puede ser:
-    - 📄 **Archivo .ref** (SX Suite 531 o anterior) - Formato binario
-    - 📄 **Archivo .csv** (SX Suite 557 o posterior) - Formato de texto
+    - **Archivo .ref** (SX Suite 531 o anterior) - Formato binario
+    - **Archivo .csv** (SX Suite 557 o posterior) - Formato de texto
 
-    El archivo debe tener **exactamente {n_channels} canales espectrales** para coincidir con tus mediciones.
+    El archivo debe tener exactamente {n_channels} canales espectrales para coincidir con tus mediciones.
     """
 }
 
 # Mensajes de éxito/error comunes
 MESSAGES = {
-    'success_file_loaded': "✅ Archivo cargado correctamente",
-    'error_no_wstd': "❌ No se encontraron mediciones con ID = 'WSTD' en el archivo.",
-    'error_no_samples': "❌ No se encontraron mediciones de muestras (todas son WSTD).",
-    'error_no_common_samples': "❌ No hay muestras comunes entre las dos lámparas. Verifica que uses las mismas IDs.",
-    'error_dimension_mismatch': "❌ **Error de validación:** El baseline tiene {baseline_points} puntos, pero el TSV tiene {tsv_channels} canales. No coinciden.",
-    'success_dimension_match': "✅ Validación correcta: {n_points} puntos en ambos archivos",
-    'success_correction_applied': "✅ Corrección aplicada al baseline",
-    'warning_no_header': "⚠️ No se puede generar .ref desde CSV: faltan valores de cabecera del sensor",
-    'warning_default_metadata': "⚠️ Metadatos generados por defecto"
+    'success_file_loaded': "Archivo cargado correctamente",
+    'error_no_wstd': "No se encontraron mediciones con ID = 'WSTD' en el archivo.",
+    'error_no_samples': "No se encontraron mediciones de muestras (todas son WSTD).",
+    'error_no_common_samples': "No hay muestras comunes entre los dos archivos. Verifica que uses las mismas IDs.",
+    'error_dimension_mismatch': "**Error de validación:** El baseline tiene {baseline_points} puntos, pero el TSV tiene {tsv_channels} canales. No coinciden.",
+    'success_dimension_match': "Validación correcta: {n_points} puntos en ambos archivos",
+    'success_correction_applied': "Corrección aplicada al baseline",
+    'warning_no_header': "No se puede generar .ref desde CSV: faltan valores de cabecera del sensor",
+    'warning_default_metadata': "Metadatos generados por defecto",
+    'info_two_files': "Proceso actualizado: ahora usamos dos archivos TSV separados para mayor flexibilidad"
 }
 
 # Configuración de informes HTML
@@ -193,6 +198,7 @@ REPORT_STYLE = """
 body { font-family: Arial, sans-serif; margin: 40px; }
 h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
 h2 { color: #34495e; margin-top: 30px; }
+h3 { color: #5a6c7d; margin-top: 20px; }
 .info-box { background-color: #ecf0f1; padding: 15px; border-radius: 5px; margin: 10px 0; }
 .warning-box { background-color: #fff3cd; padding: 15px; border-radius: 5px; margin: 10px 0; border-left: 4px solid #ffc107; }
 .success-box { background-color: #d4edda; padding: 15px; border-radius: 5px; margin: 10px 0; border-left: 4px solid #28a745; }
@@ -202,11 +208,25 @@ h2 { color: #34495e; margin-top: 30px; }
 table { border-collapse: collapse; width: 100%; margin: 20px 0; }
 th, td { border: 1px solid #bdc3c7; padding: 10px; text-align: left; }
 th { background-color: #3498db; color: white; }
+tr:nth-child(even) { background-color: #f2f2f2; }
 .status-good { color: #28a745; font-weight: bold; }
 .status-warning { color: #ffc107; font-weight: bold; }
 .status-bad { color: #dc3545; font-weight: bold; }
-.footer { margin-top: 50px; padding-top: 20px; border-top: 1px solid #bdc3c7; text-align: center; color: #7f8c8d; }
-.tag { display:inline-block; padding:2px 8px; border-radius:12px; font-size:0.85em; }
+.footer { margin-top: 50px; padding-top: 20px; border-top: 1px solid #bdc3c7; text-align: center; color: #7f8c8d; font-size: 0.9em; }
+.tag { display:inline-block; padding:2px 8px; border-radius:12px; font-size:0.85em; margin: 2px; }
 .tag-ok { background:#e8f5e9; color:#2e7d32; border:1px solid #c8e6c9; }
 .tag-no { background:#fff3e0; color:#e65100; border:1px solid #ffe0b2; }
+img { max-width: 100%; height: auto; margin: 20px 0; }
+"""
+
+# Información de versión
+VERSION = "2.0.0"
+VERSION_DATE = "2025-01-24"
+VERSION_NOTES = """
+Versión 2.0.0 - Cambios principales:
+- Procesamiento con dos archivos TSV separados (referencia y nueva lámpara)
+- Gráficos interactivos con Plotly
+- Arquitectura modular mejorada
+- Paso de validación agregado
+- Mejoras en la generación de informes
 """

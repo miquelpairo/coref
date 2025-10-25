@@ -385,10 +385,16 @@ def render_correction_simulation(df, df_ref_grouped, spectral_cols,
     aplicar el baseline corregido, comparados con los espectros de la lampara de referencia.
     """)
     
-    # Simular espectros corregidos
+    # Obtener df_new_grouped desde session_state
+    kit_data = st.session_state.kit_data
+    df_new_grouped = kit_data['df_new_grouped']
+    
+    # Simular espectros corregidos (AHORA CON 4 PARAMETROS)
     df_new_corr = simulate_corrected_spectra(
-        df, spectral_cols, lamp_new, 
-        ref_spectrum, ref_corrected
+        df_new_grouped,      # 1. DataFrame agrupado
+        spectral_cols,       # 2. Columnas espectrales
+        ref_spectrum,        # 3. Baseline original
+        ref_corrected        # 4. Baseline corregido
     )
     
     # Obtener muestras usadas y no usadas
@@ -399,8 +405,8 @@ def render_correction_simulation(df, df_ref_grouped, spectral_cols,
     st.markdown("**Muestras usadas en la correccion**")
     fig_used = plot_corrected_spectra_comparison(
         df_ref_grouped, df_new_corr, spectral_cols,
-        lamp_ref, lamp_new, used_ids,
-        title=f"{lamp_ref} (referencia) vs {lamp_new} (corregido) - usadas en la correccion"
+        "Referencia", "Nueva (corregida)", used_ids,
+        title="Referencia vs Nueva (corregida) - usadas en la correccion"
     )
     st.plotly_chart(fig_used, use_container_width=True)
     
@@ -409,35 +415,40 @@ def render_correction_simulation(df, df_ref_grouped, spectral_cols,
         st.markdown("**Muestras no usadas (validacion)**")
         fig_other = plot_corrected_spectra_comparison(
             df_ref_grouped, df_new_corr, spectral_cols,
-            lamp_ref, lamp_new, other_ids,
-            title=f"{lamp_ref} (referencia) vs {lamp_new} (corregido) - NO usadas"
+            "Referencia", "Nueva (corregida)", other_ids,
+            title="Referencia vs Nueva (corregida) - NO usadas"
         )
         st.plotly_chart(fig_other, use_container_width=True)
     else:
         st.info("Todas las muestras comunes estan siendo usadas para calcular la correccion.")
 
-
 def render_tsv_export(df, spectral_cols, lamp_new, ref_spectrum, ref_corrected):
-    """Renderiza la exportacion del TSV con espectros corregidos."""
+    """
+    Renderiza la exportacion del TSV con espectros corregidos.
+    """
+    # Obtener df_new_grouped desde session_state
+    kit_data = st.session_state.kit_data
+    df_new_grouped = kit_data['df_new_grouped']
+    
+    # Simular espectros corregidos (AHORA CON 4 PARAMETROS)
     df_new_corr = simulate_corrected_spectra(
-        df, spectral_cols, lamp_new,
-        ref_spectrum, ref_corrected
+        df_new_grouped,
+        spectral_cols,
+        ref_spectrum,
+        ref_corrected
     )
     
-    df_export_tsv = df.copy()
-    df_export_tsv.loc[df_export_tsv["Note"] == lamp_new, spectral_cols] = df_new_corr[spectral_cols]
-    
-    tsv_bytes = io.StringIO()
-    df_export_tsv.to_csv(tsv_bytes, sep="\t", index=False)
+    # Exportar como CSV
+    csv_bytes = io.StringIO()
+    df_new_corr.to_csv(csv_bytes, index=True, index_label='ID')
     
     st.download_button(
-        "Descargar TSV completo con espectros corregidos (verificacion)",
-        data=tsv_bytes.getvalue(),
-        file_name=f"espectros_{lamp_new}_corregidos.tsv",
-        mime="text/tab-separated-values",
+        "Descargar espectros corregidos (CSV)",
+        data=csv_bytes.getvalue(),
+        file_name=f"espectros_nueva_corregidos_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+        mime="text/csv",
         use_container_width=True
     )
-
 
 def render_completion_message():
     """Muestra el mensaje de proceso completado."""

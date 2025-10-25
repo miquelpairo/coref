@@ -14,18 +14,7 @@ import plotly.io as pio
 
 
 def generate_html_report(kit_data, baseline_data, ref_corrected, origin):
-    """
-    Genera un informe HTML completo del proceso de ajuste.
-    
-    Args:
-        kit_data (dict): Datos del Standard Kit
-        baseline_data (dict): Datos del baseline
-        ref_corrected (np.array): Baseline corregido
-        origin (str): Tipo de archivo ('ref' o 'csv')
-        
-    Returns:
-        str: Contenido HTML del informe
-    """
+    """Genera un informe HTML completo del proceso de ajuste."""
     import streamlit as st
     
     client_data = st.session_state.client_data or {}
@@ -43,6 +32,9 @@ def generate_html_report(kit_data, baseline_data, ref_corrected, origin):
     
     ref_spectrum = baseline_data['ref_spectrum']
     header = baseline_data.get('header')
+    
+    # Obtener selected_ids
+    selected_ids = st.session_state.get('selected_ids', list(common_ids))
     
     # Iniciar HTML
     html = start_html_document(client_data)
@@ -70,11 +62,17 @@ def generate_html_report(kit_data, baseline_data, ref_corrected, origin):
     if client_data.get('notes'):
         html += generate_notes_section(client_data['notes'])
     
-    # Gráficos
+    # Gráficos ← AQUÍ ESTÁ EL ERROR
     html += generate_charts_section(
-        df, df_ref_grouped, spectral_cols,
-        lamp_ref, lamp_new, common_ids,
-        ref_spectrum, ref_corrected
+        df,                 # 1
+        df_ref_grouped,     # 2
+        spectral_cols,      # 3
+        lamp_ref,           # 4
+        lamp_new,           # 5
+        common_ids,         # 6
+        selected_ids,       # 7 ← ESTE ESTABA FALTANDO
+        ref_spectrum,       # 8
+        ref_corrected       # 9
     )
     
     # Footer
@@ -470,19 +468,39 @@ def generate_charts_section(df, df_ref_grouped, spectral_cols,
 
 
 def generate_charts_section(df, df_ref_grouped, spectral_cols,
-                           lamp_ref, lamp_new, common_ids,
+                           lamp_ref, lamp_new, common_ids, selected_ids,
                            ref_spectrum, ref_corrected):
     """
-    Genera la sección de gráficos del informe (versión con Plotly interactivo).
+    Genera la sección de gráficos del informe.
+    
+    Args:
+        df (pd.DataFrame): DataFrame completo
+        df_ref_grouped (pd.DataFrame): Espectros de referencia
+        spectral_cols (list): Columnas espectrales
+        lamp_ref (str): Nombre lámpara referencia
+        lamp_new (str): Nombre lámpara nueva
+        common_ids (list): IDs comunes
+        selected_ids (list): IDs seleccionados para corrección  ← NUEVO
+        ref_spectrum (np.array): Baseline original
+        ref_corrected (np.array): Baseline corregido
+        
+    Returns:
+        str: HTML de la sección de gráficos
     """
     import streamlit as st
     
+    # Agrupar DataFrame por ID para obtener df_new_grouped
+    df_new_grouped = df.groupby("ID")[spectral_cols].mean()
+    
     # Simular espectros corregidos
     df_new_corr = simulate_corrected_spectra(
-        df, spectral_cols, lamp_new,
-        ref_spectrum, ref_corrected
+        df_new_grouped,
+        spectral_cols, 
+        ref_spectrum, 
+        ref_corrected
     )
     
+    # Obtener muestras usadas y no usadas
     used_ids = st.session_state.get('selected_ids', list(common_ids))
     other_ids = [i for i in common_ids if i not in used_ids]
     

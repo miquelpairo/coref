@@ -93,27 +93,31 @@ def apply_baseline_correction(baseline_spectrum, correction_vector):
     return corrected
 
 
-def simulate_corrected_spectra(df_kit, spectral_cols, lamp_new, 
-                               baseline_original, baseline_corrected):
+def simulate_corrected_spectra(df_new_grouped, spectral_cols, ref_spectrum, ref_corrected):
     """
-    Simula cómo quedarían los espectros después de aplicar el baseline corregido.
+    Simula como quedarian los espectros despues de aplicar el baseline corregido.
+    
+    NOTA: Esta version simplificada trabaja directamente con el DataFrame agrupado,
+    sin necesidad de filtrar por lampara.
     
     Args:
-        df_kit (pd.DataFrame): DataFrame con mediciones del kit
-        spectral_cols (list): Lista de columnas espectrales
-        lamp_new (str): Nombre de la lámpara nueva
-        baseline_original (np.array): Baseline original
-        baseline_corrected (np.array): Baseline corregido
+        df_new_grouped (pd.DataFrame): DataFrame con espectros agrupados por ID
+        spectral_cols (list): Columnas espectrales
+        ref_spectrum (np.array): Baseline original
+        ref_corrected (np.array): Baseline corregido
         
     Returns:
         pd.DataFrame: DataFrame con espectros corregidos
     """
-    df_corrected = df_kit[df_kit["Note"] == lamp_new].copy()
     
-    # Aplicar corrección
-    correction = baseline_original - baseline_corrected
-    df_corrected[spectral_cols] = (
-        df_corrected[spectral_cols].astype(float).values + correction
-    )
+    # Copiar el DataFrame para no modificar el original
+    df_corrected = df_new_grouped.copy()
+    
+    # Aplicar la correccion a cada espectro:
+    # espectro_corregido = (espectro - baseline_original) + baseline_corregido
+    for idx in df_corrected.index:
+        espectro_original = df_corrected.loc[idx, spectral_cols].values
+        espectro_corregido = (espectro_original - ref_spectrum) + ref_corrected
+        df_corrected.loc[idx, spectral_cols] = espectro_corregido
     
     return df_corrected

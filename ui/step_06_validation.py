@@ -23,7 +23,7 @@ def render_validation_step():
     """
     Renderiza el paso de validacion post-correccion (Paso 6).
     """
-    st.markdown("## PASO 7 DE 7: Validacion Post-Correccion")
+    st.markdown("## PASO 6 DE 6: Validacion Post-Correccion")
     
     # Verificar que existan datos previos
     if not has_kit_data() or not has_correction_data():
@@ -31,8 +31,6 @@ def render_validation_step():
         return
     
     kit_data = st.session_state.kit_data
-    lamp_ref = kit_data['lamp_ref']
-    lamp_new = kit_data['lamp_new']
     mean_diff_original = kit_data['mean_diff']
     
     # Instrucciones
@@ -41,11 +39,9 @@ def render_validation_step():
     
     1. **Instala el baseline corregido** en tu espectrometro (archivo .ref o .csv del Paso 5)
     2. **Reinicia el equipo** si es necesario segun el fabricante
-    3. **Mide el Standard Kit** nuevamente con ambas lamparas:
-       - Lampara de referencia: **{lamp_ref}**
-       - Lampara nueva: **{lamp_new}**
-    4. **Exporta las mediciones** a formato TSV
-    5. **Sube el archivo** aqui abajo
+    3. **Mide el Standard Kit** nuevamente con ambas lamparas
+    4. **Exporta las mediciones** a 2 archivos TSV separados
+    5. **Sube los archivos** aqui abajo
     
     El sistema comparara las diferencias espectrales ANTES y DESPUES de la correccion
     para verificar que el ajuste fue exitoso.
@@ -53,174 +49,140 @@ def render_validation_step():
     
     st.markdown("---")
     
-    # Uploader de archivo de validacion
-    validation_file = st.file_uploader(
-        "Sube el archivo TSV con las mediciones de validacion",
-        type="tsv",
-        key="validation_upload"
+    # Uploaders de validacion
+    st.markdown("### 1️⃣ TSV Referencia (validacion)")
+    ref_val_file = st.file_uploader(
+        "Sube el TSV de REFERENCIA para validacion",
+        type=["tsv", "txt", "csv"],
+        key="ref_validation_upload",
+        help="Mediciones de referencia despues de instalar baseline corregido"
     )
     
-    if validation_file:
+    st.markdown("### 2️⃣ TSV Nueva Lampara (validacion)")
+    new_val_file = st.file_uploader(
+        "Sube el TSV de NUEVA lampara para validacion",
+        type=["tsv", "txt", "csv"],
+        key="new_validation_upload",
+        help="Mediciones de nueva lampara despues de instalar baseline corregido"
+    )
+    
+    if ref_val_file and new_val_file:
         try:
-            process_validation_file(
-                validation_file, 
-                lamp_ref, 
-                lamp_new,
+            process_validation_files(
+                ref_val_file,
+                new_val_file,
                 mean_diff_original
             )
         except Exception as e:
-            st.error(f"Error al procesar el archivo: {str(e)}")
+            st.error(f"Error al procesar los archivos: {str(e)}")
+            import traceback
+            st.error(traceback.format_exc())
     
     # Boton para volver a empezar
     st.markdown("---")
     if st.button("Finalizar y reiniciar proceso", use_container_width=True):
+        st.session_state.unsaved_changes = False
         reset_session_state()
         st.rerun()
 
-
-def process_validation_file(file, lamp_ref_original, lamp_new_original, mean_diff_original):
+def process_validation_files(ref_val_file, new_val_file, mean_diff_original):
     """
-    Procesa el archivo de validacion.
+    Procesa los archivos de validacion (2 archivos separados).
     
     Args:
-        file: Archivo TSV subido
-        lamp_ref_original (str): Lampara de referencia original (del paso 3)
-        lamp_new_original (str): Lampara nueva original (del paso 3)
+        ref_val_file: Archivo TSV de referencia
+        new_val_file: Archivo TSV de nueva lampara
         mean_diff_original (np.array): Diferencia espectral original (antes de correccion)
     """
-    # Cargar archivo
-    df_val = load_tsv_file(file)
+    # Marcar cambios sin guardar
+    st.session_state.unsaved_changes = True
+    
+    # Cargar ambos archivos
+    df_ref_val = load_tsv_file(ref_val_file)
+    df_new_val = load_tsv_file(new_val_file)
     
     # Obtener columnas espectrales
-    spectral_cols = get_spectral_columns(df_val)
+    spectral_cols_ref = get_spectral_columns(df_ref_val)
+    spectral_cols_new = get_spectral_columns(df_new_val)
+    
+    # Validar compatibilidad
+    if len(spectral_cols_ref) != len(spectral_cols_new):
+        st.error(f"""
+        Los archivos tienen diferente numero de canales espectrales:
+        - Referencia: {len(spectral_cols_ref)} canales
+        - Nueva: {len(spectral_cols_new)} canales
+        """)
+        return
+    
+    spectral_cols = spectral_cols_ref
     
     # Convertir columnas espectrales a numerico
-    df_val[spectral_cols] = df_val[spectral_cols].apply(pd.to_numeric, errors="coerce")
+    df_ref_val[spectral_cols] = df_ref_val[spectral_cols].apply(pd.to_numeric, errors="coerce")
+    df_new_val[spectral_cols] = df_new_val[spectral_cols].apply(pd.to_numeric, errors="coerce")
     
     # Filtrar muestras (excluir WSTD)
-    df_val_kit = df_val[df_val["ID"].str.upper() != "WSTD"].copy()
+    df_ref_val_kit = df_ref_val[df_ref_val["ID"].str.upper() != "WSTD"].copy()
+    df_new_val_kit = df_new_val[df_new_val["ID"].str.upper() != "WSTD"].copy()
     
-    if len(df_val_kit) == 0:
-        st.error("No se encontraron muestras validas en el archivo.")
+    if len(df_ref_val_kit) == 0:
+        st.error("No se encontraron muestras validas en el archivo de REFERENCIA")
+        return
+    
+    if len(df_new_val_kit) == 0:
+        st.error("No se encontraron muestras validas en el archivo de NUEVA lampara")
         return
     
     # Obtener informacion basica
-    lamp_options = [lamp for lamp in df_val_kit["Note"].unique() if pd.notna(lamp)]
-    sample_ids = df_val_kit["ID"].unique()
+    sample_ids_ref = df_ref_val_kit["ID"].unique()
+    sample_ids_new = df_new_val_kit["ID"].unique()
     
     # Mostrar informacion
-    st.success("Archivo de validacion cargado correctamente")
+    st.success("Archivos de validacion cargados correctamente")
     
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns(2)
     with col1:
-        st.metric("Mediciones totales", len(df_val_kit))
+        st.markdown("**📁 Archivo Referencia:**")
+        st.write(f"- Mediciones: {len(df_ref_val_kit)}")
+        st.write(f"- Muestras: {len(sample_ids_ref)}")
+    
     with col2:
-        st.metric("Muestras unicas", len(sample_ids))
-    with col3:
-        st.metric("Lamparas detectadas", len(lamp_options))
+        st.markdown("**📁 Archivo Nueva:**")
+        st.write(f"- Mediciones: {len(df_new_val_kit)}")
+        st.write(f"- Muestras: {len(sample_ids_new)}")
     
-    # Seleccion de lamparas para validacion
-    st.markdown("### Identificacion de Lamparas")
-    
-    # Mostrar info de las lámparas originales
-    st.info(f"""
-    **Lamparas usadas en el ajuste original:**
-    - Referencia: **{lamp_ref_original}**
-    - Nueva: **{lamp_new_original}**
-    
-    Puedes mantener la misma configuracion o seleccionar otras si es necesario.
-    """)
-    
-    lamp_ref, lamp_new = render_validation_lamp_selection(
-        lamp_options, 
-        lamp_ref_original, 
-        lamp_new_original
-    )
-    
-    # Verificar que sean lamparas diferentes
-    if lamp_ref == lamp_new:
-        st.error("Debes seleccionar lamparas diferentes para referencia y nueva.")
-        return
-    
-    # Agrupar mediciones por lampara
-    df_ref_val, df_new_val = group_measurements_by_lamp(
-        df_val_kit, spectral_cols, lamp_ref, lamp_new
-    )
+    # Agrupar mediciones por ID
+    df_ref_val_grouped = df_ref_val_kit.groupby("ID")[spectral_cols].mean()
+    df_new_val_grouped = df_new_val_kit.groupby("ID")[spectral_cols].mean()
     
     # Encontrar muestras comunes
-    common_ids_val = find_common_samples(df_ref_val, df_new_val)
+    common_ids_val = find_common_samples(df_ref_val_grouped, df_new_val_grouped)
     
     if not validate_common_samples(common_ids_val):
         return
     
     # Filtrar solo muestras comunes
-    df_ref_val = df_ref_val.loc[common_ids_val]
-    df_new_val = df_new_val.loc[common_ids_val]
+    df_ref_val_grouped = df_ref_val_grouped.loc[common_ids_val]
+    df_new_val_grouped = df_new_val_grouped.loc[common_ids_val]
     
     st.success(f"Muestras comunes encontradas: {len(common_ids_val)}")
     
     # Seleccion de muestras para validacion
-    render_validation_sample_selection(df_val_kit, common_ids_val, lamp_ref, lamp_new)
+    render_validation_sample_selection(common_ids_val)
     
     # Visualizacion de espectros de validacion
     render_validation_spectra_visualization(
-        df_ref_val, df_new_val, spectral_cols, 
-        lamp_ref, lamp_new, common_ids_val
+        df_ref_val_grouped, df_new_val_grouped, spectral_cols, common_ids_val
     )
     
     # Calcular diferencias en validacion
     render_validation_analysis(
-        df_ref_val, df_new_val, spectral_cols,
-        common_ids_val, mean_diff_original,
-        lamp_ref, lamp_new
+        df_ref_val_grouped, df_new_val_grouped, spectral_cols,
+        common_ids_val, mean_diff_original
     )
 
 
-def render_validation_lamp_selection(lamp_options, lamp_ref_default, lamp_new_default):
-    """
-    Renderiza los selectores para identificar lamparas en validacion.
-    
-    Args:
-        lamp_options (list): Lista de lamparas disponibles
-        lamp_ref_default (str): Lampara de referencia por defecto
-        lamp_new_default (str): Lampara nueva por defecto
-        
-    Returns:
-        tuple: (lamp_ref, lamp_new) nombres de las lamparas seleccionadas
-    """
-    col1, col2 = st.columns(2)
-    
-    # Determinar indices por defecto
-    try:
-        ref_index = lamp_options.index(lamp_ref_default)
-    except ValueError:
-        ref_index = 0
-    
-    try:
-        new_index = lamp_options.index(lamp_new_default)
-    except ValueError:
-        new_index = min(1, len(lamp_options) - 1)
-    
-    with col1:
-        lamp_ref = st.selectbox(
-            "Selecciona la lampara de REFERENCIA", 
-            lamp_options, 
-            index=ref_index, 
-            key="validation_lamp_ref_select"
-        )
-    
-    with col2:
-        lamp_new = st.selectbox(
-            "Selecciona la lampara NUEVA", 
-            lamp_options, 
-            index=new_index, 
-            key="validation_lamp_new_select"
-        )
-    
-    return lamp_ref, lamp_new
 
-
-def render_validation_sample_selection(df, common_ids, lamp_ref, lamp_new):
+def render_validation_sample_selection(common_ids):
     """
     Renderiza la interfaz de seleccion de muestras para validacion.
     """
@@ -236,14 +198,6 @@ def render_validation_sample_selection(df, common_ids, lamp_ref, lamp_new):
     # Construir tabla de muestras
     df_samples = pd.DataFrame({
         'ID': list(common_ids),
-        f'Mediciones {lamp_ref}': [
-            len(df[(df['ID'] == i) & (df['Note'] == lamp_ref)]) 
-            for i in common_ids
-        ],
-        f'Mediciones {lamp_new}': [
-            len(df[(df['ID'] == i) & (df['Note'] == lamp_new)]) 
-            for i in common_ids
-        ],
         'Usar en validacion': [
             i in st.session_state.validation_pending_selection 
             for i in common_ids
@@ -256,7 +210,7 @@ def render_validation_sample_selection(df, common_ids, lamp_ref, lamp_new):
                 df_samples,
                 use_container_width=True,
                 hide_index=True,
-                disabled=[f'Mediciones {lamp_ref}', f'Mediciones {lamp_new}'],
+                disabled=['ID'],
                 key="editor_validation_samples"
             )
             
@@ -298,9 +252,7 @@ def render_validation_sample_selection(df, common_ids, lamp_ref, lamp_new):
             f"Confirmadas: {len(st.session_state.get('validation_selected_ids', []))}"
         )
 
-
-def render_validation_spectra_visualization(df_ref_val, df_new_val, spectral_cols,
-                                           lamp_ref, lamp_new, common_ids):
+def render_validation_spectra_visualization(df_ref_val, df_new_val, spectral_cols, common_ids):
     """
     Renderiza la visualizacion de espectros de validacion.
     """
@@ -314,13 +266,14 @@ def render_validation_spectra_visualization(df_ref_val, df_new_val, spectral_col
         
         fig = plot_kit_spectra(
             df_ref_val, df_new_val,
-            spectral_cols, lamp_ref, lamp_new, ids_to_plot
+            spectral_cols, 
+            "Referencia", "Nueva",  # Nombres genericos
+            ids_to_plot
         )
         st.plotly_chart(fig, use_container_width=True)
 
-
 def render_validation_analysis(df_ref_val, df_new_val, spectral_cols, common_ids,
-                               mean_diff_original, lamp_ref, lamp_new):
+                               mean_diff_original):
     """
     Renderiza el analisis de validacion comparando antes y despues.
     """
@@ -344,14 +297,13 @@ def render_validation_analysis(df_ref_val, df_new_val, spectral_cols, common_ids
     st.session_state.validation_data = {
         'df_ref_val': df_ref_val,
         'df_new_val': df_new_val,
-        'lamp_ref': lamp_ref,
-        'lamp_new': lamp_new,
+        'lamp_ref': 'Referencia',  # Nombre generico
+        'lamp_new': 'Nueva',        # Nombre generico
         'common_ids': common_ids,
         'selected_ids': ids_for_val,
         'mean_diff_after': mean_diff_after,
-        'spectral_cols': spectral_cols  # <- AGREGAR ESTA LINEA
+        'spectral_cols': spectral_cols
     }
-    
     
     # Crear DataFrame para visualizacion
     df_comparison = pd.DataFrame({
@@ -370,14 +322,13 @@ def render_validation_analysis(df_ref_val, df_new_val, spectral_cols, common_ids
     render_validation_metrics(mean_diff_original, mean_diff_after)
     
     # Descargar datos de validacion
-    render_validation_download(df_comparison, lamp_ref, lamp_new)
+    render_validation_download(df_comparison)
     
-    # NUEVO: Generar informe completo
+    # Generar informe completo
     render_validation_report_section(mean_diff_original, mean_diff_after)
     
     # Conclusion
     render_validation_conclusion(mean_diff_original, mean_diff_after)
-
 
 def render_validation_report_section(mean_diff_before, mean_diff_after):
     """
@@ -530,7 +481,7 @@ def render_validation_metrics(mean_diff_before, mean_diff_after):
         st.caption(f"Antes: {std_before:.6f}")
 
 
-def render_validation_download(df_comparison, lamp_ref, lamp_new):
+def render_validation_download(df_comparison):
     """
     Renderiza boton de descarga de datos de validacion.
     """
@@ -540,7 +491,7 @@ def render_validation_download(df_comparison, lamp_ref, lamp_new):
     st.download_button(
         "Descargar datos de validacion (CSV)",
         data=csv_val.getvalue(),
-        file_name=f"validacion_{lamp_ref}_vs_{lamp_new}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+        file_name=f"validacion_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
         mime="text/csv",
         use_container_width=True
     )
