@@ -25,6 +25,7 @@ def apply_buchi_styles():
     - Fondo: Blanco
     - Texto: Negro
     - Sidebar: Fondo verde oscuro (#093A34) con texto blanco
+    - Parche: corrige icono roto de los expanders de Streamlit
     """
     st.markdown(f"""
         <style>
@@ -149,7 +150,7 @@ def apply_buchi_styles():
             color: {BUCHI_COLORS['negro']} !important;
         }}
 
-        /* Botón Cerrar Sesión específico - SOBRESCRIBE secondary en main */
+        /* Botón Cerrar Sesión específico - sobrescribe secondary en main */
         section[data-testid="stMain"] .st-key-logout_btn button[data-testid="stBaseButton-secondary"] {{
             background-color: {BUCHI_COLORS['verde_oscuro']} !important;
             color: {BUCHI_COLORS['blanco']} !important;
@@ -186,7 +187,32 @@ def apply_buchi_styles():
             background-color: {BUCHI_COLORS['verde_principal']};
             color: {BUCHI_COLORS['blanco']} !important;
         }}
-        
+
+        /* ===== EXPANDERS =====
+           Fix global del icono roto 'keyboard_arrow_down'
+           y sustitución por una flecha Unicode estable
+        */
+
+        /* Oculta el span interno donde Streamlit intenta renderizar Material Icons */
+        div[data-testid="stExpander"] div[role="button"] span[data-testid="stIconMaterial"] {{
+            display: none !important;
+        }}
+
+        /* Asegura layout razonable para el header del expander */
+        div[data-testid="stExpander"] div[role="button"] {{
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }}
+
+        /* Inserta nuestra propia flecha al final del título del expander */
+        div[data-testid="stExpander"] div[role="button"]::after {{
+            content: "▾";
+            font-size: 1rem;
+            color: {BUCHI_COLORS['negro']};
+            margin-left: auto;
+        }}
+
         </style>
     """, unsafe_allow_html=True)
 
