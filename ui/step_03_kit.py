@@ -113,12 +113,12 @@ def render_kit_step():
             
             col1, col2 = st.columns(2)
             with col1:
-                st.markdown("**📁 Archivo de Referencia:**")
+                st.markdown("** Archivo de Referencia:**")
                 st.write(f"- Mediciones: {len(df_ref_kit)}")
                 st.write(f"- Muestras unicas: {len(df_ref_kit['ID'].unique())}")
             
             with col2:
-                st.markdown("**📁 Archivo Nueva Lampara:**")
+                st.markdown("** Archivo Nueva Lampara:**")
                 st.write(f"- Mediciones: {len(df_new_kit)}")
                 st.write(f"- Muestras unicas: {len(df_new_kit['ID'].unique())}")
             

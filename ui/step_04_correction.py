@@ -19,10 +19,10 @@ def render_correction_step():
     """
     Renderiza el paso de cálculo de corrección espectral (Paso 3).
     """
-    st.markdown("## 📍 PASO 5 DE 7: Cálculo de Corrección Espectral")
+    st.markdown("## PASO 5 DE 7: Cálculo de Corrección Espectral")
     
     if not has_kit_data():
-        st.error("❌ No hay datos del Standard Kit. Vuelve al Paso 3.")
+        st.error(" No hay datos del Standard Kit. Vuelve al Paso 3.")
         return
     
     # Marcar cambios sin guardar al calcular corrección
@@ -40,9 +40,9 @@ def render_correction_step():
     # Información del proceso
     st.info(f"""
     **Calculando la diferencia espectral promedio entre:**
-    - 🔵 Lámpara de referencia: **{lamp_ref}**
-    - 🔴 Lámpara nueva: **{lamp_new}**
-    - 📊 Basado en **{len(common_ids)} muestras** comunes
+    - Lámpara de referencia: **{lamp_ref}**
+    - Lámpara nueva: **{lamp_new}**
+    - Basado en **{len(common_ids)} muestras** comunes
     """)
     
     # Obtener muestras seleccionadas para corrección
@@ -71,12 +71,12 @@ def render_correction_step():
     # ============================================
     # GRÁFICO 1: Muestras usadas en la corrección
     # ============================================
-    st.markdown("### 📊 Diferencias Espectrales - Muestras Usadas")
+    st.markdown("### Diferencias Espectrales - Muestras Usadas")
     
     if len(ids_for_corr) < len(common_ids):
-        st.info(f"📊 Mostrando {len(ids_for_corr)} de {len(common_ids)} muestras (usadas en la corrección)")
+        st.info(f" Mostrando {len(ids_for_corr)} de {len(common_ids)} muestras (usadas en la corrección)")
     else:
-        st.info(f"📊 Mostrando todas las {len(ids_for_corr)} muestras")
+        st.info(f" Mostrando todas las {len(ids_for_corr)} muestras")
     
     fig_used = plot_correction_differences(df_diff, ids_for_corr, ids_for_corr)
     st.plotly_chart(fig_used, use_container_width=True)
@@ -85,9 +85,9 @@ def render_correction_step():
     # GRÁFICO 2: Validación en muestras NO usadas
     # ============================================
     if len(ids_not_used) > 0:
-        st.markdown("### 🔎 Validación - Muestras NO Usadas en la Corrección")
+        st.markdown("### Validación - Muestras NO Usadas en la Corrección")
         st.info(f"""
-        📊 Mostrando {len(ids_not_used)} muestras que **NO** se usaron para calcular la corrección.
+         Mostrando {len(ids_not_used)} muestras que **NO** se usaron para calcular la corrección.
         
         Este gráfico muestra cómo la corrección calculada afecta a muestras independientes,
         permitiendo validar que la corrección es robusta y generalizable.
@@ -99,7 +99,7 @@ def render_correction_step():
         # Estadísticas de validación
         render_validation_statistics(df_diff, ids_not_used, mean_diff)
     else:
-        st.info("ℹ️ Todas las muestras se están usando para la corrección. No hay muestras de validación disponibles.")
+        st.info("Todas las muestras se están usando para la corrección. No hay muestras de validación disponibles.")
     
     # Estadísticas de corrección
     render_correction_statistics(mean_diff)
@@ -114,11 +114,11 @@ def render_correction_step():
     st.markdown("---")
     col_continue, col_skip = st.columns([3, 1])
     with col_continue:
-        if st.button("➡️ Continuar al Paso 6", type="primary", use_container_width=True):
+        if st.button("Continuar al Paso 6", type="primary", use_container_width=True):
             st.session_state.unsaved_changes = False  # Limpiar flag
             go_to_next_step()
     with col_skip:
-        if st.button("⏭️ Omitir", key="skip_step4", use_container_width=True):
+        if st.button("Omitir", key="skip_step4", use_container_width=True):
             st.session_state.unsaved_changes = False  # Limpiar flag
             go_to_next_step()
 
@@ -160,7 +160,7 @@ def render_correction_statistics(mean_diff):
     Args:
         mean_diff (np.array): Vector de corrección promedio
     """
-    st.markdown("### 📈 Estadísticas de la Corrección")
+    st.markdown("### Estadísticas de la Corrección")
     
     col1, col2, col3 = st.columns(3)
     
@@ -190,7 +190,7 @@ def render_download_correction_table(df_diff, lamp_ref, lamp_new):
     df_diff.to_csv(csv_diff, index=False)
     
     st.download_button(
-        "📄 Descargar tabla de corrección (CSV)",
+        "Descargar tabla de corrección (CSV)",
         data=csv_diff.getvalue(),
         file_name=f"correccion_{lamp_ref}_vs_{lamp_new}.csv",
         mime="text/csv"
@@ -205,7 +205,7 @@ def render_validation_statistics(df_diff, ids_not_used, mean_diff):
         ids_not_used (list): IDs no usados en corrección
         mean_diff (np.array): Vector de corrección promedio
     """
-    st.markdown("#### 📊 Estadísticas de Validación")
+    st.markdown("#### Estadísticas de Validación")
     
     # Calcular diferencias promedio por muestra de validación
     validation_diffs = []
@@ -250,8 +250,8 @@ def render_validation_statistics(df_diff, ids_not_used, mean_diff):
         
         # Interpretación
         if max_residual < 0.01:
-            st.success("✅ Excelente validación: Las muestras no usadas muestran diferencias muy similares a la corrección calculada.")
+            st.success("Excelente validación: Las muestras no usadas muestran diferencias muy similares a la corrección calculada.")
         elif max_residual < 0.05:
-            st.info("ℹ️ Buena validación: Las muestras no usadas son consistentes con la corrección.")
+            st.info("Buena validación: Las muestras no usadas son consistentes con la corrección.")
         else:
-            st.warning("⚠️ Atención: Hay diferencias significativas en las muestras de validación. Considera revisar la selección de muestras.")
+            st.warning("Atención: Hay diferencias significativas en las muestras de validación. Considera revisar la selección de muestras.")

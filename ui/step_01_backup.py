@@ -10,10 +10,10 @@ def render_backup_step():
     """
     Renderiza la pantalla de advertencia de backup (Paso 1).
     """
-    st.markdown("## 📍 PASO 2 de 7: Advertencia Importante")
+    st.markdown("## PASO 2 de 7: Advertencia Importante")
     st.warning(INSTRUCTIONS['backup'])
 
-    st.markdown("### 📁 Ubicaciones de los archivos baseline:")
+    st.markdown("### Ubicaciones de los archivos baseline:")
     col1, col2 = st.columns(2)
     
     with col1:
@@ -31,11 +31,11 @@ def render_backup_step():
     col_btn1, col_btn2 = st.columns(2)
     
     with col_btn1:
-        if st.button("✅ Ya realicé el backup, continuar", type="primary", use_container_width=True):
+        if st.button(" Ya realicé el backup, continuar", type="primary", use_container_width=True):
             st.session_state.backup_done = True
             go_to_next_step()
     
     with col_btn2:
-        if st.button("⏭️ Omitir este paso (no recomendado)", use_container_width=True):
+        if st.button(" Omitir este paso (no recomendado)", use_container_width=True):
             st.session_state.backup_done = False
             go_to_next_step()

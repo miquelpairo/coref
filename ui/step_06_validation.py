@@ -50,7 +50,7 @@ def render_validation_step():
     st.markdown("---")
     
     # Uploaders de validacion
-    st.markdown("### 1️⃣ TSV Referencia (validacion)")
+    st.markdown("### 1️ TSV Referencia (validacion)")
     ref_val_file = st.file_uploader(
         "Sube el TSV de REFERENCIA para validacion",
         type=["tsv", "txt", "csv"],
@@ -58,7 +58,7 @@ def render_validation_step():
         help="Mediciones de referencia despues de instalar baseline corregido"
     )
     
-    st.markdown("### 2️⃣ TSV Nueva Lampara (validacion)")
+    st.markdown("### 2️ TSV Nueva Lampara (validacion)")
     new_val_file = st.file_uploader(
         "Sube el TSV de NUEVA lampara para validacion",
         type=["tsv", "txt", "csv"],
@@ -141,12 +141,12 @@ def process_validation_files(ref_val_file, new_val_file, mean_diff_original):
     
     col1, col2 = st.columns(2)
     with col1:
-        st.markdown("**📁 Archivo Referencia:**")
+        st.markdown("**Archivo Referencia:**")
         st.write(f"- Mediciones: {len(df_ref_val_kit)}")
         st.write(f"- Muestras: {len(sample_ids_ref)}")
     
     with col2:
-        st.markdown("**📁 Archivo Nueva:**")
+        st.markdown("**Archivo Nueva:**")
         st.write(f"- Mediciones: {len(df_new_val_kit)}")
         st.write(f"- Muestras: {len(sample_ids_new)}")
     
@@ -335,9 +335,9 @@ def render_validation_report_section(mean_diff_before, mean_diff_after):
     Renderiza la seccion de generacion de informe de validacion.
     """
     st.markdown("---")
-    st.markdown("### 📋 Generar Informe Completo de Validacion")
+    st.markdown("### Generar Informe Completo de Validacion")
     
-    if st.button("📄 Generar Informe con Validacion", use_container_width=True, type="primary"):
+    if st.button("Generar Informe con Validacion", use_container_width=True, type="primary"):
         try:
             from core.report_generator import generate_validation_report
             
@@ -374,7 +374,7 @@ def render_validation_report_section(mean_diff_before, mean_diff_after):
                 mime="text/html",
                 use_container_width=True
             )
-            st.success("✅ Informe de validacion generado correctamente")
+            st.success("Informe de validacion generado correctamente")
             
         except Exception as e:
             st.error(f"❌ Error al generar el informe: {str(e)}")

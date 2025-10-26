@@ -12,6 +12,15 @@ from core.spectral_processing import simulate_corrected_spectra
 from utils.plotting import plot_corrected_spectra_comparison
 import plotly.io as pio
 
+def load_buchi_css():
+    """Carga el CSS corporativo de Buchi"""
+    try:
+        with open('buchi_report_styles_simple.css', 'r', encoding='utf-8') as f:
+            return f.read()
+    except FileNotFoundError:
+        # Fallback al CSS original si no encuentra el archivo
+        from config import REPORT_STYLE
+        return REPORT_STYLE
 
 def generate_html_report(kit_data, baseline_data, ref_corrected, origin):
     """Genera un informe HTML completo del proceso de ajuste."""
@@ -97,7 +106,7 @@ def start_html_document(client_data):
     <head>
         <meta charset="UTF-8">
         <style>
-            {REPORT_STYLE}
+            {load_buchi_css()}
         </style>
     </head>
     <body>

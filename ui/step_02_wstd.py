@@ -61,12 +61,12 @@ def render_wstd_step():
             selected_indices = edited_df[edited_df['Seleccionar'] == True].index.tolist()
             
             if len(selected_indices) == 0:
-                st.warning("⚠️ No has seleccionado ninguna fila. Por favor, marca las mediciones WSTD.")
+                st.warning(" No has seleccionado ninguna fila. Por favor, marca las mediciones WSTD.")
                 return
             
             df_wstd = df.loc[selected_indices].copy()
             
-            st.success(f"✅ {len(df_wstd)} filas seleccionadas para análisis WSTD")
+            st.success(f" {len(df_wstd)} filas seleccionadas para análisis WSTD")
             
             # Mostrar info detallada
             st.write("**Filas seleccionadas:**")

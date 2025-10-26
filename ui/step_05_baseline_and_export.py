@@ -286,14 +286,14 @@ def render_correction_and_export_section():
     col_next, col_restart = st.columns([3, 1])
     
     with col_next:
-        if st.button("➡️ Continuar a Validacion", type="primary", use_container_width=True):
+        if st.button("Continuar a Validacion", type="primary", use_container_width=True):
             st.session_state.unsaved_changes = False  # Limpiar flag
             from session_manager import go_to_next_step
             go_to_next_step()
             st.rerun()
     
     with col_restart:
-        if st.button("🔄 Reiniciar proceso", use_container_width=True):
+        if st.button("Reiniciar proceso", use_container_width=True):
             st.session_state.unsaved_changes = False  # Limpiar flag
             reset_session_state()
             st.rerun()

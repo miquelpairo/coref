@@ -6,12 +6,12 @@ import streamlit as st
 from config import STEPS
 from session_manager import get_current_step
 
-
 def render_sidebar():
     """
     Renderiza la barra lateral con el progreso de los pasos.
     """
     with st.sidebar:
+               
         st.markdown("## Progreso")
         
         current_step = get_current_step()
@@ -25,7 +25,12 @@ def render_sidebar():
                 # Paso completado - CLICKABLE con seguridad
                 col1, col2 = st.columns([0.1, 0.9])
                 with col1:
-                    st.markdown("✅")
+                    st.markdown('''
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="12" r="10" fill="white" stroke="#64B445" stroke-width="2"/>
+                            <path d="M9 12l2 2 4-4" stroke="#000000" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    ''', unsafe_allow_html=True)
                 with col2:
                     if st.button(
                         f"**{step_number}. {step_name}**",
@@ -48,7 +53,12 @@ def render_sidebar():
                 # Paso actual - NO CLICKABLE
                 col1, col2 = st.columns([0.1, 0.9])
                 with col1:
-                    st.markdown("⏳")
+                    st.markdown('''
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="12" r="10" stroke="#4DB9D2" stroke-width="2" fill="none"/>
+                            <path d="M8 12h8m-4-4l4 4-4 4" stroke="#4DB9D2" stroke-width="2" fill="none" stroke-linecap="round"/>
+                        </svg>
+                    ''', unsafe_allow_html=True)
                 with col2:
                     st.markdown(f"**{step_number}. {step_name}**")
                 
@@ -56,7 +66,11 @@ def render_sidebar():
                 # Paso pendiente - NO CLICKABLE
                 col1, col2 = st.columns([0.1, 0.9])
                 with col1:
-                    st.markdown("○")
+                    st.markdown('''
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="12" r="10" stroke="#999" stroke-width="2" fill="none"/>
+                        </svg>
+                    ''', unsafe_allow_html=True)
                 with col2:
                     st.markdown(f"{step_number}. {step_name}")
         

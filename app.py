@@ -12,14 +12,19 @@ from ui.step_05_baseline_and_export import render_baseline_and_export_step
 from ui.step_06_validation import render_validation_step
 from ui.utilities import render_utilities_section
 from auth import check_password, logout
-
+from buchi_streamlit_theme import apply_buchi_styles
+import streamlit.components.v1 as components
 
 def main():
     """Aplicacion principal de Baseline Adjustment Tool"""
     
     # Configuracion de la pagina
     st.set_page_config(**PAGE_CONFIG)
-
+    
+    # Aplicar estilos corporativos Buchi
+    apply_buchi_styles()
+   
+        
     # Verificar autenticacion
     if not check_password():
         st.stop()
@@ -27,12 +32,12 @@ def main():
     # Inicializar estado de sesion
     initialize_session_state()
     
-    # 👇 Hook post-rerun: si vengo de un cambio de paso, sube al top
+    # Hook post-rerun: si vengo de un cambio de paso, sube al top
     if st.session_state.get("_scroll_to_top"):
         components.html(
             """
             <script>
-              // intenta en raíz y en contenedores comunes de Streamlit
+              // intenta en raiz y en contenedores comunes de Streamlit
               (function(){
                 const doc = window.parent?.document || document;
                 const mains = doc.querySelectorAll('section.main, main, body, html');
@@ -55,7 +60,7 @@ def main():
         st.markdown("### Asistente para ajuste de linea base en espectrometros NIR")
     with col2:
         st.markdown("")  # Espaciado
-        if st.button("Cerrar Sesion", use_container_width=True):
+        if st.button("Cerrar Sesion", use_container_width=True, key="logout_btn"):
             logout()
     
     # Sidebar con progreso
@@ -63,26 +68,24 @@ def main():
     
     # Router de pasos
     current_step = st.session_state.step
-
     if current_step == 1:
         render_client_info_step()              # 1: Info Cliente
     elif current_step == 2:
         render_backup_step()                   # 2: Backup
     elif current_step == 3:
-        render_wstd_step()                     # 3: Diagnóstico WSTD
+        render_wstd_step()                     # 3: Diagnostico WSTD
     elif current_step == 4:
-        render_kit_step()                      # 4: Medición Kit
+        render_kit_step()                      # 4: Medicion Kit
     elif current_step == 5:
-        render_correction_step()               # 5: Cálculo Corrección
+        render_correction_step()               # 5: Calculo Correccion
     elif current_step == 6:
-        render_baseline_and_export_step()      # 6: Baseline + Exportación
+        render_baseline_and_export_step()      # 6: Baseline + Exportacion
     elif current_step == 7:
-        render_validation_step()               # 7: Validación
+        render_validation_step()               # 7: Validacion
     
     # Seccion de utilidades (siempre visible)
     st.markdown("---")
     render_utilities_section()
-
 
 if __name__ == "__main__":
     main()

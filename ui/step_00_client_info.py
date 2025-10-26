@@ -24,11 +24,11 @@ def render_client_info_step():
         with col1:
             client_name = st.text_input(
                 "Nombre del Cliente *", 
-                placeholder="Ej: Agropecuaria San Jose"
+                placeholder="Ej: Empresa"
             )
             contact_person = st.text_input(
                 "Persona de Contacto", 
-                placeholder="Ej: Juan Perez"
+                placeholder="Ej: Nombre y apellido"
             )
             contact_email = st.text_input(
                 "Email de Contacto", 
