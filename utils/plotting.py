@@ -251,42 +251,37 @@ def plot_correction_summary(mean_diff):
     return fig
 
 
-def plot_baseline_spectrum(baseline_spectrum, lamp_name):
+def plot_baseline_spectrum(spectrum, title="Espectro del Baseline"):
     """
-    Crea gráfico del espectro de baseline.
+    Crea un gráfico del espectro del baseline.
     
     Args:
-        baseline_spectrum (np.array): Espectro del baseline
-        lamp_name (str): Nombre de la lámpara
-        
-    Returns:
-        plotly.graph_objects.Figure: Figura con el gráfico
+        spectrum: Espectro del baseline
+        title: Título del gráfico (opcional)
     """
+    import plotly.graph_objects as go
+    
+    channels = list(range(1, len(spectrum) + 1))
+    
     fig = go.Figure()
-    
-    channels = list(range(1, len(baseline_spectrum) + 1))
-    
     fig.add_trace(go.Scatter(
         x=channels,
-        y=baseline_spectrum,
+        y=spectrum,
         mode='lines',
-        name='Baseline',
-        line=dict(width=2, color='blue'),
-        hovertemplate='Canal: %{x}<br>Intensidad: %{y:.2f}<extra></extra>'
+        line=dict(color='blue', width=2),
+        name='Baseline'
     ))
     
     fig.update_layout(
-        title=f'Baseline original de {lamp_name}',
+        title=title,
         xaxis_title='Canal espectral',
         yaxis_title='Intensidad',
-        height=400,
-        hovermode='closest',
-        template='plotly_white'
+        template='plotly_white',
+        height=500
     )
     
     return fig
-
-
+    
 def plot_baseline_comparison(baseline_original, baseline_corrected, spectral_cols):
     """
     Crea gráfico comparativo de baseline original vs corregido.

@@ -564,7 +564,7 @@ def generate_baseline_info(ref_corrected, header, origin):
     kit_data = st.session_state.kit_data
     lamp_new = kit_data['lamp_new']
     
-    fig = plot_baseline_spectrum(ref_corrected, lamp_new)
+    fig = plot_baseline_spectrum(ref_corrected, title="Baseline Corregido")
     
     # Convertir a HTML
     html += fig.to_html(

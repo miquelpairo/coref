@@ -126,7 +126,7 @@ def process_ref_file(file, spectral_cols, lamp_new):
     
     # Visualizar baseline
     with st.expander("Ver espectro del baseline cargado"):
-        fig = plot_baseline_spectrum(ref_spectrum, lamp_new)
+        fig = plot_baseline_spectrum(ref_spectrum, title="Baseline Cargado")
         st.plotly_chart(fig, use_container_width=True)
     
     # Guardar datos
@@ -177,7 +177,7 @@ def process_csv_file(file, spectral_cols, lamp_new):
     
     # Visualizar baseline
     with st.expander("Ver espectro del baseline cargado"):
-        fig = plot_baseline_spectrum(ref_spectrum, lamp_new)
+        fig = plot_baseline_spectrum(ref_spectrum, title="Baseline")
         st.plotly_chart(fig, use_container_width=True)
     
     # Guardar datos

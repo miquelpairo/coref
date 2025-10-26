@@ -340,6 +340,38 @@ def apply_buchi_styles():
             display: inline-block;
             vertical-align: middle;
         }}
+        
+                /* ===== FIX ICONO MATERIAL DEL TOGGLE DE SIDEBAR (MODO COLAPSADO) =====
+           En streamlit.io, cuando la sidebar está plegada aparece un botón flotante
+           para volver a abrirla. Ese botón muestra texto literal
+           tipo "keyboard_double_arrow_right" en vez del icono material.
+           Aquí lo ocultamos y metemos una flecha estable.
+        */
+
+        /* 1. Ocultamos el texto crudo del icono material en el botón flotante */
+        button span[data-testid="stIconMaterial"] {{
+            font-size: 0 !important;
+            line-height: 0 !important;
+            color: transparent !important;
+        }}
+
+        /* 2. Añadimos nuestra flecha por defecto (abrir sidebar) */
+        button span[data-testid="stIconMaterial"]::after {{
+            content: "▸";
+            font-size: 1rem;
+            line-height: 1rem;
+            color: {BUCHI_COLORS['negro']};
+            display: inline-block;
+            vertical-align: middle;
+        }}
+
+        /* 3. Si el botón está dentro del propio sidebar (expanded),
+              usamos la versión blanca, no negra */
+        [data-testid="stSidebar"] button span[data-testid="stIconMaterial"]::after {{
+            content: "▸";
+            color: #FFFFFF;
+        }}
+
 
 
 
