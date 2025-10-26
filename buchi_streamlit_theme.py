@@ -189,11 +189,71 @@ def apply_buchi_styles():
         }}
 
         /* ===== EXPANDERS =====
-           Parche global para ocultar 'keyboard_arrow_down' en todos los expanders
-           y dibujar nuestra propia flecha.
+           Parche global para ocultar 'keyboard_arrow_*'
+           y dibujar una flecha consistente en local y en streamlit.io
         */
 
-        /* Aseguramos layout del header del expander */
+        /* --- CASO STREAMLIT CLOUD (usa <details><summary>...) --- */
+
+        /* 1. Oculta el span con data-testid="stIconMaterial" dentro del summary */
+        details > summary [data-testid="stIconMaterial"] {{
+            display: none !important;
+            visibility: hidden !important;
+        }}
+
+        /* 2. Ajusta el summary para posicionar nuestra flecha propia */
+        details > summary {{
+            position: relative !important;
+            list-style: none !important; /* quita el triángulo por defecto de <summary> en algunos navegadores */
+            padding-right: 2rem !important;
+            cursor: pointer;
+            display: flex !important;
+            align-items: center !important;
+            gap: 0.5rem !important;
+            color: inherit !important;
+        }}
+
+        /* 3. Flecha cuando el expander está cerrado (details SIN open) */
+        details:not([open]) > summary::after {{
+            content: "▾";
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1rem;
+            font-weight: 400;
+            color: {BUCHI_COLORS['negro']};
+        }}
+
+        /* 4. Flecha cuando está abierto (details[open]) */
+        details[open] > summary::after {{
+            content: "▴";
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1rem;
+            font-weight: 400;
+            color: {BUCHI_COLORS['negro']};
+        }}
+
+        /* 5. Asegura que el texto del título siga visible
+              (Streamlit mete el título dentro de <div data-testid="stMarkdownContainer"><p>...</p></div>)
+              No lo tocamos de color para no pelear con tus overrides globales,
+              pero garantizamos que no colapse por herencia de font-size:0 de reglas anteriores.
+        */
+        details > summary [data-testid="stMarkdownContainer"],
+        details > summary [data-testid="stMarkdownContainer"] * {{
+            font-size: inherit !important;
+            line-height: inherit !important;
+            color: inherit !important;
+            visibility: visible !important;
+            display: block !important;
+        }}
+
+        /* --- CASO LOCAL (usa div[data-testid="stExpander"] ... role="button") --- */
+
+        /* Asegura layout tipo flex en local */
         div[data-testid="stExpander"] > div[role="button"] {{
             display: flex !important;
             align-items: center !important;
@@ -205,13 +265,13 @@ def apply_buchi_styles():
             color: inherit !important;
         }}
 
-        /* 1. Mata cualquier span que intente ser el icono de Material Icons */
+        /* Oculta el span con el icono roto en local */
         div[data-testid="stExpander"] > div[role="button"] span[data-testid="stIconMaterial"] {{
             display: none !important;
             visibility: hidden !important;
         }}
 
-        /* 2. Mata también cualquier span suelto ANTES del título que contenga texto tipo 'keyboard_arrow_*' */
+        /* Evita que se vea texto como 'keyboard_arrow_down' en spans sueltos */
         div[data-testid="stExpander"] > div[role="button"] span {{
             font-size: 0 !important;
             line-height: 0 !important;
@@ -222,8 +282,10 @@ def apply_buchi_styles():
             display: inline-block !important;
         }}
 
-        /* 3. Recupera visibilidad normal del título en <p> */
-        div[data-testid="stExpander"] > div[role="button"] p {{
+        /* Rehabilita el texto bueno (el título) donde Streamlit lo pone normalmente */
+        div[data-testid="stExpander"] > div[role="button"] p,
+        div[data-testid="stExpander"] > div[role="button"] div[data-testid="stMarkdownContainer"],
+        div[data-testid="stExpander"] > div[role="button"] div[data-testid="stMarkdownContainer"] * {{
             font-size: inherit !important;
             line-height: inherit !important;
             color: inherit !important;
@@ -234,19 +296,7 @@ def apply_buchi_styles():
             visibility: visible !important;
         }}
 
-        /* 4. Y si Streamlit usa <div> en lugar de <p> para el título, también */
-        div[data-testid="stExpander"] > div[role="button"] div {{
-            font-size: inherit !important;
-            line-height: inherit !important;
-            color: inherit !important;
-            width: auto !important;
-            height: auto !important;
-            overflow: visible !important;
-            display: inline-block !important;
-            visibility: visible !important;
-        }}
-
-        /* 5. Nuestra propia flecha con estado cerrado/abierto */
+        /* Flecha custom en local (aria-expanded false/true) */
         div[data-testid="stExpander"] > div[role="button"][aria-expanded="false"]::after {{
             content: "▾";
             position: absolute;
@@ -268,6 +318,7 @@ def apply_buchi_styles():
             font-weight: 400;
             color: {BUCHI_COLORS['negro']};
         }}
+
 
 
 
