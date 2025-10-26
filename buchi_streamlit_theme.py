@@ -190,28 +190,69 @@ def apply_buchi_styles():
 
         /* ===== EXPANDERS =====
            Fix global del icono roto 'keyboard_arrow_down'
-           y sustitución por una flecha Unicode estable
+           y sustitución por una flecha Unicode estable con estado abierto/cerrado
         */
 
-        /* Oculta el span interno donde Streamlit intenta renderizar Material Icons */
-        div[data-testid="stExpander"] div[role="button"] span[data-testid="stIconMaterial"] {{
+        /* 1. Forzamos layout del header del expander */
+        div[data-testid="stExpander"] > div[role="button"] {
+            display: flex !important;
+            align-items: center !important;
+            gap: 0.5rem !important;
+            position: relative !important;
+            padding-right: 2rem !important; /* dejamos hueco para la flecha custom */
+            color: inherit !important;
+        }
+
+        /* 2. Ocultamos cualquier intento de Streamlit de meter su icono/material */
+        div[data-testid="stExpander"] > div[role="button"] span[data-testid="stIconMaterial"] {
             display: none !important;
-        }}
+            visibility: hidden !important;
+            font-size: 0 !important;
+            line-height: 0 !important;
+            width: 0 !important;
+            height: 0 !important;
+            overflow: hidden !important;
+        }
 
-        /* Asegura layout razonable para el header del expander */
-        div[data-testid="stExpander"] div[role="button"] {{
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }}
+        /* 3. También ocultamos el texto literal que a veces queda dentro del span
+              (por ejemplo 'keyboard_arrow_down') si Streamlit lo mete suelto */
+        div[data-testid="stExpander"] > div[role="button"] span {
+            /* si es el icono/material mal renderizado, lo anulamos */
+            color: transparent !important;
+            font-size: 0 !important;
+            line-height: 0 !important;
+        }
 
-        /* Inserta nuestra propia flecha al final del título del expander */
-        div[data-testid="stExpander"] div[role="button"]::after {{
+        /* OJO: NO tocamos el <p> que contiene el título del expander.
+           Ese <p> es el texto bueno que tú ves ("Utilidades...", etc.).
+           Lo queremos visible tal cual. */
+
+        /* 4. Añadimos nuestra flecha al header del expander como pseudo-elemento.
+              Estado CERRADO (aria-expanded="false") -> flecha hacia abajo ▾
+        */
+        div[data-testid="stExpander"] > div[role="button"][aria-expanded="false"]::after {
             content: "▾";
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
             font-size: 1rem;
             color: {BUCHI_COLORS['negro']};
-            margin-left: auto;
-        }}
+            font-weight: 400;
+        }
+
+        /* 5. Estado ABIERTO (aria-expanded="true") -> flecha hacia arriba ▴ */
+        div[data-testid="stExpander"] > div[role="button"][aria-expanded="true"]::after {
+            content: "▴";
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1rem;
+            color: {BUCHI_COLORS['negro']};
+            font-weight: 400;
+        }
+
 
         </style>
     """, unsafe_allow_html=True)
