@@ -95,29 +95,11 @@ def apply_baseline_correction(baseline_spectrum, correction_vector):
 
 def simulate_corrected_spectra(df_new_grouped, spectral_cols, ref_spectrum, ref_corrected):
     """
-    Simula como quedarian los espectros despues de aplicar el baseline corregido.
-    
-    NOTA: Esta version simplificada trabaja directamente con el DataFrame agrupado,
-    sin necesidad de filtrar por lampara.
-    
-    Args:
-        df_new_grouped (pd.DataFrame): DataFrame con espectros agrupados por ID
-        spectral_cols (list): Columnas espectrales
-        ref_spectrum (np.array): Baseline original
-        ref_corrected (np.array): Baseline corregido
-        
-    Returns:
-        pd.DataFrame: DataFrame con espectros corregidos
+    Simula cómo quedarían los espectros después de aplicar el baseline corregido.
+    Trabaja directamente sobre el DataFrame agrupado por ID.
     """
-    
-    # Copiar el DataFrame para no modificar el original
-    df_corrected = df_new_grouped.copy()
-    
-    # Aplicar la correccion a cada espectro:
-    # espectro_corregido = (espectro - baseline_original) + baseline_corregido
-    for idx in df_corrected.index:
-        espectro_original = df_corrected.loc[idx, spectral_cols].values
-        espectro_corregido = (espectro_original - ref_spectrum) + ref_corrected
-        df_corrected.loc[idx, spectral_cols] = espectro_corregido
-    
+    df_new_only = df_new_grouped[spectral_cols].copy()
+    delta = ref_corrected - ref_spectrum
+    df_corrected = df_new_only + delta  # aplica la corrección por broadcasting
     return df_corrected
+

@@ -319,6 +319,27 @@ def apply_buchi_styles():
             color: {BUCHI_COLORS['negro']};
         }}
 
+        /* ===== FIX ICONO MATERIAL EN SIDEBAR =====
+           En Streamlit Cloud a veces aparece el texto literal "keyboard_arrow_right"
+           o "keyboard_arrow_down" dentro de span[data-testid="stIconMaterial"].
+           Lo ocultamos y lo reemplazamos por una flecha simple que no depende de Material Icons.
+        */
+
+        [data-testid="stSidebar"] span[data-testid="stIconMaterial"] {{
+            font-size: 0 !important;
+            line-height: 0 !important;
+            color: transparent !important;
+        }}
+
+        /* Si el span roto está dentro de la sidebar, añadimos nuestra flecha decorativa */
+        [data-testid="stSidebar"] span[data-testid="stIconMaterial"]::after {{
+            content: "›";
+            font-size: 0.9rem;
+            line-height: 1rem;
+            color: #FFFFFF; /* Blanco porque tu sidebar es verde oscuro */
+            display: inline-block;
+            vertical-align: middle;
+        }}
 
 
 

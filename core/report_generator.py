@@ -73,16 +73,17 @@ def generate_html_report(kit_data, baseline_data, ref_corrected, origin):
     
     # Gráficos ← AQUÍ ESTÁ EL ERROR
     html += generate_charts_section(
-        df,                 # 1
-        df_ref_grouped,     # 2
-        spectral_cols,      # 3
-        lamp_ref,           # 4
-        lamp_new,           # 5
-        common_ids,         # 6
-        selected_ids,       # 7 ← ESTE ESTABA FALTANDO
-        ref_spectrum,       # 8
-        ref_corrected       # 9
+        df_ref_grouped=df_ref_grouped,
+        df_new_grouped=df_new_grouped,
+        spectral_cols=spectral_cols,
+        lamp_ref=lamp_ref,
+        lamp_new=lamp_new,
+        common_ids=common_ids,
+        selected_ids=selected_ids,
+        ref_spectrum=ref_spectrum,
+        ref_corrected=ref_corrected
     )
+
     
     # Footer
     html += generate_footer()
@@ -110,10 +111,25 @@ def start_html_document(client_data):
         </style>
     </head>
     <body>
-        <h1>📊 Informe de Ajuste de Baseline NIR</h1>
+        <h1>Informe de Ajuste de Baseline NIR</h1>
+        
+        <div class="toc-box">
+            <h2>Índice</h2>
+            <ul>
+                <li><a href="#info-cliente">Información del Cliente</a></li>
+                <li><a href="#wstd-section">Diagnóstico WSTD</a></li>
+                <li><a href="#process-details">Detalles del Proceso</a></li>
+                <li><a href="#samples">Muestras del Standard Kit</a></li>
+                <li><a href="#correction-stats">Estadísticas de la Corrección</a></li>
+                <li><a href="#baseline-info">Baseline Generado</a></li>
+                <li><a href="#charts-section">Resultados Gráficos</a></li>
+                <li><a href="#validation-section">Validación (si aplica)</a></li>
+            </ul>
+        </div>
 
-        <div class="info-box">
-            <h2>👤 Información del Cliente</h2>
+
+        <div class="info-box" id="info-cliente">
+            <h2>Información del Cliente</h2>
             <div class="metric">
                 <span class="metric-label">Cliente:</span>
                 <span class="metric-value">{client_data.get('client_name', 'N/A')}</span>
@@ -168,8 +184,8 @@ def generate_wstd_section(wstd_data):
     spectral_cols = wstd_data['spectral_cols']
     
     html = """
-        <div class="warning-box">
-            <h2>🔍 Diagnóstico Inicial - White Standard (sin línea base)</h2>
+        <div class="warning-box" id="wstd-section">
+            <h2>Diagnóstico Inicial - White Standard (sin línea base)</h2>
             <p><strong>Estado del sistema ANTES del ajuste:</strong></p>
             <table>
                 <tr>
@@ -236,7 +252,7 @@ def generate_wstd_charts(df_wstd, spectral_cols):
     import plotly.graph_objects as go
     from plotly.subplots import make_subplots
     
-    html = "<h2>📊 Gráficos de Diagnóstico WSTD</h2>"
+    html = "<h2>Gráficos de Diagnóstico WSTD</h2>"
     
     # Crear el gráfico
     fig = make_subplots(
@@ -352,8 +368,8 @@ def generate_process_details(lamp_ref, lamp_new, n_spectral, n_samples, origin):
     used_ids = st.session_state.get('selected_ids', [])
     
     html = f"""
-        <div class="info-box">
-            <h2>🔬 Detalles del Proceso</h2>
+        <div class="info-box" id="process-details">
+            <h2>Detalles del Proceso</h2>
             <div class="metric">
                 <span class="metric-label">Lámpara de Referencia:</span>
                 <span class="metric-value">{lamp_ref}</span>
@@ -402,7 +418,7 @@ def generate_samples_table(df, common_ids, lamp_ref, lamp_new):
     used_ids = st.session_state.get('selected_ids', list(common_ids))
     
     html = """
-        <h2>📦 Muestras del Standard Kit</h2>
+        <h2 id="samples"> Muestras del Standard Kit</h2>
         <table>
             <tr>
                 <th>ID Muestra</th>
@@ -445,8 +461,8 @@ def generate_correction_statistics(mean_diff):
     std_corr = np.std(mean_diff)
     
     html = f"""
-        <div class="info-box">
-            <h2>📈 Estadísticas de la Corrección</h2>
+        <div class="info-box" id="correction-stats">
+            <h2>Estadísticas de la Corrección</h2>
             <div class="metric">
                 <span class="metric-label">Corrección Máxima:</span>
                 <span class="metric-value">{max_corr:.6f}</span>
@@ -477,8 +493,8 @@ def generate_baseline_info(ref_corrected, header, origin):
         str: HTML de información del baseline
     """
     html = f"""
-        <div class="info-box">
-            <h2>📊 Baseline Generado</h2>
+        <div class="info-box" id="baseline-info">
+            <h2>Baseline Generado</h2>
             <div class="metric">
                 <span class="metric-label">Puntos Espectrales:</span>
                 <span class="metric-value">{len(ref_corrected)}</span>
@@ -539,119 +555,79 @@ def generate_notes_section(notes):
     return html
 
 
-def generate_charts_section(df, df_ref_grouped, spectral_cols,
-                           lamp_ref, lamp_new, common_ids,
-                           ref_spectrum, ref_corrected):
+def generate_charts_section(
+    df_ref_grouped,
+    df_new_grouped,
+    spectral_cols,
+    lamp_ref,
+    lamp_new,
+    common_ids,
+    selected_ids,
+    ref_spectrum,
+    ref_corrected
+):
     """
-    Genera la sección de gráficos del informe.
-    
-    Args:
-        df (pd.DataFrame): DataFrame completo
-        df_ref_grouped (pd.DataFrame): Mediciones de referencia
-        spectral_cols (list): Columnas espectrales
-        lamp_ref (str): Lámpara de referencia
-        lamp_new (str): Lámpara nueva
-        common_ids (list): IDs comunes
-        ref_spectrum (np.array): Baseline original
-        ref_corrected (np.array): Baseline corregido
-        
-    Returns:
-        str: HTML de la sección de gráficos
-    """
-    import streamlit as st
-    
-    # Simular espectros corregidos
-    df_new_corr = simulate_corrected_spectra(
-        df, spectral_cols, lamp_new,
-        ref_spectrum, ref_corrected
-    )
-    
-    used_ids = st.session_state.get('selected_ids', list(common_ids))
-    other_ids = [i for i in common_ids if i not in used_ids]
-    
-    html = "<h2>📊 Resultados gráficos</h2>"
-    
-    # Gráfico de muestras usadas
-    html += "<h3>✅ Muestras usadas en la corrección</h3>"
-    img_used = create_comparison_chart_image(
-        df_ref_grouped, df_new_corr, spectral_cols,
-        lamp_ref, lamp_new, used_ids,
-        "Resultado (usadas para corrección): Referencia vs Nueva corregida"
-    )
-    html += f'<img src="data:image/png;base64,{img_used}" style="width:100%; max-width:1000px;">'
-    
-    # Gráfico de muestras no usadas (si existen)
-    if len(other_ids) > 0:
-        html += "<h3>🔎 Muestras de validación (no usadas)</h3>"
-        img_val = create_comparison_chart_image(
-            df_ref_grouped, df_new_corr, spectral_cols,
-            lamp_ref, lamp_new, other_ids,
-            "Resultado (validación): Referencia vs Nueva corregida"
-        )
-        html += f'<img src="data:image/png;base64,{img_val}" style="width:100%; max-width:1000px;">'
-    
-    return html
+    Genera la sección de gráficos del informe comparando:
+    - espectros de referencia (df_ref_grouped)
+    - espectros de la lámpara nueva tras aplicar la corrección simulada (df_new_grouped corregido)
 
+    Parámetros:
+        df_ref_grouped (pd.DataFrame): espectros medios por ID de la lámpara de referencia
+        df_new_grouped (pd.DataFrame): espectros medios por ID de la lámpara nueva (sin corregir)
+        spectral_cols (list[str]): columnas espectrales en orden
+        lamp_ref (str): etiqueta de la lámpara de referencia (ej. "Referencia")
+        lamp_new (str): etiqueta de la lámpara nueva (ej. "Nueva")
+        common_ids (list[str]): IDs presentes en ambas lámparas
+        selected_ids (list[str]): IDs usadas para calcular la corrección
+        ref_spectrum (np.array): baseline original
+        ref_corrected (np.array): baseline corregido
 
-def generate_charts_section(df, df_ref_grouped, spectral_cols,
-                           lamp_ref, lamp_new, common_ids, selected_ids,
-                           ref_spectrum, ref_corrected):
+    Devuelve:
+        str: bloque HTML con los gráficos embebidos
     """
-    Genera la sección de gráficos del informe.
-    
-    Args:
-        df (pd.DataFrame): DataFrame completo
-        df_ref_grouped (pd.DataFrame): Espectros de referencia
-        spectral_cols (list): Columnas espectrales
-        lamp_ref (str): Nombre lámpara referencia
-        lamp_new (str): Nombre lámpara nueva
-        common_ids (list): IDs comunes
-        selected_ids (list): IDs seleccionados para corrección  ← NUEVO
-        ref_spectrum (np.array): Baseline original
-        ref_corrected (np.array): Baseline corregido
-        
-    Returns:
-        str: HTML de la sección de gráficos
-    """
-    import streamlit as st
-    
-    # Agrupar DataFrame por ID para obtener df_new_grouped
-    df_new_grouped = df.groupby("ID")[spectral_cols].mean()
-    
-    # Simular espectros corregidos
+
+    # 1. Aplicar corrección simulada a la lámpara nueva
     df_new_corr = simulate_corrected_spectra(
         df_new_grouped,
-        spectral_cols, 
-        ref_spectrum, 
+        spectral_cols,
+        ref_spectrum,
         ref_corrected
     )
-    
-    # Obtener muestras usadas y no usadas
-    used_ids = st.session_state.get('selected_ids', list(common_ids))
+
+    # 2. Separar en "usadas en corrección" vs "no usadas"
+    used_ids = list(selected_ids)
     other_ids = [i for i in common_ids if i not in used_ids]
-    
-    html = "<h2>📊 Resultados gráficos</h2>"
-    
-    # Gráfico de muestras usadas
-    html += "<h3>✅ Muestras usadas en la corrección</h3>"
-    fig_used = plot_corrected_spectra_comparison(
-        df_ref_grouped, df_new_corr, spectral_cols,
-        lamp_ref, lamp_new, used_ids,
-        "Resultado (usadas para corrección): Referencia vs Nueva corregida"
-    )
-    # Convertir a HTML interactivo
-    html += fig_used.to_html(include_plotlyjs='cdn', div_id='chart_used')
-    
-    # Gráfico de muestras no usadas (si existen)
+
+    html = '<h2 id="charts-section">Resultados gráficos</h2>'
+
+    # 3. Gráfico de muestras usadas en la corrección
+    if len(used_ids) > 0:
+        html += "<h3>Muestras usadas en la corrección</h3>"
+        fig_used = plot_corrected_spectra_comparison(
+            df_ref_grouped,
+            df_new_corr,
+            spectral_cols,
+            lamp_ref,
+            lamp_new,
+            used_ids,
+            "Referencia vs Nueva corregida (muestras usadas en la corrección)"
+        )
+        html += fig_used.to_html(include_plotlyjs='cdn', div_id='chart_used')
+
+    # 4. Gráfico de muestras no usadas (validación)
     if len(other_ids) > 0:
-        html += "<h3>🔎 Muestras de validación (no usadas)</h3>"
+        html += "<h3>Muestras de validación (no usadas en la corrección)</h3>"
         fig_val = plot_corrected_spectra_comparison(
-            df_ref_grouped, df_new_corr, spectral_cols,
-            lamp_ref, lamp_new, other_ids,
-            "Resultado (validación): Referencia vs Nueva corregida"
+            df_ref_grouped,
+            df_new_corr,
+            spectral_cols,
+            lamp_ref,
+            lamp_new,
+            other_ids,
+            "Referencia vs Nueva corregida (muestras de validación)"
         )
         html += fig_val.to_html(include_plotlyjs='cdn', div_id='chart_validation')
-    
+
     return html
 
 
@@ -756,13 +732,13 @@ def generate_validation_section(validation_data, mean_diff_before, mean_diff_aft
         status_icon = "🔴"
     
     html = f"""
-        <div class="warning-box" style="margin-top: 30px;">
+        <div class="warning-box" id="validation-section" style="margin-top: 30px;">
             <h2>✅ Validacion Post-Correccion</h2>
             <p><strong>Verificacion del ajuste con mediciones reales:</strong></p>
         </div>
         
         <div class="info-box">
-            <h2>📋 Detalles de la Validacion</h2>
+            <h2>Detalles de la Validacion</h2>
             <div class="metric">
                 <span class="metric-label">Lampara de Referencia:</span>
                 <span class="metric-value">{lamp_ref}</span>
@@ -783,7 +759,7 @@ def generate_validation_section(validation_data, mean_diff_before, mean_diff_aft
         </div>
         
         <div class="info-box">
-            <h2>📊 Resultados de la Validacion</h2>
+            <h2>Resultados de la Validacion</h2>
             <table>
                 <tr>
                     <th>Metrica</th>
@@ -873,7 +849,7 @@ def generate_validation_section(validation_data, mean_diff_before, mean_diff_aft
     html += """
         </div>
         
-        <h2>📦 Muestras de Validacion</h2>
+        <h2>Muestras de Validacion</h2>
         <table>
             <tr>
                 <th>ID Muestra</th>
@@ -924,7 +900,7 @@ def generate_validation_charts(df_ref_val, df_new_val, spectral_cols,
     from utils.plotting import plot_kit_spectra
     import plotly.graph_objects as go
     
-    html = "<h2>📊 Graficos de Validacion</h2>"
+    html = "<h2>Graficos de Validacion</h2>"
     
     # Grafico 1: Espectros de validacion
     html += "<h3>Espectros de las muestras de validacion</h3>"
