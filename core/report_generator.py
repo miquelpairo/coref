@@ -108,13 +108,54 @@ def start_html_document(client_data):
         <meta charset="UTF-8">
         <style>
             {load_buchi_css()}
+                        /* Sidebar del índice */
+            .sidebar {{
+                position: fixed;
+                left: 0;
+                top: 0;
+                width: 250px;
+                height: 100%;
+                background-color: #093A34;
+                padding: 20px;
+                overflow-y: auto;
+                z-index: 1000;
+            }}
+            
+            
+            .sidebar ul {{
+                list-style: none;
+                padding: 0;
+            }}
+            
+            .sidebar ul li {{
+                margin-bottom: 10px;
+            }}
+            
+            .sidebar ul li a {{
+                color: white;
+                text-decoration: none;
+                display: block;
+                padding: 8px;
+                border-radius: 5px;
+                transition: background-color 0.3s;
+                font-weight: bold;
+            }}
+            
+            .sidebar ul li a:hover {{
+                background-color: #289A93;
+            }}
+            
+            /* Contenido principal con margen izquierdo */
+            .main-content {{
+                margin-left: 270px;
+                padding: 20px;
+            }}
         </style>
     </head>
     <body>
-        <h1>Informe de Ajuste de Baseline NIR</h1>
         
-        <div class="toc-box">
-            <h2>Índice</h2>
+        
+        <div class="sidebar">
             <ul>
                 <li><a href="#info-cliente">Información del Cliente</a></li>
                 <li><a href="#wstd-section">Diagnóstico WSTD</a></li>
@@ -127,7 +168,8 @@ def start_html_document(client_data):
             </ul>
         </div>
 
-
+        <div class="main-content">
+        <h1>Informe de Ajuste de Baseline NIR</h1>
         <div class="info-box" id="info-cliente">
             <h2>Información del Cliente</h2>
             <div class="metric">
@@ -166,6 +208,7 @@ def start_html_document(client_data):
                 <span class="metric-value">{client_data.get('date', datetime.now().strftime('%Y-%m-%d %H:%M:%S'))}</span>
             </div>
         </div>
+        
     """
     return html
 
@@ -370,14 +413,7 @@ def generate_process_details(lamp_ref, lamp_new, n_spectral, n_samples, origin):
     html = f"""
         <div class="info-box" id="process-details">
             <h2>Detalles del Proceso</h2>
-            <div class="metric">
-                <span class="metric-label">Lámpara de Referencia:</span>
-                <span class="metric-value">{lamp_ref}</span>
-            </div>
-            <div class="metric">
-                <span class="metric-label">Lámpara Nueva:</span>
-                <span class="metric-value">{lamp_new}</span>
-            </div>
+
             <br>
             <div class="metric">
                 <span class="metric-label">Canales Espectrales:</span>
@@ -482,7 +518,7 @@ def generate_correction_statistics(mean_diff):
 
 def generate_baseline_info(ref_corrected, header, origin):
     """
-    Genera la sección de información del baseline generado.
+    Genera la sección de información del baseline generado con gráfico.
     
     Args:
         ref_corrected (np.array): Baseline corregido
@@ -517,24 +553,29 @@ def generate_baseline_info(ref_corrected, header, origin):
             </div>
         """
     
-    html += f"""
-            <br>
-            <div class="metric">
-                <span class="metric-label">Valor Mínimo:</span>
-                <span class="metric-value">{np.min(ref_corrected):.6f}</span>
-            </div>
-            <div class="metric">
-                <span class="metric-label">Valor Máximo:</span>
-                <span class="metric-value">{np.max(ref_corrected):.6f}</span>
-            </div>
-            <div class="metric">
-                <span class="metric-label">Valor Medio:</span>
-                <span class="metric-value">{np.mean(ref_corrected):.6f}</span>
-            </div>
-        </div>
+    html += """
+            <h3 style="margin-top: 30px;">Espectro del Baseline Corregido</h3>
     """
+    
+    # Generar gráfico del baseline
+    from utils.plotting import plot_baseline_spectrum
+    import streamlit as st
+    
+    kit_data = st.session_state.kit_data
+    lamp_new = kit_data['lamp_new']
+    
+    fig = plot_baseline_spectrum(ref_corrected, lamp_new)
+    
+    # Convertir a HTML
+    html += fig.to_html(
+        include_plotlyjs='cdn',
+        div_id='baseline_corrected_chart',
+        config={'displayModeBar': True, 'responsive': True}
+    )
+    
+    html += "</div>"
+    
     return html
-
 
 def generate_notes_section(notes):
     """
@@ -733,7 +774,7 @@ def generate_validation_section(validation_data, mean_diff_before, mean_diff_aft
     
     html = f"""
         <div class="warning-box" id="validation-section" style="margin-top: 30px;">
-            <h2>✅ Validacion Post-Correccion</h2>
+            <h2>Validacion Post-Correccion</h2>
             <p><strong>Verificacion del ajuste con mediciones reales:</strong></p>
         </div>
         
@@ -798,7 +839,7 @@ def generate_validation_section(validation_data, mean_diff_before, mean_diff_aft
     
     html += f"""
         <div class="{status_class}" style="padding: 20px; margin: 20px 0; border-radius: 5px;">
-            <h2>{status_icon} Conclusion de la Validacion: {status_text}</h2>
+            <h2> Conclusion de la Validacion: {status_text}</h2>
             <p style="font-size: 1.1em; margin: 10px 0;">
                 La diferencia espectral entre lamparas se redujo en un <strong>{improvement_mean:.1f}%</strong>.
             </p>
@@ -811,21 +852,21 @@ def generate_validation_section(validation_data, mean_diff_before, mean_diff_aft
     if max_after < 0.001:
         html += """
             <p style="margin-top: 15px;">
-            ✅ <strong>El ajuste de baseline es optimo.</strong> Las lamparas estan perfectamente alineadas 
+             <strong>El ajuste de baseline es optimo.</strong> Las lamparas estan perfectamente alineadas 
             y el sistema esta listo para uso en produccion.
             </p>
         """
     elif max_after < 0.01:
         html += """
             <p style="margin-top: 15px;">
-            ✅ <strong>El ajuste de baseline funciona correctamente.</strong> Las lamparas estan bien alineadas 
+             <strong>El ajuste de baseline funciona correctamente.</strong> Las lamparas estan bien alineadas 
             y el sistema puede usarse con confianza.
             </p>
         """
     elif improvement_mean > 50:
         html += """
             <p style="margin-top: 15px;">
-            ⚠️ <strong>Correccion aceptable pero mejorable.</strong> Se recomienda:
+             <strong>Correccion aceptable pero mejorable.</strong> Se recomienda:
             <ul>
                 <li>Revisar la calidad de las mediciones del Standard Kit</li>
                 <li>Verificar las condiciones ambientales durante las mediciones</li>
@@ -836,7 +877,7 @@ def generate_validation_section(validation_data, mean_diff_before, mean_diff_aft
     else:
         html += """
             <p style="margin-top: 15px;">
-            🔴 <strong>La correccion requiere revision.</strong> Acciones recomendadas:
+             <strong>La correccion requiere revision.</strong> Acciones recomendadas:
             <ul>
                 <li>Verificar que el baseline corregido se instalo correctamente</li>
                 <li>Reiniciar el equipo si es necesario</li>
