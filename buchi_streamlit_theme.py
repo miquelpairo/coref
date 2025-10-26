@@ -194,17 +194,17 @@ def apply_buchi_styles():
         */
 
         /* 1. Forzamos layout del header del expander */
-        div[data-testid="stExpander"] > div[role="button"] {
+        div[data-testid="stExpander"] > div[role="button"] {{
             display: flex !important;
             align-items: center !important;
             gap: 0.5rem !important;
             position: relative !important;
             padding-right: 2rem !important; /* dejamos hueco para la flecha custom */
             color: inherit !important;
-        }
+        }}
 
         /* 2. Ocultamos cualquier intento de Streamlit de meter su icono/material */
-        div[data-testid="stExpander"] > div[role="button"] span[data-testid="stIconMaterial"] {
+        div[data-testid="stExpander"] > div[role="button"] span[data-testid="stIconMaterial"] {{
             display: none !important;
             visibility: hidden !important;
             font-size: 0 !important;
@@ -212,16 +212,16 @@ def apply_buchi_styles():
             width: 0 !important;
             height: 0 !important;
             overflow: hidden !important;
-        }
+        }}
 
         /* 3. También ocultamos el texto literal que a veces queda dentro del span
               (por ejemplo 'keyboard_arrow_down') si Streamlit lo mete suelto */
-        div[data-testid="stExpander"] > div[role="button"] span {
+        div[data-testid="stExpander"] > div[role="button"] span {{
             /* si es el icono/material mal renderizado, lo anulamos */
             color: transparent !important;
             font-size: 0 !important;
             line-height: 0 !important;
-        }
+        }}
 
         /* OJO: NO tocamos el <p> que contiene el título del expander.
            Ese <p> es el texto bueno que tú ves ("Utilidades...", etc.).
@@ -230,28 +230,28 @@ def apply_buchi_styles():
         /* 4. Añadimos nuestra flecha al header del expander como pseudo-elemento.
               Estado CERRADO (aria-expanded="false") -> flecha hacia abajo ▾
         */
-        div[data-testid="stExpander"] > div[role="button"][aria-expanded="false"]::after {
+        div[data-testid="stExpander"] > div[role="button"][aria-expanded="false"]::after {{
             content: "▾";
             position: absolute;
             right: 0.75rem;
             top: 50%;
             transform: translateY(-50%);
             font-size: 1rem;
-            color: {BUCHI_COLORS['negro']};
+            color: {{BUCHI_COLORS['negro']}};
             font-weight: 400;
-        }
+        }}
 
         /* 5. Estado ABIERTO (aria-expanded="true") -> flecha hacia arriba ▴ */
-        div[data-testid="stExpander"] > div[role="button"][aria-expanded="true"]::after {
+        div[data-testid="stExpander"] > div[role="button"][aria-expanded="true"]::after {{
             content: "▴";
             position: absolute;
             right: 0.75rem;
             top: 50%;
             transform: translateY(-50%);
             font-size: 1rem;
-            color: {BUCHI_COLORS['negro']};
+            color: {{BUCHI_COLORS['negro']}};
             font-weight: 400;
-        }
+        }}
 
 
         </style>
