@@ -19,7 +19,7 @@ font = "sans serif"
 
 [server]
 # Configuración del servidor
-headless = true
+headless = false
 port = 8501
 
 [browser]

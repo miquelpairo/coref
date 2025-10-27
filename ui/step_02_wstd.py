@@ -22,7 +22,7 @@ def render_wstd_step():
     st.markdown("---")
     
     wstd_file = st.file_uploader(
-        "Sube el archivo TSV con las mediciones de WSTD", 
+        "Sube el archivo TSV con las mediciones de External White", 
         type="tsv", 
         key="wstd_upload"
     )
@@ -40,7 +40,7 @@ def render_wstd_step():
         try:
             df = load_tsv_file(wstd_file)
             
-            st.markdown("### Selecciona las filas que corresponden a la referencia externa (WSTD)")
+            st.markdown("### Selecciona las filas que corresponden a la referencia externa (External White)")
             st.info("Marca las casillas de las mediciones que corresponden al White Standard.")
             
             # Crear tabla con índice visible
@@ -61,12 +61,12 @@ def render_wstd_step():
             selected_indices = edited_df[edited_df['Seleccionar'] == True].index.tolist()
             
             if len(selected_indices) == 0:
-                st.warning(" No has seleccionado ninguna fila. Por favor, marca las mediciones WSTD.")
+                st.warning(" No has seleccionado ninguna fila. Por favor, marca las mediciones External White.")
                 return
             
             df_wstd = df.loc[selected_indices].copy()
             
-            st.success(f" {len(df_wstd)} filas seleccionadas para análisis WSTD")
+            st.success(f" {len(df_wstd)} filas seleccionadas para análisis External White")
             
             # Mostrar info detallada
             st.write("**Filas seleccionadas:**")
@@ -106,7 +106,7 @@ def render_wstd_step():
 
 def plot_wstd_individual(df_wstd, spectral_cols, selected_indices):
     """
-    Crea gráfico con cada medición WSTD individual y sus diferencias.
+    Crea gráfico con cada medición External White individual y sus diferencias.
     """
     from plotly.subplots import make_subplots
     
@@ -114,8 +114,8 @@ def plot_wstd_individual(df_wstd, spectral_cols, selected_indices):
     fig = make_subplots(
         rows=2, cols=1,
         subplot_titles=(
-            'Espectros WSTD - Desviación respecto a referencia ideal',
-            'Diferencias entre mediciones WSTD'
+            'Espectros External White - Desviación respecto a referencia ideal',
+            'Diferencias entre mediciones External White'
         ),
         vertical_spacing=0.12
     )

@@ -12,7 +12,7 @@ PAGE_CONFIG = {
 STEPS = {
     1: "Datos del cliente",
     2: "Backup de archivos",
-    3: "Diagnóstico WSTD",
+    3: "Diagnóstico External White",
     4: "Medición del Standard Kit",
     5: "Cálculo de corrección",
     6: "Baseline y Exportación",
@@ -32,7 +32,7 @@ SUPPORTED_EXTENSIONS = {
     'ref': ['ref']
 }
 
-# Umbrales de diagnóstico para WSTD
+# Umbrales de diagnóstico para External White
 WSTD_THRESHOLDS = {
     'good': 0.01,           # Bien ajustado
     'warning': 0.05,        # Desviación moderada
@@ -126,15 +126,15 @@ INSTRUCTIONS = {
     """,
     
     'wstd': """
-    ### Instrucciones para el diagnóstico WSTD:
+    ### Instrucciones para el diagnóstico External White:
 
-    1. **Prepara el White Standard** (referencia blanca del kit de calibración)
+    1. **Prepara el External White** (referencia blanca del kit de calibración)
     2. En el equipo NIR, **NO tomes línea base** (medir como muestra normal)
-    3. **Mide el White Standard y asígnale un ID identificable** en el equipo
+    3. **Mide el External White y asígnale un ID identificable** en el equipo
     4. **Exporta el archivo TSV** con las mediciones
     5. **En la aplicación, selecciona manualmente** las filas que corresponden a las mediciones de referencia
 
-    **¿Por qué este paso?** Si el sistema está bien calibrado, las mediciones del White Standard 
+    **¿Por qué este paso?** Si el sistema está bien calibrado, las mediciones del External White 
     sin línea base deberían estar muy cercanas a 0 en todo el espectro. Esto nos permite 
     diagnosticar el estado del equipo antes de realizar el ajuste.
     """,
@@ -178,7 +178,7 @@ INSTRUCTIONS = {
 # Mensajes de éxito/error comunes
 MESSAGES = {
     'success_file_loaded': "Archivo cargado correctamente",
-    'error_no_wstd': "No se encontraron mediciones con ID = 'WSTD' en el archivo.",
+    'error_no_wstd': "No se encontraron mediciones con ID = 'External White' en el archivo.",
     'error_no_samples': "No se encontraron mediciones de muestras (todas son WSTD).",
     'error_no_common_samples': "No hay muestras comunes entre los dos archivos. Verifica que uses las mismas IDs.",
     'error_dimension_mismatch': "**Error de validación:** El baseline tiene {baseline_points} puntos, pero el TSV tiene {tsv_channels} canales. No coinciden.",
