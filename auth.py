@@ -43,10 +43,8 @@ def check_password():
                 try:
                     correct_username = st.secrets["auth"]["username"]
                     correct_password = st.secrets["auth"]["password"]
-                    st.info("✅ Usando credenciales de secrets.toml")
-                except Exception as e:  # <-- La 'e' se define aquí
-                    st.warning(f"⚠️ No se encontró secrets.toml: {e}")
-                    st.info("📝 Usando credenciales por defecto")
+                except:
+                    # Credenciales por defecto (CAMBIAR ESTAS)
                     correct_username = "admin"
                     correct_password = "baseline2025"
                 
