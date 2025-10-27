@@ -1,0 +1,28 @@
+# Configuración del tema corporativo Buchi para Streamlit
+# Guarda este archivo en: .streamlit/config.toml
+
+[theme]
+# Color primario (verde Buchi)
+primaryColor = "#64B445"
+
+# Color de fondo principal
+backgroundColor = "#FFFFFF"
+
+# Color de fondo secundario (para sidebar y elementos)
+secondaryBackgroundColor = "#F8F9FA"
+
+# Color del texto
+textColor = "#262730"
+
+# Fuente
+font = "sans serif"
+
+[server]
+# Configuración del servidor
+headless = true
+port = 8501
+
+[browser]
+# Configuración del navegador
+gatherUsageStats = false
+serverAddress = "localhost"
