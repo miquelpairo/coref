@@ -17,10 +17,6 @@ textColor = "#262730"
 # Fuente
 font = "sans serif"
 
-[server]
-# Configuración del servidor
-headless = false
-port = 8501
 
 [browser]
 # Configuración del navegador
