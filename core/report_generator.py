@@ -12,6 +12,32 @@ from core.spectral_processing import simulate_corrected_spectra
 from utils.plotting import plot_corrected_spectra_comparison
 import plotly.io as pio
 
+def wrap_chart_in_expandable(chart_html, title, chart_id, default_open=False):
+    """
+    Envuelve un gráfico en un elemento expandible HTML.
+    
+    Args:
+        chart_html (str): HTML del gráfico
+        title (str): Título del expandible
+        chart_id (str): ID único para el expandible
+        default_open (bool): Si debe estar abierto por defecto
+        
+    Returns:
+        str: HTML con el gráfico en un expandible
+    """
+    open_attr = "open" if default_open else ""
+    
+    return f"""
+    <details {open_attr} style="margin: 20px 0; border: 1px solid #ddd; border-radius: 5px; padding: 10px;">
+        <summary style="cursor: pointer; font-weight: bold; padding: 10px; background-color: #f8f9fa; border-radius: 5px; user-select: none;">
+            📊 {title}
+        </summary>
+        <div style="padding: 15px; margin-top: 10px;">
+            {chart_html}
+        </div>
+    </details>
+    """
+
 def load_buchi_css():
     """Carga el CSS corporativo de Buchi"""
     try:
@@ -398,14 +424,22 @@ def generate_wstd_charts(df_wstd, spectral_cols):
     )
     
     # Convertir a HTML
-    html += fig.to_html(
+    chart_html = fig.to_html(
         include_plotlyjs='cdn',
         div_id='wstd_charts',
         config={'displayModeBar': True, 'responsive': True}
     )
     
-    return html
+    # ⭐ CAMBIO: Envolver en expandible
+    html += wrap_chart_in_expandable(
+        chart_html,
+        "Ver gráficos de diagnóstico WSTD",
+        "wstd_charts_expandable",
+        default_open=False
+    )
     
+    return html
+
 def generate_process_details(lamp_ref, lamp_new, n_spectral, n_samples, origin):
     """
     Genera la sección de detalles del proceso.
@@ -467,8 +501,10 @@ def generate_samples_table(df, common_ids, lamp_ref, lamp_new):
     
     used_ids = st.session_state.get('selected_ids', list(common_ids))
     
-    html = """
-        <h2 id="samples"> Muestras del Standard Kit</h2>
+    html = "<h2 id='samples'>Muestras del Standard Kit</h2>"
+    
+    # Construir la tabla
+    table_html = """
         <table>
             <tr>
                 <th>ID Muestra</th>
@@ -483,7 +519,7 @@ def generate_samples_table(df, common_ids, lamp_ref, lamp_new):
         count_new = len(df[(df['ID'] == id_) & (df['Note'] == lamp_new)])
         used_tag = '<span class="tag tag-ok">✓ Sí</span>' if id_ in used_ids else '<span class="tag tag-no">✗ No</span>'
         
-        html += f"""
+        table_html += f"""
             <tr>
                 <td>{id_}</td>
                 <td>{count_ref}</td>
@@ -492,7 +528,16 @@ def generate_samples_table(df, common_ids, lamp_ref, lamp_new):
             </tr>
         """
     
-    html += "</table>"
+    table_html += "</table>"
+    
+    # ⭐ CAMBIO: Envolver tabla en expandible
+    html += wrap_chart_in_expandable(
+        table_html,
+        f"Ver detalle de muestras ({len(common_ids)} muestras)",
+        "samples_table_expandable",
+        default_open=False
+    )
+    
     return html
 
 def generate_selected_samples_chart(df_ref_grouped, df_new_grouped, spectral_cols,
@@ -527,10 +572,18 @@ def generate_selected_samples_chart(df_ref_grouped, df_new_grouped, spectral_col
         lamp_ref, lamp_new, selected_ids
     )
     
-    html += fig.to_html(
+    chart_html = fig.to_html(
         include_plotlyjs='cdn',
         div_id='selected_samples_before',
         config={'displayModeBar': True, 'responsive': True}
+    )
+    
+    # ⭐ CAMBIO: Envolver en expandible
+    html += wrap_chart_in_expandable(
+        chart_html,
+        "Ver espectros de muestras seleccionadas",
+        "selected_samples_expandable",
+        default_open=False
     )
     
     html += "</div>"
@@ -618,10 +671,18 @@ def generate_correction_differences_charts(df_ref_grouped, df_new_grouped, mean_
         html += f"<p style='color: #6c757d; font-size: 0.95em;'><em>Mostrando todas las {len(selected_ids)} muestras</em></p>"
     
     fig_used = plot_correction_differences(df_diff, selected_ids, selected_ids)
-    html += fig_used.to_html(
+    chart_html_used = fig_used.to_html(
         include_plotlyjs='cdn',
         div_id='correction_differences_used',
         config={'displayModeBar': True, 'responsive': True}
+    )
+    
+    # ⭐ CAMBIO: Envolver en expandible
+    html += wrap_chart_in_expandable(
+        chart_html_used,
+        "Ver gráfico de diferencias espectrales (muestras usadas)",
+        "correction_used_expandable",
+        default_open=False
     )
     
     # GRÁFICO 2: Muestras de validación (si existen)
@@ -636,10 +697,18 @@ def generate_correction_differences_charts(df_ref_grouped, df_new_grouped, mean_
         """
         
         fig_validation = plot_correction_differences(df_diff, ids_not_used, ids_not_used)
-        html += fig_validation.to_html(
+        chart_html_validation = fig_validation.to_html(
             include_plotlyjs='cdn',
             div_id='correction_differences_validation',
             config={'displayModeBar': True, 'responsive': True}
+        )
+        
+        # ⭐ CAMBIO: Envolver en expandible
+        html += wrap_chart_in_expandable(
+            chart_html_validation,
+            "Ver gráfico de validación (muestras NO usadas)",
+            "correction_validation_expandable",
+            default_open=False
         )
         
         # Estadísticas de validación
@@ -749,8 +818,8 @@ def generate_baseline_info(ref_corrected, header, origin, ref_spectrum, spectral
         ref_corrected (np.array): Baseline corregido
         header (np.array): Cabecera del .ref
         origin (str): Tipo de archivo
-        ref_spectrum (np.array): Baseline original (NUEVO)
-        spectral_cols (list): Columnas espectrales (NUEVO)
+        ref_spectrum (np.array): Baseline original
+        spectral_cols (list): Columnas espectrales
         
     Returns:
         str: HTML de información del baseline
@@ -787,22 +856,29 @@ def generate_baseline_info(ref_corrected, header, origin, ref_spectrum, spectral
             </p>
     """
     
-    # ⭐ CAMBIO: Usar plot_baseline_comparison en lugar de plot_baseline_spectrum
     from utils.plotting import plot_baseline_comparison
     
     fig = plot_baseline_comparison(ref_spectrum, ref_corrected, spectral_cols)
     
     # Convertir a HTML
-    html += fig.to_html(
+    chart_html = fig.to_html(
         include_plotlyjs='cdn',
         div_id='baseline_comparison_chart',
         config={'displayModeBar': True, 'responsive': True}
     )
     
+    # ⭐ CAMBIO: Envolver en expandible
+    html += wrap_chart_in_expandable(
+        chart_html,
+        "Ver comparación de baseline (Original vs Corregido)",
+        "baseline_comparison_expandable",
+        default_open=False
+    )
+    
     html += "</div>"
     
     return html
-    
+
 def generate_notes_section(notes):
     """
     Genera la sección de notas adicionales.
@@ -867,7 +943,16 @@ def generate_charts_section(
             used_ids,
             "Referencia vs Nueva corregida (muestras usadas en la corrección)"
         )
-        html += fig_used.to_html(include_plotlyjs='cdn', div_id='chart_used')
+        
+        chart_html_used = fig_used.to_html(include_plotlyjs='cdn', div_id='chart_used')
+        
+        # ⭐ CAMBIO: Envolver en expandible
+        html += wrap_chart_in_expandable(
+            chart_html_used,
+            "Ver espectros corregidos (muestras usadas)",
+            "chart_used_expandable",
+            default_open=False
+        )
 
     # 4. Gráficos de muestras no usadas (validación)
     if len(other_ids) > 0:
@@ -886,7 +971,16 @@ def generate_charts_section(
             other_ids,
             "Referencia vs Nueva original (muestras de validación)"
         )
-        html += fig_before.to_html(include_plotlyjs='cdn', div_id='chart_validation_before')
+        
+        chart_html_before = fig_before.to_html(include_plotlyjs='cdn', div_id='chart_validation_before')
+        
+        # ⭐ CAMBIO: Envolver en expandible
+        html += wrap_chart_in_expandable(
+            chart_html_before,
+            "Ver espectros SIN corrección (validación)",
+            "chart_validation_before_expandable",
+            default_open=False
+        )
         
         # ⭐ GRÁFICO DESPUÉS (con corrección)
         html += "<h4>DESPUÉS: Con corrección aplicada</h4>"
@@ -901,10 +995,18 @@ def generate_charts_section(
             other_ids,
             "Referencia vs Nueva corregida (muestras de validación)"
         )
-        html += fig_after.to_html(include_plotlyjs='cdn', div_id='chart_validation_after')
+        
+        chart_html_after = fig_after.to_html(include_plotlyjs='cdn', div_id='chart_validation_after')
+        
+        # ⭐ CAMBIO: Envolver en expandible
+        html += wrap_chart_in_expandable(
+            chart_html_after,
+            "Ver espectros CON corrección (validación)",
+            "chart_validation_after_expandable",
+            default_open=False
+        )
 
     return html
-
 
 def generate_footer():
     """
@@ -1186,10 +1288,18 @@ def generate_validation_charts(df_ref_val, df_new_val, spectral_cols,
         lamp_ref, lamp_new, selected_ids
     )
     
-    html += fig_spectra.to_html(
+    chart_html_spectra = fig_spectra.to_html(
         include_plotlyjs='cdn',
         div_id='validation_spectra',
         config={'displayModeBar': True, 'responsive': True}
+    )
+    
+    # ⭐ CAMBIO: Envolver en expandible
+    html += wrap_chart_in_expandable(
+        chart_html_spectra,
+        "Ver espectros de validación",
+        "validation_spectra_expandable",
+        default_open=False
     )
     
     # Grafico 2: Comparacion ANTES vs DESPUES
@@ -1238,10 +1348,18 @@ def generate_validation_charts(df_ref_val, df_new_val, spectral_cols,
         )
     )
     
-    html += fig_comparison.to_html(
+    chart_html_comparison = fig_comparison.to_html(
         include_plotlyjs='cdn',
         div_id='validation_comparison',
         config={'displayModeBar': True, 'responsive': True}
+    )
+    
+    # ⭐ CAMBIO: Envolver en expandible
+    html += wrap_chart_in_expandable(
+        chart_html_comparison,
+        "Ver comparación ANTES vs DESPUÉS",
+        "validation_comparison_expandable",
+        default_open=False
     )
     
     return html
