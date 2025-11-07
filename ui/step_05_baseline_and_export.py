@@ -389,12 +389,12 @@ def render_correction_simulation(df, df_ref_grouped, spectral_cols,
     kit_data = st.session_state.kit_data
     df_new_grouped = kit_data['df_new_grouped']
     
-    # Simular espectros corregidos (AHORA CON 4 PARAMETROS)
+    # Simular espectros corregidos
     df_new_corr = simulate_corrected_spectra(
-        df_new_grouped,      # 1. DataFrame agrupado
-        spectral_cols,       # 2. Columnas espectrales
-        ref_spectrum,        # 3. Baseline original
-        ref_corrected        # 4. Baseline corregido
+        df_new_grouped,
+        spectral_cols,
+        ref_spectrum,
+        ref_corrected
     )
     
     # Obtener muestras usadas y no usadas
@@ -413,15 +413,33 @@ def render_correction_simulation(df, df_ref_grouped, spectral_cols,
     # Grafico de muestras no usadas (validacion)
     if len(other_ids) > 0:
         st.markdown("**Muestras no usadas (validacion)**")
-        fig_other = plot_corrected_spectra_comparison(
-            df_ref_grouped, df_new_corr, spectral_cols,
-            "Referencia", "Nueva (corregida)", other_ids,
+        
+        # GRÁFICO 1: SIN corrección
+        st.markdown("*ANTES: Sin corrección aplicada*")
+        fig_before = plot_corrected_spectra_comparison(
+            df_ref_grouped, 
+            df_new_grouped,  # ← SIN CORRECCIÓN (original)
+            spectral_cols,
+            "Referencia", "Nueva (original)", 
+            other_ids,
+            title="Referencia vs Nueva (original) - NO usadas"
+        )
+        st.plotly_chart(fig_before, use_container_width=True)
+        
+        # GRÁFICO 2: CON corrección
+        st.markdown("*DESPUÉS: Con corrección aplicada*")
+        fig_after = plot_corrected_spectra_comparison(
+            df_ref_grouped, 
+            df_new_corr,  # ← CON CORRECCIÓN
+            spectral_cols,
+            "Referencia", "Nueva (corregida)", 
+            other_ids,
             title="Referencia vs Nueva (corregida) - NO usadas"
         )
-        st.plotly_chart(fig_other, use_container_width=True)
+        st.plotly_chart(fig_after, use_container_width=True)
     else:
         st.info("Todas las muestras comunes estan siendo usadas para calcular la correccion.")
-
+        
 def render_tsv_export(df, spectral_cols, lamp_new, ref_spectrum, ref_corrected):
     """
     Renderiza la exportacion del TSV con espectros corregidos.

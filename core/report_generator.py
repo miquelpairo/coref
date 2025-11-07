@@ -61,17 +61,32 @@ def generate_html_report(kit_data, baseline_data, ref_corrected, origin):
     # Tabla de muestras
     html += generate_samples_table(df, common_ids, lamp_ref, lamp_new)
     
+    # Gráfico de muestras seleccionadas ANTES de corrección
+    html += generate_selected_samples_chart(
+        df_ref_grouped, df_new_grouped, spectral_cols,
+        lamp_ref, lamp_new, selected_ids
+    )
+    
     # Estadísticas de corrección
     html += generate_correction_statistics(mean_diff)
     
-    # Información del baseline generado
-    html += generate_baseline_info(ref_corrected, header, origin)
+    # Gráficos de diferencias espectrales
+    html += generate_correction_differences_charts(
+        df_ref_grouped, df_new_grouped, mean_diff,
+        common_ids, selected_ids, lamp_ref, lamp_new
+    )
+    
+    # ⭐ CAMBIO: Pasar ref_spectrum y spectral_cols también
+    html += generate_baseline_info(
+        ref_corrected, header, origin, 
+        ref_spectrum, spectral_cols  # ← NUEVOS PARÁMETROS
+    )
     
     # Notas adicionales
     if client_data.get('notes'):
         html += generate_notes_section(client_data['notes'])
     
-    # Gráficos ← AQUÍ ESTÁ EL ERROR
+    # Gráficos
     html += generate_charts_section(
         df_ref_grouped=df_ref_grouped,
         df_new_grouped=df_new_grouped,
@@ -83,13 +98,11 @@ def generate_html_report(kit_data, baseline_data, ref_corrected, origin):
         ref_spectrum=ref_spectrum,
         ref_corrected=ref_corrected
     )
-
     
     # Footer
     html += generate_footer()
     
     return html
-
 
 def start_html_document(client_data):
     """
@@ -162,6 +175,7 @@ def start_html_document(client_data):
                 <li><a href="#process-details">Detalles del Proceso</a></li>
                 <li><a href="#samples">Muestras del Standard Kit</a></li>
                 <li><a href="#correction-stats">Estadísticas de la Corrección</a></li>
+                <li><a href="#correction-differences">Diferencias Espectrales</a></li>
                 <li><a href="#baseline-info">Baseline Generado</a></li>
                 <li><a href="#charts-section">Resultados Gráficos</a></li>
                 <li><a href="#validation-section">Validación (si aplica)</a></li>
@@ -481,6 +495,47 @@ def generate_samples_table(df, common_ids, lamp_ref, lamp_new):
     html += "</table>"
     return html
 
+def generate_selected_samples_chart(df_ref_grouped, df_new_grouped, spectral_cols,
+                                    lamp_ref, lamp_new, selected_ids):
+    """
+    Genera el gráfico de muestras seleccionadas ANTES de la corrección.
+    
+    Args:
+        df_ref_grouped (pd.DataFrame): Espectros de referencia
+        df_new_grouped (pd.DataFrame): Espectros nuevos (sin corregir)
+        spectral_cols (list): Columnas espectrales
+        lamp_ref (str): Nombre lámpara referencia
+        lamp_new (str): Nombre lámpara nueva
+        selected_ids (list): IDs seleccionados
+        
+    Returns:
+        str: HTML con el gráfico embebido
+    """
+    from utils.plotting import plot_kit_spectra
+    
+    html = """
+        <div class="info-box">
+            <h3>Espectros de las Muestras Seleccionadas (ANTES de corrección)</h3>
+            <p style='color: #6c757d; font-size: 0.95em;'>
+                <em>Comparación de los espectros medidos con ambas lámparas antes de aplicar 
+                la corrección. Estas muestras fueron usadas para calcular el ajuste de baseline.</em>
+            </p>
+    """
+    
+    fig = plot_kit_spectra(
+        df_ref_grouped, df_new_grouped, spectral_cols,
+        lamp_ref, lamp_new, selected_ids
+    )
+    
+    html += fig.to_html(
+        include_plotlyjs='cdn',
+        div_id='selected_samples_before',
+        config={'displayModeBar': True, 'responsive': True}
+    )
+    
+    html += "</div>"
+    
+    return html
 
 def generate_correction_statistics(mean_diff):
     """
@@ -515,15 +570,187 @@ def generate_correction_statistics(mean_diff):
     """
     return html
 
-
-def generate_baseline_info(ref_corrected, header, origin):
+def generate_correction_differences_charts(df_ref_grouped, df_new_grouped, mean_diff,
+                                          common_ids, selected_ids, lamp_ref, lamp_new):
     """
-    Genera la sección de información del baseline generado con gráfico.
+    Genera los gráficos de diferencias espectrales (del Paso 5).
+    
+    Args:
+        df_ref_grouped (pd.DataFrame): Espectros de referencia
+        df_new_grouped (pd.DataFrame): Espectros nuevos
+        mean_diff (np.array): Vector de corrección promedio
+        common_ids (list): Todos los IDs comunes
+        selected_ids (list): IDs usados en corrección
+        lamp_ref (str): Nombre lámpara referencia
+        lamp_new (str): Nombre lámpara nueva
+        
+    Returns:
+        str: HTML con los gráficos embebidos
+    """
+    from utils.plotting import plot_correction_differences
+    
+    # Construir DataFrame de diferencias (igual que en el Paso 5)
+    df_diff = pd.DataFrame({"Canal": range(1, len(mean_diff) + 1)})
+    
+    for id_ in common_ids:
+        df_diff[f"{lamp_ref}_{id_}"] = df_ref_grouped.loc[id_].values
+        df_diff[f"{lamp_new}_{id_}"] = df_new_grouped.loc[id_].values
+        df_diff[f"DIF_{id_}"] = (
+            df_ref_grouped.loc[id_].values - df_new_grouped.loc[id_].values
+        )
+    
+    df_diff["CORRECCION_PROMEDIO"] = mean_diff
+    
+    # Identificar muestras no usadas
+    ids_not_used = [id_ for id_ in common_ids if id_ not in selected_ids]
+    
+    html = """
+        <div class="info-box" id="correction-differences">
+            <h2>Diferencias Espectrales - Análisis Detallado</h2>
+    """
+    
+    # GRÁFICO 1: Muestras usadas en la corrección
+    html += "<h3>Muestras Usadas en la Corrección</h3>"
+    
+    if len(selected_ids) < len(common_ids):
+        html += f"<p style='color: #6c757d; font-size: 0.95em;'><em>Mostrando {len(selected_ids)} de {len(common_ids)} muestras (usadas en la corrección)</em></p>"
+    else:
+        html += f"<p style='color: #6c757d; font-size: 0.95em;'><em>Mostrando todas las {len(selected_ids)} muestras</em></p>"
+    
+    fig_used = plot_correction_differences(df_diff, selected_ids, selected_ids)
+    html += fig_used.to_html(
+        include_plotlyjs='cdn',
+        div_id='correction_differences_used',
+        config={'displayModeBar': True, 'responsive': True}
+    )
+    
+    # GRÁFICO 2: Muestras de validación (si existen)
+    if len(ids_not_used) > 0:
+        html += "<h3>Validación - Muestras NO Usadas en la Corrección</h3>"
+        html += f"""
+            <p style='color: #6c757d; font-size: 0.95em;'>
+                <em>Mostrando {len(ids_not_used)} muestras que <strong>NO</strong> se usaron para calcular la corrección.<br>
+                Este gráfico muestra cómo la corrección calculada afecta a muestras independientes,
+                permitiendo validar que la corrección es robusta y generalizable.</em>
+            </p>
+        """
+        
+        fig_validation = plot_correction_differences(df_diff, ids_not_used, ids_not_used)
+        html += fig_validation.to_html(
+            include_plotlyjs='cdn',
+            div_id='correction_differences_validation',
+            config={'displayModeBar': True, 'responsive': True}
+        )
+        
+        # Estadísticas de validación
+        html += generate_validation_statistics_html(df_diff, ids_not_used, mean_diff)
+    else:
+        html += """
+            <p style='color: #17a2b8; background-color: #d1ecf1; padding: 15px; border-radius: 5px; border-left: 4px solid #17a2b8;'>
+                <strong>ℹ️ Información:</strong> Todas las muestras se están usando para la corrección. 
+                No hay muestras de validación disponibles.
+            </p>
+        """
+    
+    html += "</div>"
+    
+    return html
+
+def generate_validation_statistics_html(df_diff, ids_not_used, mean_diff):
+    """
+    Genera las estadísticas de validación en formato HTML.
+    
+    Args:
+        df_diff (pd.DataFrame): DataFrame con diferencias
+        ids_not_used (list): IDs no usados en corrección
+        mean_diff (np.array): Vector de corrección promedio
+        
+    Returns:
+        str: HTML con estadísticas
+    """
+    html = "<h4>Estadísticas de Validación</h4>"
+    
+    # Calcular diferencias promedio por muestra de validación
+    validation_diffs = []
+    for id_ in ids_not_used:
+        diff_col = f"DIF_{id_}"
+        if diff_col in df_diff.columns:
+            sample_diff = df_diff[diff_col].values
+            validation_diffs.append(sample_diff)
+    
+    if validation_diffs:
+        validation_diffs = np.array(validation_diffs)
+        validation_mean = np.mean(validation_diffs, axis=0)
+        
+        # Comparar con la corrección calculada
+        residual = validation_mean - mean_diff
+        
+        max_residual = np.max(np.abs(residual))
+        mean_residual = np.mean(np.abs(residual))
+        std_residual = np.std(residual)
+        
+        html += """
+            <table style="margin-top: 15px;">
+                <tr>
+                    <th>Métrica</th>
+                    <th>Valor</th>
+                    <th>Descripción</th>
+                </tr>
+        """
+        
+        html += f"""
+                <tr>
+                    <td><strong>Residuo máximo</strong></td>
+                    <td>{max_residual:.6f}</td>
+                    <td>Diferencia máxima entre la corrección calculada y las muestras de validación</td>
+                </tr>
+                <tr>
+                    <td><strong>Residuo medio</strong></td>
+                    <td>{mean_residual:.6f}</td>
+                    <td>Diferencia media entre la corrección calculada y las muestras de validación</td>
+                </tr>
+                <tr>
+                    <td><strong>Desv. estándar residuo</strong></td>
+                    <td>{std_residual:.6f}</td>
+                    <td>Variabilidad del residuo</td>
+                </tr>
+            </table>
+        """
+        
+        # Interpretación
+        if max_residual < 0.01:
+            html += """
+                <div class="status-good" style="margin-top: 15px; padding: 15px; border-radius: 5px;">
+                    <strong>✅ Excelente validación:</strong> Las muestras no usadas muestran diferencias 
+                    muy similares a la corrección calculada.
+                </div>
+            """
+        elif max_residual < 0.05:
+            html += """
+                <div style="margin-top: 15px; padding: 15px; border-radius: 5px; background-color: #d1ecf1; border-left: 4px solid #17a2b8;">
+                    <strong>ℹ️ Buena validación:</strong> Las muestras no usadas son consistentes con la corrección.
+                </div>
+            """
+        else:
+            html += """
+                <div class="status-warning" style="margin-top: 15px; padding: 15px; border-radius: 5px;">
+                    <strong>⚠️ Atención:</strong> Hay diferencias significativas en las muestras de validación. 
+                    Considera revisar la selección de muestras.
+                </div>
+            """
+    
+    return html
+
+def generate_baseline_info(ref_corrected, header, origin, ref_spectrum, spectral_cols):
+    """
+    Genera la sección de información del baseline generado con gráfico comparativo.
     
     Args:
         ref_corrected (np.array): Baseline corregido
         header (np.array): Cabecera del .ref
         origin (str): Tipo de archivo
+        ref_spectrum (np.array): Baseline original (NUEVO)
+        spectral_cols (list): Columnas espectrales (NUEVO)
         
     Returns:
         str: HTML de información del baseline
@@ -554,29 +781,28 @@ def generate_baseline_info(ref_corrected, header, origin):
         """
     
     html += """
-            <h3 style="margin-top: 30px;">Espectro del Baseline Corregido</h3>
+            <h3 style="margin-top: 30px;">Comparación: Baseline Original vs Corregido</h3>
+            <p style='color: #6c757d; font-size: 0.95em;'>
+                <em>Visualización del baseline antes y después de aplicar la corrección calculada.</em>
+            </p>
     """
     
-    # Generar gráfico del baseline
-    from utils.plotting import plot_baseline_spectrum
-    import streamlit as st
+    # ⭐ CAMBIO: Usar plot_baseline_comparison en lugar de plot_baseline_spectrum
+    from utils.plotting import plot_baseline_comparison
     
-    kit_data = st.session_state.kit_data
-    lamp_new = kit_data['lamp_new']
-    
-    fig = plot_baseline_spectrum(ref_corrected, title="Baseline Corregido")
+    fig = plot_baseline_comparison(ref_spectrum, ref_corrected, spectral_cols)
     
     # Convertir a HTML
     html += fig.to_html(
         include_plotlyjs='cdn',
-        div_id='baseline_corrected_chart',
+        div_id='baseline_comparison_chart',
         config={'displayModeBar': True, 'responsive': True}
     )
     
     html += "</div>"
     
     return html
-
+    
 def generate_notes_section(notes):
     """
     Genera la sección de notas adicionales.
@@ -609,22 +835,8 @@ def generate_charts_section(
 ):
     """
     Genera la sección de gráficos del informe comparando:
-    - espectros de referencia (df_ref_grouped)
-    - espectros de la lámpara nueva tras aplicar la corrección simulada (df_new_grouped corregido)
-
-    Parámetros:
-        df_ref_grouped (pd.DataFrame): espectros medios por ID de la lámpara de referencia
-        df_new_grouped (pd.DataFrame): espectros medios por ID de la lámpara nueva (sin corregir)
-        spectral_cols (list[str]): columnas espectrales en orden
-        lamp_ref (str): etiqueta de la lámpara de referencia (ej. "Referencia")
-        lamp_new (str): etiqueta de la lámpara nueva (ej. "Nueva")
-        common_ids (list[str]): IDs presentes en ambas lámparas
-        selected_ids (list[str]): IDs usadas para calcular la corrección
-        ref_spectrum (np.array): baseline original
-        ref_corrected (np.array): baseline corregido
-
-    Devuelve:
-        str: bloque HTML con los gráficos embebidos
+    - ANTES: espectros sin corrección
+    - DESPUÉS: espectros con corrección aplicada
     """
 
     # 1. Aplicar corrección simulada a la lámpara nueva
@@ -639,11 +851,13 @@ def generate_charts_section(
     used_ids = list(selected_ids)
     other_ids = [i for i in common_ids if i not in used_ids]
 
-    html = '<h2 id="charts-section">Resultados gráficos</h2>'
+    html = '<h2 id="charts-section">Resultados Gráficos</h2>'
 
-    # 3. Gráfico de muestras usadas en la corrección
+    # 3. Gráfico de muestras usadas en la corrección (CON corrección)
     if len(used_ids) > 0:
-        html += "<h3>Muestras usadas en la corrección</h3>"
+        html += "<h3>Muestras usadas en la corrección (CON corrección aplicada)</h3>"
+        html += "<p style='color: #6c757d; font-size: 0.95em;'><em>Espectros después de aplicar el baseline corregido.</em></p>"
+        
         fig_used = plot_corrected_spectra_comparison(
             df_ref_grouped,
             df_new_corr,
@@ -655,19 +869,39 @@ def generate_charts_section(
         )
         html += fig_used.to_html(include_plotlyjs='cdn', div_id='chart_used')
 
-    # 4. Gráfico de muestras no usadas (validación)
+    # 4. Gráficos de muestras no usadas (validación)
     if len(other_ids) > 0:
-        html += "<h3>Muestras de validación (no usadas en la corrección)</h3>"
-        fig_val = plot_corrected_spectra_comparison(
+        html += '<h3 id="validation-section">Muestras de Validación (no usadas en la corrección)</h3>'
+        
+        # ⭐ GRÁFICO ANTES (sin corrección)
+        html += "<h4>ANTES: Sin corrección aplicada</h4>"
+        html += "<p style='color: #6c757d; font-size: 0.95em;'><em>Espectros originales sin ninguna corrección.</em></p>"
+        
+        fig_before = plot_corrected_spectra_comparison(
             df_ref_grouped,
-            df_new_corr,
+            df_new_grouped,  # ← SIN CORRECCIÓN
             spectral_cols,
             lamp_ref,
-            lamp_new,
+            lamp_new + " (original)",
+            other_ids,
+            "Referencia vs Nueva original (muestras de validación)"
+        )
+        html += fig_before.to_html(include_plotlyjs='cdn', div_id='chart_validation_before')
+        
+        # ⭐ GRÁFICO DESPUÉS (con corrección)
+        html += "<h4>DESPUÉS: Con corrección aplicada</h4>"
+        html += "<p style='color: #6c757d; font-size: 0.95em;'><em>Espectros después de aplicar el baseline corregido.</em></p>"
+        
+        fig_after = plot_corrected_spectra_comparison(
+            df_ref_grouped,
+            df_new_corr,  # ← CON CORRECCIÓN
+            spectral_cols,
+            lamp_ref,
+            lamp_new + " (corregida)",
             other_ids,
             "Referencia vs Nueva corregida (muestras de validación)"
         )
-        html += fig_val.to_html(include_plotlyjs='cdn', div_id='chart_validation')
+        html += fig_after.to_html(include_plotlyjs='cdn', div_id='chart_validation_after')
 
     return html
 
