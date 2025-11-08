@@ -112,6 +112,9 @@ def render_correction_step():
     # Guardar corrección en session_state
     update_kit_data_with_correction(mean_diff)
     
+        # Simulación del efecto de la corrección
+    render_correction_simulation_preview()
+    
     # Navegación
     st.markdown("---")
     col_continue, col_skip = st.columns([3, 1])
@@ -177,7 +180,6 @@ def render_correction_statistics(mean_diff):
     with col3:
         std_corr = np.std(mean_diff)
         st.metric("Desviación estándar", f"{std_corr:.4f}")
-
 
 def render_download_correction_table(df_diff, lamp_ref, lamp_new):
     """
@@ -257,3 +259,108 @@ def render_validation_statistics(df_diff, ids_not_used, mean_diff):
             st.info("Buena validación: Las muestras no usadas son consistentes con la corrección.")
         else:
             st.warning("Atención: Hay diferencias significativas en las muestras de validación. Considera revisar la selección de muestras.")
+            
+def render_correction_simulation_preview():
+    """
+    Renderiza una vista previa de cómo quedará el efecto de la corrección.
+    """
+    st.markdown("---")
+    st.markdown("### 🔮 Simulación: Vista Previa del Efecto de la Corrección")
+    
+    st.info("""
+    A continuación se muestra una **simulación** de cómo quedarían los espectros de la lámpara nueva 
+    después de aplicar el baseline corregido, comparados con los espectros de la lámpara de referencia.
+    
+    ⚠️ **Nota:** Esta es solo una simulación. El baseline corregido aún no se ha generado. 
+    Podrás descargarlo en el siguiente paso (Paso 6).
+    """)
+    
+    # Obtener datos necesarios
+    kit_data = st.session_state.kit_data
+    df_ref_grouped = kit_data['df_ref_grouped']
+    df_new_grouped = kit_data['df_new_grouped']
+    spectral_cols = kit_data['spectral_cols']
+    lamp_ref = kit_data['lamp_ref']
+    lamp_new = kit_data['lamp_new']
+    common_ids = kit_data['common_ids']
+    mean_diff = kit_data['mean_diff']
+    
+    # Para simular, necesitamos crear un baseline ficticio
+    # Asumimos que el baseline original es aproximadamente el promedio de los espectros
+    # Esta es una aproximación para la simulación
+    baseline_approx = np.mean([df_ref_grouped.loc[id_].values for id_ in common_ids], axis=0)
+    baseline_corrected_approx = baseline_approx - mean_diff
+    
+    # Simular espectros corregidos
+    from core.spectral_processing import simulate_corrected_spectra
+    df_new_corr = simulate_corrected_spectra(
+        df_new_grouped,
+        spectral_cols,
+        baseline_approx,
+        baseline_corrected_approx
+    )
+    
+    # Obtener muestras usadas y no usadas
+    used_ids = st.session_state.get('selected_ids', list(common_ids))
+    other_ids = [i for i in common_ids if i not in used_ids]
+    
+    # Gráfico de muestras usadas - ANTES Y DESPUÉS
+    with st.expander("📊 Ver simulación - Muestras usadas en la corrección", expanded=False):
+        st.markdown("**Muestras usadas en la corrección (simulación)**")
+        
+        from utils.plotting import plot_corrected_spectra_comparison
+        
+        # GRÁFICO 1: SIN corrección
+        st.markdown("*ANTES: Sin corrección aplicada*")
+        fig_before_used = plot_corrected_spectra_comparison(
+            df_ref_grouped, 
+            df_new_grouped,  # ← SIN CORRECCIÓN
+            spectral_cols,
+            "Referencia", "Nueva (original)", 
+            used_ids,
+            title="Referencia vs Nueva (original) - muestras usadas"
+        )
+        st.plotly_chart(fig_before_used, use_container_width=True)
+        
+        # GRÁFICO 2: CON corrección (simulado)
+        st.markdown("*DESPUÉS: Con corrección aplicada (simulación)*")
+        fig_after_used = plot_corrected_spectra_comparison(
+            df_ref_grouped, 
+            df_new_corr,  # ← CON CORRECCIÓN
+            spectral_cols,
+            "Referencia", "Nueva (simulación corregida)", 
+            used_ids,
+            title="Simulación: Referencia vs Nueva (corregida) - muestras usadas"
+        )
+        st.plotly_chart(fig_after_used, use_container_width=True)
+    
+    # Gráfico de muestras no usadas (validación)
+    if len(other_ids) > 0:
+        with st.expander("✅ Ver simulación - Muestras no usadas (validación)", expanded=False):
+            st.markdown("**Muestras no usadas (simulación de validación)**")
+            
+            # GRÁFICO 1: SIN corrección
+            st.markdown("*ANTES: Sin corrección aplicada*")
+            fig_before = plot_corrected_spectra_comparison(
+                df_ref_grouped, 
+                df_new_grouped,  # ← SIN CORRECCIÓN
+                spectral_cols,
+                "Referencia", "Nueva (original)", 
+                other_ids,
+                title="Referencia vs Nueva (original) - NO usadas"
+            )
+            st.plotly_chart(fig_before, use_container_width=True)
+            
+            # GRÁFICO 2: CON corrección (simulado)
+            st.markdown("*DESPUÉS: Con corrección aplicada (simulación)*")
+            fig_after = plot_corrected_spectra_comparison(
+                df_ref_grouped, 
+                df_new_corr,  # ← CON CORRECCIÓN (simulado)
+                spectral_cols,
+                "Referencia", "Nueva (simulación corregida)", 
+                other_ids,
+                title="Simulación: Referencia vs Nueva (corregida) - NO usadas"
+            )
+            st.plotly_chart(fig_after, use_container_width=True)
+    else:
+        st.info("Todas las muestras comunes están siendo usadas para calcular la corrección.")

@@ -147,7 +147,7 @@ def start_html_document(client_data):
         <meta charset="UTF-8">
         <style>
             {load_buchi_css()}
-                        /* Sidebar del índice */
+            /* Sidebar del índice */
             .sidebar {{
                 position: fixed;
                 left: 0;
@@ -159,7 +159,6 @@ def start_html_document(client_data):
                 overflow-y: auto;
                 z-index: 1000;
             }}
-            
             
             .sidebar ul {{
                 list-style: none;
@@ -193,7 +192,6 @@ def start_html_document(client_data):
     </head>
     <body>
         
-        
         <div class="sidebar">
             <ul>
                 <li><a href="#info-cliente">Información del Cliente</a></li>
@@ -212,46 +210,47 @@ def start_html_document(client_data):
         <h1>Informe de Ajuste de Baseline NIR</h1>
         <div class="info-box" id="info-cliente">
             <h2>Información del Cliente</h2>
-            <div class="metric">
-                <span class="metric-label">Cliente:</span>
-                <span class="metric-value">{client_data.get('client_name', 'N/A')}</span>
-            </div>
-            <div class="metric">
-                <span class="metric-label">Contacto:</span>
-                <span class="metric-value">{client_data.get('contact_person', 'N/A')}</span>
-            </div>
-            <div class="metric">
-                <span class="metric-label">Email:</span>
-                <span class="metric-value">{client_data.get('contact_email', 'N/A')}</span>
-            </div>
-            <br>
-            <div class="metric">
-                <span class="metric-label">N/S Sensor:</span>
-                <span class="metric-value">{client_data.get('sensor_sn', 'N/A')}</span>
-            </div>
-            <div class="metric">
-                <span class="metric-label">Modelo:</span>
-                <span class="metric-value">{client_data.get('equipment_model', 'N/A')}</span>
-            </div>
-            <div class="metric">
-                <span class="metric-label">Técnico:</span>
-                <span class="metric-value">{client_data.get('technician', 'N/A')}</span>
-            </div>
-            <br>
-            <div class="metric">
-                <span class="metric-label">Ubicación:</span>
-                <span class="metric-value">{client_data.get('location', 'N/A')}</span>
-            </div>
-            <br>
-            <div class="metric">
-                <span class="metric-label">Fecha del Proceso:</span>
-                <span class="metric-value">{client_data.get('date', datetime.now().strftime('%Y-%m-%d %H:%M:%S'))}</span>
-            </div>
+            <table>
+                <tr>
+                    <th>Campo</th>
+                    <th>Valor</th>
+                </tr>
+                <tr>
+                    <td><strong>Cliente</strong></td>
+                    <td>{client_data.get('client_name', 'N/A')}</td>
+                </tr>
+                <tr>
+                    <td><strong>Contacto</strong></td>
+                    <td>{client_data.get('contact_person', 'N/A')}</td>
+                </tr>
+                <tr>
+                    <td><strong>Email</strong></td>
+                    <td>{client_data.get('contact_email', 'N/A')}</td>
+                </tr>
+                <tr>
+                    <td><strong>N/S Sensor</strong></td>
+                    <td>{client_data.get('sensor_sn', 'N/A')}</td>
+                </tr>
+                <tr>
+                    <td><strong>Modelo</strong></td>
+                    <td>{client_data.get('equipment_model', 'N/A')}</td>
+                </tr>
+                <tr>
+                    <td><strong>Técnico</strong></td>
+                    <td>{client_data.get('technician', 'N/A')}</td>
+                </tr>
+                <tr>
+                    <td><strong>Ubicación</strong></td>
+                    <td>{client_data.get('location', 'N/A')}</td>
+                </tr>
+                <tr>
+                    <td><strong>Fecha del Proceso</strong></td>
+                    <td>{client_data.get('date', datetime.now().strftime('%Y-%m-%d %H:%M:%S'))}</td>
+                </tr>
+            </table>
         </div>
-        
     """
     return html
-
 
 def generate_wstd_section(wstd_data):
     """
@@ -461,28 +460,39 @@ def generate_process_details(lamp_ref, lamp_new, n_spectral, n_samples, origin):
     html = f"""
         <div class="info-box" id="process-details">
             <h2>Detalles del Proceso</h2>
-
-            <br>
-            <div class="metric">
-                <span class="metric-label">Canales Espectrales:</span>
-                <span class="metric-value">{n_spectral}</span>
-            </div>
-            <div class="metric">
-                <span class="metric-label">Muestras Comunes:</span>
-                <span class="metric-value">{n_samples}</span>
-            </div>
-            <div class="metric">
-                <span class="metric-label">Muestras usadas en corrección:</span>
-                <span class="metric-value">{len(used_ids)}</span>
-            </div>
-            <div class="metric">
-                <span class="metric-label">Formato Baseline:</span>
-                <span class="metric-value">.{origin}</span>
-            </div>
+            <table>
+                <tr>
+                    <th>Parámetro</th>
+                    <th>Valor</th>
+                </tr>
+                <tr>
+                    <td><strong>Lámpara de Referencia</strong></td>
+                    <td>{lamp_ref}</td>
+                </tr>
+                <tr>
+                    <td><strong>Lámpara Nueva</strong></td>
+                    <td>{lamp_new}</td>
+                </tr>
+                <tr>
+                    <td><strong>Canales Espectrales</strong></td>
+                    <td>{n_spectral}</td>
+                </tr>
+                <tr>
+                    <td><strong>Muestras Comunes</strong></td>
+                    <td>{n_samples}</td>
+                </tr>
+                <tr>
+                    <td><strong>Muestras usadas en corrección</strong></td>
+                    <td>{len(used_ids)}</td>
+                </tr>
+                <tr>
+                    <td><strong>Formato Baseline</strong></td>
+                    <td>.{origin}</td>
+                </tr>
+            </table>
         </div>
     """
     return html
-
 
 def generate_samples_table(df, common_ids, lamp_ref, lamp_new):
     """
@@ -607,18 +617,28 @@ def generate_correction_statistics(mean_diff):
     html = f"""
         <div class="info-box" id="correction-stats">
             <h2>Estadísticas de la Corrección</h2>
-            <div class="metric">
-                <span class="metric-label">Corrección Máxima:</span>
-                <span class="metric-value">{max_corr:.6f}</span>
-            </div>
-            <div class="metric">
-                <span class="metric-label">Corrección Media:</span>
-                <span class="metric-value">{mean_corr:.6f}</span>
-            </div>
-            <div class="metric">
-                <span class="metric-label">Desviación Estándar:</span>
-                <span class="metric-value">{std_corr:.6f}</span>
-            </div>
+            <table style="margin-top: 15px;">
+                <tr>
+                    <th>Métrica</th>
+                    <th>Valor</th>
+                    <th>Descripción</th>
+                </tr>
+                <tr>
+                    <td><strong>Corrección Máxima</strong></td>
+                    <td>{max_corr:.6f}</td>
+                    <td>Máxima desviación absoluta que se corrige en cualquier canal espectral</td>
+                </tr>
+                <tr>
+                    <td><strong>Corrección Media</strong></td>
+                    <td>{mean_corr:.6f}</td>
+                    <td>Promedio de las correcciones aplicadas a lo largo de todos los canales</td>
+                </tr>
+                <tr>
+                    <td><strong>Desviación Estándar</strong></td>
+                    <td>{std_corr:.6f}</td>
+                    <td>Variabilidad de la corrección entre diferentes canales espectrales</td>
+                </tr>
+            </table>
         </div>
     """
     return html
@@ -827,29 +847,36 @@ def generate_baseline_info(ref_corrected, header, origin, ref_spectrum, spectral
     html = f"""
         <div class="info-box" id="baseline-info">
             <h2>Baseline Generado</h2>
-            <div class="metric">
-                <span class="metric-label">Puntos Espectrales:</span>
-                <span class="metric-value">{len(ref_corrected)}</span>
-            </div>
+            <table>
+                <tr>
+                    <th>Parámetro</th>
+                    <th>Valor</th>
+                </tr>
+                <tr>
+                    <td><strong>Puntos Espectrales</strong></td>
+                    <td>{len(ref_corrected)}</td>
+                </tr>
     """
     
     if origin == 'ref' and header is not None:
         html += f"""
-            <div class="metric">
-                <span class="metric-label">Cabecera X1:</span>
-                <span class="metric-value">{header[0]:.6e}</span>
-            </div>
-            <div class="metric">
-                <span class="metric-label">Cabecera X2:</span>
-                <span class="metric-value">{header[1]:.6e}</span>
-            </div>
-            <div class="metric">
-                <span class="metric-label">Cabecera X3:</span>
-                <span class="metric-value">{header[2]:.6e}</span>
-            </div>
+                <tr>
+                    <td><strong>Cabecera X1</strong></td>
+                    <td>{header[0]:.6e}</td>
+                </tr>
+                <tr>
+                    <td><strong>Cabecera X2</strong></td>
+                    <td>{header[1]:.6e}</td>
+                </tr>
+                <tr>
+                    <td><strong>Cabecera X3</strong></td>
+                    <td>{header[2]:.6e}</td>
+                </tr>
         """
     
     html += """
+            </table>
+            
             <h3 style="margin-top: 30px;">Comparación: Baseline Original vs Corregido</h3>
             <p style='color: #6c757d; font-size: 0.95em;'>
                 <em>Visualización del baseline antes y después de aplicar la corrección calculada.</em>
@@ -1116,23 +1143,28 @@ def generate_validation_section(validation_data, mean_diff_before, mean_diff_aft
         
         <div class="info-box">
             <h2>Detalles de la Validacion</h2>
-            <div class="metric">
-                <span class="metric-label">Lampara de Referencia:</span>
-                <span class="metric-value">{lamp_ref}</span>
-            </div>
-            <div class="metric">
-                <span class="metric-label">Lampara Nueva:</span>
-                <span class="metric-value">{lamp_new}</span>
-            </div>
-            <br>
-            <div class="metric">
-                <span class="metric-label">Muestras medidas:</span>
-                <span class="metric-value">{len(common_ids)}</span>
-            </div>
-            <div class="metric">
-                <span class="metric-label">Muestras usadas en validacion:</span>
-                <span class="metric-value">{len(selected_ids)}</span>
-            </div>
+            <table>
+                <tr>
+                    <th>Parámetro</th>
+                    <th>Valor</th>
+                </tr>
+                <tr>
+                    <td><strong>Lámpara de Referencia</strong></td>
+                    <td>{lamp_ref}</td>
+                </tr>
+                <tr>
+                    <td><strong>Lámpara Nueva</strong></td>
+                    <td>{lamp_new}</td>
+                </tr>
+                <tr>
+                    <td><strong>Muestras medidas</strong></td>
+                    <td>{len(common_ids)}</td>
+                </tr>
+                <tr>
+                    <td><strong>Muestras usadas en validación</strong></td>
+                    <td>{len(selected_ids)}</td>
+                </tr>
+            </table>
         </div>
         
         <div class="info-box">
@@ -1175,7 +1207,7 @@ def generate_validation_section(validation_data, mean_diff_before, mean_diff_aft
     
     html += f"""
         <div class="{status_class}" style="padding: 20px; margin: 20px 0; border-radius: 5px;">
-            <h2> Conclusion de la Validacion: {status_text}</h2>
+            <h2>{status_icon} Conclusion de la Validacion: {status_text}</h2>
             <p style="font-size: 1.1em; margin: 10px 0;">
                 La diferencia espectral entre lamparas se redujo en un <strong>{improvement_mean:.1f}%</strong>.
             </p>
@@ -1188,45 +1220,50 @@ def generate_validation_section(validation_data, mean_diff_before, mean_diff_aft
     if max_after < 0.001:
         html += """
             <p style="margin-top: 15px;">
-             <strong>El ajuste de baseline es optimo.</strong> Las lamparas estan perfectamente alineadas 
-            y el sistema esta listo para uso en produccion.
+                <strong>El ajuste de baseline es optimo.</strong> Las lamparas estan perfectamente alineadas 
+                y el sistema esta listo para uso en produccion.
             </p>
         """
     elif max_after < 0.01:
         html += """
             <p style="margin-top: 15px;">
-             <strong>El ajuste de baseline funciona correctamente.</strong> Las lamparas estan bien alineadas 
-            y el sistema puede usarse con confianza.
+                <strong>El ajuste de baseline funciona correctamente.</strong> Las lamparas estan bien alineadas 
+                y el sistema puede usarse con confianza.
             </p>
         """
     elif improvement_mean > 50:
         html += """
             <p style="margin-top: 15px;">
-             <strong>Correccion aceptable pero mejorable.</strong> Se recomienda:
-            <ul>
-                <li>Revisar la calidad de las mediciones del Standard Kit</li>
-                <li>Verificar las condiciones ambientales durante las mediciones</li>
-                <li>Evaluar el estado de las lamparas</li>
-            </ul>
+                <strong>Correccion aceptable pero mejorable.</strong> Se recomienda:
+                <ul>
+                    <li>Revisar la calidad de las mediciones del Standard Kit</li>
+                    <li>Verificar las condiciones ambientales durante las mediciones</li>
+                    <li>Evaluar el estado de las lamparas</li>
+                </ul>
             </p>
         """
     else:
         html += """
             <p style="margin-top: 15px;">
-             <strong>La correccion requiere revision.</strong> Acciones recomendadas:
-            <ul>
-                <li>Verificar que el baseline corregido se instalo correctamente</li>
-                <li>Reiniciar el equipo si es necesario</li>
-                <li>Asegurar condiciones estables durante las mediciones</li>
-                <li>Considerar repetir el proceso con diferentes muestras</li>
-            </ul>
+                <strong>La correccion requiere revision.</strong> Acciones recomendadas:
+                <ul>
+                    <li>Verificar que el baseline corregido se instalo correctamente</li>
+                    <li>Reiniciar el equipo si es necesario</li>
+                    <li>Asegurar condiciones estables durante las mediciones</li>
+                    <li>Considerar repetir el proceso con diferentes muestras</li>
+                </ul>
             </p>
         """
     
     html += """
         </div>
         
-        <h2>Muestras de Validacion</h2>
+        <div class="info-box">
+            <h2>Muestras de Validacion</h2>
+    """
+    
+    # Envolver tabla en expandible
+    table_html = """
         <table>
             <tr>
                 <th>ID Muestra</th>
@@ -1241,7 +1278,7 @@ def generate_validation_section(validation_data, mean_diff_before, mean_diff_aft
         count_new = 1 if id_ in df_new_val.index else 0
         used_tag = '<span class="tag tag-ok">✓ Si</span>' if id_ in selected_ids else '<span class="tag tag-no">✗ No</span>'
         
-        html += f"""
+        table_html += f"""
             <tr>
                 <td>{id_}</td>
                 <td>{count_ref}</td>
@@ -1250,10 +1287,19 @@ def generate_validation_section(validation_data, mean_diff_before, mean_diff_aft
             </tr>
         """
     
-    html += "</table>"
+    table_html += "</table>"
+    
+    # Envolver tabla en expandible
+    html += wrap_chart_in_expandable(
+        table_html,
+        f"Ver detalle de muestras de validación ({len(common_ids)} muestras)",
+        "validation_samples_table_expandable",
+        default_open=False
+    )
+    
+    html += "</div>"
     
     return html
-
 
 def generate_validation_charts(df_ref_val, df_new_val, spectral_cols,
                                lamp_ref, lamp_new, selected_ids,
