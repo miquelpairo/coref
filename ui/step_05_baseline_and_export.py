@@ -124,8 +124,8 @@ def process_ref_file(file, spectral_cols, lamp_new):
     if not validate_and_display_dimensions(len(ref_spectrum), len(spectral_cols)):
         return
     
-    # Visualizar baseline
-    with st.expander("Ver espectro del baseline cargado"):
+    # Visualizar baseline en expander
+    with st.expander("📊 Ver espectro del baseline cargado", expanded=False):
         fig = plot_baseline_spectrum(ref_spectrum, title="Baseline Cargado")
         st.plotly_chart(fig, use_container_width=True)
     
@@ -175,8 +175,8 @@ def process_csv_file(file, spectral_cols, lamp_new):
     if not validate_and_display_dimensions(len(ref_spectrum), len(spectral_cols)):
         return
     
-    # Visualizar baseline
-    with st.expander("Ver espectro del baseline cargado"):
+    # Visualizar baseline en expander
+    with st.expander("📊 Ver espectro del baseline cargado", expanded=False):
         fig = plot_baseline_spectrum(ref_spectrum, title="Baseline")
         st.plotly_chart(fig, use_container_width=True)
     
@@ -237,13 +237,14 @@ def render_correction_and_export_section():
     st.success(MESSAGES['success_correction_applied'])
     
     # Comparacion de valores
-    with st.expander("Ver comparacion de valores del baseline"):
+    with st.expander("📋 Ver comparacion de valores del baseline", expanded=False):
         render_baseline_comparison_values(ref_spectrum, ref_corrected)
     
-    # Visualizacion comparativa
-    st.markdown("#### Comparacion: Baseline Original vs Corregido")
-    fig_comp = plot_baseline_comparison(ref_spectrum, ref_corrected, spectral_cols)
-    st.plotly_chart(fig_comp, use_container_width=True)
+    # Visualizacion comparativa en expander
+    with st.expander("📊 Ver Comparacion: Baseline Original vs Corregido", expanded=False):
+        st.markdown("#### Comparacion: Baseline Original vs Corregido")
+        fig_comp = plot_baseline_comparison(ref_spectrum, ref_corrected, spectral_cols)
+        st.plotly_chart(fig_comp, use_container_width=True)
     
     # Descargar comparacion detallada
     render_comparison_download(ref_spectrum, ref_corrected, mean_diff)
@@ -401,42 +402,44 @@ def render_correction_simulation(df, df_ref_grouped, spectral_cols,
     used_ids = st.session_state.get('selected_ids', list(common_ids))
     other_ids = [i for i in common_ids if i not in used_ids]
     
-    # Grafico de muestras usadas
-    st.markdown("**Muestras usadas en la correccion**")
-    fig_used = plot_corrected_spectra_comparison(
-        df_ref_grouped, df_new_corr, spectral_cols,
-        "Referencia", "Nueva (corregida)", used_ids,
-        title="Referencia vs Nueva (corregida) - usadas en la correccion"
-    )
-    st.plotly_chart(fig_used, use_container_width=True)
+    # Grafico de muestras usadas en expander
+    with st.expander("📊 Ver Muestras usadas en la corrección", expanded=False):
+        st.markdown("**Muestras usadas en la correccion**")
+        fig_used = plot_corrected_spectra_comparison(
+            df_ref_grouped, df_new_corr, spectral_cols,
+            "Referencia", "Nueva (corregida)", used_ids,
+            title="Referencia vs Nueva (corregida) - usadas en la correccion"
+        )
+        st.plotly_chart(fig_used, use_container_width=True)
     
     # Grafico de muestras no usadas (validacion)
     if len(other_ids) > 0:
-        st.markdown("**Muestras no usadas (validacion)**")
-        
-        # GRÁFICO 1: SIN corrección
-        st.markdown("*ANTES: Sin corrección aplicada*")
-        fig_before = plot_corrected_spectra_comparison(
-            df_ref_grouped, 
-            df_new_grouped,  # ← SIN CORRECCIÓN (original)
-            spectral_cols,
-            "Referencia", "Nueva (original)", 
-            other_ids,
-            title="Referencia vs Nueva (original) - NO usadas"
-        )
-        st.plotly_chart(fig_before, use_container_width=True)
-        
-        # GRÁFICO 2: CON corrección
-        st.markdown("*DESPUÉS: Con corrección aplicada*")
-        fig_after = plot_corrected_spectra_comparison(
-            df_ref_grouped, 
-            df_new_corr,  # ← CON CORRECCIÓN
-            spectral_cols,
-            "Referencia", "Nueva (corregida)", 
-            other_ids,
-            title="Referencia vs Nueva (corregida) - NO usadas"
-        )
-        st.plotly_chart(fig_after, use_container_width=True)
+        with st.expander("✅ Ver Muestras no usadas (validación)", expanded=False):
+            st.markdown("**Muestras no usadas (validacion)**")
+            
+            # GRÁFICO 1: SIN corrección
+            st.markdown("*ANTES: Sin corrección aplicada*")
+            fig_before = plot_corrected_spectra_comparison(
+                df_ref_grouped, 
+                df_new_grouped,  # ← SIN CORRECCIÓN (original)
+                spectral_cols,
+                "Referencia", "Nueva (original)", 
+                other_ids,
+                title="Referencia vs Nueva (original) - NO usadas"
+            )
+            st.plotly_chart(fig_before, use_container_width=True)
+            
+            # GRÁFICO 2: CON corrección
+            st.markdown("*DESPUÉS: Con corrección aplicada*")
+            fig_after = plot_corrected_spectra_comparison(
+                df_ref_grouped, 
+                df_new_corr,  # ← CON CORRECCIÓN
+                spectral_cols,
+                "Referencia", "Nueva (corregida)", 
+                other_ids,
+                title="Referencia vs Nueva (corregida) - NO usadas"
+            )
+            st.plotly_chart(fig_after, use_container_width=True)
     else:
         st.info("Todas las muestras comunes estan siendo usadas para calcular la correccion.")
         

@@ -79,9 +79,11 @@ def render_wstd_step():
             
             st.write(f"**Canales espectrales:** {len(spectral_cols)}")
             
-            st.markdown("### Diagnóstico Visual")
-            fig = plot_wstd_individual(df_wstd, spectral_cols, selected_indices)
-            st.plotly_chart(fig, use_container_width=True)
+            # Envolver gráficos en expander
+            with st.expander("📊 Ver Diagnóstico Visual", expanded=False):
+                st.markdown("### Diagnóstico Visual")
+                fig = plot_wstd_individual(df_wstd, spectral_cols, selected_indices)
+                st.plotly_chart(fig, use_container_width=True)
             
             st.markdown("### Métricas de Diagnóstico")
             render_diagnostic_metrics(df_wstd, spectral_cols, selected_indices)

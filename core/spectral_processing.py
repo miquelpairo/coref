@@ -100,6 +100,6 @@ def simulate_corrected_spectra(df_new_grouped, spectral_cols, ref_spectrum, ref_
     """
     df_new_only = df_new_grouped[spectral_cols].copy()
     delta = ref_corrected - ref_spectrum
-    df_corrected = df_new_only + delta  # aplica la corrección por broadcasting
+    df_corrected = df_new_only - delta  # aplica la corrección por broadcasting
     return df_corrected
 

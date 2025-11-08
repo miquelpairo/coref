@@ -71,33 +71,35 @@ def render_correction_step():
     # ============================================
     # GRÁFICO 1: Muestras usadas en la corrección
     # ============================================
-    st.markdown("### Diferencias Espectrales - Muestras Usadas")
-    
-    if len(ids_for_corr) < len(common_ids):
-        st.info(f" Mostrando {len(ids_for_corr)} de {len(common_ids)} muestras (usadas en la corrección)")
-    else:
-        st.info(f" Mostrando todas las {len(ids_for_corr)} muestras")
-    
-    fig_used = plot_correction_differences(df_diff, ids_for_corr, ids_for_corr)
-    st.plotly_chart(fig_used, use_container_width=True)
+    with st.expander("📊 Ver Diferencias Espectrales - Muestras Usadas", expanded=False):
+        st.markdown("### Diferencias Espectrales - Muestras Usadas")
+        
+        if len(ids_for_corr) < len(common_ids):
+            st.info(f" Mostrando {len(ids_for_corr)} de {len(common_ids)} muestras (usadas en la corrección)")
+        else:
+            st.info(f" Mostrando todas las {len(ids_for_corr)} muestras")
+        
+        fig_used = plot_correction_differences(df_diff, ids_for_corr, ids_for_corr)
+        st.plotly_chart(fig_used, use_container_width=True)
     
     # ============================================
     # GRÁFICO 2: Validación en muestras NO usadas
     # ============================================
     if len(ids_not_used) > 0:
-        st.markdown("### Validación - Muestras NO Usadas en la Corrección")
-        st.info(f"""
-         Mostrando {len(ids_not_used)} muestras que **NO** se usaron para calcular la corrección.
-        
-        Este gráfico muestra cómo la corrección calculada afecta a muestras independientes,
-        permitiendo validar que la corrección es robusta y generalizable.
-        """)
-        
-        fig_validation = plot_correction_differences(df_diff, ids_not_used, ids_not_used)
-        st.plotly_chart(fig_validation, use_container_width=True)
-        
-        # Estadísticas de validación
-        render_validation_statistics(df_diff, ids_not_used, mean_diff)
+        with st.expander("✅ Ver Validación - Muestras NO Usadas", expanded=False):
+            st.markdown("### Validación - Muestras NO Usadas en la Corrección")
+            st.info(f"""
+             Mostrando {len(ids_not_used)} muestras que **NO** se usaron para calcular la corrección.
+            
+            Este gráfico muestra cómo la corrección calculada afecta a muestras independientes,
+            permitiendo validar que la corrección es robusta y generalizable.
+            """)
+            
+            fig_validation = plot_correction_differences(df_diff, ids_not_used, ids_not_used)
+            st.plotly_chart(fig_validation, use_container_width=True)
+            
+            # Estadísticas de validación
+            render_validation_statistics(df_diff, ids_not_used, mean_diff)
     else:
         st.info("Todas las muestras se están usando para la corrección. No hay muestras de validación disponibles.")
     

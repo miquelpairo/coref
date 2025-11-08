@@ -25,6 +25,8 @@ def main():
     apply_buchi_styles()
    
         
+        
+        
     # Verificar autenticacion
     if not check_password():
         st.stop()

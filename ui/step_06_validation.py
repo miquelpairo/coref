@@ -204,7 +204,7 @@ def render_validation_sample_selection(common_ids):
         ]
     })
     
-    with st.expander("Ver y seleccionar muestras"):
+    with st.expander("🔍 Ver y seleccionar muestras", expanded=False):
         with st.form("form_validation_samples", clear_on_submit=False):
             edited = st.data_editor(
                 df_samples,
@@ -256,7 +256,7 @@ def render_validation_spectra_visualization(df_ref_val, df_new_val, spectral_col
     """
     Renderiza la visualizacion de espectros de validacion.
     """
-    with st.expander("Ver espectros de validacion"):
+    with st.expander("📊 Ver espectros de validación", expanded=False):
         # Obtener muestras seleccionadas
         selected_ids = st.session_state.get('validation_selected_ids', list(common_ids))
         ids_to_plot = selected_ids if len(selected_ids) > 0 else list(common_ids)
@@ -313,10 +313,11 @@ def render_validation_analysis(df_ref_val, df_new_val, spectral_cols, common_ids
         "Mejora": mean_diff_original - mean_diff_after
     })
     
-    # Visualizar diferencias ANTES vs DESPUES
-    st.markdown("#### Comparacion: Antes vs Despues de la Correccion")
-    fig_comparison = plot_validation_comparison(df_comparison)
-    st.plotly_chart(fig_comparison, use_container_width=True)
+    # Visualizar diferencias ANTES vs DESPUES en expander
+    with st.expander("📊 Ver Comparación: Antes vs Después de la Corrección", expanded=False):
+        st.markdown("#### Comparacion: Antes vs Despues de la Correccion")
+        fig_comparison = plot_validation_comparison(df_comparison)
+        st.plotly_chart(fig_comparison, use_container_width=True)
     
     # Metricas de validacion
     render_validation_metrics(mean_diff_original, mean_diff_after)
