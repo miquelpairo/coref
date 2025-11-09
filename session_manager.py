@@ -33,12 +33,7 @@ def initialize_session_state():
     if 'backup_done' not in st.session_state:
         st.session_state.backup_done = False
     
-    # Selección de muestras
-    if 'selected_ids' not in st.session_state:
-        st.session_state.selected_ids = []
-    
-    if 'pending_selection' not in st.session_state:
-        st.session_state.pending_selection = []
+
 
 
 def reset_session_state():

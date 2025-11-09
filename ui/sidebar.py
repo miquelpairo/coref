@@ -6,23 +6,58 @@ import streamlit as st
 from config import STEPS
 from session_manager import get_current_step
 
+
+@st.dialog("⚠️ Cambios sin guardar")
+def confirm_navigation_dialog(target_step, step_name):
+    """
+    Diálogo modal para confirmar navegación con cambios sin guardar.
+    """
+    st.write("Tienes cambios sin guardar en el paso actual.")
+    st.write(f"¿Deseas navegar a **{step_name}** de todos modos?")
+    st.caption("Los cambios no guardados se perderán.")
+    
+    st.markdown("")  # Espaciado
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("✓ Sí, continuar", key="confirm_yes", use_container_width=True, type="primary"):
+            st.session_state.unsaved_changes = False
+            st.session_state.step = target_step
+            st.session_state.pending_navigation = None
+            st.session_state.pending_navigation_name = None
+            st.rerun()
+    with col2:
+        if st.button("✗ Cancelar", key="confirm_no", use_container_width=True):
+            st.session_state.pending_navigation = None
+            st.session_state.pending_navigation_name = None
+            st.rerun()
+
+
 def render_sidebar():
     """
     Renderiza la barra lateral con el progreso de los pasos.
     """
     with st.sidebar:
-               
         st.markdown("## Progreso")
         
         current_step = get_current_step()
         
+        # Inicializar estados
+        if 'pending_navigation' not in st.session_state:
+            st.session_state.pending_navigation = None
+        if 'pending_navigation_name' not in st.session_state:
+            st.session_state.pending_navigation_name = None
+        
+        # Mostrar advertencia de cambios sin guardar
+        if st.session_state.get('unsaved_changes', False):
+            st.warning("⚠️ Cambios sin guardar")
+        
         # Renderizar cada paso con su estado
         for step_idx, step_name in STEPS.items():
-            # Calcular numero de paso visible (1-7)
             step_number = step_idx
             
             if step_idx < current_step:
-                # Paso completado - CLICKABLE con seguridad
+                # Paso completado - CLICKABLE
                 col1, col2 = st.columns([0.1, 0.9])
                 with col1:
                     st.markdown('''
@@ -40,12 +75,12 @@ def render_sidebar():
                     ):
                         # Verificar si hay cambios sin guardar
                         if st.session_state.get('unsaved_changes', False):
-                            st.warning("Tienes cambios sin guardar en el paso actual")
-                            if st.button("Continuar de todos modos", key=f"confirm_{step_idx}"):
-                                st.session_state.unsaved_changes = False
-                                st.session_state.step = step_idx
-                                st.rerun()
+                            # Guardar destino y mostrar diálogo
+                            st.session_state.pending_navigation = step_idx
+                            st.session_state.pending_navigation_name = step_name
+                            st.rerun()
                         else:
+                            # Navegar directamente
                             st.session_state.step = step_idx
                             st.rerun()
                     
@@ -76,7 +111,7 @@ def render_sidebar():
         
         st.markdown("---")
         
-        # Informacion adicional
+        # Información adicional
         total_steps = len(STEPS)
         completed = current_step
         progress = min(completed / total_steps, 1.0)
@@ -87,4 +122,11 @@ def render_sidebar():
         st.markdown("---")
         
         # Leyenda
-        st.caption("Haz clic en los pasos completados para revisarlos")
+        st.caption("✓ Completado | → Actual | ○ Pendiente")
+        st.caption("Haz clic en los pasos completados ✓ para revisarlos")
+    
+    # CRÍTICO: Mostrar diálogo FUERA del sidebar
+    if st.session_state.get('pending_navigation') is not None:
+        target_step = st.session_state.pending_navigation
+        target_name = st.session_state.get('pending_navigation_name', f'Paso {target_step}')
+        confirm_navigation_dialog(target_step, target_name)

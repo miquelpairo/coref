@@ -15,6 +15,7 @@ from auth import check_password, logout
 from buchi_streamlit_theme import apply_buchi_styles
 import streamlit.components.v1 as components
 
+
 def main():
     """Aplicacion principal de Baseline Adjustment Tool"""
     
@@ -23,10 +24,7 @@ def main():
     
     # Aplicar estilos corporativos Buchi
     apply_buchi_styles()
-   
-        
-        
-        
+    
     # Verificar autenticacion
     if not check_password():
         st.stop()
@@ -65,8 +63,15 @@ def main():
         if st.button("Cerrar Sesion", use_container_width=True, key="logout_btn"):
             logout()
     
-    # Sidebar con progreso
+    # Sidebar con progreso (incluye el diálogo modal)
     render_sidebar()
+    
+    # ⭐ CRÍTICO: Si hay navegación pendiente, NO renderizar el paso actual
+    # El diálogo modal se encarga de la navegación
+    if st.session_state.get('pending_navigation') is not None:
+        # Mostrar mensaje temporal mientras se confirma
+        st.info("⏳ Confirma la navegación en el diálogo que aparece arriba...")
+        st.stop()  # Detener renderizado del paso actual
     
     # Router de pasos
     current_step = st.session_state.step
@@ -88,6 +93,7 @@ def main():
     # Seccion de utilidades (siempre visible)
     st.markdown("---")
     render_utilities_section()
+
 
 if __name__ == "__main__":
     main()

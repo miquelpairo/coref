@@ -191,10 +191,10 @@ def render_sample_selection_simple(common_ids):
     # Inicializar seleccion
     if 'selected_ids' not in st.session_state:
         st.session_state.selected_ids = list(common_ids)
-    
+
     if 'pending_selection' not in st.session_state:
-        st.session_state.pending_selection = list(st.session_state.selected_ids)
-    
+        st.session_state.pending_selection = list(common_ids)
+
     # Tabla de muestras
     df_samples = pd.DataFrame({
         'ID': list(common_ids),
@@ -204,7 +204,7 @@ def render_sample_selection_simple(common_ids):
         ]
     })
     
-    with st.expander("Ver y seleccionar muestras"):
+    with st.expander("Ver y seleccionar muestras", expanded=True):
         with st.form("form_select_samples", clear_on_submit=False):
             edited = st.data_editor(
                 df_samples,
