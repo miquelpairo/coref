@@ -88,6 +88,17 @@ SPECIAL_IDS = {
     'wstd': 'WSTD'  # White Standard ID (ya no es obligatorio)
 }
 
+# ⭐ NUEVO: Configuración de muestras de control
+CONTROL_SAMPLES_CONFIG = {
+    'min_samples': 1,
+    'max_samples': 50,
+    'prediction_tolerance': {
+        'good': 0.5,      # Diferencia < 0.5% = buena reproducibilidad
+        'warning': 2.0,   # Diferencia < 2% = aceptable
+        'bad': float('inf')  # Diferencia > 2% = revisar
+    }
+}
+
 # Configuración de gráficos
 PLOT_CONFIG = {
     'figsize_default': (12, 6),
@@ -139,6 +150,27 @@ INSTRUCTIONS = {
     diagnosticar el estado del equipo antes de realizar el ajuste.
     """,
     
+    # ⭐ NUEVO: Instrucciones para muestras de control
+    'control_samples': """
+    ### Muestras de Control (Opcional pero Recomendado)
+
+    **¿Por qué usar muestras de control?**
+    Las muestras de control te permiten validar que el ajuste de baseline mejora las predicciones 
+    del equipo. Medirás las mismas muestras **antes** y **después** del ajuste para comparar.
+
+    **Instrucciones:**
+    1. **Selecciona 3-10 muestras representativas** de tu rango analítico
+    2. **Asígnales IDs identificables** (ej: Control_Protein_High, Control_Moisture_Low, etc.)
+    3. **Mide las muestras AHORA** (antes del ajuste) con la lámpara nueva
+    4. **Exporta el archivo TSV** - debe incluir las predicciones (columna "Results")
+    5. Las medirás de nuevo al final del proceso para comparar
+
+    **Importante:** 
+    - Usa muestras con valores de predicción conocidos o esperados
+    - Anota los IDs exactos - los necesitarás al final
+    - El archivo debe tener la columna "Results" con las predicciones
+    """,
+    
     'kit': """
     ### Instrucciones para medición del Standard Kit:
 
@@ -172,21 +204,45 @@ INSTRUCTIONS = {
     - **Archivo .csv** (SX Suite 557 o posterior) - Formato de texto
 
     El archivo debe tener exactamente {n_channels} canales espectrales para coincidir con tus mediciones.
+    """,
+    
+    # ⭐ NUEVO: Instrucciones para validación con muestras de control
+    'validation_control': """
+    ### Validación con Muestras de Control
+
+    **Ha llegado el momento de validar el ajuste.**
+
+    **Instrucciones:**
+    1. **Mide las MISMAS muestras de control** que mediste al inicio
+    2. **Usa los MISMOS IDs** para poder comparar
+    3. **Exporta el archivo TSV** con las nuevas mediciones
+    4. La aplicación comparará automáticamente:
+       - Los espectros NIR antes vs. después
+       - Las predicciones antes vs. después
+       - Te mostrará si el ajuste mejoró la precisión
+
+    **Objetivo:** Verificar que el ajuste de baseline realmente mejora las predicciones.
     """
 }
 
 # Mensajes de éxito/error comunes
 MESSAGES = {
-    'success_file_loaded': "Archivo cargado correctamente",
-    'error_no_wstd': "No se encontraron mediciones con ID = 'External White' en el archivo.",
-    'error_no_samples': "No se encontraron mediciones de muestras (todas son WSTD).",
-    'error_no_common_samples': "No hay muestras comunes entre los dos archivos. Verifica que uses las mismas IDs.",
+    'success_file_loaded': "✅ Archivo cargado correctamente",
+    'error_no_wstd': "❌ No se encontraron mediciones con ID = 'External White' en el archivo.",
+    'error_no_samples': "❌ No se encontraron mediciones de muestras (todas son WSTD).",
+    'error_no_common_samples': "❌ No hay muestras comunes entre los dos archivos. Verifica que uses las mismas IDs.",
     'error_dimension_mismatch': "**Error de validación:** El baseline tiene {baseline_points} puntos, pero el TSV tiene {tsv_channels} canales. No coinciden.",
-    'success_dimension_match': "Validación correcta: {n_points} puntos en ambos archivos",
-    'success_correction_applied': "Corrección aplicada al baseline",
-    'warning_no_header': "No se puede generar .ref desde CSV: faltan valores de cabecera del sensor",
-    'warning_default_metadata': "Metadatos generados por defecto",
-    'info_two_files': "Proceso actualizado: ahora usamos dos archivos TSV separados para mayor flexibilidad"
+    'success_dimension_match': "✅ Validación correcta: {n_points} puntos en ambos archivos",
+    'success_correction_applied': "✅ Corrección aplicada al baseline",
+    'warning_no_header': "⚠️ No se puede generar .ref desde CSV: faltan valores de cabecera del sensor",
+    'warning_default_metadata': "⚠️ Metadatos generados por defecto",
+    'info_two_files': "ℹ️ Proceso actualizado: ahora usamos dos archivos TSV separados para mayor flexibilidad",
+    # ⭐ NUEVO: Mensajes para muestras de control
+    'success_control_initial': "✅ Muestras de control iniciales guardadas correctamente",
+    'success_control_final': "✅ Muestras de control finales guardadas correctamente",
+    'error_no_predictions': "❌ El archivo no contiene la columna 'Results' con las predicciones",
+    'error_no_common_control': "❌ No se encontraron muestras de control comunes entre las mediciones iniciales y finales",
+    'info_control_skipped': "ℹ️ Paso de muestras de control omitido"
 }
 
 # Configuración de informes HTML
@@ -216,11 +272,14 @@ img { max-width: 100%; height: auto; margin: 20px 0; }
 """
 
 # Información de versión
-VERSION = "2.1.0"
-VERSION_DATE = "2025-01-25"
+VERSION = "2.2.0"
+VERSION_DATE = "2025-01-27"
 VERSION_NOTES = """
-Versión 2.1.0 - Cambios principales:
-- WSTD: Selección manual de filas mediante checkboxes (ya no requiere ID específico)
+Versión 2.2.0 - Cambios principales:
+- ⭐ NUEVO: Soporte para muestras de control
+- ⭐ NUEVO: Comparación de predicciones antes/después del ajuste
+- ⭐ NUEVO: Validación espectral de muestras de control
+- WSTD: Selección manual de filas mediante checkboxes
 - WSTD: Visualización individual de cada medición con gráficos de diferencias
 - Gráficos WSTD incluidos en el reporte HTML con Plotly interactivo
 - Mejoras en la usabilidad del paso de diagnóstico inicial

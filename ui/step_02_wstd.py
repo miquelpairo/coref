@@ -1,5 +1,5 @@
 """
-Paso 2: Diagnostico WSTD (White Standard)
+Paso 3: Diagnostico WSTD (White Standard) + Muestras de Control
 """
 import streamlit as st
 import pandas as pd
@@ -7,19 +7,28 @@ import numpy as np
 import io
 import plotly.graph_objects as go
 from config import INSTRUCTIONS, MESSAGES, SPECIAL_IDS, WSTD_THRESHOLDS, DIAGNOSTIC_STATUS
-from session_manager import save_wstd_data, go_to_next_step
+from session_manager import (
+    save_wstd_data, 
+    go_to_next_step,
+    save_control_samples_initial  # ⭐ NUEVO
+)
 from core.file_handlers import load_tsv_file, get_spectral_columns
 from utils.validators import validate_wstd_measurements
 from utils.plotting import plot_wstd_spectra
+from utils.control_samples import extract_predictions_from_results  # ⭐ NUEVO
 
 
 def render_wstd_step():
     """
-    Renderiza el paso de diagnostico inicial con WSTD (Paso 1).
+    Renderiza el paso de diagnostico inicial con WSTD (Paso 3).
+    Incluye opción para cargar muestras de control.
     """
     st.markdown("## PASO 3 DE 7: Diagnóstico Inicial")
     st.markdown(INSTRUCTIONS['wstd'])
     st.markdown("---")
+    
+    # ========== SECCIÓN 1: EXTERNAL WHITE ==========
+    st.markdown("### 🔍 Diagnóstico External White")
     
     wstd_file = st.file_uploader(
         "Sube el archivo TSV con las mediciones de External White", 
@@ -36,12 +45,14 @@ def render_wstd_step():
             st.session_state.unsaved_changes = False
             go_to_next_step()
     
+    wstd_processed = False
+    
     if wstd_file:
         try:
             df = load_tsv_file(wstd_file)
             
-            st.markdown("### Selecciona las filas que corresponden a la referencia externa (External White)")
-            st.info("Marca las casillas de las mediciones que corresponden al White Standard.")
+            st.markdown("#### Selecciona las filas que corresponden a la referencia externa (External White)")
+            st.info("✅ Marca las casillas de las mediciones que corresponden al White Standard.")
             
             # Crear tabla con índice visible
             df_display = df[['ID', 'Note']].copy()
@@ -61,49 +72,159 @@ def render_wstd_step():
             selected_indices = edited_df[edited_df['Seleccionar'] == True].index.tolist()
             
             if len(selected_indices) == 0:
-                st.warning(" No has seleccionado ninguna fila. Por favor, marca las mediciones External White.")
-                return
-            
-            df_wstd = df.loc[selected_indices].copy()
-            
-            st.success(f" {len(df_wstd)} filas seleccionadas para análisis External White")
-            
-            # Mostrar info detallada
-            st.write("**Filas seleccionadas:**")
-            display_df = df_wstd[['ID', 'Note']].copy()
-            display_df.insert(0, 'Índice fila', selected_indices)
-            st.dataframe(display_df, use_container_width=True)
-            
-            spectral_cols = get_spectral_columns(df)
-            df_wstd[spectral_cols] = df_wstd[spectral_cols].apply(pd.to_numeric, errors="coerce")
-            
-            st.write(f"**Canales espectrales:** {len(spectral_cols)}")
-            
-            # Envolver gráficos en expander
-            with st.expander("📊 Ver Diagnóstico Visual", expanded=False):
-                st.markdown("### Diagnóstico Visual")
-                fig = plot_wstd_individual(df_wstd, spectral_cols, selected_indices)
-                st.plotly_chart(fig, use_container_width=True)
-            
-            st.markdown("### Métricas de Diagnóstico")
-            render_diagnostic_metrics(df_wstd, spectral_cols, selected_indices)
-            
-            save_wstd_data(
-                df=df_wstd,
-                grouped=None,
-                spectral_cols=spectral_cols,
-                lamps=None
-            )
-            
-            st.markdown("---")
-            if st.button("Continuar al Paso 4", type="primary", use_container_width=True):
-                st.session_state.unsaved_changes = False
-                go_to_next_step()
+                st.warning("⚠️ No has seleccionado ninguna fila. Por favor, marca las mediciones External White.")
+            else:
+                df_wstd = df.loc[selected_indices].copy()
+                
+                st.success(f"✅ {len(df_wstd)} filas seleccionadas para análisis External White")
+                
+                # Mostrar info detallada
+                st.write("**Filas seleccionadas:**")
+                display_df = df_wstd[['ID', 'Note']].copy()
+                display_df.insert(0, 'Índice fila', selected_indices)
+                st.dataframe(display_df, use_container_width=True)
+                
+                spectral_cols = get_spectral_columns(df)
+                df_wstd[spectral_cols] = df_wstd[spectral_cols].apply(pd.to_numeric, errors="coerce")
+                
+                st.write(f"**Canales espectrales:** {len(spectral_cols)}")
+                
+                # Envolver gráficos en expander
+                with st.expander("📊 Ver Diagnóstico Visual", expanded=False):
+                    st.markdown("#### Diagnóstico Visual")
+                    fig = plot_wstd_individual(df_wstd, spectral_cols, selected_indices)
+                    st.plotly_chart(fig, use_container_width=True)
+                
+                st.markdown("#### Métricas de Diagnóstico")
+                render_diagnostic_metrics(df_wstd, spectral_cols, selected_indices)
+                
+                save_wstd_data(
+                    df=df_wstd,
+                    grouped=None,
+                    spectral_cols=spectral_cols,
+                    lamps=None
+                )
+                
+                wstd_processed = True
                 
         except Exception as e:
-            st.error(f"Error al procesar el archivo: {str(e)}")
+            st.error(f"❌ Error al procesar el archivo: {str(e)}")
             import traceback
             st.code(traceback.format_exc())
+    
+    # ========== SECCIÓN 2: MUESTRAS DE CONTROL (OPCIONAL) ==========
+    st.markdown("---")
+    st.markdown("### 🧪 Muestras de Control (Opcional pero Recomendado)")
+    st.markdown(INSTRUCTIONS['control_samples'])
+    
+    control_file = st.file_uploader(
+        "Sube el archivo TSV con las muestras de control (ANTES del ajuste)",
+        type="tsv",
+        key="control_initial_upload",
+        help="Las muestras deben incluir la columna 'Result' con las predicciones"
+    )
+    
+    control_processed = False
+    
+    if control_file:
+        try:
+            df_control = load_tsv_file(control_file)
+            
+            # Verificar que tenga la columna Result
+            if 'Result' not in df_control.columns:
+                st.error(MESSAGES['error_no_predictions'])
+            else:
+                st.success(MESSAGES['success_file_loaded'])
+                
+                # Mostrar preview de las muestras
+                st.markdown("#### Muestras detectadas en el archivo:")
+                preview_cols = ['ID', 'Note', 'Result']
+                available_cols = [col for col in preview_cols if col in df_control.columns]
+                st.dataframe(df_control[available_cols], use_container_width=True)
+                
+                # Seleccionar muestras de control
+                st.markdown("#### Selecciona las muestras de control:")
+                st.info("✅ Estas muestras se medirán nuevamente al final para validar el ajuste.")
+                
+                # Crear checkboxes para seleccionar muestras
+                df_control_display = df_control[['ID', 'Note']].copy()
+                df_control_display.insert(0, 'Usar como Control', False)
+                
+                edited_control = st.data_editor(
+                    df_control_display,
+                    hide_index=False,
+                    use_container_width=True,
+                    disabled=['ID', 'Note'],
+                    key='control_selector'
+                )
+                
+                selected_control_indices = edited_control[edited_control['Usar como Control'] == True].index.tolist()
+                
+                if len(selected_control_indices) > 0:
+                    df_control_selected = df_control.loc[selected_control_indices].copy()
+                    
+                    st.success(f"✅ {len(df_control_selected)} muestras de control seleccionadas")
+                    
+                    # Extraer predicciones
+                    predictions_df = extract_predictions_from_results(df_control_selected)
+
+                    if not predictions_df.empty:
+                        st.markdown("#### Predicciones detectadas:")
+                        st.dataframe(predictions_df, use_container_width=True)
+
+                        # === NORMALIZA Y GUARDA ===
+                        # 1) Detecta y normaliza la columna de resultados a 'Result'
+                        result_col = None
+                        for c in ('Result', 'Results'):
+                            if c in df_control_selected.columns:
+                                result_col = c
+                                break
+
+                        df_to_save = df_control_selected.copy()
+                        if result_col and result_col != 'Result':
+                            df_to_save.rename(columns={result_col: 'Result'}, inplace=True)
+
+                        # 2) Normaliza IDs a string
+                        df_to_save['ID'] = df_to_save['ID'].astype(str).str.strip()
+
+                        # 3) Columnas espectrales
+                        spectral_cols = get_spectral_columns(df_control)
+
+                        # 4) Guarda en session_state lo que luego necesitará el Paso 7
+                        sample_ids = df_to_save['ID'].tolist()
+                        save_control_samples_initial(
+                            df=df_to_save,              # <- ¡usa df_to_save (incluye 'Result')!
+                            spectral_cols=spectral_cols,
+                            sample_ids=sample_ids
+                        )
+
+                        st.info(f"💾 {MESSAGES['success_control_initial']}")
+                        st.info(f"📝 **Importante:** Anota estos IDs: {', '.join(sample_ids)}")
+                        st.info("Los necesitarás al final del proceso para medir las mismas muestras.")
+                        
+                        control_processed = True
+                    else:
+                        st.warning("⚠️ No se pudieron extraer predicciones del campo Result")
+                else:
+                    st.warning("⚠️ No has seleccionado ninguna muestra de control")
+                    
+        except Exception as e:
+            st.error(f"❌ Error al procesar muestras de control: {str(e)}")
+            import traceback
+            st.code(traceback.format_exc())
+    else:
+        st.info("ℹ️ Puedes omitir este paso y continuar sin muestras de control")
+    
+    # ========== BOTÓN DE NAVEGACIÓN ==========
+    st.markdown("---")
+    
+    # Permitir continuar si WSTD está procesado (control es opcional)
+    if wstd_processed or st.session_state.get('wstd_data') is not None:
+        if st.button("Continuar al Paso 4 →", type="primary", use_container_width=True):
+            st.session_state.unsaved_changes = False
+            go_to_next_step()
+    else:
+        st.warning("⚠️ Debes completar el diagnóstico External White para continuar")
 
 
 def plot_wstd_individual(df_wstd, spectral_cols, selected_indices):
@@ -214,6 +335,7 @@ def plot_wstd_individual(df_wstd, spectral_cols, selected_indices):
     )
     
     return fig
+
 
 def render_diagnostic_metrics(df_wstd, spectral_cols, selected_indices):
     """

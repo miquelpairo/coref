@@ -202,7 +202,8 @@ def start_html_document(client_data):
                 <li><a href="#correction-differences">Diferencias Espectrales</a></li>
                 <li><a href="#baseline-info">Baseline Generado</a></li>
                 <li><a href="#charts-section">Resultados Gráficos</a></li>
-                <li><a href="#validation-section">Validación (si aplica)</a></li>
+                <li><a href="#validation-section">Validación</a></li>
+                <li><a href="#control-samples-section">Muestras de Control</a></li>
             </ul>
         </div>
 
@@ -924,7 +925,6 @@ def generate_notes_section(notes):
     """
     return html
 
-
 def generate_charts_section(
     df_ref_grouped,
     df_new_grouped,
@@ -942,7 +942,7 @@ def generate_charts_section(
     - DESPUÉS: espectros con corrección aplicada
     """
 
-    # 1. Aplicar corrección simulada a la lámpara nueva
+    # 1) Aplicar corrección simulada a la lámpara nueva
     df_new_corr = simulate_corrected_spectra(
         df_new_grouped,
         spectral_cols,
@@ -950,84 +950,106 @@ def generate_charts_section(
         ref_corrected
     )
 
-    # 2. Separar en "usadas en corrección" vs "no usadas"
+    # 2) Separar en "usadas en corrección" vs "no usadas"
     used_ids = list(selected_ids)
     other_ids = [i for i in common_ids if i not in used_ids]
 
     html = '<h2 id="charts-section">Resultados Gráficos</h2>'
 
-    # 3. Gráfico de muestras usadas en la corrección (CON corrección)
+    # 3) Muestras usadas en la corrección → ANTES y DESPUÉS (en vertical)
     if len(used_ids) > 0:
-        html += "<h3>Muestras usadas en la corrección (CON corrección aplicada)</h3>"
-        html += "<p style='color: #6c757d; font-size: 0.95em;'><em>Espectros después de aplicar el baseline corregido.</em></p>"
-        
-        fig_used = plot_corrected_spectra_comparison(
+        html += "<h3>Muestras usadas en la corrección</h3>"
+        html += "<p style='color: #6c757d; font-size: 0.95em;'><em>Comparativa antes y después de aplicar la corrección.</em></p>"
+
+        # ANTES: SIN corrección
+        fig_used_before = plot_corrected_spectra_comparison(
             df_ref_grouped,
-            df_new_corr,
+            df_new_grouped,  # SIN corrección
             spectral_cols,
             lamp_ref,
-            lamp_new,
+            lamp_new + " (original)",
             used_ids,
-            "Referencia vs Nueva corregida (muestras usadas en la corrección)"
+            "Referencia vs Nueva ORIGINAL (muestras usadas)"
         )
-        
-        chart_html_used = fig_used.to_html(include_plotlyjs='cdn', div_id='chart_used')
-        
-        # ⭐ CAMBIO: Envolver en expandible
+        chart_used_before = fig_used_before.to_html(
+            include_plotlyjs='cdn',
+            div_id='chart_used_before',
+            config={'displayModeBar': True, 'responsive': True}
+        )
         html += wrap_chart_in_expandable(
-            chart_html_used,
-            "Ver espectros corregidos (muestras usadas)",
-            "chart_used_expandable",
+            chart_used_before,
+            "Ver espectros SIN corrección (muestras usadas)",
+            "chart_used_before_expandable",
             default_open=False
         )
 
-    # 4. Gráficos de muestras no usadas (validación)
+        # DESPUÉS: CON corrección
+        fig_used_after = plot_corrected_spectra_comparison(
+            df_ref_grouped,
+            df_new_corr,  # CON corrección
+            spectral_cols,
+            lamp_ref,
+            lamp_new + " (corregida)",
+            used_ids,
+            "Referencia vs Nueva CORREGIDA (muestras usadas)"
+        )
+        chart_used_after = fig_used_after.to_html(
+            include_plotlyjs=False,
+            div_id='chart_used_after',
+            config={'displayModeBar': True, 'responsive': True}
+        )
+        html += wrap_chart_in_expandable(
+            chart_used_after,
+            "Ver espectros CON corrección (muestras usadas)",
+            "chart_used_after_expandable",
+            default_open=False
+        )
+
+    # 4) Muestras NO usadas (validación) → ANTES y DESPUÉS (en vertical)
     if len(other_ids) > 0:
         html += '<h3 id="validation-section">Muestras de Validación (no usadas en la corrección)</h3>'
-        
-        # ⭐ GRÁFICO ANTES (sin corrección)
-        html += "<h4>ANTES: Sin corrección aplicada</h4>"
-        html += "<p style='color: #6c757d; font-size: 0.95em;'><em>Espectros originales sin ninguna corrección.</em></p>"
-        
-        fig_before = plot_corrected_spectra_comparison(
+        html += "<p style='color: #6c757d; font-size: 0.95em;'><em>Comparativa antes y después de aplicar la corrección.</em></p>"
+
+        # ANTES: SIN corrección
+        include_js = 'cdn' if len(used_ids) == 0 else False
+        fig_val_before = plot_corrected_spectra_comparison(
             df_ref_grouped,
-            df_new_grouped,  # ← SIN CORRECCIÓN
+            df_new_grouped,  # SIN corrección
             spectral_cols,
             lamp_ref,
             lamp_new + " (original)",
             other_ids,
-            "Referencia vs Nueva original (muestras de validación)"
+            "Referencia vs Nueva ORIGINAL (validación)"
         )
-        
-        chart_html_before = fig_before.to_html(include_plotlyjs='cdn', div_id='chart_validation_before')
-        
-        # ⭐ CAMBIO: Envolver en expandible
+        chart_val_before = fig_val_before.to_html(
+            include_plotlyjs=include_js,
+            div_id='chart_validation_before',
+            config={'displayModeBar': True, 'responsive': True}
+        )
         html += wrap_chart_in_expandable(
-            chart_html_before,
+            chart_val_before,
             "Ver espectros SIN corrección (validación)",
             "chart_validation_before_expandable",
             default_open=False
         )
-        
-        # ⭐ GRÁFICO DESPUÉS (con corrección)
-        html += "<h4>DESPUÉS: Con corrección aplicada</h4>"
-        html += "<p style='color: #6c757d; font-size: 0.95em;'><em>Espectros después de aplicar el baseline corregido.</em></p>"
-        
-        fig_after = plot_corrected_spectra_comparison(
+
+        # DESPUÉS: CON corrección
+        fig_val_after = plot_corrected_spectra_comparison(
             df_ref_grouped,
-            df_new_corr,  # ← CON CORRECCIÓN
+            df_new_corr,  # CON corrección
             spectral_cols,
             lamp_ref,
             lamp_new + " (corregida)",
             other_ids,
-            "Referencia vs Nueva corregida (muestras de validación)"
+            "Referencia vs Nueva CORREGIDA (validación)"
         )
-        
-        chart_html_after = fig_after.to_html(include_plotlyjs='cdn', div_id='chart_validation_after')
-        
-        # ⭐ CAMBIO: Envolver en expandible
+        chart_val_after = fig_val_after.to_html(
+            include_plotlyjs=False,
+            div_id='chart_validation_after',
+            config={'displayModeBar': True, 'responsive': True}
+        )
         html += wrap_chart_in_expandable(
-            chart_html_after,
+            chart_val_after,
             "Ver espectros CON corrección (validación)",
             "chart_validation_after_expandable",
             default_open=False
@@ -1035,6 +1057,183 @@ def generate_charts_section(
 
     return html
 
+def _df_to_html_table(df: pd.DataFrame, float_fmt="{:.2f}", index=False) -> str:
+    if df is None or df.empty:
+        return "<p><em>Sin datos</em></p>"
+    df_fmt = df.copy()
+    for c in df_fmt.select_dtypes(include="number").columns:
+        df_fmt[c] = df_fmt[c].apply(lambda x: float_fmt.format(x) if pd.notna(x) else "")
+    return df_fmt.to_html(index=index, classes="table", border=0)
+
+def generate_control_samples_section():
+    """
+    Sección de 'Validación con Muestras de Control' (opcional).
+    Requiere que existan en session_state:
+      - control_samples_initial: {'df', 'spectral_cols', 'sample_ids'}
+      - control_samples_final:   {'df', 'spectral_cols', 'sample_ids'}
+    """
+    import streamlit as st
+    import pandas as pd
+    from utils.control_samples import (
+        extract_predictions_from_results,
+        get_prediction_parameters,
+        compare_predictions,
+        plot_spectra_comparison,
+        plot_predictions_comparison,
+        calculate_spectral_metrics
+    )
+
+    ctrl_ini = st.session_state.get('control_samples_initial')
+    ctrl_fin = st.session_state.get('control_samples_final')
+    if not ctrl_ini or not ctrl_fin:
+        return ""  # no hay sección
+
+    # --- Datos base ---
+    df_initial = ctrl_ini['df'].copy()
+    df_final   = ctrl_fin['df'].copy()
+    spec_ini   = ctrl_ini.get('spectral_cols', [])
+    spec_fin   = ctrl_fin.get('spectral_cols', [])
+    ids_ini    = [str(x).strip() for x in ctrl_ini.get('sample_ids', [])]
+    ids_fin    = [str(x).strip() for x in ctrl_fin.get('sample_ids', [])]
+
+    # Normaliza IDs
+    df_initial['ID'] = df_initial['ID'].astype(str).str.strip()
+    df_final['ID']   = df_final['ID'].astype(str).str.strip()
+
+    # IDs comunes
+    common_ids = sorted(list(set(ids_ini) & set(ids_fin)))
+    if not common_ids:
+        return """
+        <div class="warning-box" id="control-samples-section" style="margin-top: 30px;">
+            <h2>Validación con Muestras de Control</h2>
+            <p><em>No se encontraron IDs comunes entre las muestras de control iniciales y finales.</em></p>
+        </div>
+        """
+
+    # Columnas espectrales compatibles
+    if len(spec_ini) != len(spec_fin):
+        min_len = min(len(spec_ini), len(spec_fin))
+        spectral_cols = spec_ini[:min_len]
+        note_specs = f"⚠️ Inicial: {len(spec_ini)} canales, Final: {len(spec_fin)} canales → usando {min_len} comunes."
+    else:
+        spectral_cols = spec_ini
+        note_specs = f"Canales espectrales: {len(spectral_cols)}"
+
+    # === 1) Comparación espectral ===
+    fig_spectra = plot_spectra_comparison(
+        df_initial[df_initial['ID'].isin(common_ids)],
+        df_final[df_final['ID'].isin(common_ids)],
+        spectral_cols,
+        common_ids
+    )
+    chart_html_spectra = fig_spectra.to_html(
+        include_plotlyjs='cdn',
+        div_id='ctrl_spectra',
+        config={'displayModeBar': True, 'responsive': True}
+    )
+
+    spectral_metrics = calculate_spectral_metrics(
+        df_initial[df_initial['ID'].isin(common_ids)],
+        df_final[df_final['ID'].isin(common_ids)],
+        spectral_cols,
+        common_ids
+    )
+    # spectral_metrics -> dict; lo paso a DF para tabla
+    rows = []
+    for sid, m in spectral_metrics.items():
+        rows.append({
+            "Muestra": sid,
+            "Dif. media": m['mean_diff'],
+            "Desv. estándar": m['std_diff'],
+            "Dif. máx. abs.": m['max_diff'],
+            "RMSE": m['rmse'],
+            "Correlación": m['correlation'],
+        })
+    df_spec_metrics = pd.DataFrame(rows)
+
+    # Tabla de métricas (HTML)
+    spec_table_html = _df_to_html_table(df_spec_metrics, float_fmt="{:.6f}", index=False)
+
+    # === 2) Comparación de predicciones ===
+    pred_ini = extract_predictions_from_results(df_initial[df_initial['ID'].isin(common_ids)])
+    pred_fin = extract_predictions_from_results(df_final[df_final['ID'].isin(common_ids)])
+
+    pred_block = ""
+    if pred_ini is not None and not pred_ini.empty and pred_fin is not None and not pred_fin.empty:
+        params_initial = get_prediction_parameters(pred_ini)
+        params_final   = get_prediction_parameters(pred_fin)
+        common_params  = [p for p in params_initial if p in params_final]
+
+        if common_params:
+            cmp_df = compare_predictions(pred_ini, pred_fin, common_ids)
+
+            # Gráfico barras
+            fig_pred = plot_predictions_comparison(cmp_df, common_params)
+            chart_html_pred = (
+                fig_pred.to_html(
+                    include_plotlyjs='cdn',
+                    div_id='ctrl_predictions',
+                    config={'displayModeBar': True, 'responsive': True}
+                ) if fig_pred else "<p><em>Sin gráfico</em></p>"
+            )
+
+            # Tabla bonita (solo columnas relevantes y en orden)
+            cols = ['ID']
+            for p in common_params:
+                cols += [f'{p}_initial', f'{p}_final', f'{p}_diff', f'{p}_diff_pct']
+            cmp_show = cmp_df[cols].copy()
+            for c in cmp_show.columns:
+                if c.endswith('_diff_pct'):
+                    cmp_show[c] = cmp_show[c].apply(lambda x: f"{x:.2f}%" if pd.notna(x) else "")
+                elif c != 'ID':
+                    cmp_show[c] = cmp_show[c].apply(lambda x: f"{x:.2f}" if pd.notna(x) else "")
+
+            # Render tabla a HTML y envolverla en expandible con scroll
+            table_html = _df_to_html_table(cmp_show, float_fmt="{:.2f}", index=False)
+            table_html_scroll = f"<div style='overflow-x:auto'>{table_html}</div>"
+            table_wrapped = wrap_chart_in_expandable(
+                table_html_scroll,
+                "Ver tabla completa de comparación",
+                "ctrl_pred_table_expand",
+                False
+            )
+
+            pred_block = (
+                f"<h3>2) Comparación de Predicciones</h3>"
+                f"<p style='color:#6c757d;font-size:0.95em;'>Parámetros detectados: {', '.join(common_params)}.</p>"
+                f"{wrap_chart_in_expandable(chart_html_pred, 'Ver comparación de predicciones', 'ctrl_pred_expand', False)}"
+                f"{table_wrapped}"
+            )
+        else:
+            pred_block = """
+                <h3>2) Comparación de Predicciones</h3>
+                <p><em>No hay parámetros comunes (ParamN) entre inicial y final.</em></p>
+            """
+    else:
+        pred_block = """
+            <h3>2) Comparación de Predicciones</h3>
+            <p><em>No se pudieron extraer predicciones de uno o ambos conjuntos.</em></p>
+        """
+
+    # Empaquetado HTML (gráficos en vertical + expandibles cerrados)
+    html = f"""
+        <div class="info-box" id="control-samples-section" style="margin-top: 30px;">
+            <h2>Validación con Muestras de Control</h2>
+            <p style="color:#6c757d;font-size:0.95em;">
+                IDs comunes: {", ".join(common_ids)}<br>
+                {note_specs}
+            </p>
+
+            <h3>1) Comparación Espectral</h3>
+            {wrap_chart_in_expandable(chart_html_spectra, "Ver comparación de espectros (control)", "ctrl_spec_expand", False)}
+            <h4>Métricas espectrales</h4>
+            {spec_table_html}
+
+            {pred_block}
+        </div>
+    """
+    return html
+    
 def generate_footer():
     """
     Genera el footer del informe.
@@ -1079,6 +1278,9 @@ def generate_validation_report(kit_data, baseline_data, ref_corrected, origin,
     
     # Agregar seccion de validacion
     html += generate_validation_section(validation_data, mean_diff_before, mean_diff_after)
+    
+    # >>> NUEVO: Sección de Muestras de Control (si existen en session_state)
+    html += generate_control_samples_section()
     
     # Agregar footer final
     html += generate_footer()

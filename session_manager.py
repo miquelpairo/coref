@@ -29,11 +29,29 @@ def initialize_session_state():
     if 'baseline_data' not in st.session_state:
         st.session_state.baseline_data = None
     
+    if 'validation_data' not in st.session_state:
+        st.session_state.validation_data = None
+    
+    # ⭐ NUEVO: Datos de muestras de control
+    if 'control_samples_initial' not in st.session_state:
+        st.session_state.control_samples_initial = None
+    
+    if 'control_samples_final' not in st.session_state:
+        st.session_state.control_samples_final = None
+    
     # Flags de control
     if 'backup_done' not in st.session_state:
         st.session_state.backup_done = False
     
-
+    if 'unsaved_changes' not in st.session_state:
+        st.session_state.unsaved_changes = False
+    
+    # Estados de navegación
+    if 'pending_navigation' not in st.session_state:
+        st.session_state.pending_navigation = None
+    
+    if 'pending_navigation_name' not in st.session_state:
+        st.session_state.pending_navigation_name = None
 
 
 def reset_session_state():
@@ -45,15 +63,17 @@ def reset_session_state():
         del st.session_state[key]
     initialize_session_state()
 
+
 def _mark_scroll_to_top():
     st.session_state._scroll_to_top = True
+
 
 def go_to_step(step_number):
     """
     Navega a un paso específico del proceso.
     
     Args:
-        step_number (int): Número del paso al que navegar (-1 a 5)
+        step_number (int): Número del paso al que navegar (-1 a 7)
     """
     st.session_state.step = step_number
     st.rerun()
@@ -93,6 +113,7 @@ def save_client_data(client_name, sensor_sn, contact_person='', contact_email=''
         equipment_model (str): Modelo del equipo
         location (str): Ubicación
         notes (str): Notas adicionales
+        technician (str): Técnico responsable
     """
     st.session_state.client_data = {
         'client_name': client_name,
@@ -102,7 +123,7 @@ def save_client_data(client_name, sensor_sn, contact_person='', contact_email=''
         'equipment_model': equipment_model,
         'location': location,
         'notes': notes,
-        'technician':technician,
+        'technician': technician,
         'date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     }
 
@@ -140,6 +161,81 @@ def save_wstd_data(df, grouped, spectral_cols, lamps):
         'spectral_cols': spectral_cols,
         'lamps': lamps
     }
+
+
+# ⭐ NUEVO: Funciones para muestras de control
+def save_control_samples_initial(df, spectral_cols, sample_ids):
+    """
+    Guarda las muestras de control del diagnóstico inicial.
+    
+    Args:
+        df (pd.DataFrame): DataFrame con las mediciones de control
+        spectral_cols (list): Lista de columnas espectrales
+        sample_ids (list): IDs de las muestras seleccionadas
+    """
+    st.session_state.control_samples_initial = {
+        'df': df.copy(),
+        'spectral_cols': spectral_cols,
+        'sample_ids': sample_ids,
+        'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    }
+
+
+def save_control_samples_final(df, spectral_cols, sample_ids):
+    """
+    Guarda las muestras de control de la validación final.
+    
+    Args:
+        df (pd.DataFrame): DataFrame con las mediciones de control finales
+        spectral_cols (list): Lista de columnas espectrales
+        sample_ids (list): IDs de las muestras seleccionadas
+    """
+    st.session_state.control_samples_final = {
+        'df': df.copy(),
+        'spectral_cols': spectral_cols,
+        'sample_ids': sample_ids,
+        'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    }
+
+
+def get_control_samples_initial():
+    """
+    Recupera las muestras de control iniciales.
+    
+    Returns:
+        dict or None: Diccionario con los datos o None si no existen
+    """
+    return st.session_state.get('control_samples_initial', None)
+
+
+def get_control_samples_final():
+    """
+    Recupera las muestras de control finales.
+    
+    Returns:
+        dict or None: Diccionario con los datos o None si no existen
+    """
+    return st.session_state.get('control_samples_final', None)
+
+
+def has_control_samples_initial():
+    """
+    Verifica si hay muestras de control iniciales guardadas.
+    
+    Returns:
+        bool: True si hay muestras de control iniciales
+    """
+    return st.session_state.control_samples_initial is not None
+
+
+def has_control_samples_final():
+    """
+    Verifica si hay muestras de control finales guardadas.
+    
+    Returns:
+        bool: True si hay muestras de control finales
+    """
+    return st.session_state.control_samples_final is not None
 
 
 def save_kit_data(df, df_ref_grouped, df_new_grouped, spectral_cols, 
