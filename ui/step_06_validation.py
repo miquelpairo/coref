@@ -195,9 +195,9 @@ def process_control_samples_final(control_final_file, control_initial):
     spectral_cols = control_initial['spectral_cols']
     initial_sample_ids = control_initial['sample_ids']
     
-    # Mostrar preview
+    # Mostrar preview con Recipe si existe
     st.markdown("#### Muestras detectadas en el archivo final:")
-    preview_cols = ['ID', 'Note', 'Result']
+    preview_cols = ['ID', 'Note', 'Recipe', 'Result']
     available_cols = [col for col in preview_cols if col in df_final.columns]
     st.dataframe(df_final[available_cols], use_container_width=True)
     
@@ -205,14 +205,22 @@ def process_control_samples_final(control_final_file, control_initial):
     st.markdown("#### Selecciona las muestras que corresponden a las de control:")
     st.info("✅ Deberían coincidir con los IDs de las muestras iniciales")
     
+    # Incluir Recipe en el selector si existe
     df_final_display = df_final[['ID', 'Note']].copy()
+    
+    if 'Recipe' in df_final.columns:
+        df_final_display['Recipe'] = df_final['Recipe']
+    
     df_final_display.insert(0, 'Usar como Control Final', False)
+    
+    # Deshabilitar Recipe si existe
+    disabled_cols = ['ID', 'Note', 'Recipe'] if 'Recipe' in df_final.columns else ['ID', 'Note']
     
     edited_final = st.data_editor(
         df_final_display,
         hide_index=False,
         use_container_width=True,
-        disabled=['ID', 'Note'],
+        disabled=disabled_cols,
         key='control_final_selector'
     )
     
@@ -227,6 +235,13 @@ def process_control_samples_final(control_final_file, control_initial):
     
     st.success(f"✅ {len(df_final_selected)} muestras de control finales seleccionadas")
     
+    # Mostrar recetas finales si existen
+    if 'Recipe' in df_final_selected.columns:
+        recipes_final = df_final_selected['Recipe'].dropna().unique()
+        if len(recipes_final) > 0:
+            recipes_str = ', '.join([str(r) for r in recipes_final])
+            st.info(f"📋 **Recetas detectadas en muestras finales:** {recipes_str}")
+    
     # Encontrar IDs comunes
     common_ids = list(set(initial_sample_ids) & set(final_sample_ids))
     
@@ -237,6 +252,64 @@ def process_control_samples_final(control_final_file, control_initial):
         return
     
     st.success(f"✅ {len(common_ids)} muestras comunes encontradas: {', '.join(common_ids)}")
+    
+    # ⭐ NUEVO: Validar que las recetas coincidan para los IDs comunes
+    if 'Recipe' in df_initial.columns and 'Recipe' in df_final_selected.columns:
+        # Filtrar solo IDs comunes para la comparación
+        df_initial_common = df_initial[df_initial['ID'].isin(common_ids)].copy()
+        df_final_common = df_final_selected[df_final_selected['ID'].isin(common_ids)].copy()
+        
+        # Normalizar IDs
+        df_initial_common['ID'] = df_initial_common['ID'].astype(str).str.strip()
+        df_final_common['ID'] = df_final_common['ID'].astype(str).str.strip()
+        
+        # Crear diccionarios de Recipe por ID
+        recipe_initial = df_initial_common.set_index('ID')['Recipe'].to_dict()
+        recipe_final = df_final_common.set_index('ID')['Recipe'].to_dict()
+        
+        # Verificar coincidencias
+        mismatches = []
+        for sample_id in common_ids:
+            recipe_ini = recipe_initial.get(sample_id)
+            recipe_fin = recipe_final.get(sample_id)
+            
+            # Comparar solo si ambos tienen Recipe (no son NaN)
+            if pd.notna(recipe_ini) and pd.notna(recipe_fin):
+                if str(recipe_ini).strip() != str(recipe_fin).strip():
+                    mismatches.append({
+                        'ID': sample_id,
+                        'Recipe_Inicial': recipe_ini,
+                        'Recipe_Final': recipe_fin
+                    })
+        
+        # Mostrar advertencia si hay diferencias
+        if mismatches:
+            st.error("❌ **ERROR CRÍTICO: Recetas no coinciden**")
+            st.warning("""
+            ⚠️ Las siguientes muestras tienen diferentes recetas (calibraciones) entre las mediciones 
+            inicial y final. Esto invalida la comparación porque las diferencias observadas pueden 
+            deberse al cambio de calibración y no al ajuste de baseline.
+            """)
+            
+            df_mismatches = pd.DataFrame(mismatches)
+            st.dataframe(df_mismatches, use_container_width=True)
+            
+            st.error("""
+            **Acciones recomendadas:**
+            1. Verifica que las muestras finales se midieron con la MISMA receta que las iniciales
+            2. Si cambiaste de receta, debes medir nuevamente las muestras de control con la receta original
+            3. El ajuste de baseline NO cambia la receta/calibración a usar
+            """)
+            
+            # Preguntar si quiere continuar de todos modos
+            st.markdown("---")
+            if st.checkbox("⚠️ Entiendo el riesgo y quiero continuar de todos modos", key="force_continue"):
+                st.warning("Continuando con la validación a pesar de las diferencias en recetas...")
+            else:
+                st.info("Proceso detenido. Corrige las recetas antes de continuar.")
+                return  # ← Detiene el proceso aquí
+        else:
+            st.success("✅ Recetas coinciden correctamente entre mediciones iniciales y finales")
     
     # Guardar muestras finales
     spectral_cols_final = get_spectral_columns(df_final)
@@ -259,11 +332,10 @@ def process_control_samples_final(control_final_file, control_initial):
         common_ids
     )
 
-
 def render_control_samples_analysis(df_initial, df_final, spectral_cols_initial, 
                                     spectral_cols_final, common_ids):
     """
-    ⭐ NUEVA FUNCIÓN: Renderiza el análisis comparativo de muestras de control.
+    ⭐ ACTUALIZADO: Renderiza el análisis comparativo de muestras de control.
     """
     # --- Normaliza IDs ---
     df_initial = df_initial.copy()
@@ -333,8 +405,15 @@ def render_control_samples_analysis(df_initial, df_final, spectral_cols_initial,
         st.write("Params final:", params_final)
         return
 
-    # Comparación robusta
-    comparison_df = compare_predictions(predictions_initial, predictions_final, common_ids)
+    # ⭐ MODIFICADO: Pasar también df_initial y df_final para capturar Recipe
+    comparison_df = compare_predictions(
+        predictions_initial, 
+        predictions_final, 
+        common_ids,
+        df_original_initial=df_initial,  # ← NUEVO
+        df_original_final=df_final        # ← NUEVO
+    )
+    
     if comparison_df.empty:
         st.warning("⚠️ No hay datos de predicciones para comparar")
         st.write("IDs comunes:", common_ids)
@@ -352,9 +431,10 @@ def render_control_samples_analysis(df_initial, df_final, spectral_cols_initial,
         if fig_pred:
             st.plotly_chart(fig_pred, use_container_width=True)
 
-    # Tabla de comparación detallada
-    st.markdown("##### Tabla de Comparación Detallada")
-    render_predictions_comparison_table(comparison_df, common_params)
+    # ⭐ MODIFICADO: Tabla de comparación detallada con expander y scroll horizontal
+    with st.expander("📋 Ver Tabla de Comparación Detallada", expanded=False):
+        st.markdown("##### Tabla de Comparación Detallada")
+        render_predictions_comparison_table(comparison_df, common_params)
 
     # ========== CONCLUSIÓN ==========
     st.markdown("---")
@@ -362,7 +442,6 @@ def render_control_samples_analysis(df_initial, df_final, spectral_cols_initial,
 
     # Descargar resultados
     render_control_samples_download(comparison_df, spectral_metrics)
-    
 
 def render_spectral_metrics_table(spectral_metrics):
     """
@@ -385,13 +464,18 @@ def render_spectral_metrics_table(spectral_metrics):
 
 def render_predictions_comparison_table(comparison_df, parameters):
     """
-    ⭐ NUEVA FUNCIÓN: Renderiza tabla con comparación de predicciones.
+    ⭐ ACTUALIZADO: Renderiza tabla con comparación de predicciones incluyendo Recipe.
+    Usa contenedor con scroll horizontal para tablas anchas.
     """
     display_data = []
     
     for _, row in comparison_df.iterrows():
         sample_id = row['ID']
         sample_data = {'Muestra': sample_id}
+        
+        # ⭐ NUEVO: Añadir Recipe si existe
+        if 'Recipe' in row.index and pd.notna(row['Recipe']):
+            sample_data['Receta'] = row['Recipe']
         
         for param in parameters:
             col_initial = f'{param}_initial'
@@ -417,14 +501,32 @@ def render_predictions_comparison_table(comparison_df, parameters):
         display_data.append(sample_data)
     
     df_display = pd.DataFrame(display_data)
-    st.dataframe(df_display, use_container_width=True)
-
+    
+    # ⭐ NUEVO: Reordenar columnas para que Recipe esté al inicio
+    if 'Receta' in df_display.columns:
+        cols = ['Muestra', 'Receta'] + [c for c in df_display.columns if c not in ['Muestra', 'Receta']]
+        df_display = df_display[cols]
+    
+    # ⭐ NUEVO: Usar contenedor con altura fija para scroll horizontal
+    st.dataframe(
+        df_display, 
+        use_container_width=True,
+        height=400  # Altura fija con scroll vertical si hay muchas filas
+    )
 
 def render_control_samples_conclusion(comparison_df, parameters):
     """
-    ⭐ NUEVA FUNCIÓN: Renderiza conclusión del análisis de muestras de control.
+    ⭐ ACTUALIZADO: Renderiza conclusión del análisis de muestras de control.
+    Incluye información de recetas si está disponible.
     """
     st.markdown("### 🎯 Conclusión: Validación con Muestras de Control")
+    
+    # ⭐ NUEVO: Mostrar información de recetas si existe
+    if 'Recipe' in comparison_df.columns:
+        recipes = comparison_df['Recipe'].dropna().unique()
+        if len(recipes) > 0:
+            recipes_str = ', '.join([str(r) for r in recipes])
+            st.info(f"📋 **Recetas analizadas:** {recipes_str}")
     
     # Analizar mejoras/empeoramientos
     good_count = 0
@@ -508,7 +610,6 @@ def render_control_samples_conclusion(comparison_df, parameters):
         4. Considera repetir el proceso de ajuste
         5. Verifica el estado de las lámparas y ópticas
         """)
-
 
 def render_control_samples_download(comparison_df, spectral_metrics):
     """

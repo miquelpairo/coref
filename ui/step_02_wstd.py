@@ -136,9 +136,9 @@ def render_wstd_step():
             else:
                 st.success(MESSAGES['success_file_loaded'])
                 
-                # Mostrar preview de las muestras
+                # ⭐ MODIFICADO: Mostrar preview de las muestras (incluye Recipe si existe)
                 st.markdown("#### Muestras detectadas en el archivo:")
-                preview_cols = ['ID', 'Note', 'Result']
+                preview_cols = ['ID', 'Note', 'Recipe', 'Result']
                 available_cols = [col for col in preview_cols if col in df_control.columns]
                 st.dataframe(df_control[available_cols], use_container_width=True)
                 
@@ -146,15 +146,23 @@ def render_wstd_step():
                 st.markdown("#### Selecciona las muestras de control:")
                 st.info("✅ Estas muestras se medirán nuevamente al final para validar el ajuste.")
                 
-                # Crear checkboxes para seleccionar muestras
+                # ⭐ MODIFICADO: Crear checkboxes para seleccionar muestras (incluye Recipe si existe)
                 df_control_display = df_control[['ID', 'Note']].copy()
+                
+                # Añadir Recipe si existe
+                if 'Recipe' in df_control.columns:
+                    df_control_display['Recipe'] = df_control['Recipe']
+                
                 df_control_display.insert(0, 'Usar como Control', False)
+                
+                # Deshabilitar Recipe si existe
+                disabled_cols = ['ID', 'Note', 'Recipe'] if 'Recipe' in df_control.columns else ['ID', 'Note']
                 
                 edited_control = st.data_editor(
                     df_control_display,
                     hide_index=False,
                     use_container_width=True,
-                    disabled=['ID', 'Note'],
+                    disabled=disabled_cols,
                     key='control_selector'
                 )
                 
@@ -164,6 +172,13 @@ def render_wstd_step():
                     df_control_selected = df_control.loc[selected_control_indices].copy()
                     
                     st.success(f"✅ {len(df_control_selected)} muestras de control seleccionadas")
+                    
+                    # ⭐ NUEVO: Mostrar información de recetas si existe
+                    if 'Recipe' in df_control_selected.columns:
+                        recipes = df_control_selected['Recipe'].dropna().unique()
+                        if len(recipes) > 0:
+                            recipes_str = ', '.join([str(r) for r in recipes])
+                            st.info(f"📋 **Recetas detectadas:** {recipes_str}")
                     
                     # Extraer predicciones
                     predictions_df = extract_predictions_from_results(df_control_selected)
@@ -186,6 +201,10 @@ def render_wstd_step():
 
                         # 2) Normaliza IDs a string
                         df_to_save['ID'] = df_to_save['ID'].astype(str).str.strip()
+                        
+                        # ⭐ NUEVO: Asegurar que Recipe se preserve si existe
+                        if 'Recipe' in df_control.columns and 'Recipe' not in df_to_save.columns:
+                            df_to_save['Recipe'] = df_control.loc[selected_control_indices, 'Recipe']
 
                         # 3) Columnas espectrales
                         spectral_cols = get_spectral_columns(df_control)
@@ -193,7 +212,7 @@ def render_wstd_step():
                         # 4) Guarda en session_state lo que luego necesitará el Paso 7
                         sample_ids = df_to_save['ID'].tolist()
                         save_control_samples_initial(
-                            df=df_to_save,              # <- ¡usa df_to_save (incluye 'Result')!
+                            df=df_to_save,              # <- ¡usa df_to_save (incluye 'Result' Y 'Recipe')!
                             spectral_cols=spectral_cols,
                             sample_ids=sample_ids
                         )
@@ -225,7 +244,6 @@ def render_wstd_step():
             go_to_next_step()
     else:
         st.warning("⚠️ Debes completar el diagnóstico External White para continuar")
-
 
 def plot_wstd_individual(df_wstd, spectral_cols, selected_indices):
     """

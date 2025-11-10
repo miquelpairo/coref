@@ -96,11 +96,13 @@ def get_prediction_parameters(df: pd.DataFrame) -> list:
 
 def compare_predictions(df_initial: pd.DataFrame,
                         df_final: pd.DataFrame,
-                        common_ids: list) -> pd.DataFrame:
+                        common_ids: list,
+                        df_original_initial: pd.DataFrame = None,  # ⭐ NUEVO
+                        df_original_final: pd.DataFrame = None) -> pd.DataFrame:  # ⭐ NUEVO
     """
     Compara predicciones usando merges por ID, param a param.
     Devuelve un DF ancho con columnas:
-      ID, Param1_initial, Param1_final, Param1_diff, Param1_diff_pct, ...
+      ID, Recipe, Param1_initial, Param1_final, Param1_diff, Param1_diff_pct, ...
     """
     if df_initial is None or df_final is None or not len(common_ids):
         return pd.DataFrame()
@@ -116,8 +118,7 @@ def compare_predictions(df_initial: pd.DataFrame,
     ini = df_initial[df_initial['ID'].isin(common_ids)].copy()
     fin = df_final[df_final['ID'].isin(common_ids)].copy()
 
-    # Asegura solo una fila por ID (si tienes replicados, aquí puedes decidir: mean, first, etc.)
-    # Por defecto cojo la primera
+    # Asegura solo una fila por ID
     ini = ini.drop_duplicates(subset=['ID'], keep='first')
     fin = fin.drop_duplicates(subset=['ID'], keep='first')
 
@@ -126,16 +127,28 @@ def compare_predictions(df_initial: pd.DataFrame,
     p_fin = get_prediction_parameters(fin)
     common_params = [p for p in p_ini if p in p_fin]
     if not common_params:
-        return pd.DataFrame()  # no hay nada que comparar
+        return pd.DataFrame()
 
     # Fuerza numérico
     for col in common_params:
         ini[col] = pd.to_numeric(ini[col], errors='coerce')
         fin[col] = pd.to_numeric(fin[col], errors='coerce')
 
-    # Base con IDs comunes en el mismo orden que common_ids
+    # Base con IDs comunes
     base = pd.DataFrame({'ID': common_ids})
-    base = base.merge(ini[['ID']], on='ID', how='inner')  # asegura que realmente existen
+    base = base.merge(ini[['ID']], on='ID', how='inner')
+    
+    # ⭐ NUEVO: Añadir Recipe desde los DataFrames originales si existen
+    if df_original_initial is not None and 'Recipe' in df_original_initial.columns:
+        df_original_initial = df_original_initial.copy()
+        df_original_initial['ID'] = df_original_initial['ID'].astype(str).str.strip()
+        recipe_col = df_original_initial[['ID', 'Recipe']].drop_duplicates(subset=['ID'])
+        base = base.merge(recipe_col, on='ID', how='left')
+    elif df_original_final is not None and 'Recipe' in df_original_final.columns:
+        df_original_final = df_original_final.copy()
+        df_original_final['ID'] = df_original_final['ID'].astype(str).str.strip()
+        recipe_col = df_original_final[['ID', 'Recipe']].drop_duplicates(subset=['ID'])
+        base = base.merge(recipe_col, on='ID', how='left')
 
     # Para cada parámetro, mergea inicial y final y calcula difs
     out = base.copy()
@@ -154,7 +167,6 @@ def compare_predictions(df_initial: pd.DataFrame,
         )
 
     return out
-
 
 def get_prediction_status(diff_pct):
     """
