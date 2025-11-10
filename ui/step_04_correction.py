@@ -1,5 +1,5 @@
 """
-Paso 5: Cálculo de Corrección Espectral
+Paso 5: Cálculo de Corrección Espectral (OPCIONAL)
 """
 import streamlit as st
 import pandas as pd
@@ -17,12 +17,37 @@ from utils.plotting import plot_correction_differences, plot_correction_summary
 
 def render_correction_step():
     """
-    Renderiza el paso de cálculo de corrección espectral (Paso 3).
+    Renderiza el paso de cálculo de corrección espectral (Paso 5).
+    Este paso es completamente OPCIONAL e INDEPENDIENTE.
     """
     st.markdown("## PASO 5 DE 7: Cálculo de Corrección Espectral")
     
+    # Información sobre que este paso es opcional
+    st.info("""
+    ### ℹ️ Este paso es OPCIONAL e INDEPENDIENTE
+    
+    **Puedes elegir:**
+    - ✅ **Calcular la corrección** - Si tienes datos del Standard Kit del Paso 4
+    - ⏭️ **Omitir este paso** - Si solo quieres documentar otras mediciones
+    - 📄 **Generar informe** - Con los datos que tengas disponibles
+    
+    Si omites este paso, no podrás generar el baseline corregido en el Paso 6.
+    """)
+    
+    # Verificar si hay datos del Standard Kit
     if not has_kit_data():
-        st.error(" No hay datos del Standard Kit. Vuelve al Paso 3.")
+        st.warning("""
+        ⚠️ No hay datos del Standard Kit cargados.
+        
+        **Puedes:**
+        - Volver al Paso 4 para cargar el Standard Kit
+        - Omitir este paso y continuar
+        - Generar un informe con los datos disponibles de otros pasos
+        """)
+        
+        # Mostrar sección de informe y navegación
+        render_report_section_standalone()
+        render_navigation_without_data()
         return
     
     # Marcar cambios sin guardar al calcular corrección
@@ -40,8 +65,8 @@ def render_correction_step():
     # Información del proceso
     st.info(f"""
     **Calculando la diferencia espectral promedio entre:**
-    - Lámpara de referencia: **{lamp_ref}**
-    - Lámpara nueva: **{lamp_new}**
+    - Estado de referencia: **{lamp_ref}**
+    - Estado actual: **{lamp_new}**
     - Basado en **{len(common_ids)} muestras** comunes
     """)
     
@@ -49,7 +74,7 @@ def render_correction_step():
     ids_for_corr = st.session_state.get('selected_ids', list(common_ids))
     
     if len(ids_for_corr) == 0:
-        st.warning("No has seleccionado ninguna muestra. Se usarán todas por defecto.")
+        st.warning("⚠️ No has seleccionado ninguna muestra. Se usarán todas por defecto.")
         ids_for_corr = list(common_ids)
     
     # Identificar muestras NO usadas (para validación)
@@ -75,9 +100,9 @@ def render_correction_step():
         st.markdown("### Diferencias Espectrales - Muestras Usadas")
         
         if len(ids_for_corr) < len(common_ids):
-            st.info(f" Mostrando {len(ids_for_corr)} de {len(common_ids)} muestras (usadas en la corrección)")
+            st.info(f"ℹ️ Mostrando {len(ids_for_corr)} de {len(common_ids)} muestras (usadas en la corrección)")
         else:
-            st.info(f" Mostrando todas las {len(ids_for_corr)} muestras")
+            st.info(f"ℹ️ Mostrando todas las {len(ids_for_corr)} muestras")
         
         fig_used = plot_correction_differences(df_diff, ids_for_corr, ids_for_corr)
         st.plotly_chart(fig_used, use_container_width=True)
@@ -89,7 +114,7 @@ def render_correction_step():
         with st.expander("✅ Ver Validación - Muestras NO Usadas", expanded=False):
             st.markdown("### Validación - Muestras NO Usadas en la Corrección")
             st.info(f"""
-             Mostrando {len(ids_not_used)} muestras que **NO** se usaron para calcular la corrección.
+            ℹ️ Mostrando {len(ids_not_used)} muestras que **NO** se usaron para calcular la corrección.
             
             Este gráfico muestra cómo la corrección calculada afecta a muestras independientes,
             permitiendo validar que la corrección es robusta y generalizable.
@@ -101,7 +126,7 @@ def render_correction_step():
             # Estadísticas de validación
             render_validation_statistics(df_diff, ids_not_used, mean_diff)
     else:
-        st.info("Todas las muestras se están usando para la corrección. No hay muestras de validación disponibles.")
+        st.info("ℹ️ Todas las muestras se están usando para la corrección. No hay muestras de validación disponibles.")
     
     # Estadísticas de corrección
     render_correction_statistics(mean_diff)
@@ -112,20 +137,25 @@ def render_correction_step():
     # Guardar corrección en session_state
     update_kit_data_with_correction(mean_diff)
     
-        # Simulación del efecto de la corrección
+    # Simulación del efecto de la corrección
     render_correction_simulation_preview()
     
     # Navegación
     st.markdown("---")
+    st.markdown("### Siguiente Paso")
+    
     col_continue, col_skip = st.columns([3, 1])
+    
     with col_continue:
-        if st.button("Continuar al Paso 6", type="primary", use_container_width=True):
-            st.session_state.unsaved_changes = False  # Limpiar flag
+        if st.button("✅ Continuar al Paso 6", type="primary", use_container_width=True):
+            st.session_state.unsaved_changes = False
             go_to_next_step()
+    
     with col_skip:
-        if st.button("Omitir", key="skip_step4", use_container_width=True):
-            st.session_state.unsaved_changes = False  # Limpiar flag
+        if st.button("⏭️ Omitir paso", use_container_width=True, key="skip_step_correction"):
+            st.session_state.unsaved_changes = False
             go_to_next_step()
+
 
 def build_correction_dataframe(df_ref_grouped, df_new_grouped, mean_diff, 
                                common_ids, lamp_ref, lamp_new):
@@ -165,7 +195,7 @@ def render_correction_statistics(mean_diff):
     Args:
         mean_diff (np.array): Vector de corrección promedio
     """
-    st.markdown("### Estadísticas de la Corrección")
+    st.markdown("### 📊 Estadísticas de la Corrección")
     
     col1, col2, col3 = st.columns(3)
     
@@ -181,6 +211,7 @@ def render_correction_statistics(mean_diff):
         std_corr = np.std(mean_diff)
         st.metric("Desviación estándar", f"{std_corr:.4f}")
 
+
 def render_download_correction_table(df_diff, lamp_ref, lamp_new):
     """
     Renderiza el botón de descarga de la tabla de corrección.
@@ -194,11 +225,13 @@ def render_download_correction_table(df_diff, lamp_ref, lamp_new):
     df_diff.to_csv(csv_diff, index=False)
     
     st.download_button(
-        "Descargar tabla de corrección (CSV)",
+        "📥 Descargar tabla de corrección (CSV)",
         data=csv_diff.getvalue(),
         file_name=f"correccion_{lamp_ref}_vs_{lamp_new}.csv",
-        mime="text/csv"
+        mime="text/csv",
+        use_container_width=True
     )
+
 
 def render_validation_statistics(df_diff, ids_not_used, mean_diff):
     """
@@ -209,7 +242,7 @@ def render_validation_statistics(df_diff, ids_not_used, mean_diff):
         ids_not_used (list): IDs no usados en corrección
         mean_diff (np.array): Vector de corrección promedio
     """
-    st.markdown("#### Estadísticas de Validación")
+    st.markdown("#### 📈 Estadísticas de Validación")
     
     # Calcular diferencias promedio por muestra de validación
     validation_diffs = []
@@ -254,12 +287,13 @@ def render_validation_statistics(df_diff, ids_not_used, mean_diff):
         
         # Interpretación
         if max_residual < 0.01:
-            st.success("Excelente validación: Las muestras no usadas muestran diferencias muy similares a la corrección calculada.")
+            st.success("✅ Excelente validación: Las muestras no usadas muestran diferencias muy similares a la corrección calculada.")
         elif max_residual < 0.05:
-            st.info("Buena validación: Las muestras no usadas son consistentes con la corrección.")
+            st.info("ℹ️ Buena validación: Las muestras no usadas son consistentes con la corrección.")
         else:
-            st.warning("Atención: Hay diferencias significativas en las muestras de validación. Considera revisar la selección de muestras.")
+            st.warning("⚠️ Atención: Hay diferencias significativas en las muestras de validación. Considera revisar la selección de muestras.")
             
+
 def render_correction_simulation_preview():
     """
     Renderiza una vista previa de cómo quedará el efecto de la corrección.
@@ -268,8 +302,8 @@ def render_correction_simulation_preview():
     st.markdown("### 🔮 Simulación: Vista Previa del Efecto de la Corrección")
     
     st.info("""
-    A continuación se muestra una **simulación** de cómo quedarían los espectros de la lámpara nueva 
-    después de aplicar el baseline corregido, comparados con los espectros de la lámpara de referencia.
+    A continuación se muestra una **simulación** de cómo quedarían los espectros del estado actual
+    después de aplicar el baseline corregido, comparados con los espectros del estado de referencia.
     
     ⚠️ **Nota:** Esta es solo una simulación. El baseline corregido aún no se ha generado. 
     Podrás descargarlo en el siguiente paso (Paso 6).
@@ -363,4 +397,62 @@ def render_correction_simulation_preview():
             )
             st.plotly_chart(fig_after, use_container_width=True)
     else:
-        st.info("Todas las muestras comunes están siendo usadas para calcular la corrección.")
+        st.info("ℹ️ Todas las muestras comunes están siendo usadas para calcular la corrección.")
+
+
+def render_report_section_standalone():
+    """
+    Renderiza sección de informe cuando no hay datos de corrección.
+    """
+    st.markdown("---")
+    st.markdown("### 📄 Generar Informe")
+    
+    st.info("""
+    Puedes generar un informe con los datos disponibles de otros pasos 
+    (diagnóstico inicial, muestras de control, etc.)
+    """)
+    
+    if st.button("📊 Generar Informe Parcial", use_container_width=True, type="secondary"):
+        try:
+            from core.report_generator import generate_partial_report
+            
+            # Generar informe con lo que haya disponible
+            html_content = generate_partial_report()
+            
+            client_data = st.session_state.get('client_data') or {}
+            filename = f"Informe_Parcial_{client_data.get('sensor_sn', 'sensor')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+            
+            st.download_button(
+                label="📥 Descargar Informe HTML",
+                data=html_content,
+                file_name=filename,
+                mime="text/html",
+                use_container_width=True
+            )
+            st.success("✅ Informe generado correctamente con los datos disponibles")
+            
+        except Exception as e:
+            st.error(f"❌ Error al generar el informe: {str(e)}")
+            st.info("💡 Asegúrate de haber completado al menos uno de los pasos anteriores")
+
+
+def render_navigation_without_data():
+    """
+    Renderiza navegación cuando no hay datos del Standard Kit.
+    """
+    st.markdown("---")
+    st.markdown("### Navegación")
+    
+    col_back, col_skip = st.columns([1, 2])
+    
+    with col_back:
+        if st.button("← Volver al Paso 4", use_container_width=True):
+            st.session_state.unsaved_changes = False
+            st.session_state.current_step = 4
+            st.rerun()
+    
+    with col_skip:
+        if st.button("⏭️ Omitir y continuar al Paso 6", type="primary", use_container_width=True):
+            st.session_state.unsaved_changes = False
+            go_to_next_step()
+            st.rerun()

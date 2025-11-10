@@ -85,17 +85,25 @@ def render_sidebar():
                             st.rerun()
                     
             elif step_idx == current_step:
-                # Paso actual - NO CLICKABLE
+                # Paso actual — botón verde (mismo type que completados) y flecha a la izquierda. No clicable.
                 col1, col2 = st.columns([0.1, 0.9])
                 with col1:
                     st.markdown('''
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="12" cy="12" r="10" stroke="#4DB9D2" stroke-width="2" fill="none"/>
-                            <path d="M8 12h8m-4-4l4 4-4 4" stroke="#4DB9D2" stroke-width="2" fill="none" stroke-linecap="round"/>
+                            <!-- Círculo verde para coherencia visual con completados -->
+                            <circle cx="12" cy="12" r="10" stroke="#64B445" stroke-width="2" fill="none"/>
+                            <!-- Flecha indicando "estás aquí" -->
+                            <path d="M8 12h8m-4-4l4 4-4 4" stroke="#64B445" stroke-width="2" fill="none" stroke-linecap="round"/>
                         </svg>
                     ''', unsafe_allow_html=True)
                 with col2:
-                    st.markdown(f"**{step_number}. {step_name}**")
+                    st.button(
+                        f"**{step_number}. {step_name}**",
+                        key=f"current_step_{step_idx}",
+                        use_container_width=True,
+                        type="secondary",  # ⚠️ Pon aquí el MISMO type que uses en los completados (secondary o primary)
+                        disabled=True       # no clicable
+                    )
                 
             else:
                 # Paso pendiente - NO CLICKABLE

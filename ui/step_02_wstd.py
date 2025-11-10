@@ -39,12 +39,6 @@ def render_wstd_step():
     if wstd_file:
         st.session_state.unsaved_changes = True
     
-    col_skip1, col_skip2 = st.columns([3, 1])
-    with col_skip2:
-        if st.button("Omitir paso", key="skip_step1"):
-            st.session_state.unsaved_changes = False
-            go_to_next_step()
-    
     wstd_processed = False
     
     if wstd_file:
@@ -234,16 +228,51 @@ def render_wstd_step():
     else:
         st.info("ℹ️ Puedes omitir este paso y continuar sin muestras de control")
     
-    # ========== BOTÓN DE NAVEGACIÓN ==========
+    # ========== BOTONES DE NAVEGACIÓN ==========
     st.markdown("---")
     
-    # Permitir continuar si WSTD está procesado (control es opcional)
-    if wstd_processed or st.session_state.get('wstd_data') is not None:
-        if st.button("Continuar al Paso 4 →", type="primary", use_container_width=True):
-            st.session_state.unsaved_changes = False
-            go_to_next_step()
+    # Verificar si hay muestras de control guardadas
+    has_control = st.session_state.get('control_samples_initial') is not None
+    
+    # Permitir continuar si WSTD está procesado O si hay muestras de control
+    can_continue = wstd_processed or st.session_state.get('wstd_data') is not None or has_control
+    
+    if can_continue:
+        col_continue, col_skip = st.columns([3, 1])
+        
+        # Mensaje informativo sobre qué datos están disponibles
+        if wstd_processed and has_control:
+            st.success("✅ Diagnóstico WSTD y muestras de control guardados")
+        elif wstd_processed:
+            st.success("✅ Diagnóstico WSTD guardado")
+        elif has_control:
+            st.success("✅ Muestras de control guardadas")
+        
+        with col_continue:
+            if st.button("✅ Continuar al Paso 4", type="primary", use_container_width=True):
+                st.session_state.unsaved_changes = False
+                go_to_next_step()
+        
+        with col_skip:
+            if st.button("⏭️ Omitir paso", use_container_width=True, key="skip_step_wstd"):
+                st.session_state.unsaved_changes = False
+                go_to_next_step()
     else:
-        st.warning("⚠️ Debes completar el diagnóstico External White para continuar")
+        st.info("""
+        ℹ️ **Opciones para continuar:**
+        
+        - Completa el diagnóstico External White, o
+        - Carga muestras de control, o
+        - Omite este paso directamente
+        """)
+        
+        # Botón de omitir disponible incluso sin datos
+        col_empty, col_skip = st.columns([3, 1])
+        with col_skip:
+            if st.button("⏭️ Omitir paso", use_container_width=True, key="skip_step_wstd_no_data"):
+                st.session_state.unsaved_changes = False
+                go_to_next_step()
+
 
 def plot_wstd_individual(df_wstd, spectral_cols, selected_indices):
     """

@@ -1611,3 +1611,95 @@ def generate_validation_charts(df_ref_val, df_new_val, spectral_cols,
     )
     
     return html
+
+def generate_partial_report(
+    kit_data=None,
+    baseline_data=None,
+    ref_corrected=None,
+    origin=None,
+    validation_data=None,
+    mean_diff_before=None,
+    mean_diff_after=None
+):
+    """
+    Genera un informe HTML con las secciones disponibles y omite el resto.
+    Es seguro ante datos faltantes.
+    - Si hay datos base completos → usa generate_html_report(...)
+    - Si además hay validación → añade generate_validation_section(...) y (si existe) muestras de control
+    - Si faltan datos base → crea un informe mínimo con cabecera + WSTD + muestras de control, y footer.
+    """
+    import streamlit as st
+
+    # Helper para saber si tengo todo lo base
+    has_base = (kit_data is not None and
+                baseline_data is not None and
+                ref_corrected is not None and
+                origin is not None)
+
+    # Helper para validación
+    has_validation = (validation_data is not None and
+                      mean_diff_before is not None and
+                      mean_diff_after is not None)
+
+    # Datos de cliente (no obligatorio)
+    client_data = st.session_state.get('client_data', {})
+
+    if has_base:
+        # Informe completo (pasos 1–5)
+        html = generate_html_report(kit_data, baseline_data, ref_corrected, origin)
+
+        # Si hay validación, inyecto la sección antes del footer
+        if has_validation:
+            html = html.replace(generate_footer(), "")
+            html += generate_validation_section(validation_data, mean_diff_before, mean_diff_after)
+            # Muestras de control (si existen)
+            html += generate_control_samples_section()
+            html += generate_footer()
+        else:
+            # Aún sin validación, pruebo a añadir muestras de control si existen
+            html = html.replace(generate_footer(), "")
+            html += generate_control_samples_section()
+            html += generate_footer()
+
+        return html
+
+    # ------- Informe mínimo si faltan datos base -------
+    # Arranque del documento + sidebar corporativa
+    html = start_html_document(client_data)
+
+    # Si hay diagnóstico WSTD en session_state, añádelo
+    wstd_data = st.session_state.get('wstd_data')
+    if wstd_data and isinstance(wstd_data, dict) and wstd_data.get('df') is not None:
+        try:
+            html += generate_wstd_section(wstd_data)
+        except Exception as e:
+            html += f"""
+                <div class="warning-box" id="wstd-section">
+                    <h2>Diagnóstico WSTD</h2>
+                    <p><em>No se pudo renderizar la sección WSTD: {e}</em></p>
+                </div>
+            """
+
+    # Aviso de datos incompletos
+    html += """
+        <div class="warning-box" style="margin-top: 20px;">
+            <h2>Secciones no disponibles</h2>
+            <p><em>No se encontraron datos suficientes para generar el informe completo del proceso (pasos 1–5).</em></p>
+        </div>
+    """
+
+    # Aun así, intenta añadir Muestras de Control si existen
+    try:
+        ctrl_html = generate_control_samples_section()
+        if ctrl_html:
+            html += ctrl_html
+    except Exception as e:
+        html += f"""
+            <div class="warning-box" id="control-samples-section">
+                <h2>Muestras de Control</h2>
+                <p><em>No se pudo renderizar la sección de control: {e}</em></p>
+            </div>
+        """
+
+    html += generate_footer()
+    return html

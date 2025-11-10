@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Paso 5: Cargar Baseline, Aplicar Corrección y Exportar
+Paso 6: Cargar Baseline, Aplicar Corrección y Exportar (OPCIONAL)
 """
 import streamlit as st
 import pandas as pd
@@ -36,50 +36,78 @@ from utils.plotting import (
 
 def render_baseline_and_export_step():
     """
-    Renderiza el paso combinado de baseline y exportacion (Paso 5).
+    Renderiza el paso combinado de baseline y exportacion (Paso 6).
+    Este paso es completamente OPCIONAL e INDEPENDIENTE.
     """
-    st.markdown("## PASO 6 DE 7: Cargar Baseline, Aplicar Correccion y Exportar")
+    st.markdown("## PASO 6 DE 7: Cargar Baseline, Aplicar Corrección y Exportar")
     
-    if not has_kit_data():
-        st.error("No hay datos del Standard Kit. Vuelve al Paso 3.")
-        return
-    
-    if not has_correction_data():
-        st.error("No hay datos de correccion calculados. Vuelve al Paso 4.")
-        return
-    
-    kit_data = st.session_state.kit_data
-    lamp_new = kit_data['lamp_new']
-    spectral_cols = kit_data['spectral_cols']
-    
-    # SECCION 1: CARGAR BASELINE
-    st.markdown("### Paso 5.1: Cargar Baseline de la Lampara Nueva")
+    st.info("""
+    ### ℹ️ Este paso es OPCIONAL e INDEPENDIENTE
+    - ✅ **Cargar baseline y aplicar corrección** (si ya tienes Paso 5)
+    - ⏭️ **Omitir este paso**
+    - 📄 **Generar informe** con los datos disponibles
+    """)
+
+    has_kit  = has_kit_data()
+    has_corr = has_correction_data()
+
+    # Panel de estado
+    with st.expander("Estado de dependencias", expanded=False):
+        st.write(f"- Paso 4 (Standard Kit): {'✅ disponible' if has_kit else '❌ no cargado'}")
+        st.write(f"- Paso 5 (Corrección):   {'✅ disponible' if has_corr else '❌ no calculada'}")
+
+    # ⚠️ NO accedemos a st.session_state.kit_data si no hay kit
+    if has_kit:
+        kit_data = st.session_state.kit_data
+        lamp_new = kit_data.get('lamp_new', 'Nueva')
+        spectral_cols = kit_data.get('spectral_cols', None)
+    else:
+        kit_data = None
+        lamp_new = "Nueva"
+        spectral_cols = None  # sin TSV no se puede validar longitud
+
+    # SECCIÓN 1: CARGAR BASELINE (siempre disponible)
+    st.markdown("### Paso 6.1: Cargar Baseline (Opcional)")
     render_baseline_upload_section(lamp_new, spectral_cols)
-    
-    # SECCION 2: APLICAR CORRECCION Y EXPORTAR (solo si hay baseline cargado)
+
+    # SECCIÓN 2: APLICAR CORRECCIÓN+EXPORTAR solo cuando hay baseline + kit + corrección
     if has_baseline_data():
         st.markdown("---")
-        st.markdown("### Paso 5.2: Aplicar Correccion y Exportar")
-        render_correction_and_export_section()
+        st.markdown("### Paso 6.2: Aplicar Corrección y Exportar")
+
+        if has_kit and has_corr:
+            render_correction_and_export_section()
+        else:
+            st.warning("Para aplicar la corrección necesitas **Standard Kit (Paso 4)** y **Corrección (Paso 5)**.")
+            render_skip_step_section()
+    else:
+        st.markdown("---")
+        render_skip_step_section()
 
 
 def render_baseline_upload_section(lamp_new, spectral_cols):
     """
-    Renderiza la seccion de carga de baseline.
-    
-    Args:
-        lamp_new (str): Nombre de la lampara nueva
-        spectral_cols (list): Columnas espectrales
+    Renderiza la sección de carga de baseline (.ref o .csv).
+    Puede ejecutarse incluso si no hay datos del Standard Kit,
+    en cuyo caso no se valida el número de canales.
     """
-    instructions_text = INSTRUCTIONS['baseline_load'].format(
-        lamp_name=lamp_new,
-        n_channels=len(spectral_cols)
-    )
-    st.info(instructions_text)
+    # === Instrucciones dinámicas ===
+    if spectral_cols is None:
+        st.info("""
+        📁 **Carga un archivo de baseline (.ref o .csv)**  
+        No se validará el número de canales porque aún no se han cargado
+        los archivos del Standard Kit (Paso 4).
+        """)
+    else:
+        instructions_text = INSTRUCTIONS['baseline_load'].format(
+            n_channels=len(spectral_cols)
+        )
+        st.info(instructions_text)
     
+    # === Uploader ===
     baseline_file = st.file_uploader(
         "Sube el archivo baseline (.ref o .csv)",
-        type=["ref", "csv"], 
+        type=["ref", "csv"],
         key="baseline_upload"
     )
     
@@ -94,9 +122,13 @@ def render_baseline_upload_section(lamp_new, spectral_cols):
                 process_ref_file(baseline_file, spectral_cols, lamp_new)
             elif file_extension == 'csv':
                 process_csv_file(baseline_file, spectral_cols, lamp_new)
-                
+            else:
+                st.error("❌ Tipo de archivo no reconocido. Usa .ref o .csv.")
         except Exception as e:
-            st.error(f"Error al procesar el archivo: {str(e)}")
+            st.error(f"❌ Error al procesar el archivo: {str(e)}")
+            import traceback
+            st.error(traceback.format_exc())
+
 
 
 def process_ref_file(file, spectral_cols, lamp_new):
@@ -137,7 +169,7 @@ def process_ref_file(file, spectral_cols, lamp_new):
         origin='ref'
     )
     
-    st.success("Baseline cargado correctamente. Continua con la aplicacion de la correccion.")
+    st.success("Baseline cargado correctamente. Continúa con la aplicación de la corrección.")
 
 
 def process_csv_file(file, spectral_cols, lamp_new):
@@ -157,8 +189,8 @@ def process_csv_file(file, spectral_cols, lamp_new):
         st.metric("Timestamp", df_baseline['time_stamp'].iloc[0])
     
     with col2:
-        st.metric("Sys Temp (C)", f"{df_baseline['sys_temp'].iloc[0]:.2f}")
-        st.metric("TEC Temp (C)", f"{df_baseline['tec_temp'].iloc[0]:.2f}")
+        st.metric("Sys Temp (°C)", f"{df_baseline['sys_temp'].iloc[0]:.2f}")
+        st.metric("TEC Temp (°C)", f"{df_baseline['tec_temp'].iloc[0]:.2f}")
     
     with col3:
         st.metric("Lamp Time", df_baseline['lamp_time'].iloc[0])
@@ -188,13 +220,17 @@ def process_csv_file(file, spectral_cols, lamp_new):
         origin='csv'
     )
     
-    st.success("Baseline cargado correctamente. Continua con la aplicacion de la correccion.")
+    st.success("Baseline cargado correctamente. Continúa con la aplicación de la corrección.")
 
 
 def validate_and_display_dimensions(baseline_length, tsv_length):
     """
-    Valida y muestra el resultado de la comparacion de dimensiones.
+    Valida dimensiones. Si tsv_length es None, no valida y deja continuar.
     """
+    if tsv_length is None:
+        st.info(f"No hay TSV del Standard Kit para validar canales. Puntos del baseline: {baseline_length}.")
+        return True
+
     if not validate_dimension_match(baseline_length, tsv_length):
         error_msg = MESSAGES['error_dimension_mismatch'].format(
             baseline_points=baseline_length,
@@ -208,6 +244,40 @@ def validate_and_display_dimensions(baseline_length, tsv_length):
         )
         st.success(success_msg)
         return True
+
+
+def render_skip_step_section():
+    """
+    Renderiza la sección para omitir este paso y continuar.
+    """
+    st.markdown("### ⏭️ Omitir este paso")
+    
+    st.info("""
+    **Si decides omitir la carga y aplicación del baseline:**
+    
+    - Los datos de la corrección calculada se mantienen guardados (si existen)
+    - Puedes volver a este paso más tarde si lo necesitas
+    - Puedes continuar a validación o generar el informe con los datos actuales
+    """)
+    
+    # Mostrar botón de informe parcial
+    render_report_section_standalone()
+    
+    st.markdown("---")
+    col_skip, col_restart = st.columns([3, 1])
+    
+    with col_skip:
+        if st.button("⏭️ Omitir y continuar a Validación", type="primary", use_container_width=True):
+            st.session_state.unsaved_changes = False
+            from session_manager import go_to_next_step
+            go_to_next_step()
+            st.rerun()
+    
+    with col_restart:
+        if st.button("🔄 Reiniciar proceso", use_container_width=True):
+            st.session_state.unsaved_changes = False
+            reset_session_state()
+            st.rerun()
 
 
 def render_correction_and_export_section():
@@ -237,12 +307,12 @@ def render_correction_and_export_section():
     st.success(MESSAGES['success_correction_applied'])
     
     # Comparacion de valores
-    with st.expander("📋 Ver comparacion de valores del baseline", expanded=False):
+    with st.expander("📋 Ver comparación de valores del baseline", expanded=False):
         render_baseline_comparison_values(ref_spectrum, ref_corrected)
     
     # Visualizacion comparativa en expander
-    with st.expander("📊 Ver Comparacion: Baseline Original vs Corregido", expanded=False):
-        st.markdown("#### Comparacion: Baseline Original vs Corregido")
+    with st.expander("📊 Ver Comparación: Baseline Original vs Corregido", expanded=False):
+        st.markdown("#### Comparación: Baseline Original vs Corregido")
         fig_comp = plot_baseline_comparison(ref_spectrum, ref_corrected, spectral_cols)
         st.plotly_chart(fig_comp, use_container_width=True)
     
@@ -265,25 +335,25 @@ def render_correction_and_export_section():
     
     # Navegación al siguiente paso
     st.markdown("---")
-    st.markdown("### Siguiente Paso: Validacion")
+    st.markdown("### Siguiente Paso: Validación")
     st.info("""
-    **Paso 6 - Validacion (Opcional pero recomendado):**
+    **Paso 7 - Validación (Opcional pero recomendado):**
     
-    Verifica que el ajuste fue exitoso midiendo nuevamente el Standard Kit 
-    con el baseline corregido instalado.
+    Si aplicaste el baseline corregido al equipo, puedes verificar que el ajuste 
+    fue exitoso midiendo nuevamente muestras de control.
     """)
     
     col_next, col_restart = st.columns([3, 1])
     
     with col_next:
-        if st.button("Continuar a Validacion", type="primary", use_container_width=True):
+        if st.button("✅ Continuar a Validación", type="primary", use_container_width=True):
             st.session_state.unsaved_changes = False  # Limpiar flag
             from session_manager import go_to_next_step
             go_to_next_step()
             st.rerun()
     
     with col_restart:
-        if st.button("Reiniciar proceso", use_container_width=True):
+        if st.button("🔄 Reiniciar proceso", use_container_width=True):
             st.session_state.unsaved_changes = False  # Limpiar flag
             reset_session_state()
             st.rerun()
@@ -299,7 +369,7 @@ def render_baseline_comparison_values(ref_spectrum, ref_corrected):
         st.write(f"Corregido: {ref_corrected[:5]}")
     
     with col_val2:
-        st.write("**Ultimos 5 valores:**")
+        st.write("**Últimos 5 valores:**")
         st.write(f"Original: {ref_spectrum[-5:]}")
         st.write(f"Corregido: {ref_corrected[-5:]}")
 
@@ -317,7 +387,7 @@ def render_comparison_download(ref_spectrum, ref_corrected, mean_diff):
     df_comparison.to_csv(csv_comp, index=False)
     
     st.download_button(
-        "Descargar comparacion detallada (CSV)",
+        "📥 Descargar comparación detallada (CSV)",
         data=csv_comp.getvalue(),
         file_name=f"comparacion_baseline_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
         mime="text/csv",
@@ -336,7 +406,7 @@ def render_export_options(ref_corrected, header, df_baseline, origin, lamp_new):
             st.info("Cabecera original del sensor preservada")
             ref_bytes = export_ref_file(ref_corrected, header)
             st.download_button(
-                "Descargar .ref corregido",
+                "📥 Descargar .ref corregido",
                 data=ref_bytes,
                 file_name=f"baseline_{lamp_new}_corregido.ref",
                 mime="application/octet-stream",
@@ -357,7 +427,7 @@ def render_export_options(ref_corrected, header, df_baseline, origin, lamp_new):
             csv_bytes = export_csv_file(ref_corrected)
         
         st.download_button(
-            "Descargar .csv corregido",
+            "📥 Descargar .csv corregido",
             data=csv_bytes,
             file_name=f"baseline_{lamp_new}_corregido.csv",
             mime="text/csv",
@@ -369,23 +439,22 @@ def render_export_options(ref_corrected, header, df_baseline, origin, lamp_new):
 def render_completion_message():
     """Muestra el mensaje de proceso completado."""
     st.success("""
-    **Proceso Completado**
+    ✅ **Baseline Corregido Generado Exitosamente**
 
-    **Proximos pasos:**
+    **Próximos pasos recomendados:**
     1. Descarga el baseline corregido en el formato adecuado (.ref o .csv)
-    2. Copia el archivo a la ubicacion correspondiente en tu sistema
-    3. Verifica el ajuste midiendo nuevamente el White Standard sin linea base
-    4. Los espectros de ambas lamparas deberian estar ahora alineados
+    2. Copia el archivo a la ubicación correspondiente en tu sistema
+    3. Continúa al paso de validación para verificar el ajuste
 
-    **Recordatorio:** Asegurate de haber realizado el backup de los archivos originales.
+    **Recordatorio:** Asegúrate de haber realizado el backup de los archivos originales.
     """)
 
 
 def render_report_section(kit_data, baseline_data, ref_corrected, origin):
     """Renderiza la seccion de generacion de informe."""
-    st.markdown("#### Generar Informe del Proceso")
+    st.markdown("#### 📄 Generar Informe del Proceso")
     
-    if st.button("Generar Informe Completo", use_container_width=True, type="primary"):
+    if st.button("📊 Generar Informe Completo", use_container_width=True, type="secondary"):
         try:
             html_content = generate_html_report(
                 kit_data, 
@@ -398,13 +467,72 @@ def render_report_section(kit_data, baseline_data, ref_corrected, origin):
             filename = f"Informe_Baseline_{client_data.get('sensor_sn', 'sensor')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
             
             st.download_button(
-                label="Descargar Informe HTML",
+                label="📥 Descargar Informe HTML",
                 data=html_content,
                 file_name=filename,
                 mime="text/html",
                 use_container_width=True
             )
-            st.success("Informe generado correctamente")
+            st.success("✅ Informe generado correctamente")
             
         except Exception as e:
-            st.error(f"Error al generar el informe: {str(e)}")
+            st.error(f"❌ Error al generar el informe: {str(e)}")
+
+
+def render_report_section_standalone():
+    """
+    Renderiza sección de informe cuando no hay datos necesarios.
+    """
+    st.markdown("---")
+    st.markdown("### 📄 Generar Informe")
+    
+    st.info("""
+    Puedes generar un informe con los datos disponibles de otros pasos 
+    (diagnóstico inicial, muestras de control, standard kit, etc.)
+    """)
+    
+    if st.button("📊 Generar Informe Parcial", use_container_width=True, type="secondary"):
+        try:
+            from core.report_generator import generate_partial_report
+            
+            # Generar informe con lo que haya disponible
+            html_content = generate_partial_report()
+            
+            client_data = st.session_state.get('client_data') or {}
+            filename = f"Informe_Parcial_{client_data.get('sensor_sn', 'sensor')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+            
+            st.download_button(
+                label="📥 Descargar Informe HTML",
+                data=html_content,
+                file_name=filename,
+                mime="text/html",
+                use_container_width=True
+            )
+            st.success("✅ Informe generado correctamente con los datos disponibles")
+            
+        except Exception as e:
+            st.error(f"❌ Error al generar el informe: {str(e)}")
+            st.info("💡 Asegúrate de haber completado al menos uno de los pasos anteriores")
+
+
+def render_navigation_without_dependencies():
+    """
+    Renderiza navegación cuando no hay datos de dependencias.
+    """
+    st.markdown("---")
+    st.markdown("### Navegación")
+    
+    col_back, col_skip = st.columns([1, 2])
+    
+    with col_back:
+        if st.button("← Volver al Paso 5", use_container_width=True):
+            st.session_state.unsaved_changes = False
+            st.session_state.current_step = 5
+            st.rerun()
+    
+    with col_skip:
+        if st.button("⏭️ Omitir y continuar al Paso 7", type="primary", use_container_width=True):
+            st.session_state.unsaved_changes = False
+            from session_manager import go_to_next_step
+            go_to_next_step()
+            st.rerun()

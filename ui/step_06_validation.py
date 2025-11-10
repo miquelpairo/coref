@@ -39,20 +39,27 @@ from utils.control_samples import (
 def render_validation_step():
     st.markdown("## PASO 7 DE 7: Validación Post-Corrección")
 
-    if not has_kit_data() or not has_correction_data():
-        st.error("❌ No hay datos de corrección previos. Completa primero los pasos anteriores.")
-        return
+    has_kit = has_kit_data()
+    has_corr = has_correction_data()
 
-    # 1) Standard Kit
-    render_standard_kit_validation()
+    # 1) Standard Kit (solo si hay datos de corrección previos)
+    if has_kit and has_corr:
+        render_standard_kit_validation()
+    else:
+        st.info("""
+        ℹ️ **Validación con Standard Kit no disponible**  
+        No se han encontrado datos suficientes de los pasos anteriores
+        (Paso 4 y/o Paso 5). Puedes igualmente **validar con Muestras de Control**
+        y generar un informe parcial.
+        """)
 
-    # 2) Muestras de Control
+    # 2) Muestras de Control (siempre)
     st.markdown("---")
     render_control_samples_validation()
 
-    # 3) 👉 Botón de informe (ÚNICO punto donde se renderiza)
+    # 3) Botón de informe (único)
     st.markdown("---")
-    render_validation_report_entrypoint()   # <— aquí y solo aquí
+    render_validation_report_entrypoint(fallback_partial=True)
 
     # 4) Reset
     st.markdown("---")
@@ -1120,53 +1127,71 @@ def render_validation_report_section(mean_diff_before, mean_diff_after):
             import traceback
             st.error(traceback.format_exc())
 
-def render_validation_report_entrypoint():
+def render_validation_report_entrypoint(fallback_partial: bool = False):
     """
     Muestra SIEMPRE el botón de informe.
-    - Si hay validación (before/after + validation_data): usa generate_validation_report.
-    - Si NO hay validación aún: usa generate_html_report (informe base sin sección de validación).
+    - Con validación completa (before/after + validation_data): generate_validation_report
+    - Con kit/baseline pero sin validación after: generate_html_report
+    - Si no hay kit/baseline y fallback_partial=True: generate_partial_report (solo control)
     """
-    st.markdown("---")
     st.markdown("#### 📄 Generar Informe Completo de Validación")
 
-    kit_data = st.session_state.kit_data
-    baseline_data = st.session_state.baseline_data
-
+    kit_data = st.session_state.get('kit_data')
+    baseline_data = st.session_state.get('baseline_data')
     stats = st.session_state.get('validation_stats')
     valdata = st.session_state.get('validation_data')
 
-    mean_diff_before = (stats or {}).get('mean_diff_before', kit_data['mean_diff'])
-    mean_diff_after  = (stats or {}).get('mean_diff_after', None)
+    # Flags de disponibilidad
+    has_kit = kit_data is not None
+    has_baseline = baseline_data is not None
+    has_after = (stats is not None) and (stats.get('mean_diff_after') is not None)
 
     if st.button("📥 Generar Informe", use_container_width=True, type="primary", key="btn_report_validation_global"):
         try:
-            from core.spectral_processing import apply_baseline_correction
-            ref_corrected = apply_baseline_correction(baseline_data['ref_spectrum'], kit_data['mean_diff'])
-            origin = baseline_data['origin']
-
-            # Ruta 1: informe completo con validación (si hay after + validation_data)
-            if (mean_diff_after is not None) and (valdata is not None):
+            # Ruta 1: informe completo con validación (require kit+baseline + after)
+            if has_kit and has_baseline and has_after and (valdata is not None):
+                from core.spectral_processing import apply_baseline_correction
                 from core.report_generator import generate_validation_report
+
+                ref_corrected = apply_baseline_correction(baseline_data['ref_spectrum'], kit_data['mean_diff'])
+                origin = baseline_data['origin']
                 html_content = generate_validation_report(
                     kit_data,
                     baseline_data,
                     ref_corrected,
                     origin,
                     valdata,
-                    mean_diff_before,
-                    mean_diff_after
-                )
-            # Ruta 2: informe base sin validación
-            else:
-                from core.report_generator import generate_html_report
-                html_content = generate_html_report(
-                    kit_data,
-                    baseline_data,
-                    ref_corrected,
-                    origin
+                    stats['mean_diff_before'],
+                    stats['mean_diff_after']
                 )
 
-            client_data = st.session_state.client_data or {}
+            # Ruta 2: hay kit+baseline pero sin validación “after” → informe base
+            elif has_kit and has_baseline:
+                from core.spectral_processing import apply_baseline_correction
+                from core.report_generator import generate_html_report
+
+                ref_corrected = apply_baseline_correction(baseline_data['ref_spectrum'], kit_data['mean_diff'])
+                origin = baseline_data['origin']
+                html_content = generate_html_report(kit_data, baseline_data, ref_corrected, origin)
+
+            # Ruta 3: solo control (sin kit/baseline) → informe parcial
+            elif fallback_partial:
+                from core.report_generator import generate_partial_report
+                html = generate_partial_report(
+                    kit_data=kit_data if has_kit_data() else None,
+                    baseline_data=baseline_data if has_correction_data() else None,
+                    ref_corrected=ref_corrected if has_correction_data() else None,
+                    origin=origin if has_correction_data() else None,
+                    validation_data=validation_data if 'validation_data' in locals() else None,
+                    mean_diff_before=mean_diff_before if 'mean_diff_before' in locals() else None,
+                    mean_diff_after=mean_diff_after if 'mean_diff_after' in locals() else None
+                )
+
+            else:
+                st.error("❌ No hay datos suficientes para generar el informe.")
+                return
+
+            client_data = st.session_state.get('client_data') or {}
             filename = f"Informe_Validacion_{client_data.get('sensor_sn','sensor')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
 
             st.download_button(

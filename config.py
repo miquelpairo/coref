@@ -12,7 +12,7 @@ PAGE_CONFIG = {
 STEPS = {
     1: "Datos del cliente",
     2: "Backup de archivos",
-    3: "Diagnóstico External White",
+    3: "Diagnóstico Inicial",
     4: "Medición del Standard Kit",
     5: "Cálculo de corrección",
     6: "Baseline y Exportación",
@@ -119,109 +119,117 @@ INSTRUCTIONS = {
     """,
     
     'backup': """
-    ### Advertencia: Backup de Archivos Baseline
+    ### ⚠️ CRÍTICO: Backup de Archivos Baseline
 
-    **Antes de continuar con este proceso, es CRÍTICO que realices una copia de seguridad manual 
-    de los archivos baseline actuales.**
+    **Antes de continuar, realiza una copia de seguridad manual de los archivos baseline actuales.**
 
     Este procedimiento modificará los archivos de línea base del equipo NIR. Si algo sale mal, 
     necesitarás los archivos originales para restaurar la configuración.
     """,
     
     'backup_procedure': """
-    ### Procedimiento recomendado para el backup:
-    1. Copia toda la carpeta correspondiente a tu versión de software
-    2. Pégala en una ubicación segura (Desktop, carpeta de backups, etc.)
-    3. Renombra la carpeta con la fecha actual (ej: SX-Suite_Backup_2025-01-15)
+    ### Procedimiento para el backup:
+    1. Localiza la carpeta de baseline según tu versión de software:
+       - **SX Suite ≤531**: `C:\\ProgramData\\NIR-Online\\SX-Suite`
+       - **SX Suite ≥557**: `C:\\ProgramData\\NIR-Online\\SX-Suite\\Data\\Reference`
+    2. Copia la carpeta completa a una ubicación segura
+    3. Renombra la copia con fecha (ej: `SX-Suite_Backup_2025-01-15`)
     4. Verifica que la copia se realizó correctamente
     """,
     
     'wstd': """
-    ### Instrucciones para el diagnóstico External White:
+    ### 📊 Diagnóstico Inicial del Sensor
 
-    1. **Prepara el External White** (referencia blanca del kit de calibración)
-    2. En el equipo NIR, **NO tomes línea base** (medir como muestra normal)
-    3. **Mide el External White y asígnale un ID identificable** en el equipo
+    **Objetivo:** Caracterizar el estado actual del sensor antes de realizar cualquier ajuste.
+
+    **Procedimiento:**
+    1. **Mide una referencia blanca** (External White o similar) con la configuración actual del equipo
+    2. **NO tomes nueva baseline** - usa la configuración actual del sensor
+    3. **Asigna un ID identificable** a la medición (ej: "ExtWhite", "WSTD", "WhiteRef")
     4. **Exporta el archivo TSV** con las mediciones
-    5. **En la aplicación, selecciona manualmente** las filas que corresponden a las mediciones de referencia
+    5. **Selecciona las filas correspondientes** usando los checkboxes
 
-    **¿Por qué este paso?** Si el sistema está bien calibrado, las mediciones del External White 
-    sin línea base deberían estar muy cercanas a 0 en todo el espectro. Esto nos permite 
-    diagnosticar el estado del equipo antes de realizar el ajuste.
+    **¿Qué evaluamos?**
+    Las desviaciones del espectro respecto a cero nos indican el estado del sensor.
+    Esto sirve como referencia del "antes" del ajuste.
+    
+    **Nota:** Este paso es opcional pero recomendado para documentar el estado inicial.
     """,
     
-    # ⭐ NUEVO: Instrucciones para muestras de control
     'control_samples': """
-    ### Muestras de Control (Opcional pero Recomendado)
+    ### 🎯 Muestras de Control (Opcional)
 
-    **¿Por qué usar muestras de control?**
-    Las muestras de control te permiten validar que el ajuste de baseline mejora las predicciones 
-    del equipo. Medirás las mismas muestras **antes** y **después** del ajuste para comparar.
+    **Objetivo:** Validar que el ajuste de baseline mejora las predicciones del equipo.
 
-    **Instrucciones:**
-    1. **Selecciona 3-10 muestras representativas** de tu rango analítico
-    2. **Asígnales IDs identificables** (ej: Control_Protein_High, Control_Moisture_Low, etc.)
-    3. **Mide las muestras AHORA** (antes del ajuste) con la lámpara nueva
-    4. **Exporta el archivo TSV** - debe incluir las predicciones (columna "Results")
-    5. Las medirás de nuevo al final del proceso para comparar
+    **¿Qué son muestras de control?**
+    Muestras reales que medirás **antes** y **después** del ajuste para comparar 
+    el impacto en las predicciones.
 
-    **Importante:** 
-    - Usa muestras con valores de predicción conocidos o esperados
-    - Anota los IDs exactos - los necesitarás al final
-    - El archivo debe tener la columna "Results" con las predicciones
+    **Procedimiento:**
+    1. **Mide 3-10 muestras representativas** con la configuración actual
+    2. **Asigna IDs únicos** a cada muestra (serán necesarios después)
+    3. **Exporta el archivo TSV** - debe incluir la columna "Results" con predicciones
+    4. Después del ajuste, medirás las mismas muestras para comparar
+
+    **Requisitos del archivo:**
+    - Debe contener la columna "Results" con las predicciones NIR
+    - Los IDs deben ser consistentes y fáciles de identificar
     """,
     
     'kit': """
-    ### Instrucciones para medición del Standard Kit:
+    ### 📦 Archivos para Calcular la Corrección
 
-    **NUEVO PROCESO CON DOS ARCHIVOS SEPARADOS:**
+    **La herramienta necesita DOS archivos TSV para calcular el ajuste:**
 
-    **Archivo 1 - TSV de Referencia (histórico):**
-    - Mediciones bien calibradas con lámpara de referencia
-    - Puede ser un archivo antiguo de tu base de datos
-    - Debe incluir IDs de muestra consistentes
+    **Archivo 1 - Referencia (estado deseado):**
+    - Mediciones del sensor en el estado que quieres replicar
+    - Puede ser de un equipo de referencia, o del mismo equipo en buen estado
+    - Contiene los espectros "objetivo"
 
-    **Archivo 2 - TSV de Nueva Lámpara:**
-    - Toma línea base con la lámpara NUEVA
-    - Mide las MISMAS muestras que en el archivo de referencia
-    - Usa exactamente los MISMOS IDs de muestra
-    - Exporta el archivo TSV
+    **Archivo 2 - Estado Actual (a corregir):**
+    - Mediciones del sensor en su estado actual
+    - Debe contener las **MISMAS muestras** que el archivo de referencia
+    - Usa **EXACTAMENTE los MISMOS IDs** de muestra
 
-    **Importante:** Los archivos se emparejarán por ID de muestra, así que usa identificadores 
-    consistentes (ej: Sample01, Sample02, Soja_A, etc.)
-
-    **Recomendación:** 10-20 muestras representativas de tu rango analítico.
+    **Importante:** 
+    - Los archivos se emparejan por ID de muestra
+    - Cuantas más muestras uses (10-30), mejor será el ajuste
+    - Las muestras deben cubrir el rango analítico de interés
     """,
     
     'baseline_load': """
-    ### Instrucciones para cargar baseline:
+    ### 📁 Cargar Baseline Actual
 
-    Necesitas cargar el archivo baseline actual de la lámpara nueva que tomaste antes de 
-    medir el Standard Kit.
+    **Necesitas el archivo baseline que usaste para medir el "Estado Actual" en el paso anterior.**
 
-    Este archivo puede ser:
-    - **Archivo .ref** (SX Suite 531 o anterior) - Formato binario
-    - **Archivo .csv** (SX Suite 557 o posterior) - Formato de texto
+    **Formatos soportados:**
+    - **Archivo .ref** (SX Suite ≤531) - Formato binario
+    - **Archivo .csv** (SX Suite ≥557) - Formato de texto
 
-    El archivo debe tener exactamente {n_channels} canales espectrales para coincidir con tus mediciones.
+    **Validación:** El archivo debe tener exactamente **{n_channels} canales** espectrales 
+    para coincidir con tus mediciones TSV.
+    
+    Este baseline será corregido y podrás exportarlo en ambos formatos.
     """,
     
-    # ⭐ NUEVO: Instrucciones para validación con muestras de control
     'validation_control': """
-    ### Validación con Muestras de Control
+    ### ✅ Validación con Muestras de Control
 
-    **Ha llegado el momento de validar el ajuste.**
+    **Si definiste muestras de control al inicio, ahora puedes validar el ajuste.**
 
-    **Instrucciones:**
-    1. **Mide las MISMAS muestras de control** que mediste al inicio
-    2. **Usa los MISMOS IDs** para poder comparar
-    3. **Exporta el archivo TSV** con las nuevas mediciones
-    4. La aplicación comparará automáticamente:
-       - Los espectros NIR antes vs. después
-       - Las predicciones antes vs. después
-       - Te mostrará si el ajuste mejoró la precisión
+    **Procedimiento:**
+    1. **Aplica el nuevo baseline corregido** al equipo NIR
+    2. **Mide las MISMAS muestras de control** que mediste al inicio
+    3. **Usa los MISMOS IDs** para poder comparar
+    4. **Exporta el archivo TSV** con las mediciones
 
-    **Objetivo:** Verificar que el ajuste de baseline realmente mejora las predicciones.
+    **Análisis automático:**
+    La aplicación comparará:
+    - Espectros NIR antes vs. después del ajuste
+    - Predicciones antes vs. después del ajuste
+    - Te mostrará si las predicciones mejoraron
+
+    **Nota:** Este paso es opcional. Si no tienes muestras de control, puedes omitirlo.
     """
 }
 
