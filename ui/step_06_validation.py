@@ -1127,83 +1127,118 @@ def render_validation_report_section(mean_diff_before, mean_diff_after):
             import traceback
             st.error(traceback.format_exc())
 
-def render_validation_report_entrypoint(fallback_partial: bool = False):
+def render_validation_report_entrypoint(fallback_partial: bool = False, preview: bool = False):
     """
-    Muestra SIEMPRE el botón de informe.
-    - Con validación completa (before/after + validation_data): generate_validation_report
-    - Con kit/baseline pero sin validación after: generate_html_report
-    - Si no hay kit/baseline y fallback_partial=True: generate_partial_report (solo control)
+    Genera el HTML del informe y SOLO ofrece descarga.
+    Si preview=True, añade un toggle para previsualizar bajo demanda.
     """
-    st.markdown("#### 📄 Generar Informe Completo de Validación")
+    import traceback
+    from core.spectral_processing import apply_baseline_correction
 
-    kit_data = st.session_state.get('kit_data')
-    baseline_data = st.session_state.get('baseline_data')
-    stats = st.session_state.get('validation_stats')
-    valdata = st.session_state.get('validation_data')
+    st.markdown("#### 📄 Generar Informe")
 
-    # Flags de disponibilidad
-    has_kit = kit_data is not None
-    has_baseline = baseline_data is not None
-    has_after = (stats is not None) and (stats.get('mean_diff_after') is not None)
+    kit_data_value        = st.session_state.get('kit_data')
+    baseline_data_value   = st.session_state.get('baseline_data')
+    val_stats_value       = st.session_state.get('validation_stats') or {}
+    valdata_value         = st.session_state.get('validation_data')
+
+    mean_diff_before_val  = val_stats_value.get('mean_diff_before')
+    mean_diff_after_val   = val_stats_value.get('mean_diff_after')
+
+    has_kit       = kit_data_value is not None
+    has_baseline  = baseline_data_value is not None
+    has_after     = mean_diff_after_val is not None
+    has_valdata   = valdata_value is not None
 
     if st.button("📥 Generar Informe", use_container_width=True, type="primary", key="btn_report_validation_global"):
+        html_content = None
         try:
-            # Ruta 1: informe completo con validación (require kit+baseline + after)
-            if has_kit and has_baseline and has_after and (valdata is not None):
-                from core.spectral_processing import apply_baseline_correction
+            if has_kit and has_baseline and has_after and has_valdata:
                 from core.report_generator import generate_validation_report
-
-                ref_corrected = apply_baseline_correction(baseline_data['ref_spectrum'], kit_data['mean_diff'])
-                origin = baseline_data['origin']
+                ref_corrected_value = apply_baseline_correction(
+                    baseline_data_value['ref_spectrum'],
+                    kit_data_value['mean_diff']
+                )
+                origin_value = baseline_data_value.get('origin')
                 html_content = generate_validation_report(
-                    kit_data,
-                    baseline_data,
-                    ref_corrected,
-                    origin,
-                    valdata,
-                    stats['mean_diff_before'],
-                    stats['mean_diff_after']
+                    kit_data_value,
+                    baseline_data_value,
+                    ref_corrected_value,
+                    origin_value,
+                    valdata_value,
+                    mean_diff_before_val,
+                    mean_diff_after_val
                 )
 
-            # Ruta 2: hay kit+baseline pero sin validación “after” → informe base
             elif has_kit and has_baseline:
-                from core.spectral_processing import apply_baseline_correction
                 from core.report_generator import generate_html_report
+                ref_corrected_value = apply_baseline_correction(
+                    baseline_data_value['ref_spectrum'],
+                    kit_data_value['mean_diff']
+                )
+                origin_value = baseline_data_value.get('origin')
+                html_content = generate_html_report(
+                    kit_data_value,
+                    baseline_data_value,
+                    ref_corrected_value,
+                    origin_value
+                )
 
-                ref_corrected = apply_baseline_correction(baseline_data['ref_spectrum'], kit_data['mean_diff'])
-                origin = baseline_data['origin']
-                html_content = generate_html_report(kit_data, baseline_data, ref_corrected, origin)
+            elif has_kit and not has_baseline:
+                from core.report_generator import generate_partial_report
+                html_content = generate_partial_report(
+                    kit_data=kit_data_value,
+                    baseline_data=None,
+                    ref_corrected=None,
+                    origin=None,
+                    validation_data=valdata_value if (has_after and has_valdata) else None,
+                    mean_diff_before=mean_diff_before_val if has_after else None,
+                    mean_diff_after=mean_diff_after_val if has_after else None
+                )
 
-            # Ruta 3: solo control (sin kit/baseline) → informe parcial
             elif fallback_partial:
                 from core.report_generator import generate_partial_report
-                html = generate_partial_report(
-                    kit_data=kit_data if has_kit_data() else None,
-                    baseline_data=baseline_data if has_correction_data() else None,
-                    ref_corrected=ref_corrected if has_correction_data() else None,
-                    origin=origin if has_correction_data() else None,
-                    validation_data=validation_data if 'validation_data' in locals() else None,
-                    mean_diff_before=mean_diff_before if 'mean_diff_before' in locals() else None,
-                    mean_diff_after=mean_diff_after if 'mean_diff_after' in locals() else None
+                html_content = generate_partial_report(
+                    kit_data=kit_data_value,
+                    baseline_data=baseline_data_value,
+                    ref_corrected=None,
+                    origin=None,
+                    validation_data=valdata_value,
+                    mean_diff_before=mean_diff_before_val,
+                    mean_diff_after=mean_diff_after_val
                 )
-
             else:
                 st.error("❌ No hay datos suficientes para generar el informe.")
                 return
 
-            client_data = st.session_state.get('client_data') or {}
-            filename = f"Informe_Validacion_{client_data.get('sensor_sn','sensor')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
-
-            st.download_button(
-                label="📥 Descargar Informe HTML",
-                data=html_content,
-                file_name=filename,
-                mime="text/html",
-                use_container_width=True
-            )
-            st.success("✅ Informe generado correctamente")
-
         except Exception as e:
-            st.error(f"❌ Error al generar el informe: {str(e)}")
-            import traceback
-            st.error(traceback.format_exc())
+            st.error(f"❌ Error al generar el informe: {e}")
+            st.code(traceback.format_exc())
+            html_content = f"""
+            <html><body style="font-family:Arial">
+              <h1>Informe parcial (error)</h1>
+              <pre style="white-space:pre-wrap">{traceback.format_exc()}</pre>
+            </body></html>
+            """
+
+        # 👇 Solo DESCARGA; no se renderiza automáticamente
+        client_data = st.session_state.get('client_data') or {}
+        filename = f"Informe_Validacion_{client_data.get('sensor_sn','sensor')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+
+        st.download_button(
+            label="⬇️ Descargar Informe HTML",
+            data=html_content.encode("utf-8"),
+            file_name=filename,
+            mime="text/html",
+            use_container_width=True
+        )
+
+        # (Opcional) vista previa bajo demanda
+        if preview and st.toggle("👁️ Previsualizar informe aquí"):
+            try:
+                st.components.v1.html(html_content, height=900, scrolling=True)
+            except Exception:
+                with st.expander("Ver HTML (fallback)"):
+                    st.code(html_content, language="html")
+
+        st.success("✅ Informe generado. Usa el botón para descargar.")

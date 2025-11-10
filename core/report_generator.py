@@ -11,6 +11,7 @@ from config import REPORT_STYLE, WSTD_THRESHOLDS, DIAGNOSTIC_STATUS
 from core.spectral_processing import simulate_corrected_spectra
 from utils.plotting import plot_corrected_spectra_comparison
 import plotly.io as pio
+from datetime import datetime
 
 def wrap_chart_in_expandable(chart_html, title, chart_id, default_open=False):
     """
@@ -49,70 +50,95 @@ def load_buchi_css():
         return REPORT_STYLE
 
 def generate_html_report(kit_data, baseline_data, ref_corrected, origin):
-    """Genera un informe HTML completo del proceso de ajuste."""
     import streamlit as st
-    
-    client_data = st.session_state.client_data or {}
-    wstd_data = st.session_state.wstd_data or {}
-    
-    # Extraer datos necesarios
-    df = kit_data['df']
-    df_ref_grouped = kit_data['df_ref_grouped']
-    df_new_grouped = kit_data['df_new_grouped']
-    spectral_cols = kit_data['spectral_cols']
-    lamp_ref = kit_data['lamp_ref']
-    lamp_new = kit_data['lamp_new']
-    common_ids = kit_data['common_ids']
-    mean_diff = kit_data['mean_diff']
-    
-    ref_spectrum = baseline_data['ref_spectrum']
-    header = baseline_data.get('header')
-    
-    # Obtener selected_ids
-    selected_ids = st.session_state.get('selected_ids', list(common_ids))
-    
-    # Iniciar HTML
-    html = start_html_document(client_data)
-    
-    # Agregar diagnóstico WSTD si existe
-    if wstd_data and 'df' in wstd_data and wstd_data['df'] is not None:
+
+    # === Contexto de sesión (opcionales) ===
+    client_data = st.session_state.get('client_data', {}) or {}
+    wstd_data   = st.session_state.get('wstd_data', {}) or {}
+
+    # === (1) Extraer datos necesarios de kit_data y baseline_data ===
+    # kit_data: esperado del pipeline de pasos 1–5
+    try:
+        df               = kit_data["df"]
+        df_ref_grouped   = kit_data["df_ref_grouped"]
+        df_new_grouped   = kit_data["df_new_grouped"]
+        spectral_cols    = kit_data["spectral_cols"]
+        lamp_ref         = kit_data["lamp_ref"]
+        lamp_new         = kit_data["lamp_new"]
+        common_ids       = kit_data["common_ids"]
+        mean_diff        = kit_data["mean_diff"]
+    except Exception as e:
+        raise ValueError(f"[generate_html_report] kit_data incompleto: {e}")
+
+    # baseline_data: baseline original (.ref o .csv) y cabecera si aplica
+    try:
+        ref_spectrum = baseline_data["ref_spectrum"]
+        header       = baseline_data.get("header")
+    except Exception as e:
+        raise ValueError(f"[generate_html_report] baseline_data incompleto: {e}")
+
+    # IDs seleccionados (si no hay, usa todas las comunes)
+    selected_ids = st.session_state.get("selected_ids", list(common_ids))
+
+    # === (2) Construir índice lateral dinámico ===
+    sections = [
+        "info-cliente",
+        "process-details",
+        "samples",
+        "correction-stats",
+        "correction-differences",
+        "baseline-info",
+        "charts-section",
+        # "validation-section" se añade solo en generate_validation_report
+        "control-samples-section",  # se mostrará solo si hay datos; la sección ya controla su visibilidad
+    ]
+    if isinstance(wstd_data, dict) and wstd_data.get("df") is not None:
+        sections.insert(1, "wstd-section")
+
+    # === (3) HTML inicial con sidebar ===
+    html = start_html_document(client_data, sections=sections)
+
+    # === (4) Secciones condicionales / fijas ===
+
+    # 4.1 WSTD (si existe)
+    if isinstance(wstd_data, dict) and wstd_data.get("df") is not None:
         html += generate_wstd_section(wstd_data)
-    
-    # Detalles del proceso
+
+    # 4.2 Detalles del proceso
     html += generate_process_details(
-        lamp_ref, lamp_new, len(spectral_cols), 
+        lamp_ref, lamp_new, len(spectral_cols),
         len(common_ids), origin
     )
-    
-    # Tabla de muestras
+
+    # 4.3 Tabla de muestras
     html += generate_samples_table(df, common_ids, lamp_ref, lamp_new)
-    
-    # Gráfico de muestras seleccionadas ANTES de corrección
+
+    # 4.4 Espectros seleccionados ANTES de corrección
     html += generate_selected_samples_chart(
         df_ref_grouped, df_new_grouped, spectral_cols,
         lamp_ref, lamp_new, selected_ids
     )
-    
-    # Estadísticas de corrección
+
+    # 4.5 Estadísticas de corrección
     html += generate_correction_statistics(mean_diff)
-    
-    # Gráficos de diferencias espectrales
+
+    # 4.6 Gráficos de diferencias espectrales (Paso 5)
     html += generate_correction_differences_charts(
         df_ref_grouped, df_new_grouped, mean_diff,
         common_ids, selected_ids, lamp_ref, lamp_new
     )
-    
-    # ⭐ CAMBIO: Pasar ref_spectrum y spectral_cols también
+
+    # 4.7 Baseline: info + gráfico Original vs Corregido
     html += generate_baseline_info(
-        ref_corrected, header, origin, 
-        ref_spectrum, spectral_cols  # ← NUEVOS PARÁMETROS
+        ref_corrected, header, origin,
+        ref_spectrum, spectral_cols
     )
-    
-    # Notas adicionales
-    if client_data.get('notes'):
-        html += generate_notes_section(client_data['notes'])
-    
-    # Gráficos
+
+    # 4.8 Notas adicionales (si el usuario las guardó)
+    if client_data.get("notes"):
+        html += generate_notes_section(client_data["notes"])
+
+    # 4.9 Resultados gráficos (ANTES vs DESPUÉS con corrección simulada)
     html += generate_charts_section(
         df_ref_grouped=df_ref_grouped,
         df_new_grouped=df_new_grouped,
@@ -124,22 +150,49 @@ def generate_html_report(kit_data, baseline_data, ref_corrected, origin):
         ref_spectrum=ref_spectrum,
         ref_corrected=ref_corrected
     )
-    
-    # Footer
+
+    # 4.10 Footer
     html += generate_footer()
-    
+
     return html
 
-def start_html_document(client_data):
+def start_html_document(client_data, sections=None):
     """
-    Inicia el documento HTML con información del cliente.
-    
-    Args:
-        client_data (dict): Datos del cliente
-        
-    Returns:
-        str: HTML inicial
+    Inicia el documento HTML con información del cliente y barra lateral dinámica.
     """
+    # Si no se pasa lista de secciones, usa todas
+    default_sections = [
+        "info-cliente",
+        "wstd-section",
+        "process-details",
+        "samples",
+        "correction-stats",
+        "correction-differences",
+        "baseline-info",
+        "charts-section",
+        "validation-section",
+        "control-samples-section",
+    ]
+    sections = sections or default_sections
+
+    labels = {
+        "info-cliente": "Información del Cliente",
+        "wstd-section": "Diagnóstico WSTD",
+        "process-details": "Detalles del Proceso",
+        "samples": "Muestras del Standard Kit",
+        "correction-stats": "Estadísticas de la Corrección",
+        "correction-differences": "Diferencias Espectrales",
+        "baseline-info": "Baseline Generado",
+        "charts-section": "Resultados Gráficos",
+        "validation-section": "Validación",
+        "control-samples-section": "Muestras de Control",
+    }
+
+    sidebar_items = "\n".join(
+        f'<li><a href="#{sid}">{labels.get(sid, sid)}</a></li>'
+        for sid in sections if sid in labels
+    )
+
     html = f"""
     <!DOCTYPE html>
     <html>
@@ -147,63 +200,24 @@ def start_html_document(client_data):
         <meta charset="UTF-8">
         <style>
             {load_buchi_css()}
-            /* Sidebar del índice */
             .sidebar {{
-                position: fixed;
-                left: 0;
-                top: 0;
-                width: 250px;
-                height: 100%;
-                background-color: #093A34;
-                padding: 20px;
-                overflow-y: auto;
-                z-index: 1000;
+                position: fixed; left: 0; top: 0; width: 250px; height: 100%;
+                background-color: #093A34; padding: 20px; overflow-y: auto; z-index: 1000;
             }}
-            
-            .sidebar ul {{
-                list-style: none;
-                padding: 0;
-            }}
-            
-            .sidebar ul li {{
-                margin-bottom: 10px;
-            }}
-            
+            .sidebar ul {{ list-style: none; padding: 0; }}
+            .sidebar ul li {{ margin-bottom: 10px; }}
             .sidebar ul li a {{
-                color: white;
-                text-decoration: none;
-                display: block;
-                padding: 8px;
-                border-radius: 5px;
-                transition: background-color 0.3s;
-                font-weight: bold;
+                color: white; text-decoration: none; display: block; padding: 8px;
+                border-radius: 5px; transition: background-color 0.3s; font-weight: bold;
             }}
-            
-            .sidebar ul li a:hover {{
-                background-color: #289A93;
-            }}
-            
-            /* Contenido principal con margen izquierdo */
-            .main-content {{
-                margin-left: 270px;
-                padding: 20px;
-            }}
+            .sidebar ul li a:hover {{ background-color: #289A93; }}
+            .main-content {{ margin-left: 270px; padding: 20px; }}
         </style>
     </head>
     <body>
-        
         <div class="sidebar">
             <ul>
-                <li><a href="#info-cliente">Información del Cliente</a></li>
-                <li><a href="#wstd-section">Diagnóstico WSTD</a></li>
-                <li><a href="#process-details">Detalles del Proceso</a></li>
-                <li><a href="#samples">Muestras del Standard Kit</a></li>
-                <li><a href="#correction-stats">Estadísticas de la Corrección</a></li>
-                <li><a href="#correction-differences">Diferencias Espectrales</a></li>
-                <li><a href="#baseline-info">Baseline Generado</a></li>
-                <li><a href="#charts-section">Resultados Gráficos</a></li>
-                <li><a href="#validation-section">Validación</a></li>
-                <li><a href="#control-samples-section">Muestras de Control</a></li>
+                {sidebar_items}
             </ul>
         </div>
 
@@ -212,46 +226,20 @@ def start_html_document(client_data):
         <div class="info-box" id="info-cliente">
             <h2>Información del Cliente</h2>
             <table>
-                <tr>
-                    <th>Campo</th>
-                    <th>Valor</th>
-                </tr>
-                <tr>
-                    <td><strong>Cliente</strong></td>
-                    <td>{client_data.get('client_name', 'N/A')}</td>
-                </tr>
-                <tr>
-                    <td><strong>Contacto</strong></td>
-                    <td>{client_data.get('contact_person', 'N/A')}</td>
-                </tr>
-                <tr>
-                    <td><strong>Email</strong></td>
-                    <td>{client_data.get('contact_email', 'N/A')}</td>
-                </tr>
-                <tr>
-                    <td><strong>N/S Sensor</strong></td>
-                    <td>{client_data.get('sensor_sn', 'N/A')}</td>
-                </tr>
-                <tr>
-                    <td><strong>Modelo</strong></td>
-                    <td>{client_data.get('equipment_model', 'N/A')}</td>
-                </tr>
-                <tr>
-                    <td><strong>Técnico</strong></td>
-                    <td>{client_data.get('technician', 'N/A')}</td>
-                </tr>
-                <tr>
-                    <td><strong>Ubicación</strong></td>
-                    <td>{client_data.get('location', 'N/A')}</td>
-                </tr>
-                <tr>
-                    <td><strong>Fecha del Proceso</strong></td>
-                    <td>{client_data.get('date', datetime.now().strftime('%Y-%m-%d %H:%M:%S'))}</td>
-                </tr>
+                <tr><th>Campo</th><th>Valor</th></tr>
+                <tr><td><strong>Cliente</strong></td><td>{client_data.get('client_name', 'N/A')}</td></tr>
+                <tr><td><strong>Contacto</strong></td><td>{client_data.get('contact_person', 'N/A')}</td></tr>
+                <tr><td><strong>Email</strong></td><td>{client_data.get('contact_email', 'N/A')}</td></tr>
+                <tr><td><strong>N/S Sensor</strong></td><td>{client_data.get('sensor_sn', 'N/A')}</td></tr>
+                <tr><td><strong>Modelo</strong></td><td>{client_data.get('equipment_model', 'N/A')}</td></tr>
+                <tr><td><strong>Técnico</strong></td><td>{client_data.get('technician', 'N/A')}</td></tr>
+                <tr><td><strong>Ubicación</strong></td><td>{client_data.get('location', 'N/A')}</td></tr>
+                <tr><td><strong>Fecha del Proceso</strong></td><td>{client_data.get('date', datetime.now().strftime('%Y-%m-%d %H:%M:%S'))}</td></tr>
             </table>
         </div>
     """
     return html
+
 
 def generate_wstd_section(wstd_data):
     """
@@ -1621,55 +1609,30 @@ def generate_partial_report(
     mean_diff_before=None,
     mean_diff_after=None
 ):
-    """
-    Genera un informe HTML con las secciones disponibles y omite el resto.
-    Es seguro ante datos faltantes.
-    - Si hay datos base completos → usa generate_html_report(...)
-    - Si además hay validación → añade generate_validation_section(...) y (si existe) muestras de control
-    - Si faltan datos base → crea un informe mínimo con cabecera + WSTD + muestras de control, y footer.
-    """
     import streamlit as st
 
-    # Helper para saber si tengo todo lo base
-    has_base = (kit_data is not None and
-                baseline_data is not None and
-                ref_corrected is not None and
-                origin is not None)
-
-    # Helper para validación
-    has_validation = (validation_data is not None and
-                      mean_diff_before is not None and
-                      mean_diff_after is not None)
-
-    # Datos de cliente (no obligatorio)
     client_data = st.session_state.get('client_data', {})
+    wstd_data   = st.session_state.get('wstd_data')
 
-    if has_base:
-        # Informe completo (pasos 1–5)
-        html = generate_html_report(kit_data, baseline_data, ref_corrected, origin)
+    # Construye el índice dinámico
+    sections = ["info-cliente"]
+    if isinstance(wstd_data, dict) and wstd_data.get('df') is not None:
+        sections.append("wstd-section")
+    # Si habrá validación, añade la entrada al índice
+    has_validation = (
+        validation_data is not None
+        and mean_diff_before is not None
+        and mean_diff_after is not None
+    )
+    if has_validation:
+        sections.append("validation-section")
+    # Muestras de control se anexa si hay datos (la función ya gestiona vacío)
+    sections.append("control-samples-section")
 
-        # Si hay validación, inyecto la sección antes del footer
-        if has_validation:
-            html = html.replace(generate_footer(), "")
-            html += generate_validation_section(validation_data, mean_diff_before, mean_diff_after)
-            # Muestras de control (si existen)
-            html += generate_control_samples_section()
-            html += generate_footer()
-        else:
-            # Aún sin validación, pruebo a añadir muestras de control si existen
-            html = html.replace(generate_footer(), "")
-            html += generate_control_samples_section()
-            html += generate_footer()
+    html = start_html_document(client_data, sections=sections)
 
-        return html
-
-    # ------- Informe mínimo si faltan datos base -------
-    # Arranque del documento + sidebar corporativa
-    html = start_html_document(client_data)
-
-    # Si hay diagnóstico WSTD en session_state, añádelo
-    wstd_data = st.session_state.get('wstd_data')
-    if wstd_data and isinstance(wstd_data, dict) and wstd_data.get('df') is not None:
+    # WSTD (si existe)
+    if isinstance(wstd_data, dict) and wstd_data.get('df') is not None:
         try:
             html += generate_wstd_section(wstd_data)
         except Exception as e:
@@ -1680,15 +1643,28 @@ def generate_partial_report(
                 </div>
             """
 
-    # Aviso de datos incompletos
-    html += """
-        <div class="warning-box" style="margin-top: 20px;">
-            <h2>Secciones no disponibles</h2>
-            <p><em>No se encontraron datos suficientes para generar el informe completo del proceso (pasos 1–5).</em></p>
-        </div>
-    """
+    # Si NO hay baseline/kit completos, avisa
+    if not (kit_data and baseline_data and ref_corrected and origin):
+        html += """
+            <div class="warning-box" style="margin-top: 20px;">
+                <h2>Secciones no disponibles</h2>
+                <p><em>No hay datos suficientes para el informe completo (pasos 1–6).</em></p>
+            </div>
+        """
 
-    # Aun así, intenta añadir Muestras de Control si existen
+    # Validación (si hay datos “after”)
+    if has_validation:
+        try:
+            html += generate_validation_section(validation_data, mean_diff_before, mean_diff_after)
+        except Exception as e:
+            html += f"""
+                <div class="warning-box" id="validation-section" style="margin-top: 20px;">
+                    <h2>Validación</h2>
+                    <p><em>No se pudo renderizar la validación: {e}</em></p>
+                </div>
+            """
+
+    # Muestras de Control (si existen en session_state)
     try:
         ctrl_html = generate_control_samples_section()
         if ctrl_html:
