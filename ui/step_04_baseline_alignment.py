@@ -169,6 +169,15 @@ def render_baseline_upload_section():
                     'origin': 'ref'
                 }
                 
+                # ⭐ NUEVO: Guardar también en baseline_data para compatibilidad con validación
+                from session_manager import save_baseline_data
+                save_baseline_data(
+                    ref_spectrum=ref_spectrum,
+                    header=header,
+                    df_baseline=None,
+                    origin='ref'
+                )
+                
                 with st.expander("📊 Ver espectro del baseline", expanded=False):
                     fig = plot_baseline_spectrum(ref_spectrum, title="Baseline Actual")
                     st.plotly_chart(fig, use_container_width=True)
@@ -197,6 +206,15 @@ def render_baseline_upload_section():
                     'origin': 'csv'
                 }
                 
+                # ⭐ NUEVO: Guardar también en baseline_data para compatibilidad con validación
+                from session_manager import save_baseline_data
+                save_baseline_data(
+                    ref_spectrum=ref_spectrum,
+                    header=None,
+                    df_baseline=df_baseline,
+                    origin='csv'
+                )
+                                
                 with st.expander("📊 Ver espectro del baseline", expanded=False):
                     fig = plot_baseline_spectrum(ref_spectrum, title="Baseline Actual")
                     st.plotly_chart(fig, use_container_width=True)
@@ -212,10 +230,21 @@ def render_baseline_upload_section():
     # Si ya existe baseline cargado previamente
     if 'baseline_current' in st.session_state:
         st.success("✅ Baseline ya cargado")
+        
+        # ⭐ NUEVO: Asegurar que baseline_data también esté guardado
+        if 'baseline_data' not in st.session_state:
+            from session_manager import save_baseline_data
+            baseline_current = st.session_state.baseline_current
+            save_baseline_data(
+                ref_spectrum=baseline_current['spectrum'],
+                header=baseline_current.get('header'),
+                df_baseline=baseline_current.get('df_baseline'),
+                origin=baseline_current['origin']
+            )
+        
         return True
     
     return False
-
 
 def render_reference_tsv_section():
     """
@@ -342,9 +371,18 @@ def render_sample_selection_section():
     
     df_new = st.session_state.new_tsv['df']
     
-    # Filtrar y agrupar
+    # ⭐ CRÍTICO: Filtrar WSTD ANTES de agrupar
     df_ref_kit = df_ref[df_ref["ID"].str.upper() != "WSTD"].copy()
     df_new_kit = df_new[df_new["ID"].str.upper() != "WSTD"].copy()
+    
+    # Verificar que haya muestras después del filtrado
+    if len(df_ref_kit) == 0:
+        st.error("❌ No hay muestras en el archivo de referencia (todas son WSTD)")
+        return
+    
+    if len(df_new_kit) == 0:
+        st.error("❌ No hay muestras en el archivo nuevo (todas son WSTD)")
+        return
     
     # Convertir a numérico
     df_ref_kit[spectral_cols] = df_ref_kit[spectral_cols].apply(pd.to_numeric, errors="coerce")
@@ -362,10 +400,14 @@ def render_sample_selection_section():
     
     st.success(f"✅ {len(common_ids)} muestras comunes encontradas")
     
+    # ⭐ CRÍTICO: Filtrar los DataFrames agrupados SOLO con IDs comunes
+    df_ref_grouped = df_ref_grouped.loc[common_ids]
+    df_new_grouped = df_new_grouped.loc[common_ids]
+    
     # Guardar datos agrupados en session_state
     st.session_state.alignment_data = {
-        'df_ref_grouped': df_ref_grouped.loc[common_ids],
-        'df_new_grouped': df_new_grouped.loc[common_ids],
+        'df_ref_grouped': df_ref_grouped,
+        'df_new_grouped': df_new_grouped,
         'spectral_cols': spectral_cols,
         'common_ids': list(common_ids)
     }
@@ -432,7 +474,6 @@ def render_sample_selection_section():
             f"Pendientes: {len(st.session_state.pending_selection)} - "
             f"Confirmadas: {len(st.session_state.get('selected_ids', []))}"
         )
-
 
 def render_spectra_visualization_section():
     """
@@ -509,6 +550,9 @@ def render_correction_calculation_section():
     
     # Guardar corrección
     st.session_state.correction_vector = mean_diff
+    
+    # ⭐ NUEVO: Guardar también en formato kit_data para compatibilidad con validación
+    save_kit_data_for_validation()
     
     # Gráfico de corrección
     with st.expander("📊 Ver vector de corrección", expanded=False):
@@ -635,6 +679,7 @@ def render_corrected_baseline_section():
             
             # Preparar datos para el informe
             kit_data = {
+                'df': st.session_state.new_tsv['df'],  # ⭐ AÑADIDO - DataFrame completo del TSV nuevo
                 'df_ref_grouped': st.session_state.alignment_data['df_ref_grouped'],
                 'df_new_grouped': st.session_state.alignment_data['df_new_grouped'],
                 'spectral_cols': st.session_state.alignment_data['spectral_cols'],
@@ -643,6 +688,14 @@ def render_corrected_baseline_section():
                 'common_ids': st.session_state.alignment_data['common_ids'],
                 'mean_diff': st.session_state.correction_vector
             }
+            # DEBUG
+            st.write("DEBUG - Verificando kit_data:")
+            st.write("- ¿Existe new_tsv?", 'new_tsv' in st.session_state)
+            if 'new_tsv' in st.session_state:
+                st.write("- Keys en new_tsv:", list(st.session_state.new_tsv.keys()))
+                st.write("- ¿Existe 'df'?", 'df' in st.session_state.new_tsv)
+            st.write("- kit_data keys:", list(kit_data.keys()))
+            st.write("- ¿'df' en kit_data?", 'df' in kit_data)
             
             baseline_data_for_report = {
                 'ref_spectrum': baseline_data['spectrum'],
@@ -704,3 +757,46 @@ def render_navigation_section():
             if st.button("🔄 Finalizar y reiniciar", key="finish_alignment"):
                 reset_session_state()
                 st.rerun()
+                
+def save_kit_data_for_validation():
+    """
+    Guarda los datos en formato kit_data para compatibilidad con el paso de validación.
+    """
+    if 'alignment_data' not in st.session_state:
+        return
+    
+    if 'new_tsv' not in st.session_state:
+        return
+    
+    if 'correction_vector' not in st.session_state:
+        return
+    
+    # Preparar kit_data en el formato que espera validación
+    alignment_data = st.session_state.alignment_data
+    
+    kit_data = {
+        'df': st.session_state.new_tsv['df'],
+        'df_ref_grouped': alignment_data['df_ref_grouped'],
+        'df_new_grouped': alignment_data['df_new_grouped'],
+        'spectral_cols': alignment_data['spectral_cols'],
+        'lamp_ref': 'Referencia',
+        'lamp_new': 'Nueva',
+        'common_ids': alignment_data['common_ids'],
+        'mean_diff': st.session_state.correction_vector
+    }
+    
+    # Guardar usando la función de session_manager
+    from session_manager import save_kit_data
+    save_kit_data(
+        df=kit_data['df'],
+        df_ref_grouped=kit_data['df_ref_grouped'],
+        df_new_grouped=kit_data['df_new_grouped'],
+        spectral_cols=kit_data['spectral_cols'],
+        lamp_ref=kit_data['lamp_ref'],
+        lamp_new=kit_data['lamp_new'],
+        common_ids=kit_data['common_ids']
+    )
+    
+    # Y también guardar mean_diff
+    from session_manager import update_kit_data_with_correction
+    update_kit_data_with_correction(st.session_state.correction_vector)

@@ -145,7 +145,7 @@ def render_control_samples_validation():
         - Podrás comparar automáticamente las predicciones antes/después del ajuste
         """)
         # Botón de informe siempre visible
-        render_validation_report_entrypoint()
+        # render_validation_report_entrypoint()
         return  # ← Importante: no intentes acceder a control_initial
 
     # Caso 2: Sí hay control inicial → seguimos
@@ -1150,8 +1150,11 @@ def render_validation_report_entrypoint(fallback_partial: bool = False, preview:
     has_after     = mean_diff_after_val is not None
     has_valdata   = valdata_value is not None
 
-    if st.button("📥 Generar Informe", use_container_width=True, type="primary", key="btn_report_validation_global"):
-        html_content = None
+    # ⭐ NUEVO: Inicializar html_content en session_state si no existe
+    if 'validation_report_html' not in st.session_state:
+        st.session_state.validation_report_html = None
+
+    if st.button("📥 Generar Informe", use_container_width=True, type="primary", key="btn_generate_validation_report"):
         try:
             if has_kit and has_baseline and has_after and has_valdata:
                 from core.report_generator import generate_validation_report
@@ -1211,34 +1214,39 @@ def render_validation_report_entrypoint(fallback_partial: bool = False, preview:
                 st.error("❌ No hay datos suficientes para generar el informe.")
                 return
 
+            # ⭐ Guardar en session_state
+            st.session_state.validation_report_html = html_content
+            st.success("✅ Informe generado correctamente")
+
         except Exception as e:
             st.error(f"❌ Error al generar el informe: {e}")
             st.code(traceback.format_exc())
-            html_content = f"""
+            st.session_state.validation_report_html = f"""
             <html><body style="font-family:Arial">
               <h1>Informe parcial (error)</h1>
               <pre style="white-space:pre-wrap">{traceback.format_exc()}</pre>
             </body></html>
             """
 
-        # 👇 Solo DESCARGA; no se renderiza automáticamente
+    # ⭐ NUEVO: Mostrar botón de descarga FUERA del if, si existe el HTML
+    if st.session_state.validation_report_html:
         client_data = st.session_state.get('client_data') or {}
         filename = f"Informe_Validacion_{client_data.get('sensor_sn','sensor')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
 
         st.download_button(
             label="⬇️ Descargar Informe HTML",
-            data=html_content.encode("utf-8"),
+            data=st.session_state.validation_report_html.encode("utf-8"),
             file_name=filename,
             mime="text/html",
-            use_container_width=True
+            use_container_width=True,
+            key="btn_download_validation_report"  # ⭐ Key única
         )
 
         # (Opcional) vista previa bajo demanda
-        if preview and st.toggle("👁️ Previsualizar informe aquí"):
-            try:
-                st.components.v1.html(html_content, height=900, scrolling=True)
-            except Exception:
-                with st.expander("Ver HTML (fallback)"):
-                    st.code(html_content, language="html")
-
-        st.success("✅ Informe generado. Usa el botón para descargar.")
+        if preview:
+            if st.toggle("👁️ Previsualizar informe aquí", key="toggle_preview_validation"):
+                try:
+                    st.components.v1.html(st.session_state.validation_report_html, height=900, scrolling=True)
+                except Exception:
+                    with st.expander("Ver HTML (fallback)"):
+                        st.code(st.session_state.validation_report_html, language="html")

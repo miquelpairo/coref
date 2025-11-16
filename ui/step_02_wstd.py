@@ -8,14 +8,15 @@ import io
 import plotly.graph_objects as go
 from config import INSTRUCTIONS, MESSAGES, SPECIAL_IDS, WSTD_THRESHOLDS, DIAGNOSTIC_STATUS
 from session_manager import (
-    save_wstd_data, 
+    save_wstd_data,
+    save_reference_tsv,  # ⭐ NUEVO - Para guardar TSV completo
     go_to_next_step,
-    save_control_samples_initial  # ⭐ NUEVO
+    save_control_samples_initial
 )
 from core.file_handlers import load_tsv_file, get_spectral_columns
 from utils.validators import validate_wstd_measurements
 from utils.plotting import plot_wstd_spectra
-from utils.control_samples import extract_predictions_from_results  # ⭐ NUEVO
+from utils.control_samples import extract_predictions_from_results
 
 
 def render_wstd_step():
@@ -23,12 +24,17 @@ def render_wstd_step():
     Renderiza el paso de diagnostico inicial con WSTD (Paso 3).
     Incluye opción para cargar muestras de control.
     """
-    st.markdown("## PASO 3 DE 7: Diagnóstico Inicial")
+    st.markdown("## PASO 3 DE 5: Diagnóstico Inicial")  # ⭐ CAMBIADO: 3 DE 5
     st.markdown(INSTRUCTIONS['wstd'])
     st.markdown("---")
     
-    # ========== SECCIÓN 1: EXTERNAL WHITE ==========
-    st.markdown("### 🔍 Diagnóstico External White")
+    # ========== SECCIÓN 1: EXTERNAL WHITE (OBLIGATORIO) ==========
+    st.markdown("### 🔍 Diagnóstico External White (Obligatorio)")
+    st.info("""
+    📋 **Este archivo TSV se usará como referencia en el Paso 4 (Alineamiento de Baseline)**
+    
+    Asegúrate de medir con el baseline actual del equipo antes de cualquier ajuste.
+    """)
     
     wstd_file = st.file_uploader(
         "Sube el archivo TSV con las mediciones de External White", 
@@ -44,6 +50,11 @@ def render_wstd_step():
     if wstd_file:
         try:
             df = load_tsv_file(wstd_file)
+            spectral_cols = get_spectral_columns(df)
+            
+            # ⭐ NUEVO: Guardar el TSV completo para usar en Paso 4
+            save_reference_tsv(df, spectral_cols)
+            st.success("✅ Archivo TSV guardado como referencia para el Paso 4")
             
             st.markdown("#### Selecciona las filas que corresponden a la referencia externa (External White)")
             st.info("✅ Marca las casillas de las mediciones que corresponden al White Standard.")
@@ -66,7 +77,7 @@ def render_wstd_step():
             selected_indices = edited_df[edited_df['Seleccionar'] == True].index.tolist()
             
             if len(selected_indices) == 0:
-                st.warning("⚠️ No has seleccionado ninguna fila. Por favor, marca las mediciones External White.")
+                st.warning("⚠️ No has seleccionado ninguna fila. Por favor, marca las mediciones External White para el diagnóstico.")
             else:
                 df_wstd = df.loc[selected_indices].copy()
                 
@@ -78,7 +89,6 @@ def render_wstd_step():
                 display_df.insert(0, 'Índice fila', selected_indices)
                 st.dataframe(display_df, use_container_width=True)
                 
-                spectral_cols = get_spectral_columns(df)
                 df_wstd[spectral_cols] = df_wstd[spectral_cols].apply(pd.to_numeric, errors="coerce")
                 
                 st.write(f"**Canales espectrales:** {len(spectral_cols)}")
@@ -130,7 +140,7 @@ def render_wstd_step():
             else:
                 st.success(MESSAGES['success_file_loaded'])
                 
-                # ⭐ MODIFICADO: Mostrar preview de las muestras (incluye Recipe si existe)
+                # Mostrar preview de las muestras
                 st.markdown("#### Muestras detectadas en el archivo:")
                 preview_cols = ['ID', 'Note', 'Recipe', 'Result']
                 available_cols = [col for col in preview_cols if col in df_control.columns]
@@ -140,7 +150,6 @@ def render_wstd_step():
                 st.markdown("#### Selecciona las muestras de control:")
                 st.info("✅ Estas muestras se medirán nuevamente al final para validar el ajuste.")
                 
-                # ⭐ MODIFICADO: Crear checkboxes para seleccionar muestras (incluye Recipe si existe)
                 df_control_display = df_control[['ID', 'Note']].copy()
                 
                 # Añadir Recipe si existe
@@ -167,7 +176,7 @@ def render_wstd_step():
                     
                     st.success(f"✅ {len(df_control_selected)} muestras de control seleccionadas")
                     
-                    # ⭐ NUEVO: Mostrar información de recetas si existe
+                    # Mostrar información de recetas si existe
                     if 'Recipe' in df_control_selected.columns:
                         recipes = df_control_selected['Recipe'].dropna().unique()
                         if len(recipes) > 0:
@@ -181,8 +190,7 @@ def render_wstd_step():
                         st.markdown("#### Predicciones detectadas:")
                         st.dataframe(predictions_df, use_container_width=True)
 
-                        # === NORMALIZA Y GUARDA ===
-                        # 1) Detecta y normaliza la columna de resultados a 'Result'
+                        # Normalizar y guardar
                         result_col = None
                         for c in ('Result', 'Results'):
                             if c in df_control_selected.columns:
@@ -193,20 +201,16 @@ def render_wstd_step():
                         if result_col and result_col != 'Result':
                             df_to_save.rename(columns={result_col: 'Result'}, inplace=True)
 
-                        # 2) Normaliza IDs a string
                         df_to_save['ID'] = df_to_save['ID'].astype(str).str.strip()
                         
-                        # ⭐ NUEVO: Asegurar que Recipe se preserve si existe
                         if 'Recipe' in df_control.columns and 'Recipe' not in df_to_save.columns:
                             df_to_save['Recipe'] = df_control.loc[selected_control_indices, 'Recipe']
 
-                        # 3) Columnas espectrales
                         spectral_cols = get_spectral_columns(df_control)
 
-                        # 4) Guarda en session_state lo que luego necesitará el Paso 7
                         sample_ids = df_to_save['ID'].tolist()
                         save_control_samples_initial(
-                            df=df_to_save,              # <- ¡usa df_to_save (incluye 'Result' Y 'Recipe')!
+                            df=df_to_save,
                             spectral_cols=spectral_cols,
                             sample_ids=sample_ids
                         )
@@ -226,53 +230,39 @@ def render_wstd_step():
             import traceback
             st.code(traceback.format_exc())
     else:
-        st.info("ℹ️ Puedes omitir este paso y continuar sin muestras de control")
+        st.info("ℹ️ Puedes omitir las muestras de control y continuar solo con el diagnóstico WSTD")
     
     # ========== BOTONES DE NAVEGACIÓN ==========
     st.markdown("---")
     
-    # Verificar si hay muestras de control guardadas
+    # ⭐ MODIFICADO: Solo permitir continuar si hay archivo WSTD cargado
+    has_wstd = st.session_state.get('reference_tsv') is not None
     has_control = st.session_state.get('control_samples_initial') is not None
     
-    # Permitir continuar si WSTD está procesado O si hay muestras de control
-    can_continue = wstd_processed or st.session_state.get('wstd_data') is not None or has_control
-    
-    if can_continue:
-        col_continue, col_skip = st.columns([3, 1])
+    if has_wstd:
+        col_continue, col_space = st.columns([3, 1])
         
         # Mensaje informativo sobre qué datos están disponibles
         if wstd_processed and has_control:
-            st.success("✅ Diagnóstico WSTD y muestras de control guardados")
+            st.success("✅ TSV de referencia guardado y muestras de control seleccionadas")
         elif wstd_processed:
-            st.success("✅ Diagnóstico WSTD guardado")
-        elif has_control:
-            st.success("✅ Muestras de control guardadas")
+            st.success("✅ TSV de referencia guardado (muestras de control opcionales)")
+        elif has_wstd:
+            st.success("✅ TSV de referencia disponible del paso anterior")
         
         with col_continue:
             if st.button("✅ Continuar al Paso 4", type="primary", use_container_width=True):
                 st.session_state.unsaved_changes = False
                 go_to_next_step()
-        
-        with col_skip:
-            if st.button("⏭️ Omitir paso", use_container_width=True, key="skip_step_wstd"):
-                st.session_state.unsaved_changes = False
-                go_to_next_step()
     else:
-        st.info("""
-        ℹ️ **Opciones para continuar:**
+        st.warning("""
+        ⚠️ **Debes cargar el archivo TSV de External White para continuar**
         
-        - Completa el diagnóstico External White, o
-        - Carga muestras de control, o
-        - Omite este paso directamente
+        Este archivo es necesario como referencia para el alineamiento de baseline en el Paso 4.
         """)
-        
-        # Botón de omitir disponible incluso sin datos
-        col_empty, col_skip = st.columns([3, 1])
-        with col_skip:
-            if st.button("⏭️ Omitir paso", use_container_width=True, key="skip_step_wstd_no_data"):
-                st.session_state.unsaved_changes = False
-                go_to_next_step()
 
+
+# ========== FUNCIONES DE VISUALIZACIÓN (sin cambios) ==========
 
 def plot_wstd_individual(df_wstd, spectral_cols, selected_indices):
     """
@@ -280,7 +270,6 @@ def plot_wstd_individual(df_wstd, spectral_cols, selected_indices):
     """
     from plotly.subplots import make_subplots
     
-    # Crear subplots (2 filas)
     fig = make_subplots(
         rows=2, cols=1,
         subplot_titles=(
@@ -309,20 +298,12 @@ def plot_wstd_individual(df_wstd, spectral_cols, selected_indices):
             row=1, col=1
         )
     
-    # Línea de referencia en y=0 para subplot 1
-    fig.add_hline(
-        y=0, 
-        line_dash="dash", 
-        line_color="gray", 
-        opacity=0.5,
-        row=1, col=1
-    )
+    fig.add_hline(y=0, line_dash="dash", line_color="gray", opacity=0.5, row=1, col=1)
     
     # Subplot 2: Diferencias entre mediciones
     if len(df_wstd) >= 2:
         spectra_list = [row[spectral_cols].values for idx, row in df_wstd.iterrows()]
         
-        # Si hay 2 mediciones, mostrar su diferencia
         if len(df_wstd) == 2:
             diff = spectra_list[0] - spectra_list[1]
             label_diff = f"Fila {selected_indices[0]} - Fila {selected_indices[1]}"
@@ -339,8 +320,6 @@ def plot_wstd_individual(df_wstd, spectral_cols, selected_indices):
                 ),
                 row=2, col=1
             )
-        
-        # Si hay más de 2, mostrar diferencias respecto a la primera
         else:
             for i in range(1, len(spectra_list)):
                 diff = spectra_list[0] - spectra_list[i]
@@ -359,16 +338,8 @@ def plot_wstd_individual(df_wstd, spectral_cols, selected_indices):
                     row=2, col=1
                 )
         
-        # Línea de referencia en y=0 para subplot 2
-        fig.add_hline(
-            y=0, 
-            line_dash="dash", 
-            line_color="gray", 
-            opacity=0.5,
-            row=2, col=1
-        )
+        fig.add_hline(y=0, line_dash="dash", line_color="gray", opacity=0.5, row=2, col=1)
     
-    # Layout
     fig.update_xaxes(title_text="Canal espectral", row=1, col=1)
     fig.update_xaxes(title_text="Canal espectral", row=2, col=1)
     fig.update_yaxes(title_text="Desviación", row=1, col=1)
@@ -413,7 +384,6 @@ def render_diagnostic_metrics(df_wstd, spectral_cols, selected_indices):
             status = get_diagnostic_status(max_val)
             display_diagnostic_status(status)
             
-            # Mostrar algunos valores del espectro para debug
             with st.expander("Ver primeros valores"):
                 st.write(f"Primeros 5 canales: {spectrum[:5]}")
 

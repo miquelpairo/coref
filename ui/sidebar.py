@@ -101,8 +101,8 @@ def render_sidebar():
                         f"**{step_number}. {step_name}**",
                         key=f"current_step_{step_idx}",
                         use_container_width=True,
-                        type="secondary",  # ⚠️ Pon aquí el MISMO type que uses en los completados (secondary o primary)
-                        disabled=True       # no clicable
+                        type="secondary",
+                        disabled=True
                     )
                 
             else:
@@ -119,8 +119,8 @@ def render_sidebar():
         
         st.markdown("---")
         
-        # Información adicional
-        total_steps = len(STEPS)
+        # Información adicional (⭐ ACTUALIZADO: total_steps ya no es len(STEPS) sino 5)
+        total_steps = 5  # ⭐ CAMBIADO de len(STEPS) a valor fijo
         completed = current_step
         progress = min(completed / total_steps, 1.0)
         
