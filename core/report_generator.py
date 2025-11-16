@@ -1275,7 +1275,6 @@ def generate_validation_report(kit_data, baseline_data, ref_corrected, origin,
     
     return html
 
-
 def generate_validation_section(validation_data, mean_diff_before, mean_diff_after):
     """
     Genera la seccion de validacion para el informe.

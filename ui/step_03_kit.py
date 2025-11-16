@@ -176,12 +176,8 @@ def render_kit_step():
             st.error(f"Error al procesar los archivos: {str(e)}")
             import traceback
             st.error(traceback.format_exc())
-            
 
 
-
-
-    
 def render_sample_selection_simple(common_ids):
     """
     Renderiza seleccion de muestras sin nombres de lamparas especificos.
