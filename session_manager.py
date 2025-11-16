@@ -22,6 +22,9 @@ def initialize_session_state():
     
     if 'wstd_data' not in st.session_state:
         st.session_state.wstd_data = None
+        
+    if 'reference_tsv' not in st.session_state:
+        st.session_state.reference_tsv = None
     
     if 'kit_data' not in st.session_state:
         st.session_state.kit_data = None
@@ -162,6 +165,41 @@ def save_wstd_data(df, grouped, spectral_cols, lamps):
         'lamps': lamps
     }
 
+
+def save_reference_tsv(df, spectral_cols):
+    """
+    Guarda el archivo TSV completo de referencia del paso 3.
+    Este TSV se usará como referencia en el paso 4 (Alineamiento de Baseline).
+    
+    Args:
+        df (pd.DataFrame): DataFrame completo del TSV
+        spectral_cols (list): Lista de nombres de columnas espectrales
+    """
+    st.session_state.reference_tsv = {
+        'df': df.copy(),
+        'spectral_cols': spectral_cols,
+        'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    }
+
+
+def has_reference_tsv():
+    """
+    Verifica si hay un TSV de referencia guardado del paso 3.
+    
+    Returns:
+        bool: True si hay TSV de referencia
+    """
+    return st.session_state.reference_tsv is not None
+
+
+def get_reference_tsv():
+    """
+    Recupera el TSV de referencia guardado.
+    
+    Returns:
+        dict or None: Diccionario con 'df' y 'spectral_cols' o None
+    """
+    return st.session_state.get('reference_tsv', None)
 
 # ⭐ NUEVO: Funciones para muestras de control
 def save_control_samples_initial(df, spectral_cols, sample_ids):

@@ -8,15 +8,13 @@ PAGE_CONFIG = {
     "layout": "wide"
 }
 
-# Definición de pasos del proceso (DICCIONARIO como en sidebar.py)
+# Definición de pasos del proceso (⭐ ACTUALIZADO A 5 PASOS)
 STEPS = {
     1: "Datos del cliente",
     2: "Backup de archivos",
     3: "Diagnóstico Inicial",
-    4: "Medición del Standard Kit",
-    5: "Cálculo de corrección",
-    6: "Baseline y Exportación",
-    7: "Validación"
+    4: "Alineamiento de Baseline",  # ⭐ NUEVO - Fusiona antiguos pasos 4, 5 y 6
+    5: "Validación"  # ⭐ Antes era paso 7
 }
 
 # Rutas de archivos baseline
@@ -153,7 +151,7 @@ INSTRUCTIONS = {
     Las desviaciones del espectro respecto a cero nos indican el estado del sensor.
     Esto sirve como referencia del "antes" del ajuste.
     
-    **Nota:** Este paso es opcional pero recomendado para documentar el estado inicial.
+    **IMPORTANTE:** Este archivo TSV se usará automáticamente como referencia en el Paso 4.
     """,
     
     'control_samples': """
@@ -280,16 +278,15 @@ img { max-width: 100%; height: auto; margin: 20px 0; }
 """
 
 # Información de versión
-VERSION = "2.2.0"
-VERSION_DATE = "2025-01-27"
+VERSION = "3.0.0"  # ⭐ ACTUALIZADO
+VERSION_DATE = "2025-01-16"  # ⭐ ACTUALIZADO
 VERSION_NOTES = """
-Versión 2.2.0 - Cambios principales:
-- ⭐ NUEVO: Soporte para muestras de control
-- ⭐ NUEVO: Comparación de predicciones antes/después del ajuste
-- ⭐ NUEVO: Validación espectral de muestras de control
-- WSTD: Selección manual de filas mediante checkboxes
-- WSTD: Visualización individual de cada medición con gráficos de diferencias
-- Gráficos WSTD incluidos en el reporte HTML con Plotly interactivo
-- Mejoras en la usabilidad del paso de diagnóstico inicial
+Versión 3.0.0 - Refactorización Mayor:
+- ⭐ NUEVO: Proceso simplificado de 7 a 5 pasos
+- ⭐ NUEVO: Paso 4 "Alineamiento de Baseline" - integra carga de baseline, TSV, corrección y exportación
+- ⭐ NUEVO: TSV de referencia se arrastra automáticamente desde Paso 3
+- Paso 3 (WSTD): Ahora obligatorio y genera TSV de referencia
 - Arquitectura modular mejorada
+- Flujo de trabajo más intuitivo y eficiente
+- Mantenimiento de todas las funcionalidades previas
 """

@@ -342,9 +342,18 @@ def render_sample_selection_section():
     
     df_new = st.session_state.new_tsv['df']
     
-    # Filtrar y agrupar
+    # ⭐ CRÍTICO: Filtrar WSTD ANTES de agrupar
     df_ref_kit = df_ref[df_ref["ID"].str.upper() != "WSTD"].copy()
     df_new_kit = df_new[df_new["ID"].str.upper() != "WSTD"].copy()
+    
+    # Verificar que haya muestras después del filtrado
+    if len(df_ref_kit) == 0:
+        st.error("❌ No hay muestras en el archivo de referencia (todas son WSTD)")
+        return
+    
+    if len(df_new_kit) == 0:
+        st.error("❌ No hay muestras en el archivo nuevo (todas son WSTD)")
+        return
     
     # Convertir a numérico
     df_ref_kit[spectral_cols] = df_ref_kit[spectral_cols].apply(pd.to_numeric, errors="coerce")
@@ -362,10 +371,14 @@ def render_sample_selection_section():
     
     st.success(f"✅ {len(common_ids)} muestras comunes encontradas")
     
+    # ⭐ CRÍTICO: Filtrar los DataFrames agrupados SOLO con IDs comunes
+    df_ref_grouped = df_ref_grouped.loc[common_ids]
+    df_new_grouped = df_new_grouped.loc[common_ids]
+    
     # Guardar datos agrupados en session_state
     st.session_state.alignment_data = {
-        'df_ref_grouped': df_ref_grouped.loc[common_ids],
-        'df_new_grouped': df_new_grouped.loc[common_ids],
+        'df_ref_grouped': df_ref_grouped,
+        'df_new_grouped': df_new_grouped,
         'spectral_cols': spectral_cols,
         'common_ids': list(common_ids)
     }
@@ -432,7 +445,6 @@ def render_sample_selection_section():
             f"Pendientes: {len(st.session_state.pending_selection)} - "
             f"Confirmadas: {len(st.session_state.get('selected_ids', []))}"
         )
-
 
 def render_spectra_visualization_section():
     """
@@ -635,6 +647,7 @@ def render_corrected_baseline_section():
             
             # Preparar datos para el informe
             kit_data = {
+                'df': st.session_state.new_tsv['df'],  # ⭐ AÑADIDO - DataFrame completo del TSV nuevo
                 'df_ref_grouped': st.session_state.alignment_data['df_ref_grouped'],
                 'df_new_grouped': st.session_state.alignment_data['df_new_grouped'],
                 'spectral_cols': st.session_state.alignment_data['spectral_cols'],
@@ -643,6 +656,14 @@ def render_corrected_baseline_section():
                 'common_ids': st.session_state.alignment_data['common_ids'],
                 'mean_diff': st.session_state.correction_vector
             }
+            # DEBUG
+            st.write("DEBUG - Verificando kit_data:")
+            st.write("- ¿Existe new_tsv?", 'new_tsv' in st.session_state)
+            if 'new_tsv' in st.session_state:
+                st.write("- Keys en new_tsv:", list(st.session_state.new_tsv.keys()))
+                st.write("- ¿Existe 'df'?", 'df' in st.session_state.new_tsv)
+            st.write("- kit_data keys:", list(kit_data.keys()))
+            st.write("- ¿'df' en kit_data?", 'df' in kit_data)
             
             baseline_data_for_report = {
                 'ref_spectrum': baseline_data['spectrum'],
