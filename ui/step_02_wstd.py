@@ -11,20 +11,19 @@ from session_manager import (
     save_wstd_data,
     save_reference_tsv,  # ⭐ NUEVO - Para guardar TSV completo
     go_to_next_step,
-    save_control_samples_initial
+#    save_control_samples_initial
 )
 from core.file_handlers import load_tsv_file, get_spectral_columns
 from utils.validators import validate_wstd_measurements
 from utils.plotting import plot_wstd_spectra
-from utils.control_samples import extract_predictions_from_results
+#from utils.control_samples import extract_predictions_from_results
 
 
 def render_wstd_step():
     """
     Renderiza el paso de diagnostico inicial con WSTD (Paso 3).
-    Incluye opción para cargar muestras de control.
     """
-    st.markdown("## PASO 3 DE 5: Diagnóstico Inicial")  # ⭐ CAMBIADO: 3 DE 5
+    st.markdown("## PASO 3 DE 5: Diagnóstico Inicial")
     st.markdown(INSTRUCTIONS['wstd'])
     st.markdown("---")
     
@@ -116,137 +115,135 @@ def render_wstd_step():
             import traceback
             st.code(traceback.format_exc())
     
-    # ========== SECCIÓN 2: MUESTRAS DE CONTROL (OPCIONAL) ==========
-    st.markdown("---")
-    st.markdown("### 🧪 Muestras de Control (Opcional pero Recomendado)")
-    st.markdown(INSTRUCTIONS['control_samples'])
-    
-    control_file = st.file_uploader(
-        "Sube el archivo TSV con las muestras de control (ANTES del ajuste)",
-        type="tsv",
-        key="control_initial_upload",
-        help="Las muestras deben incluir la columna 'Result' con las predicciones"
-    )
-    
-    control_processed = False
-    
-    if control_file:
-        try:
-            df_control = load_tsv_file(control_file)
-            
-            # Verificar que tenga la columna Result
-            if 'Result' not in df_control.columns:
-                st.error(MESSAGES['error_no_predictions'])
-            else:
-                st.success(MESSAGES['success_file_loaded'])
-                
-                # Mostrar preview de las muestras
-                st.markdown("#### Muestras detectadas en el archivo:")
-                preview_cols = ['ID', 'Note', 'Recipe', 'Result']
-                available_cols = [col for col in preview_cols if col in df_control.columns]
-                st.dataframe(df_control[available_cols], use_container_width=True)
-                
-                # Seleccionar muestras de control
-                st.markdown("#### Selecciona las muestras de control:")
-                st.info("✅ Estas muestras se medirán nuevamente al final para validar el ajuste.")
-                
-                df_control_display = df_control[['ID', 'Note']].copy()
-                
-                # Añadir Recipe si existe
-                if 'Recipe' in df_control.columns:
-                    df_control_display['Recipe'] = df_control['Recipe']
-                
-                df_control_display.insert(0, 'Usar como Control', False)
-                
-                # Deshabilitar Recipe si existe
-                disabled_cols = ['ID', 'Note', 'Recipe'] if 'Recipe' in df_control.columns else ['ID', 'Note']
-                
-                edited_control = st.data_editor(
-                    df_control_display,
-                    hide_index=False,
-                    use_container_width=True,
-                    disabled=disabled_cols,
-                    key='control_selector'
-                )
-                
-                selected_control_indices = edited_control[edited_control['Usar como Control'] == True].index.tolist()
-                
-                if len(selected_control_indices) > 0:
-                    df_control_selected = df_control.loc[selected_control_indices].copy()
-                    
-                    st.success(f"✅ {len(df_control_selected)} muestras de control seleccionadas")
-                    
-                    # Mostrar información de recetas si existe
-                    if 'Recipe' in df_control_selected.columns:
-                        recipes = df_control_selected['Recipe'].dropna().unique()
-                        if len(recipes) > 0:
-                            recipes_str = ', '.join([str(r) for r in recipes])
-                            st.info(f"📋 **Recetas detectadas:** {recipes_str}")
-                    
-                    # Extraer predicciones
-                    predictions_df = extract_predictions_from_results(df_control_selected)
-
-                    if not predictions_df.empty:
-                        st.markdown("#### Predicciones detectadas:")
-                        st.dataframe(predictions_df, use_container_width=True)
-
-                        # Normalizar y guardar
-                        result_col = None
-                        for c in ('Result', 'Results'):
-                            if c in df_control_selected.columns:
-                                result_col = c
-                                break
-
-                        df_to_save = df_control_selected.copy()
-                        if result_col and result_col != 'Result':
-                            df_to_save.rename(columns={result_col: 'Result'}, inplace=True)
-
-                        df_to_save['ID'] = df_to_save['ID'].astype(str).str.strip()
-                        
-                        if 'Recipe' in df_control.columns and 'Recipe' not in df_to_save.columns:
-                            df_to_save['Recipe'] = df_control.loc[selected_control_indices, 'Recipe']
-
-                        spectral_cols = get_spectral_columns(df_control)
-
-                        sample_ids = df_to_save['ID'].tolist()
-                        save_control_samples_initial(
-                            df=df_to_save,
-                            spectral_cols=spectral_cols,
-                            sample_ids=sample_ids
-                        )
-
-                        st.info(f"💾 {MESSAGES['success_control_initial']}")
-                        st.info(f"📝 **Importante:** Anota estos IDs: {', '.join(sample_ids)}")
-                        st.info("Los necesitarás al final del proceso para medir las mismas muestras.")
-                        
-                        control_processed = True
-                    else:
-                        st.warning("⚠️ No se pudieron extraer predicciones del campo Result")
-                else:
-                    st.warning("⚠️ No has seleccionado ninguna muestra de control")
-                    
-        except Exception as e:
-            st.error(f"❌ Error al procesar muestras de control: {str(e)}")
-            import traceback
-            st.code(traceback.format_exc())
-    else:
-        st.info("ℹ️ Puedes omitir las muestras de control y continuar solo con el diagnóstico WSTD")
+    # ========== SECCIÓN 2: MUESTRAS DE CONTROL (DESACTIVADA) ==========
+    # st.markdown("---")
+    # st.markdown("### 🧪 Muestras de Control (Opcional pero Recomendado)")
+    # st.markdown(INSTRUCTIONS['control_samples'])
+    # 
+    # control_file = st.file_uploader(
+    #     "Sube el archivo TSV con las muestras de control (ANTES del ajuste)",
+    #     type="tsv",
+    #     key="control_initial_upload",
+    #     help="Las muestras deben incluir la columna 'Result' con las predicciones"
+    # )
+    # 
+    # control_processed = False
+    # 
+    # if control_file:
+    #     try:
+    #         df_control = load_tsv_file(control_file)
+    #         
+    #         # Verificar que tenga la columna Result
+    #         if 'Result' not in df_control.columns:
+    #             st.error(MESSAGES['error_no_predictions'])
+    #         else:
+    #             st.success(MESSAGES['success_file_loaded'])
+    #             
+    #             # Mostrar preview de las muestras
+    #             st.markdown("#### Muestras detectadas en el archivo:")
+    #             preview_cols = ['ID', 'Note', 'Recipe', 'Result']
+    #             available_cols = [col for col in preview_cols if col in df_control.columns]
+    #             st.dataframe(df_control[available_cols], use_container_width=True)
+    #             
+    #             # Seleccionar muestras de control
+    #             st.markdown("#### Selecciona las muestras de control:")
+    #             st.info("✅ Estas muestras se medirán nuevamente al final para validar el ajuste.")
+    #             
+    #             df_control_display = df_control[['ID', 'Note']].copy()
+    #             
+    #             # Añadir Recipe si existe
+    #             if 'Recipe' in df_control.columns:
+    #                 df_control_display['Recipe'] = df_control['Recipe']
+    #             
+    #             df_control_display.insert(0, 'Usar como Control', False)
+    #             
+    #             # Deshabilitar Recipe si existe
+    #             disabled_cols = ['ID', 'Note', 'Recipe'] if 'Recipe' in df_control.columns else ['ID', 'Note']
+    #             
+    #             edited_control = st.data_editor(
+    #                 df_control_display,
+    #                 hide_index=False,
+    #                 use_container_width=True,
+    #                 disabled=disabled_cols,
+    #                 key='control_selector'
+    #             )
+    #             
+    #             selected_control_indices = edited_control[edited_control['Usar como Control'] == True].index.tolist()
+    #             
+    #             if len(selected_control_indices) > 0:
+    #                 df_control_selected = df_control.loc[selected_control_indices].copy()
+    #                 
+    #                 st.success(f"✅ {len(df_control_selected)} muestras de control seleccionadas")
+    #                 
+    #                 # Mostrar información de recetas si existe
+    #                 if 'Recipe' in df_control_selected.columns:
+    #                     recipes = df_control_selected['Recipe'].dropna().unique()
+    #                     if len(recipes) > 0:
+    #                         recipes_str = ', '.join([str(r) for r in recipes])
+    #                         st.info(f"📋 **Recetas detectadas:** {recipes_str}")
+    #                 
+    #                 # Extraer predicciones
+    #                 predictions_df = extract_predictions_from_results(df_control_selected)
+    #
+    #                 if not predictions_df.empty:
+    #                     st.markdown("#### Predicciones detectadas:")
+    #                     st.dataframe(predictions_df, use_container_width=True)
+    #
+    #                     # Normalizar y guardar
+    #                     result_col = None
+    #                     for c in ('Result', 'Results'):
+    #                         if c in df_control_selected.columns:
+    #                             result_col = c
+    #                             break
+    #
+    #                     df_to_save = df_control_selected.copy()
+    #                     if result_col and result_col != 'Result':
+    #                         df_to_save.rename(columns={result_col: 'Result'}, inplace=True)
+    #
+    #                     df_to_save['ID'] = df_to_save['ID'].astype(str).str.strip()
+    #                     
+    #                     if 'Recipe' in df_control.columns and 'Recipe' not in df_to_save.columns:
+    #                         df_to_save['Recipe'] = df_control.loc[selected_control_indices, 'Recipe']
+    #
+    #                     spectral_cols = get_spectral_columns(df_control)
+    #
+    #                     sample_ids = df_to_save['ID'].tolist()
+    #                     save_control_samples_initial(
+    #                         df=df_to_save,
+    #                         spectral_cols=spectral_cols,
+    #                         sample_ids=sample_ids
+    #                     )
+    #
+    #                     st.info(f"💾 {MESSAGES['success_control_initial']}")
+    #                     st.info(f"📝 **Importante:** Anota estos IDs: {', '.join(sample_ids)}")
+    #                     st.info("Los necesitarás al final del proceso para medir las mismas muestras.")
+    #                     
+    #                     control_processed = True
+    #                 else:
+    #                     st.warning("⚠️ No se pudieron extraer predicciones del campo Result")
+    #             else:
+    #                 st.warning("⚠️ No has seleccionado ninguna muestra de control")
+    #                 
+    #     except Exception as e:
+    #         st.error(f"❌ Error al procesar muestras de control: {str(e)}")
+    #         import traceback
+    #         st.code(traceback.format_exc())
+    # else:
+    #     st.info("ℹ️ Puedes omitir las muestras de control y continuar solo con el diagnóstico WSTD")
     
     # ========== BOTONES DE NAVEGACIÓN ==========
     st.markdown("---")
     
-    # ⭐ MODIFICADO: Solo permitir continuar si hay archivo WSTD cargado
+    # Solo permitir continuar si hay archivo WSTD cargado
     has_wstd = st.session_state.get('reference_tsv') is not None
-    has_control = st.session_state.get('control_samples_initial') is not None
+    # has_control = st.session_state.get('control_samples_initial') is not None  # DESACTIVADO
     
     if has_wstd:
         col_continue, col_space = st.columns([3, 1])
         
-        # Mensaje informativo sobre qué datos están disponibles
-        if wstd_processed and has_control:
-            st.success("✅ TSV de referencia guardado y muestras de control seleccionadas")
-        elif wstd_processed:
-            st.success("✅ TSV de referencia guardado (muestras de control opcionales)")
+        # Mensaje informativo
+        if wstd_processed:
+            st.success("✅ TSV de referencia guardado")
         elif has_wstd:
             st.success("✅ TSV de referencia disponible del paso anterior")
         
@@ -260,7 +257,6 @@ def render_wstd_step():
         
         Este archivo es necesario como referencia para el alineamiento de baseline en el Paso 4.
         """)
-
 
 # ========== FUNCIONES DE VISUALIZACIÓN (sin cambios) ==========
 

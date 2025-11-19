@@ -141,15 +141,15 @@ INSTRUCTIONS = {
     **Objetivo:** Caracterizar el estado actual del sensor antes de realizar cualquier ajuste.
 
     **Procedimiento:**
-    1. **Mide una referencia blanca** (External White o similar) con la configuración actual del equipo
+    1. **Mide una referencia blanca** (External White) con la configuración actual del equipo
     2. **NO tomes nueva baseline** - usa la configuración actual del sensor
-    3. **Asigna un ID identificable** a la medición (ej: "ExtWhite", "WSTD", "WhiteRef")
+    3. **Asigna un ID identificable** a la medición (ej: "WHITE", "WSTD", "WhiteRef"). Usa el mismo ID en todo el proceso.
     4. **Exporta el archivo TSV** con las mediciones
     5. **Selecciona las filas correspondientes** usando los checkboxes
 
     **¿Qué evaluamos?**
-    Las desviaciones del espectro respecto a cero nos indican el estado del sensor.
-    Esto sirve como referencia del "antes" del ajuste.
+    Las desviaciones del espectro respecto a cero nos indican la línea base actual.
+    Esto sirve como referencia para alinear el sensor a la misma linea base.
     
     **IMPORTANTE:** Este archivo TSV se usará automáticamente como referencia en el Paso 4.
     """,
