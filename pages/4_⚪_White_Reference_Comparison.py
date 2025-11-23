@@ -470,8 +470,8 @@ def calculate_correlation_matrix(spectra_list: List[np.ndarray], names: List[str
 def main():
     """Función principal de la aplicación."""
     
-    st.title("📊 NIR Spectrum Comparison Tool")
-    st.markdown("**Herramienta de comparación de espectros NIR - COREF Suite**")
+    st.title("📊 NIR White Standard Comparison Tool")
+    st.markdown("**Herramienta de comparación de Baseline**")
     st.divider()
     
     # Sidebar
@@ -504,13 +504,14 @@ def main():
         st.info("👈 Sube al menos 1 archivo TSV para comenzar")
         st.markdown("""
         ### Características:
-        - **Overlay de espectros**: Visualiza todos los espectros simultáneamente
-        - **Análisis de residuales**: Compara contra cualquier referencia
+        - **Overlay de espectros**: Visualiza todas las referencias blancas simultáneamente
+        - **Análisis de residuales**: Diferencias punto a punto vs referencia
         - **Estadísticas**: Métricas clave por espectro
-        - **Matriz RMS**: Cuantifica variabilidad entre pares
+        - **Matriz RMS con escala absoluta**: Color basado en umbrales fijos (no relativo)
+        - **Sin correlación**: Métrica no aplicable para espectros planos
+        - **Evaluación automática**: Verde/Amarillo/Rojo según umbrales de calidad
         - **Selección de filas**: Elige qué mediciones comparar (incluso del mismo archivo)
         """)
-        return
     
     # Cargar y procesar archivos
     with st.spinner("Cargando espectros..."):
