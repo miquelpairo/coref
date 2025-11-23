@@ -50,14 +50,25 @@ def load_buchi_css():
         return REPORT_STYLE
 
 def generate_html_report(kit_data, baseline_data, ref_corrected, origin):
+    """
+    Genera el informe HTML completo del proceso de ajuste de baseline.
+    
+    Args:
+        kit_data (dict): Datos del proceso (white standards)
+        baseline_data (dict): Datos del baseline original
+        ref_corrected (np.array): Baseline corregido
+        origin (str): Tipo de archivo ('ref' o 'csv')
+        
+    Returns:
+        str: Contenido HTML del informe
+    """
     import streamlit as st
 
-    # === Contexto de sesión (opcionales) ===
+    # Contexto de sesión
     client_data = st.session_state.get('client_data', {}) or {}
     wstd_data   = st.session_state.get('wstd_data', {}) or {}
 
-    # === (1) Extraer datos necesarios de kit_data y baseline_data ===
-    # kit_data: esperado del pipeline de pasos 1–5
+    # Extraer datos necesarios de kit_data y baseline_data
     try:
         df               = kit_data["df"]
         df_ref_grouped   = kit_data["df_ref_grouped"]
@@ -70,91 +81,72 @@ def generate_html_report(kit_data, baseline_data, ref_corrected, origin):
     except Exception as e:
         raise ValueError(f"[generate_html_report] kit_data incompleto: {e}")
 
-    # baseline_data: baseline original (.ref o .csv) y cabecera si aplica
     try:
         ref_spectrum = baseline_data["ref_spectrum"]
         header       = baseline_data.get("header")
     except Exception as e:
         raise ValueError(f"[generate_html_report] baseline_data incompleto: {e}")
 
-    # IDs seleccionados (si no hay, usa todas las comunes)
+    # IDs seleccionados
     selected_ids = st.session_state.get("selected_ids", list(common_ids))
 
-    # === (2) Construir índice lateral dinámico ===
+    # Construir índice lateral dinámico
     sections = [
         "info-cliente",
         "process-details",
-        "samples",
+        "white-correction",
         "correction-stats",
-        "correction-differences",
+        "correction-vector",
         "baseline-info",
-        "charts-section",
-        # "validation-section" se añade solo en generate_validation_report
-        "control-samples-section",  # se mostrará solo si hay datos; la sección ya controla su visibilidad
     ]
     if isinstance(wstd_data, dict) and wstd_data.get("df") is not None:
         sections.insert(1, "wstd-section")
 
-    # === (3) HTML inicial con sidebar ===
+    # HTML inicial con sidebar
     html = start_html_document(client_data, sections=sections)
 
-    # === (4) Secciones condicionales / fijas ===
-
-    # 4.1 WSTD (si existe)
+    # Secciones del informe
+    
+    # WSTD inicial (si existe)
     if isinstance(wstd_data, dict) and wstd_data.get("df") is not None:
         html += generate_wstd_section(wstd_data)
 
-    # 4.2 Detalles del proceso
+    # Detalles del proceso
     html += generate_process_details(
         lamp_ref, lamp_new, len(spectral_cols),
         len(common_ids), origin
     )
 
-    # 4.3 Tabla de muestras
-    html += generate_samples_table(df, common_ids, lamp_ref, lamp_new)
-
-    # 4.4 Espectros seleccionados ANTES de corrección
-    html += generate_selected_samples_chart(
+    # Mediciones white standard usadas en la corrección
+    html += generate_white_correction_chart(
         df_ref_grouped, df_new_grouped, spectral_cols,
         lamp_ref, lamp_new, selected_ids
     )
 
-    # 4.5 Estadísticas de corrección
+    # Estadísticas de corrección
     html += generate_correction_statistics(mean_diff)
 
-    # 4.6 Gráficos de diferencias espectrales (Paso 5)
-    html += generate_correction_differences_charts(
+    # Vector de corrección
+    html += generate_correction_vector_section(
         df_ref_grouped, df_new_grouped, mean_diff,
         common_ids, selected_ids, lamp_ref, lamp_new
     )
 
-    # 4.7 Baseline: info + gráfico Original vs Corregido
+    # Baseline: info + gráfico Original vs Corregido
     html += generate_baseline_info(
         ref_corrected, header, origin,
         ref_spectrum, spectral_cols
     )
 
-    # 4.8 Notas adicionales (si el usuario las guardó)
+    # Notas adicionales (si el usuario las guardó)
     if client_data.get("notes"):
         html += generate_notes_section(client_data["notes"])
 
-    # 4.9 Resultados gráficos (ANTES vs DESPUÉS con corrección simulada)
-    html += generate_charts_section(
-        df_ref_grouped=df_ref_grouped,
-        df_new_grouped=df_new_grouped,
-        spectral_cols=spectral_cols,
-        lamp_ref=lamp_ref,
-        lamp_new=lamp_new,
-        common_ids=common_ids,
-        selected_ids=selected_ids,
-        ref_spectrum=ref_spectrum,
-        ref_corrected=ref_corrected
-    )
-
-    # 4.10 Footer
+    # Footer
     html += generate_footer()
 
     return html
+
 
 def start_html_document(client_data, sections=None):
     """
@@ -165,27 +157,23 @@ def start_html_document(client_data, sections=None):
         "info-cliente",
         "wstd-section",
         "process-details",
-        "samples",
+        "white-correction",
         "correction-stats",
-        "correction-differences",
+        "correction-vector",
         "baseline-info",
-        "charts-section",
-        "validation-section",
-        "control-samples-section",
+        "verification-section",
     ]
     sections = sections or default_sections
 
     labels = {
         "info-cliente": "Información del Cliente",
-        "wstd-section": "Diagnóstico WSTD",
+        "wstd-section": "Diagnóstico WSTD Inicial",
         "process-details": "Detalles del Proceso",
-        "samples": "Muestras del Standard Kit",
+        "white-correction": "Corrección con White Standard",
         "correction-stats": "Estadísticas de la Corrección",
-        "correction-differences": "Diferencias Espectrales",
+        "correction-vector": "Vector de Corrección",
         "baseline-info": "Baseline Generado",
-        "charts-section": "Resultados Gráficos",
-        "validation-section": "Validación",
-        "control-samples-section": "Muestras de Control",
+        "verification-section": "Verificación Post-Ajuste",
     }
 
     sidebar_items = "\n".join(
@@ -239,7 +227,6 @@ def start_html_document(client_data, sections=None):
         </div>
     """
     return html
-
 
 def generate_wstd_section(wstd_data):
     """
@@ -436,7 +423,7 @@ def generate_process_details(lamp_ref, lamp_new, n_spectral, n_samples, origin):
         lamp_ref (str): Lámpara de referencia
         lamp_new (str): Lámpara nueva
         n_spectral (int): Número de canales espectrales
-        n_samples (int): Número de muestras
+        n_samples (int): Número de mediciones white standard
         origin (str): Tipo de archivo
         
     Returns:
@@ -467,11 +454,11 @@ def generate_process_details(lamp_ref, lamp_new, n_spectral, n_samples, origin):
                     <td>{n_spectral}</td>
                 </tr>
                 <tr>
-                    <td><strong>Muestras Comunes</strong></td>
+                    <td><strong>Mediciones White Standard</strong></td>
                     <td>{n_samples}</td>
                 </tr>
                 <tr>
-                    <td><strong>Muestras usadas en corrección</strong></td>
+                    <td><strong>Mediciones usadas en corrección</strong></td>
                     <td>{len(used_ids)}</td>
                 </tr>
                 <tr>
@@ -483,66 +470,11 @@ def generate_process_details(lamp_ref, lamp_new, n_spectral, n_samples, origin):
     """
     return html
 
-def generate_samples_table(df, common_ids, lamp_ref, lamp_new):
-    """
-    Genera la tabla de muestras del Standard Kit.
-    
-    Args:
-        df (pd.DataFrame): DataFrame completo
-        common_ids (list): IDs comunes
-        lamp_ref (str): Lámpara de referencia
-        lamp_new (str): Lámpara nueva
-        
-    Returns:
-        str: HTML de la tabla
-    """
-    import streamlit as st
-    
-    used_ids = st.session_state.get('selected_ids', list(common_ids))
-    
-    html = "<h2 id='samples'>Muestras del Standard Kit</h2>"
-    
-    # Construir la tabla
-    table_html = """
-        <table>
-            <tr>
-                <th>ID Muestra</th>
-                <th>Mediciones """ + lamp_ref + """</th>
-                <th>Mediciones """ + lamp_new + """</th>
-                <th>Usada para corrección</th>
-            </tr>
-    """
-    
-    for id_ in common_ids:
-        count_ref = len(df[(df['ID'] == id_) & (df['Note'] == lamp_ref)])
-        count_new = len(df[(df['ID'] == id_) & (df['Note'] == lamp_new)])
-        used_tag = '<span class="tag tag-ok">✓ Sí</span>' if id_ in used_ids else '<span class="tag tag-no">✗ No</span>'
-        
-        table_html += f"""
-            <tr>
-                <td>{id_}</td>
-                <td>{count_ref}</td>
-                <td>{count_new}</td>
-                <td>{used_tag}</td>
-            </tr>
-        """
-    
-    table_html += "</table>"
-    
-    # ⭐ CAMBIO: Envolver tabla en expandible
-    html += wrap_chart_in_expandable(
-        table_html,
-        f"Ver detalle de muestras ({len(common_ids)} muestras)",
-        "samples_table_expandable",
-        default_open=False
-    )
-    
-    return html
 
-def generate_selected_samples_chart(df_ref_grouped, df_new_grouped, spectral_cols,
+def generate_white_correction_chart(df_ref_grouped, df_new_grouped, spectral_cols,
                                     lamp_ref, lamp_new, selected_ids):
     """
-    Genera el gráfico de muestras seleccionadas ANTES de la corrección.
+    Genera el gráfico de white standards usados para calcular la corrección.
     
     Args:
         df_ref_grouped (pd.DataFrame): Espectros de referencia
@@ -558,11 +490,12 @@ def generate_selected_samples_chart(df_ref_grouped, df_new_grouped, spectral_col
     from utils.plotting import plot_kit_spectra
     
     html = """
-        <div class="info-box">
-            <h3>Espectros de las Muestras Seleccionadas (ANTES de corrección)</h3>
+        <div class="info-box" id="white-correction">
+            <h2>Corrección con White Standard</h2>
+            <h3>Mediciones White Standard Usadas en la Corrección</h3>
             <p style='color: #6c757d; font-size: 0.95em;'>
-                <em>Comparación de los espectros medidos con ambas lámparas antes de aplicar 
-                la corrección. Estas muestras fueron usadas para calcular el ajuste de baseline.</em>
+                <em>Comparación de las mediciones de white standard con baseline original (referencia) 
+                y baseline nueva (antes de corrección). Estas mediciones se usaron para calcular el vector de corrección.</em>
             </p>
     """
     
@@ -573,15 +506,14 @@ def generate_selected_samples_chart(df_ref_grouped, df_new_grouped, spectral_col
     
     chart_html = fig.to_html(
         include_plotlyjs='cdn',
-        div_id='selected_samples_before',
+        div_id='white_correction_chart',
         config={'displayModeBar': True, 'responsive': True}
     )
     
-    # ⭐ CAMBIO: Envolver en expandible
     html += wrap_chart_in_expandable(
         chart_html,
-        "Ver espectros de muestras seleccionadas",
-        "selected_samples_expandable",
+        "Ver mediciones white standard usadas",
+        "white_correction_expandable",
         default_open=False
     )
     
@@ -632,10 +564,10 @@ def generate_correction_statistics(mean_diff):
     """
     return html
 
-def generate_correction_differences_charts(df_ref_grouped, df_new_grouped, mean_diff,
-                                          common_ids, selected_ids, lamp_ref, lamp_new):
+def generate_correction_vector_section(df_ref_grouped, df_new_grouped, mean_diff,
+                                       common_ids, selected_ids, lamp_ref, lamp_new):
     """
-    Genera los gráficos de diferencias espectrales (del Paso 5).
+    Genera la sección del vector de corrección calculado.
     
     Args:
         df_ref_grouped (pd.DataFrame): Espectros de referencia
@@ -651,7 +583,7 @@ def generate_correction_differences_charts(df_ref_grouped, df_new_grouped, mean_
     """
     from utils.plotting import plot_correction_differences
     
-    # Construir DataFrame de diferencias (igual que en el Paso 5)
+    # Construir DataFrame de diferencias
     df_diff = pd.DataFrame({"Canal": range(1, len(mean_diff) + 1)})
     
     for id_ in common_ids:
@@ -663,159 +595,72 @@ def generate_correction_differences_charts(df_ref_grouped, df_new_grouped, mean_
     
     df_diff["CORRECCION_PROMEDIO"] = mean_diff
     
-    # Identificar muestras no usadas
+    # Identificar mediciones no usadas
     ids_not_used = [id_ for id_ in common_ids if id_ not in selected_ids]
     
     html = """
-        <div class="info-box" id="correction-differences">
-            <h2>Diferencias Espectrales - Análisis Detallado</h2>
+        <div class="info-box" id="correction-vector">
+            <h2>Vector de Corrección</h2>
+            <p style='color: #6c757d; font-size: 0.95em;'>
+                <em>El vector de corrección representa el ajuste espectral calculado a partir de las 
+                diferencias entre las mediciones white standard con baseline original y baseline nueva.</em>
+            </p>
     """
     
-    # GRÁFICO 1: Muestras usadas en la corrección
-    html += "<h3>Muestras Usadas en la Corrección</h3>"
+    # GRÁFICO 1: Mediciones usadas en la corrección
+    html += "<h3>Diferencias Espectrales - Mediciones Usadas</h3>"
     
     if len(selected_ids) < len(common_ids):
-        html += f"<p style='color: #6c757d; font-size: 0.95em;'><em>Mostrando {len(selected_ids)} de {len(common_ids)} muestras (usadas en la corrección)</em></p>"
+        html += f"<p style='color: #6c757d; font-size: 0.95em;'><em>Mostrando {len(selected_ids)} de {len(common_ids)} mediciones (usadas en el cálculo)</em></p>"
     else:
-        html += f"<p style='color: #6c757d; font-size: 0.95em;'><em>Mostrando todas las {len(selected_ids)} muestras</em></p>"
+        html += f"<p style='color: #6c757d; font-size: 0.95em;'><em>Mostrando todas las {len(selected_ids)} mediciones</em></p>"
     
     fig_used = plot_correction_differences(df_diff, selected_ids, selected_ids)
     chart_html_used = fig_used.to_html(
         include_plotlyjs='cdn',
-        div_id='correction_differences_used',
+        div_id='correction_vector_used',
         config={'displayModeBar': True, 'responsive': True}
     )
     
-    # ⭐ CAMBIO: Envolver en expandible
     html += wrap_chart_in_expandable(
         chart_html_used,
-        "Ver gráfico de diferencias espectrales (muestras usadas)",
+        "Ver vector de corrección (mediciones usadas)",
         "correction_used_expandable",
         default_open=False
     )
     
-    # GRÁFICO 2: Muestras de validación (si existen)
+    # GRÁFICO 2: Mediciones de validación interna (si existen)
     if len(ids_not_used) > 0:
-        html += "<h3>Validación - Muestras NO Usadas en la Corrección</h3>"
+        html += "<h3>Validación Interna - Mediciones NO Usadas</h3>"
         html += f"""
             <p style='color: #6c757d; font-size: 0.95em;'>
-                <em>Mostrando {len(ids_not_used)} muestras que <strong>NO</strong> se usaron para calcular la corrección.<br>
-                Este gráfico muestra cómo la corrección calculada afecta a muestras independientes,
-                permitiendo validar que la corrección es robusta y generalizable.</em>
+                <em>Mostrando {len(ids_not_used)} mediciones que <strong>NO</strong> se usaron para calcular la corrección.<br>
+                Permite verificar que el vector de corrección es robusto y aplicable a mediciones independientes.</em>
             </p>
         """
         
         fig_validation = plot_correction_differences(df_diff, ids_not_used, ids_not_used)
         chart_html_validation = fig_validation.to_html(
             include_plotlyjs='cdn',
-            div_id='correction_differences_validation',
+            div_id='correction_vector_validation',
             config={'displayModeBar': True, 'responsive': True}
         )
         
-        # ⭐ CAMBIO: Envolver en expandible
         html += wrap_chart_in_expandable(
             chart_html_validation,
-            "Ver gráfico de validación (muestras NO usadas)",
+            "Ver validación interna (mediciones NO usadas)",
             "correction_validation_expandable",
             default_open=False
         )
-        
-        # Estadísticas de validación
-        html += generate_validation_statistics_html(df_diff, ids_not_used, mean_diff)
     else:
         html += """
             <p style='color: #17a2b8; background-color: #d1ecf1; padding: 15px; border-radius: 5px; border-left: 4px solid #17a2b8;'>
-                <strong>ℹ️ Información:</strong> Todas las muestras se están usando para la corrección. 
-                No hay muestras de validación disponibles.
+                <strong>ℹ️ Información:</strong> Todas las mediciones white standard se usaron para calcular la corrección. 
+                No hay mediciones de validación interna disponibles.
             </p>
         """
     
     html += "</div>"
-    
-    return html
-
-def generate_validation_statistics_html(df_diff, ids_not_used, mean_diff):
-    """
-    Genera las estadísticas de validación en formato HTML.
-    
-    Args:
-        df_diff (pd.DataFrame): DataFrame con diferencias
-        ids_not_used (list): IDs no usados en corrección
-        mean_diff (np.array): Vector de corrección promedio
-        
-    Returns:
-        str: HTML con estadísticas
-    """
-    html = "<h4>Estadísticas de Validación</h4>"
-    
-    # Calcular diferencias promedio por muestra de validación
-    validation_diffs = []
-    for id_ in ids_not_used:
-        diff_col = f"DIF_{id_}"
-        if diff_col in df_diff.columns:
-            sample_diff = df_diff[diff_col].values
-            validation_diffs.append(sample_diff)
-    
-    if validation_diffs:
-        validation_diffs = np.array(validation_diffs)
-        validation_mean = np.mean(validation_diffs, axis=0)
-        
-        # Comparar con la corrección calculada
-        residual = validation_mean - mean_diff
-        
-        max_residual = np.max(np.abs(residual))
-        mean_residual = np.mean(np.abs(residual))
-        std_residual = np.std(residual)
-        
-        html += """
-            <table style="margin-top: 15px;">
-                <tr>
-                    <th>Métrica</th>
-                    <th>Valor</th>
-                    <th>Descripción</th>
-                </tr>
-        """
-        
-        html += f"""
-                <tr>
-                    <td><strong>Residuo máximo</strong></td>
-                    <td>{max_residual:.6f}</td>
-                    <td>Diferencia máxima entre la corrección calculada y las muestras de validación</td>
-                </tr>
-                <tr>
-                    <td><strong>Residuo medio</strong></td>
-                    <td>{mean_residual:.6f}</td>
-                    <td>Diferencia media entre la corrección calculada y las muestras de validación</td>
-                </tr>
-                <tr>
-                    <td><strong>Desv. estándar residuo</strong></td>
-                    <td>{std_residual:.6f}</td>
-                    <td>Variabilidad del residuo</td>
-                </tr>
-            </table>
-        """
-        
-        # Interpretación
-        if max_residual < 0.01:
-            html += """
-                <div class="status-good" style="margin-top: 15px; padding: 15px; border-radius: 5px;">
-                    <strong>✅ Excelente validación:</strong> Las muestras no usadas muestran diferencias 
-                    muy similares a la corrección calculada.
-                </div>
-            """
-        elif max_residual < 0.05:
-            html += """
-                <div style="margin-top: 15px; padding: 15px; border-radius: 5px; background-color: #d1ecf1; border-left: 4px solid #17a2b8;">
-                    <strong>ℹ️ Buena validación:</strong> Las muestras no usadas son consistentes con la corrección.
-                </div>
-            """
-        else:
-            html += """
-                <div class="status-warning" style="margin-top: 15px; padding: 15px; border-radius: 5px;">
-                    <strong>⚠️ Atención:</strong> Hay diferencias significativas en las muestras de validación. 
-                    Considera revisar la selección de muestras.
-                </div>
-            """
     
     return html
 
@@ -913,138 +758,6 @@ def generate_notes_section(notes):
     """
     return html
 
-def generate_charts_section(
-    df_ref_grouped,
-    df_new_grouped,
-    spectral_cols,
-    lamp_ref,
-    lamp_new,
-    common_ids,
-    selected_ids,
-    ref_spectrum,
-    ref_corrected
-):
-    """
-    Genera la sección de gráficos del informe comparando:
-    - ANTES: espectros sin corrección
-    - DESPUÉS: espectros con corrección aplicada
-    """
-
-    # 1) Aplicar corrección simulada a la lámpara nueva
-    df_new_corr = simulate_corrected_spectra(
-        df_new_grouped,
-        spectral_cols,
-        ref_spectrum,
-        ref_corrected
-    )
-
-    # 2) Separar en "usadas en corrección" vs "no usadas"
-    used_ids = list(selected_ids)
-    other_ids = [i for i in common_ids if i not in used_ids]
-
-    html = '<h2 id="charts-section">Resultados Gráficos</h2>'
-
-    # 3) Muestras usadas en la corrección → ANTES y DESPUÉS (en vertical)
-    if len(used_ids) > 0:
-        html += "<h3>Muestras usadas en la corrección</h3>"
-        html += "<p style='color: #6c757d; font-size: 0.95em;'><em>Comparativa antes y después de aplicar la corrección.</em></p>"
-
-        # ANTES: SIN corrección
-        fig_used_before = plot_corrected_spectra_comparison(
-            df_ref_grouped,
-            df_new_grouped,  # SIN corrección
-            spectral_cols,
-            lamp_ref,
-            lamp_new + " (original)",
-            used_ids,
-            "Referencia vs Nueva ORIGINAL (muestras usadas)"
-        )
-        chart_used_before = fig_used_before.to_html(
-            include_plotlyjs='cdn',
-            div_id='chart_used_before',
-            config={'displayModeBar': True, 'responsive': True}
-        )
-        html += wrap_chart_in_expandable(
-            chart_used_before,
-            "Ver espectros SIN corrección (muestras usadas)",
-            "chart_used_before_expandable",
-            default_open=False
-        )
-
-        # DESPUÉS: CON corrección
-        fig_used_after = plot_corrected_spectra_comparison(
-            df_ref_grouped,
-            df_new_corr,  # CON corrección
-            spectral_cols,
-            lamp_ref,
-            lamp_new + " (corregida)",
-            used_ids,
-            "Referencia vs Nueva CORREGIDA (muestras usadas)"
-        )
-        chart_used_after = fig_used_after.to_html(
-            include_plotlyjs=False,
-            div_id='chart_used_after',
-            config={'displayModeBar': True, 'responsive': True}
-        )
-        html += wrap_chart_in_expandable(
-            chart_used_after,
-            "Ver espectros CON corrección (muestras usadas)",
-            "chart_used_after_expandable",
-            default_open=False
-        )
-
-    # 4) Muestras NO usadas (validación) → ANTES y DESPUÉS (en vertical)
-    if len(other_ids) > 0:
-        html += '<h3 id="validation-section">Muestras de Validación (no usadas en la corrección)</h3>'
-        html += "<p style='color: #6c757d; font-size: 0.95em;'><em>Comparativa antes y después de aplicar la corrección.</em></p>"
-
-        # ANTES: SIN corrección
-        include_js = 'cdn' if len(used_ids) == 0 else False
-        fig_val_before = plot_corrected_spectra_comparison(
-            df_ref_grouped,
-            df_new_grouped,  # SIN corrección
-            spectral_cols,
-            lamp_ref,
-            lamp_new + " (original)",
-            other_ids,
-            "Referencia vs Nueva ORIGINAL (validación)"
-        )
-        chart_val_before = fig_val_before.to_html(
-            include_plotlyjs=include_js,
-            div_id='chart_validation_before',
-            config={'displayModeBar': True, 'responsive': True}
-        )
-        html += wrap_chart_in_expandable(
-            chart_val_before,
-            "Ver espectros SIN corrección (validación)",
-            "chart_validation_before_expandable",
-            default_open=False
-        )
-
-        # DESPUÉS: CON corrección
-        fig_val_after = plot_corrected_spectra_comparison(
-            df_ref_grouped,
-            df_new_corr,  # CON corrección
-            spectral_cols,
-            lamp_ref,
-            lamp_new + " (corregida)",
-            other_ids,
-            "Referencia vs Nueva CORREGIDA (validación)"
-        )
-        chart_val_after = fig_val_after.to_html(
-            include_plotlyjs=False,
-            div_id='chart_validation_after',
-            config={'displayModeBar': True, 'responsive': True}
-        )
-        html += wrap_chart_in_expandable(
-            chart_val_after,
-            "Ver espectros CON corrección (validación)",
-            "chart_validation_after_expandable",
-            default_open=False
-        )
-
-    return html
-
 def _df_to_html_table(df: pd.DataFrame, float_fmt="{:.2f}", index=False) -> str:
     if df is None or df.empty:
         return "<p><em>Sin datos</em></p>"
@@ -1053,175 +766,7 @@ def _df_to_html_table(df: pd.DataFrame, float_fmt="{:.2f}", index=False) -> str:
         df_fmt[c] = df_fmt[c].apply(lambda x: float_fmt.format(x) if pd.notna(x) else "")
     return df_fmt.to_html(index=index, classes="table", border=0)
 
-def generate_control_samples_section():
-    """
-    Sección de 'Validación con Muestras de Control' (opcional).
-    Requiere que existan en session_state:
-      - control_samples_initial: {'df', 'spectral_cols', 'sample_ids'}
-      - control_samples_final:   {'df', 'spectral_cols', 'sample_ids'}
-    """
-    import streamlit as st
-    import pandas as pd
-    from utils.control_samples import (
-        extract_predictions_from_results,
-        get_prediction_parameters,
-        compare_predictions,
-        plot_spectra_comparison,
-        plot_predictions_comparison,
-        calculate_spectral_metrics
-    )
 
-    ctrl_ini = st.session_state.get('control_samples_initial')
-    ctrl_fin = st.session_state.get('control_samples_final')
-    if not ctrl_ini or not ctrl_fin:
-        return ""  # no hay sección
-
-    # --- Datos base ---
-    df_initial = ctrl_ini['df'].copy()
-    df_final   = ctrl_fin['df'].copy()
-    spec_ini   = ctrl_ini.get('spectral_cols', [])
-    spec_fin   = ctrl_fin.get('spectral_cols', [])
-    ids_ini    = [str(x).strip() for x in ctrl_ini.get('sample_ids', [])]
-    ids_fin    = [str(x).strip() for x in ctrl_fin.get('sample_ids', [])]
-
-    # Normaliza IDs
-    df_initial['ID'] = df_initial['ID'].astype(str).str.strip()
-    df_final['ID']   = df_final['ID'].astype(str).str.strip()
-
-    # IDs comunes
-    common_ids = sorted(list(set(ids_ini) & set(ids_fin)))
-    if not common_ids:
-        return """
-        <div class="warning-box" id="control-samples-section" style="margin-top: 30px;">
-            <h2>Validación con Muestras de Control</h2>
-            <p><em>No se encontraron IDs comunes entre las muestras de control iniciales y finales.</em></p>
-        </div>
-        """
-
-    # Columnas espectrales compatibles
-    if len(spec_ini) != len(spec_fin):
-        min_len = min(len(spec_ini), len(spec_fin))
-        spectral_cols = spec_ini[:min_len]
-        note_specs = f"⚠️ Inicial: {len(spec_ini)} canales, Final: {len(spec_fin)} canales → usando {min_len} comunes."
-    else:
-        spectral_cols = spec_ini
-        note_specs = f"Canales espectrales: {len(spectral_cols)}"
-
-    # === 1) Comparación espectral ===
-    fig_spectra = plot_spectra_comparison(
-        df_initial[df_initial['ID'].isin(common_ids)],
-        df_final[df_final['ID'].isin(common_ids)],
-        spectral_cols,
-        common_ids
-    )
-    chart_html_spectra = fig_spectra.to_html(
-        include_plotlyjs='cdn',
-        div_id='ctrl_spectra',
-        config={'displayModeBar': True, 'responsive': True}
-    )
-
-    spectral_metrics = calculate_spectral_metrics(
-        df_initial[df_initial['ID'].isin(common_ids)],
-        df_final[df_final['ID'].isin(common_ids)],
-        spectral_cols,
-        common_ids
-    )
-    # spectral_metrics -> dict; lo paso a DF para tabla
-    rows = []
-    for sid, m in spectral_metrics.items():
-        rows.append({
-            "Muestra": sid,
-            "Dif. media": m['mean_diff'],
-            "Desv. estándar": m['std_diff'],
-            "Dif. máx. abs.": m['max_diff'],
-            "RMSE": m['rmse'],
-            "Correlación": m['correlation'],
-        })
-    df_spec_metrics = pd.DataFrame(rows)
-
-    # Tabla de métricas (HTML)
-    spec_table_html = _df_to_html_table(df_spec_metrics, float_fmt="{:.6f}", index=False)
-
-    # === 2) Comparación de predicciones ===
-    pred_ini = extract_predictions_from_results(df_initial[df_initial['ID'].isin(common_ids)])
-    pred_fin = extract_predictions_from_results(df_final[df_final['ID'].isin(common_ids)])
-
-    pred_block = ""
-    if pred_ini is not None and not pred_ini.empty and pred_fin is not None and not pred_fin.empty:
-        params_initial = get_prediction_parameters(pred_ini)
-        params_final   = get_prediction_parameters(pred_fin)
-        common_params  = [p for p in params_initial if p in params_final]
-
-        if common_params:
-            cmp_df = compare_predictions(pred_ini, pred_fin, common_ids)
-
-            # Gráfico barras
-            fig_pred = plot_predictions_comparison(cmp_df, common_params)
-            chart_html_pred = (
-                fig_pred.to_html(
-                    include_plotlyjs='cdn',
-                    div_id='ctrl_predictions',
-                    config={'displayModeBar': True, 'responsive': True}
-                ) if fig_pred else "<p><em>Sin gráfico</em></p>"
-            )
-
-            # Tabla bonita (solo columnas relevantes y en orden)
-            cols = ['ID']
-            for p in common_params:
-                cols += [f'{p}_initial', f'{p}_final', f'{p}_diff', f'{p}_diff_pct']
-            cmp_show = cmp_df[cols].copy()
-            for c in cmp_show.columns:
-                if c.endswith('_diff_pct'):
-                    cmp_show[c] = cmp_show[c].apply(lambda x: f"{x:.2f}%" if pd.notna(x) else "")
-                elif c != 'ID':
-                    cmp_show[c] = cmp_show[c].apply(lambda x: f"{x:.2f}" if pd.notna(x) else "")
-
-            # Render tabla a HTML y envolverla en expandible con scroll
-            table_html = _df_to_html_table(cmp_show, float_fmt="{:.2f}", index=False)
-            table_html_scroll = f"<div style='overflow-x:auto'>{table_html}</div>"
-            table_wrapped = wrap_chart_in_expandable(
-                table_html_scroll,
-                "Ver tabla completa de comparación",
-                "ctrl_pred_table_expand",
-                False
-            )
-
-            pred_block = (
-                f"<h3>2) Comparación de Predicciones</h3>"
-                f"<p style='color:#6c757d;font-size:0.95em;'>Parámetros detectados: {', '.join(common_params)}.</p>"
-                f"{wrap_chart_in_expandable(chart_html_pred, 'Ver comparación de predicciones', 'ctrl_pred_expand', False)}"
-                f"{table_wrapped}"
-            )
-        else:
-            pred_block = """
-                <h3>2) Comparación de Predicciones</h3>
-                <p><em>No hay parámetros comunes (ParamN) entre inicial y final.</em></p>
-            """
-    else:
-        pred_block = """
-            <h3>2) Comparación de Predicciones</h3>
-            <p><em>No se pudieron extraer predicciones de uno o ambos conjuntos.</em></p>
-        """
-
-    # Empaquetado HTML (gráficos en vertical + expandibles cerrados)
-    html = f"""
-        <div class="info-box" id="control-samples-section" style="margin-top: 30px;">
-            <h2>Validación con Muestras de Control</h2>
-            <p style="color:#6c757d;font-size:0.95em;">
-                IDs comunes: {", ".join(common_ids)}<br>
-                {note_specs}
-            </p>
-
-            <h3>1) Comparación Espectral</h3>
-            {wrap_chart_in_expandable(chart_html_spectra, "Ver comparación de espectros (control)", "ctrl_spec_expand", False)}
-            <h4>Métricas espectrales</h4>
-            {spec_table_html}
-
-            {pred_block}
-        </div>
-    """
-    return html
-    
 def generate_footer():
     """
     Genera el footer del informe.
@@ -1242,358 +787,510 @@ def generate_footer():
 def generate_validation_report(kit_data, baseline_data, ref_corrected, origin, 
                                validation_data, mean_diff_before, mean_diff_after):
     """
-    Genera un informe HTML completo incluyendo validacion.
+    Genera un informe HTML completo incluyendo verificación post-ajuste.
     
     Args:
-        kit_data (dict): Datos del Standard Kit original
+        kit_data (dict): Datos del proceso original
         baseline_data (dict): Datos del baseline
         ref_corrected (np.array): Baseline corregido
         origin (str): Tipo de archivo ('ref' o 'csv')
-        validation_data (dict): Datos de validacion
-        mean_diff_before (np.array): Diferencia antes de correccion
-        mean_diff_after (np.array): Diferencia despues de correccion
+        validation_data (dict): Datos de verificación
+        mean_diff_before (np.array): Diferencia antes de corrección
+        mean_diff_after (np.array): Diferencia después de corrección
         
     Returns:
         str: Contenido HTML del informe completo
     """
     import streamlit as st
     
-    # Generar el informe base (pasos 1-5)
-    html = generate_html_report(kit_data, baseline_data, ref_corrected, origin)
+    # Contexto de sesión
+    client_data = st.session_state.get('client_data', {}) or {}
+    wstd_data   = st.session_state.get('wstd_data', {}) or {}
+
+    # Extraer datos necesarios
+    try:
+        df               = kit_data["df"]
+        df_ref_grouped   = kit_data["df_ref_grouped"]
+        df_new_grouped   = kit_data["df_new_grouped"]
+        spectral_cols    = kit_data["spectral_cols"]
+        lamp_ref         = kit_data["lamp_ref"]
+        lamp_new         = kit_data["lamp_new"]
+        common_ids       = kit_data["common_ids"]
+        mean_diff        = kit_data["mean_diff"]
+    except Exception as e:
+        raise ValueError(f"[generate_validation_report] kit_data incompleto: {e}")
+
+    try:
+        ref_spectrum = baseline_data["ref_spectrum"]
+        header       = baseline_data.get("header")
+    except Exception as e:
+        raise ValueError(f"[generate_validation_report] baseline_data incompleto: {e}")
+
+    selected_ids = st.session_state.get("selected_ids", list(common_ids))
+
+    # Construir índice lateral dinámico CON verificación
+    sections = [
+        "info-cliente",
+        "process-details",
+        "white-correction",
+        "correction-stats",
+        "correction-vector",
+        "baseline-info",
+        "verification-section",  # ⭐ AÑADIDO
+    ]
+    if isinstance(wstd_data, dict) and wstd_data.get("df") is not None:
+        sections.insert(1, "wstd-section")
+
+    # HTML inicial con sidebar (YA incluye link a verificación)
+    html = start_html_document(client_data, sections=sections)
+
+    # Secciones del informe base
     
-    # Quitar el footer temporal
-    html = html.replace(generate_footer(), "")
+    # WSTD inicial (si existe)
+    if isinstance(wstd_data, dict) and wstd_data.get("df") is not None:
+        html += generate_wstd_section(wstd_data)
+
+    # Detalles del proceso
+    html += generate_process_details(
+        lamp_ref, lamp_new, len(spectral_cols),
+        len(common_ids), origin
+    )
+
+    # Mediciones white standard usadas en la corrección
+    html += generate_white_correction_chart(
+        df_ref_grouped, df_new_grouped, spectral_cols,
+        lamp_ref, lamp_new, selected_ids
+    )
+
+    # Estadísticas de corrección
+    html += generate_correction_statistics(mean_diff)
+
+    # Vector de corrección
+    html += generate_correction_vector_section(
+        df_ref_grouped, df_new_grouped, mean_diff,
+        common_ids, selected_ids, lamp_ref, lamp_new
+    )
+
+    # Baseline: info + gráfico Original vs Corregido
+    html += generate_baseline_info(
+        ref_corrected, header, origin,
+        ref_spectrum, spectral_cols
+    )
+
+    # Notas adicionales (si el usuario las guardó)
+    if client_data.get("notes"):
+        html += generate_notes_section(client_data["notes"])
     
-    # Agregar seccion de validacion
+    # ⭐ SECCIÓN DE VERIFICACIÓN
     html += generate_validation_section(validation_data, mean_diff_before, mean_diff_after)
-    
-    # >>> NUEVO: Sección de Muestras de Control (si existen en session_state)
-    html += generate_control_samples_section()
-    
-    # Agregar footer final
+
+    # Footer
     html += generate_footer()
-    
+
     return html
 
 def generate_validation_section(validation_data, mean_diff_before, mean_diff_after):
     """
-    Genera la seccion de validacion para el informe.
+    Genera la sección de verificación post-ajuste (simplificada, solo estado final).
     
     Args:
-        validation_data (dict): Datos de validacion
-        mean_diff_before (np.array): Diferencia antes
-        mean_diff_after (np.array): Diferencia despues
+        validation_data (dict): Datos de verificación
+        mean_diff_before (np.array): Diferencia antes (no se usa en display)
+        mean_diff_after (np.array): Diferencia después (criterio de evaluación)
         
     Returns:
-        str: HTML de la seccion de validacion
+        str: HTML de la sección de verificación
     """
     df_ref_val = validation_data['df_ref_val']
     df_new_val = validation_data['df_new_val']
     lamp_ref = validation_data['lamp_ref']
     lamp_new = validation_data['lamp_new']
-    common_ids = validation_data['common_ids']
     selected_ids = validation_data['selected_ids']
     spectral_cols = validation_data.get('spectral_cols', df_ref_val.columns.tolist())
     
-    # Calcular metricas
-    max_before = np.max(np.abs(mean_diff_before))
-    max_after = np.max(np.abs(mean_diff_after))
-    mean_before = np.mean(np.abs(mean_diff_before))
-    mean_after = np.mean(np.abs(mean_diff_after))
-    std_before = np.std(mean_diff_before)
-    std_after = np.std(mean_diff_after)
+    # Calcular métricas SOLO del estado final (después de corrección)
+    max_diff = np.max(np.abs(mean_diff_after))
+    mean_diff = np.mean(np.abs(mean_diff_after))
+    rms = np.sqrt(np.mean(mean_diff_after**2))
     
-    improvement_max = ((max_before - max_after) / max_before * 100) if max_before != 0 else 0
-    improvement_mean = ((mean_before - mean_after) / mean_before * 100) if mean_before != 0 else 0
-    
-    # Determinar estado
-    if max_after < 0.001:
+    # Determinar estado según criterios de White Reference
+    if rms < 0.002 and max_diff < 0.005:
         status_class = "status-good"
         status_text = "EXCELENTE"
         status_icon = "🟢"
-    elif max_after < 0.01:
+        recommendation = """
+            <p style="margin-top: 15px;">
+                <strong>El ajuste de baseline es óptimo.</strong> Las lámparas están perfectamente alineadas 
+                y el sistema está listo para uso en producción.
+            </p>
+        """
+    elif rms < 0.005 and max_diff < 0.01:
         status_class = "status-good"
         status_text = "BUENO"
         status_icon = "🟢"
-    elif improvement_mean > 50:
+        recommendation = """
+            <p style="margin-top: 15px;">
+                <strong>El ajuste de baseline funciona correctamente.</strong> Las lámparas están bien alineadas 
+                y el sistema puede usarse con confianza.
+            </p>
+        """
+    elif rms < 0.01 and max_diff < 0.02:
         status_class = "status-warning"
         status_text = "ACEPTABLE"
         status_icon = "🟡"
+        recommendation = """
+            <p style="margin-top: 15px;">
+                <strong>Corrección aceptable pero mejorable.</strong> Se recomienda:
+                <ul>
+                    <li>Revisar la calidad de las mediciones white standard</li>
+                    <li>Verificar las condiciones ambientales durante las mediciones</li>
+                    <li>Evaluar el estado de las lámparas</li>
+                </ul>
+            </p>
+        """
     else:
         status_class = "status-bad"
-        status_text = "REQUIERE REVISION"
+        status_text = "REQUIERE REVISIÓN"
         status_icon = "🔴"
+        recommendation = """
+            <p style="margin-top: 15px;">
+                <strong>La corrección requiere revisión.</strong> Acciones recomendadas:
+                <ul>
+                    <li>Verificar que el baseline corregido se instaló correctamente</li>
+                    <li>Reiniciar el equipo si es necesario</li>
+                    <li>Asegurar condiciones estables durante las mediciones</li>
+                    <li>Considerar repetir el proceso con nuevas mediciones</li>
+                </ul>
+            </p>
+        """
     
     html = f"""
-        <div class="warning-box" id="validation-section" style="margin-top: 30px;">
-            <h2>Validacion Post-Correccion</h2>
-            <p><strong>Verificacion del ajuste con mediciones reales:</strong></p>
+        <div class="warning-box" id="verification-section" style="margin-top: 30px;">
+            <h2>Verificación Post-Ajuste</h2>
+            <p><strong>Comprobación del ajuste de baseline con mediciones independientes:</strong></p>
         </div>
         
         <div class="info-box">
-            <h2>Detalles de la Validacion</h2>
+            <h2>Métricas de Verificación</h2>
             <table>
                 <tr>
-                    <th>Parámetro</th>
+                    <th>Métrica</th>
                     <th>Valor</th>
+                    <th>Umbral</th>
                 </tr>
                 <tr>
-                    <td><strong>Lámpara de Referencia</strong></td>
-                    <td>{lamp_ref}</td>
+                    <td><strong>RMS</strong></td>
+                    <td>{rms:.6f}</td>
+                    <td>{'✅ < 0.005' if rms < 0.005 else ('✓ < 0.01' if rms < 0.01 else '⚠️ ≥ 0.01')}</td>
                 </tr>
                 <tr>
-                    <td><strong>Lámpara Nueva</strong></td>
-                    <td>{lamp_new}</td>
-                </tr>
-                <tr>
-                    <td><strong>Muestras medidas</strong></td>
-                    <td>{len(common_ids)}</td>
-                </tr>
-                <tr>
-                    <td><strong>Muestras usadas en validación</strong></td>
-                    <td>{len(selected_ids)}</td>
-                </tr>
-            </table>
-        </div>
-        
-        <div class="info-box">
-            <h2>Resultados de la Validacion</h2>
-            <table>
-                <tr>
-                    <th>Metrica</th>
-                    <th>Antes de Correccion</th>
-                    <th>Despues de Correccion</th>
-                    <th>Mejora</th>
-                </tr>
-                <tr>
-                    <td><strong>Diferencia Maxima</strong></td>
-                    <td>{max_before:.6f}</td>
-                    <td>{max_after:.6f}</td>
-                    <td><span class="status-good">↓ {improvement_max:.1f}%</span></td>
+                    <td><strong>Diferencia Máxima</strong></td>
+                    <td>{max_diff:.6f}</td>
+                    <td>{'✅ < 0.01' if max_diff < 0.01 else ('✓ < 0.02' if max_diff < 0.02 else '⚠️ ≥ 0.02')}</td>
                 </tr>
                 <tr>
                     <td><strong>Diferencia Media</strong></td>
-                    <td>{mean_before:.6f}</td>
-                    <td>{mean_after:.6f}</td>
-                    <td><span class="status-good">↓ {improvement_mean:.1f}%</span></td>
-                </tr>
-                <tr>
-                    <td><strong>Desviacion Estandar</strong></td>
-                    <td>{std_before:.6f}</td>
-                    <td>{std_after:.6f}</td>
-                    <td><span class="status-good">↓ {std_before - std_after:.6f}</span></td>
+                    <td>{mean_diff:.6f}</td>
+                    <td>Referencia</td>
                 </tr>
             </table>
+            <p style='color: #6c757d; font-size: 0.9em; margin-top: 10px;'>
+                <em>Umbrales basados en criterios de White Standard Reference.</em>
+            </p>
         </div>
     """
     
-    # NUEVO: Agregar graficos de validacion
-    html += generate_validation_charts(
+    # Gráficos de verificación
+    html += generate_verification_charts(
         df_ref_val, df_new_val, spectral_cols,
         lamp_ref, lamp_new, selected_ids,
         mean_diff_before, mean_diff_after
     )
     
+    # Conclusión
     html += f"""
         <div class="{status_class}" style="padding: 20px; margin: 20px 0; border-radius: 5px;">
-            <h2>{status_icon} Conclusion de la Validacion: {status_text}</h2>
+            <h2>{status_icon} Conclusión de la Verificación: {status_text}</h2>
             <p style="font-size: 1.1em; margin: 10px 0;">
-                La diferencia espectral entre lamparas se redujo en un <strong>{improvement_mean:.1f}%</strong>.
+                <strong>RMS:</strong> {rms:.6f} AU | <strong>Diferencia máxima:</strong> {max_diff:.6f} AU
             </p>
-            <p style="margin: 10px 0;">
-                Diferencia maxima actual: <strong>{max_after:.6f}</strong>
-            </p>
-    """
-    
-    # Agregar recomendaciones segun el resultado
-    if max_after < 0.001:
-        html += """
-            <p style="margin-top: 15px;">
-                <strong>El ajuste de baseline es optimo.</strong> Las lamparas estan perfectamente alineadas 
-                y el sistema esta listo para uso en produccion.
-            </p>
-        """
-    elif max_after < 0.01:
-        html += """
-            <p style="margin-top: 15px;">
-                <strong>El ajuste de baseline funciona correctamente.</strong> Las lamparas estan bien alineadas 
-                y el sistema puede usarse con confianza.
-            </p>
-        """
-    elif improvement_mean > 50:
-        html += """
-            <p style="margin-top: 15px;">
-                <strong>Correccion aceptable pero mejorable.</strong> Se recomienda:
-                <ul>
-                    <li>Revisar la calidad de las mediciones del Standard Kit</li>
-                    <li>Verificar las condiciones ambientales durante las mediciones</li>
-                    <li>Evaluar el estado de las lamparas</li>
-                </ul>
-            </p>
-        """
-    else:
-        html += """
-            <p style="margin-top: 15px;">
-                <strong>La correccion requiere revision.</strong> Acciones recomendadas:
-                <ul>
-                    <li>Verificar que el baseline corregido se instalo correctamente</li>
-                    <li>Reiniciar el equipo si es necesario</li>
-                    <li>Asegurar condiciones estables durante las mediciones</li>
-                    <li>Considerar repetir el proceso con diferentes muestras</li>
-                </ul>
-            </p>
-        """
-    
-    html += """
+            {recommendation}
         </div>
-        
-        <div class="info-box">
-            <h2>Muestras de Validacion</h2>
     """
-    
-    # Envolver tabla en expandible
-    table_html = """
-        <table>
-            <tr>
-                <th>ID Muestra</th>
-                <th>Mediciones """ + lamp_ref + """</th>
-                <th>Mediciones """ + lamp_new + """</th>
-                <th>Usada en validacion</th>
-            </tr>
-    """
-    
-    for id_ in common_ids:
-        count_ref = 1 if id_ in df_ref_val.index else 0
-        count_new = 1 if id_ in df_new_val.index else 0
-        used_tag = '<span class="tag tag-ok">✓ Si</span>' if id_ in selected_ids else '<span class="tag tag-no">✗ No</span>'
-        
-        table_html += f"""
-            <tr>
-                <td>{id_}</td>
-                <td>{count_ref}</td>
-                <td>{count_new}</td>
-                <td>{used_tag}</td>
-            </tr>
-        """
-    
-    table_html += "</table>"
-    
-    # Envolver tabla en expandible
-    html += wrap_chart_in_expandable(
-        table_html,
-        f"Ver detalle de muestras de validación ({len(common_ids)} muestras)",
-        "validation_samples_table_expandable",
-        default_open=False
-    )
-    
-    html += "</div>"
     
     return html
 
-def generate_validation_charts(df_ref_val, df_new_val, spectral_cols,
-                               lamp_ref, lamp_new, selected_ids,
-                               mean_diff_before, mean_diff_after):
+def generate_verification_charts(df_ref_val, df_new_val, spectral_cols,
+                                 lamp_ref, lamp_new, selected_ids,
+                                 mean_diff_before, mean_diff_after):
     """
-    Genera los graficos de validacion.
+    Genera los gráficos de verificación post-ajuste (completo: Overlay, Residuales, Estadísticas, RMS).
     
     Args:
-        df_ref_val (pd.DataFrame): Espectros de referencia en validacion
-        df_new_val (pd.DataFrame): Espectros nuevos en validacion
+        df_ref_val (pd.DataFrame): Espectros de referencia en verificación
+        df_new_val (pd.DataFrame): Espectros nuevos en verificación
         spectral_cols (list): Columnas espectrales
-        lamp_ref (str): Lampara de referencia
-        lamp_new (str): Lampara nueva
+        lamp_ref (str): Lámpara de referencia
+        lamp_new (str): Lámpara nueva
         selected_ids (list): IDs seleccionados
-        mean_diff_before (np.array): Diferencia antes
-        mean_diff_after (np.array): Diferencia despues
+        mean_diff_before (np.array): Diferencia antes (no usado)
+        mean_diff_after (np.array): Diferencia después
         
     Returns:
-        str: HTML con los graficos embebidos
+        str: HTML con los gráficos embebidos
     """
-    from utils.plotting import plot_kit_spectra
     import plotly.graph_objects as go
+    from utils.plotting import plot_kit_spectra
     
-    html = "<h2>Graficos de Validacion</h2>"
+    html = "<h2>Análisis de Verificación</h2>"
     
-    # Grafico 1: Espectros de validacion
-    html += "<h3>Espectros de las muestras de validacion</h3>"
-    html += "<p style='color: #6c757d; font-size: 0.95em;'><em>Comparacion de espectros medidos con ambas lamparas despues de aplicar la correccion.</em></p>"
+    # Preparar datos
+    spectra_ref = []
+    spectra_new = []
+    labels = []
     
-    fig_spectra = plot_kit_spectra(
-        df_ref_val, df_new_val, spectral_cols,
-        lamp_ref, lamp_new, selected_ids
-    )
+    for sid in selected_ids:
+        if sid in df_ref_val.index and sid in df_new_val.index:
+            spectra_ref.append(df_ref_val.loc[sid, spectral_cols].values)
+            spectra_new.append(df_new_val.loc[sid, spectral_cols].values)
+            labels.append(f"{sid}")
     
-    chart_html_spectra = fig_spectra.to_html(
-        include_plotlyjs='cdn',
-        div_id='validation_spectra',
-        config={'displayModeBar': True, 'responsive': True}
-    )
+    channels = list(range(1, len(spectral_cols) + 1))
     
-    # ⭐ CAMBIO: Envolver en expandible
-    html += wrap_chart_in_expandable(
-        chart_html_spectra,
-        "Ver espectros de validación",
-        "validation_spectra_expandable",
-        default_open=False
-    )
+    # ============================================================================
+    # TAB 1: OVERLAY
+    # ============================================================================
+    html += "<h3>1) Overlay de Espectros</h3>"
+    html += "<p style='color: #6c757d; font-size: 0.95em;'><em>Comparación visual de todas las mediciones de verificación.</em></p>"
     
-    # Grafico 2: Comparacion ANTES vs DESPUES
-    html += "<h3>Comparacion: Diferencia espectral ANTES vs DESPUES</h3>"
-    html += "<p style='color: #6c757d; font-size: 0.95em;'><em>Visualizacion de la mejora obtenida tras aplicar la correccion de baseline.</em></p>"
+    fig_overlay = go.Figure()
     
-    fig_comparison = go.Figure()
+    colors_ref = ['#1f77b4', '#2ca02c', '#9467bd', '#8c564b', '#e377c2']
+    colors_new = ['#ff7f0e', '#d62728', '#bcbd22', '#7f7f7f', '#17becf']
     
-    channels = list(range(1, len(mean_diff_before) + 1))
+    for i, (spec_ref, spec_new, label) in enumerate(zip(spectra_ref, spectra_new, labels)):
+        # Referencia
+        fig_overlay.add_trace(go.Scatter(
+            x=channels,
+            y=spec_ref,
+            mode='lines',
+            name=f"{lamp_ref} - {label}",
+            line=dict(color=colors_ref[i % len(colors_ref)], width=2),
+            hovertemplate=f'<b>{lamp_ref} - {label}</b><br>Canal: %{{x}}<br>Valor: %{{y:.6f}}<extra></extra>'
+        ))
+        
+        # Nueva
+        fig_overlay.add_trace(go.Scatter(
+            x=channels,
+            y=spec_new,
+            mode='lines',
+            name=f"{lamp_new} - {label}",
+            line=dict(color=colors_new[i % len(colors_new)], width=2, dash='dash'),
+            hovertemplate=f'<b>{lamp_new} - {label}</b><br>Canal: %{{x}}<br>Valor: %{{y:.6f}}<extra></extra>'
+        ))
     
-    # Diferencia ANTES
-    fig_comparison.add_trace(go.Scatter(
-        x=channels,
-        y=mean_diff_before,
-        mode='lines',
-        name='ANTES de correccion',
-        line=dict(width=2, color='red'),
-        hovertemplate='Canal: %{x}<br>Diferencia: %{y:.6f}<extra></extra>'
-    ))
-    
-    # Diferencia DESPUES
-    fig_comparison.add_trace(go.Scatter(
-        x=channels,
-        y=mean_diff_after,
-        mode='lines',
-        name='DESPUES de correccion',
-        line=dict(width=2, color='green'),
-        hovertemplate='Canal: %{x}<br>Diferencia: %{y:.6f}<extra></extra>'
-    ))
-    
-    # Linea de referencia
-    fig_comparison.add_hline(y=0, line_dash="dash", line_color="gray", opacity=0.5)
-    
-    fig_comparison.update_layout(
-        title='Diferencia espectral: ANTES vs DESPUES de aplicar correccion',
+    fig_overlay.update_layout(
+        title='Mediciones White Standard Post-Ajuste',
         xaxis_title='Canal espectral',
-        yaxis_title='Diferencia',
+        yaxis_title='Absorbancia',
         height=600,
         hovermode='closest',
         template='plotly_white',
-        legend=dict(
-            yanchor="top",
-            y=0.99,
-            xanchor="right",
-            x=0.99
-        )
+        legend=dict(orientation="h", yanchor="top", y=-0.15, xanchor="center", x=0.5)
     )
     
-    chart_html_comparison = fig_comparison.to_html(
+    chart_html_overlay = fig_overlay.to_html(
         include_plotlyjs='cdn',
-        div_id='validation_comparison',
+        div_id='verification_overlay',
         config={'displayModeBar': True, 'responsive': True}
     )
     
-    # ⭐ CAMBIO: Envolver en expandible
     html += wrap_chart_in_expandable(
-        chart_html_comparison,
-        "Ver comparación ANTES vs DESPUÉS",
-        "validation_comparison_expandable",
+        chart_html_overlay,
+        "Ver overlay de espectros",
+        "verification_overlay_expandable",
+        default_open=False
+    )
+    
+    # ============================================================================
+    # TAB 2: RESIDUALES
+    # ============================================================================
+    html += "<h3>2) Análisis de Residuales</h3>"
+    html += "<p style='color: #6c757d; font-size: 0.95em;'><em>Diferencias punto a punto entre lámparas.</em></p>"
+    
+    fig_residuals = go.Figure()
+    
+    for i, (spec_ref, spec_new, label) in enumerate(zip(spectra_ref, spectra_new, labels)):
+        residual = spec_new - spec_ref
+        
+        fig_residuals.add_trace(go.Scatter(
+            x=channels,
+            y=residual,
+            mode='lines',
+            name=label,
+            line=dict(width=2),
+            hovertemplate=f'<b>{label}</b><br>Canal: %{{x}}<br>Δ: %{{y:.6f}}<extra></extra>'
+        ))
+    
+    fig_residuals.add_hline(y=0, line_dash="dash", line_color="gray", opacity=0.5)
+    
+    fig_residuals.update_layout(
+        title='Residuales (Nueva - Referencia)',
+        xaxis_title='Canal espectral',
+        yaxis_title='Residual (AU)',
+        height=600,
+        hovermode='closest',
+        template='plotly_white',
+        legend=dict(orientation="h", yanchor="top", y=-0.15, xanchor="center", x=0.5)
+    )
+    
+    chart_html_residuals = fig_residuals.to_html(
+        include_plotlyjs='cdn',
+        div_id='verification_residuals',
+        config={'displayModeBar': True, 'responsive': True}
+    )
+    
+    html += wrap_chart_in_expandable(
+        chart_html_residuals,
+        "Ver análisis de residuales",
+        "verification_residuals_expandable",
+        default_open=False
+    )
+    
+    # Tabla de estadísticas de residuales
+    html += "<h4>Estadísticas de Residuales</h4>"
+    residual_stats = []
+    
+    for spec_ref, spec_new, label in zip(spectra_ref, spectra_new, labels):
+        residual = spec_new - spec_ref
+        rms = np.sqrt(np.mean(residual**2))
+        max_diff = np.abs(residual).max()
+        
+        # Evaluar según umbrales
+        if rms < 0.002 and max_diff < 0.005:
+            evaluacion = "✅ Excelente"
+        elif rms < 0.005 and max_diff < 0.01:
+            evaluacion = "✓ Bueno"
+        elif rms < 0.01 and max_diff < 0.02:
+            evaluacion = "⚠️ Aceptable"
+        else:
+            evaluacion = "❌ Revisar"
+        
+        residual_stats.append({
+            'Muestra': label,
+            'RMS': f"{rms:.6f}",
+            'Max |Δ|': f"{max_diff:.6f}",
+            'Media Δ': f"{np.mean(residual):.6f}",
+            'Desv. Est.': f"{np.std(residual):.6f}",
+            'Evaluación': evaluacion
+        })
+    
+    residual_df = pd.DataFrame(residual_stats)
+    table_html = residual_df.to_html(index=False, classes="table", border=0)
+    html += f"<div style='overflow-x:auto'>{table_html}</div>"
+    
+    # ============================================================================
+    # TAB 3: ESTADÍSTICAS
+    # ============================================================================
+    html += "<h3>3) Estadísticas Espectrales</h3>"
+    
+    stats = []
+    for spec_ref, spec_new, label in zip(spectra_ref, spectra_new, labels):
+        stats.append({
+            'Muestra': f"{label} - {lamp_ref}",
+            'Min': f"{spec_ref.min():.6f}",
+            'Max': f"{spec_ref.max():.6f}",
+            'Media': f"{spec_ref.mean():.6f}",
+            'Desv. Est.': f"{spec_ref.std():.6f}",
+            'Rango': f"{spec_ref.max() - spec_ref.min():.6f}"
+        })
+        stats.append({
+            'Muestra': f"{label} - {lamp_new}",
+            'Min': f"{spec_new.min():.6f}",
+            'Max': f"{spec_new.max():.6f}",
+            'Media': f"{spec_new.mean():.6f}",
+            'Desv. Est.': f"{spec_new.std():.6f}",
+            'Rango': f"{spec_new.max() - spec_new.min():.6f}"
+        })
+    
+    stats_df = pd.DataFrame(stats)
+    stats_table_html = stats_df.to_html(index=False, classes="table", border=0)
+    
+    html += wrap_chart_in_expandable(
+        f"<div style='overflow-x:auto'>{stats_table_html}</div>",
+        "Ver estadísticas espectrales completas",
+        "verification_stats_expandable",
+        default_open=False
+    )
+    
+    # ============================================================================
+    # TAB 4: MATRIZ RMS
+    # ============================================================================
+    html += "<h3>4) Matriz de Diferencias RMS</h3>"
+    html += "<p style='color: #6c757d; font-size: 0.95em;'><em>Escala absoluta basada en umbrales de white standards.</em></p>"
+    
+    # Combinar todos los espectros
+    all_spectra = []
+    all_labels = []
+    for spec_ref, spec_new, label in zip(spectra_ref, spectra_new, labels):
+        all_spectra.append(spec_ref)
+        all_labels.append(f"{label} - {lamp_ref}")
+        all_spectra.append(spec_new)
+        all_labels.append(f"{label} - {lamp_new}")
+    
+    # Calcular matriz RMS
+    n_spectra = len(all_spectra)
+    rms_matrix = np.zeros((n_spectra, n_spectra))
+    
+    for i in range(n_spectra):
+        for j in range(n_spectra):
+            if i == j:
+                rms_matrix[i, j] = 0
+            else:
+                diff = all_spectra[i] - all_spectra[j]
+                rms_matrix[i, j] = np.sqrt(np.mean(diff**2))
+    
+    # Escala de colores absoluta
+    colorscale = [
+        [0.0, '#4caf50'],      # Verde (excelente) 0-0.005
+        [0.333, '#8bc34a'],    # Verde claro
+        [0.667, '#ffc107'],    # Amarillo (aceptable) 0.005-0.01
+        [1.0, '#f44336']       # Rojo (revisar) >0.01
+    ]
+    
+    fig_heatmap = go.Figure(data=go.Heatmap(
+        z=rms_matrix,
+        x=all_labels,
+        y=all_labels,
+        colorscale=colorscale,
+        zmin=0,
+        zmax=0.015,  # Escala fija
+        text=np.round(rms_matrix, 6),
+        texttemplate='%{text}',
+        textfont={"size": 10},
+        colorbar=dict(
+            title="RMS (AU)",
+            tickvals=[0, 0.002, 0.005, 0.01, 0.015],
+            ticktext=['0.000', '0.002<br>(Exc)', '0.005<br>(Bueno)', '0.010<br>(Acept)', '0.015']
+        )
+    ))
+    
+    fig_heatmap.update_layout(
+        title='Matriz de Diferencias RMS - Escala Absoluta',
+        height=max(400, 50 * n_spectra),
+        template='plotly_white'
+    )
+    
+    chart_html_heatmap = fig_heatmap.to_html(
+        include_plotlyjs='cdn',
+        div_id='verification_heatmap',
+        config={'displayModeBar': True, 'responsive': True}
+    )
+    
+    html += wrap_chart_in_expandable(
+        chart_html_heatmap,
+        "Ver matriz RMS",
+        "verification_heatmap_expandable",
         default_open=False
     )
     
@@ -1608,6 +1305,12 @@ def generate_partial_report(
     mean_diff_before=None,
     mean_diff_after=None
 ):
+    """
+    Genera informe parcial con las secciones disponibles.
+    
+    Returns:
+        str: HTML del informe parcial
+    """
     import streamlit as st
 
     client_data = st.session_state.get('client_data', {})
@@ -1617,27 +1320,26 @@ def generate_partial_report(
     sections = ["info-cliente"]
     if isinstance(wstd_data, dict) and wstd_data.get('df') is not None:
         sections.append("wstd-section")
-    # Si habrá validación, añade la entrada al índice
-    has_validation = (
+    
+    # Si habrá verificación, añade la entrada al índice
+    has_verification = (
         validation_data is not None
         and mean_diff_before is not None
         and mean_diff_after is not None
     )
-    if has_validation:
-        sections.append("validation-section")
-    # Muestras de control se anexa si hay datos (la función ya gestiona vacío)
-    sections.append("control-samples-section")
+    if has_verification:
+        sections.append("verification-section")
 
     html = start_html_document(client_data, sections=sections)
 
-    # WSTD (si existe)
+    # WSTD inicial (si existe)
     if isinstance(wstd_data, dict) and wstd_data.get('df') is not None:
         try:
             html += generate_wstd_section(wstd_data)
         except Exception as e:
             html += f"""
                 <div class="warning-box" id="wstd-section">
-                    <h2>Diagnóstico WSTD</h2>
+                    <h2>Diagnóstico WSTD Inicial</h2>
                     <p><em>No se pudo renderizar la sección WSTD: {e}</em></p>
                 </div>
             """
@@ -1646,35 +1348,23 @@ def generate_partial_report(
     if not (kit_data and baseline_data and ref_corrected and origin):
         html += """
             <div class="warning-box" style="margin-top: 20px;">
-                <h2>Secciones no disponibles</h2>
-                <p><em>No hay datos suficientes para el informe completo (pasos 1–6).</em></p>
+                <h2>Proceso Incompleto</h2>
+                <p><em>No hay datos suficientes para generar el informe completo. 
+                Complete el proceso de ajuste de baseline.</em></p>
             </div>
         """
 
-    # Validación (si hay datos “after”)
-    if has_validation:
+    # Verificación (si hay datos)
+    if has_verification:
         try:
             html += generate_validation_section(validation_data, mean_diff_before, mean_diff_after)
         except Exception as e:
             html += f"""
-                <div class="warning-box" id="validation-section" style="margin-top: 20px;">
-                    <h2>Validación</h2>
-                    <p><em>No se pudo renderizar la validación: {e}</em></p>
+                <div class="warning-box" id="verification-section" style="margin-top: 20px;">
+                    <h2>Verificación Post-Ajuste</h2>
+                    <p><em>No se pudo renderizar la verificación: {e}</em></p>
                 </div>
             """
-
-    # Muestras de Control (si existen en session_state)
-    try:
-        ctrl_html = generate_control_samples_section()
-        if ctrl_html:
-            html += ctrl_html
-    except Exception as e:
-        html += f"""
-            <div class="warning-box" id="control-samples-section">
-                <h2>Muestras de Control</h2>
-                <p><em>No se pudo renderizar la sección de control: {e}</em></p>
-            </div>
-        """
 
     html += generate_footer()
     return html

@@ -470,7 +470,7 @@ def render_validation_metrics(mean_diff_before, mean_diff_after):
     """
     Renderiza metricas de validacion.
     """
-    st.markdown("##### Métricas de Validación")
+    st.markdown("##### Métricas de Verificación")
     
     # Calcular metricas
     max_before = np.max(np.abs(mean_diff_before))
@@ -524,7 +524,7 @@ def render_validation_download(df_comparison):
     df_comparison.to_csv(csv_val, index=False)
     
     st.download_button(
-        "📥 Descargar datos de validación (CSV)",
+        "📥 Descargar datos de verificación (CSV)",
         data=csv_val.getvalue(),
         file_name=f"validacion_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
         mime="text/csv",

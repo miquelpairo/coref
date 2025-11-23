@@ -670,89 +670,26 @@ def render_corrected_baseline_section():
             use_container_width=True
         )
     
-    # ==========================================
-    # GENERAR INFORME DEL PROCESO
-    # ==========================================
-    st.markdown("---")
-    st.markdown("#### 📄 Generar Informe del Proceso")
-    
-    if st.button("📊 Generar Informe Completo", use_container_width=True, type="secondary", key="generate_report_alignment"):
-        try:
-            from core.report_generator import generate_html_report
-            
-            # Preparar datos para el informe
-            kit_data = {
-                'df': st.session_state.new_tsv['df'],
-                'df_ref_grouped': st.session_state.alignment_data['df_ref_grouped'],
-                'df_new_grouped': st.session_state.alignment_data['df_new_grouped'],
-                'spectral_cols': st.session_state.alignment_data['spectral_cols'],
-                'lamp_ref': 'Referencia',
-                'lamp_new': 'Nueva',
-                'common_ids': st.session_state.alignment_data['common_ids'],
-                'mean_diff': st.session_state.correction_vector
-            }
-            
-            baseline_data_for_report = {
-                'ref_spectrum': baseline_data['spectrum'],
-                'header': baseline_data['header'],
-                'df_baseline': baseline_data['df_baseline'],
-                'origin': baseline_data['origin']
-            }
-            
-            html_content = generate_html_report(
-                kit_data,
-                baseline_data_for_report,
-                ref_corrected,
-                baseline_data['origin']
-            )
-            
-            client_data = st.session_state.get('client_data') or {}
-            filename = f"Informe_Alineamiento_{client_data.get('sensor_sn', 'sensor')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
-            
-            st.download_button(
-                label="📥 Descargar Informe HTML",
-                data=html_content,
-                file_name=filename,
-                mime="text/html",
-                use_container_width=True,
-                key="download_report_alignment"
-            )
-            st.success("✅ Informe generado correctamente")
-            
-        except Exception as e:
-            st.error(f"❌ Error al generar el informe: {str(e)}")
-            import traceback
-            st.error(traceback.format_exc())
+
 
 def render_navigation_section():
     """
-    Navegación al siguiente paso.
+    Navegación obligatoria al paso de verificación.
     """
-    st.markdown("### Siguiente Paso: Verificación")
+    st.markdown("### ➡️ Siguiente Paso: Verificación Obligatoria")
     
     st.info("""
     **Paso 5 - Verificación de la baseline:**
     
-    Si aplicaste el baseline corregido al equipo, puedes verificar el ajuste 
-    midiendo nuevamente las muestras de control.
+    Para completar el proceso, debes verificar el ajuste midiendo nuevamente 
+    las muestras de control con el baseline corregido aplicado.
+    
+    ⚠️ **Este paso es obligatorio** para validar la corrección y generar el informe final.
     """)
     
-    col_next, col_skip = st.columns([3, 1])
-    
-    with col_next:
-        if st.button("✅ Continuar al Paso 5", type="primary", use_container_width=True):
-            st.session_state.unsaved_changes = False
-            go_to_next_step()
-    
-    with col_skip:
-        if st.button("⏭️ Omitir validación", use_container_width=True):
-            st.session_state.unsaved_changes = False
-            # Saltar al final o reiniciar
-            from session_manager import reset_session_state
-            if st.button("🔄 Finalizar y reiniciar", key="finish_alignment"):
-                reset_session_state()
-                st.rerun()
-
+    if st.button("➡️ Ir a Verificación (Paso 5)", type="primary", use_container_width=True):
+        st.session_state.unsaved_changes = False
+        go_to_next_step()
 
 def save_kit_data_for_validation():
     """
