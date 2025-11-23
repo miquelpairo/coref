@@ -509,7 +509,13 @@ VALIDATION_STATUS = {
     }
 }
 
-
+# Umbrales para White Reference Comparison
+WHITE_REFERENCE_THRESHOLDS = {
+    'excellent': {'rms': 0.002, 'max_diff': 0.005, 'color': '#4caf50'},
+    'good': {'rms': 0.005, 'max_diff': 0.01, 'color': '#8bc34a'},
+    'acceptable': {'rms': 0.01, 'max_diff': 0.02, 'color': '#ffc107'},
+    'review': {'color': '#f44336'}
+}
 
 # Información de versión
 VERSION = "3.0.0"  # ⭐ ACTUALIZADO
