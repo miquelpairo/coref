@@ -45,26 +45,23 @@ def render_baseline_alignment_step():
     """
     st.markdown("## PASO 4 DE 5: Alineamiento de Baseline")
     
-    st.info("""
-    ### 📋 Proceso de Alineamiento
+    # Usar instrucciones desde config
+    st.info(INSTRUCTIONS['alignment_intro'])
     
-    1. **Cargar baseline actual** del equipo (.ref o .csv)
-    2. **Cargar TSV de referencia** (automáticamente desde Paso 3)
-    3. **Cargar TSV de nueva medición** (medido con el baseline actual)
-    4. **Calcular corrección** basada en las diferencias espectrales
-    5. **Generar baseline corregido** listo para aplicar al equipo
-    """)
+    with st.expander("📋 Ver procedimiento completo", expanded=False):
+        st.markdown(INSTRUCTIONS['alignment_procedure'])
     
     st.markdown("---")
     
     # ==========================================
     # SECCIÓN 1: CARGAR BASELINE
     # ==========================================
-    st.markdown("### 1️⃣ Cargar Baseline Actual del Equipo")
+    st.markdown("### 1️⃣ Cargar Baseline Nueva")
+    st.info(INSTRUCTIONS['alignment_baseline_upload'])
     baseline_loaded = render_baseline_upload_section()
     
     if not baseline_loaded:
-        st.info("👆 Carga el baseline actual del equipo para continuar")
+        st.warning("👇 Carga el baseline nuevo para continuar")
         return
     
     # ==========================================
@@ -72,6 +69,7 @@ def render_baseline_alignment_step():
     # ==========================================
     st.markdown("---")
     st.markdown("### 2️⃣ TSV de Referencia")
+    st.info(INSTRUCTIONS['alignment_ref_tsv'])
     ref_tsv_loaded = render_reference_tsv_section()
     
     if not ref_tsv_loaded:
@@ -83,10 +81,11 @@ def render_baseline_alignment_step():
     # ==========================================
     st.markdown("---")
     st.markdown("### 3️⃣ TSV de Nueva Medición")
+    st.info(INSTRUCTIONS['alignment_new_tsv'])
     new_tsv_loaded = render_new_tsv_section()
     
     if not new_tsv_loaded:
-        st.info("👆 Carga el TSV de la nueva medición para continuar")
+        st.warning("👇 Carga el TSV de la nueva medición para continuar")
         return
     
     # ==========================================
@@ -125,7 +124,6 @@ def render_baseline_alignment_step():
     # ==========================================
     st.markdown("---")
     render_navigation_section()
-
 
 def render_baseline_upload_section():
     """
@@ -260,7 +258,7 @@ def render_reference_tsv_section():
         st.success(f"✅ TSV de referencia cargado desde Paso 3 ({len(df_ref)} mediciones)")
         
         # Mostrar preview
-        with st.expander("📋 Ver datos del TSV de referencia", expanded=False):
+        with st.expander("🔍 Ver datos del TSV de referencia", expanded=False):
             st.dataframe(df_ref[['ID', 'Note']].head(10), use_container_width=True)
             st.write(f"**Total de filas:** {len(df_ref)}")
             st.write(f"**Canales espectrales:** {len(spectral_cols)}")
@@ -319,7 +317,7 @@ def render_new_tsv_section():
             st.success(f"✅ TSV cargado correctamente ({len(df_new)} mediciones)")
             
             # Mostrar preview
-            with st.expander("📋 Ver datos del TSV", expanded=False):
+            with st.expander("🔍 Ver datos del TSV", expanded=False):
                 st.dataframe(df_new[['ID', 'Note']].head(10), use_container_width=True)
                 st.write(f"**Total de filas:** {len(df_new)}")
                 st.write(f"**Canales espectrales:** {len(spectral_cols_new)}")
@@ -429,7 +427,7 @@ def render_sample_selection_section():
         ]
     })
     
-    with st.expander("📋 Seleccionar muestras para el cálculo", expanded=True):
+    with st.expander("🔍 Seleccionar muestras para el cálculo", expanded=True):
         with st.form("form_select_samples_alignment", clear_on_submit=False):
             edited = st.data_editor(
                 df_samples,
@@ -603,6 +601,9 @@ def render_corrected_baseline_section():
     
     st.success("✅ Corrección aplicada al baseline")
     
+    # Mostrar instrucciones finales
+    st.info(INSTRUCTIONS['alignment_final'])
+    
     # Comparación visual
     with st.expander("📊 Comparación: Baseline Original vs Corregido", expanded=False):
         spectral_cols = st.session_state.alignment_data['spectral_cols']
@@ -723,15 +724,14 @@ def render_corrected_baseline_section():
             import traceback
             st.error(traceback.format_exc())
 
-
 def render_navigation_section():
     """
     Navegación al siguiente paso.
     """
-    st.markdown("### Siguiente Paso: Validación")
+    st.markdown("### Siguiente Paso: Verificación")
     
     st.info("""
-    **Paso 5 - Validación (Recomendado):**
+    **Paso 5 - Verificación de la baseline:**
     
     Si aplicaste el baseline corregido al equipo, puedes verificar el ajuste 
     midiendo nuevamente las muestras de control.

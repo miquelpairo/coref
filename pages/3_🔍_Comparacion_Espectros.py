@@ -16,6 +16,7 @@ from plotly.subplots import make_subplots
 from typing import List, Tuple
 import sys
 from pathlib import Path
+from buchi_streamlit_theme import apply_buchi_styles
 
 # Añadir directorio raíz al path para imports
 root_dir = Path(__file__).parent.parent
@@ -26,15 +27,194 @@ sys.path.insert(0, str(root_dir))
 from core.file_handlers import load_tsv_file, get_spectral_columns
 from auth import check_password  # ← AÑADIR ESTO
 
-# Configuración de la página
-st.set_page_config(
-    page_title="Spectrum Comparison Tool",
-    page_icon="📊",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
 
-# ⭐ AÑADIR VERIFICACIÓN DE AUTENTICACIÓN
+# Aplicar estilos corporativos Buchi
+apply_buchi_styles()
+
+# Corregir estilos del sidebar para mejor contraste
+st.markdown("""
+<style>
+    /* Sidebar general */
+    [data-testid="stSidebar"] {
+        background-color: #2c5f3f;
+    }
+    
+    [data-testid="stSidebar"] * {
+        color: white !important;
+    }
+    
+    /* Headers y títulos */
+    [data-testid="stSidebar"] h2,
+    [data-testid="stSidebar"] h3 {
+        color: white !important;
+    }
+    
+    /* Labels - completamente invisibles, solo texto blanco */
+    [data-testid="stSidebar"] label {
+        color: white !important;
+        font-weight: 500 !important;
+        font-size: 14px !important;
+        margin-bottom: 8px !important;
+        display: block !important;
+        background: none !important;
+        border: none !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+    }
+    
+    /* CRÍTICO: Eliminar borde verde de label de file uploader */
+    [data-testid="stSidebar"] [data-testid="stFileUploader"] > label,
+    [data-testid="stSidebar"] [data-testid="stFileUploader"] label {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+    }
+    
+    /* File uploader - contenedor principal */
+    [data-testid="stSidebar"] [data-testid="stFileUploader"] {
+        width: 100% !important;
+        margin-bottom: 20px !important;
+    }
+    
+    /* Área de drop - diseño limpio y compacto */
+    [data-testid="stSidebar"] [data-testid="stFileUploader"] section {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+        border: 2px dashed rgba(255, 255, 255, 0.3) !important;
+        border-radius: 8px !important;
+        padding: 20px !important;
+        text-align: center !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    
+    [data-testid="stSidebar"] [data-testid="stFileUploader"] section:hover {
+        border-color: rgba(255, 255, 255, 0.5) !important;
+        background-color: rgba(255, 255, 255, 0.15) !important;
+    }
+    
+    /* Texto "Drag and drop" */
+    [data-testid="stSidebar"] [data-testid="stFileUploader"] small {
+        color: rgba(255, 255, 255, 0.8) !important;
+        font-size: 13px !important;
+    }
+    
+    /* Botón "Browse files" - Verde Buchi */
+    [data-testid="stSidebar"] [data-testid="stFileUploader"] button[kind="secondary"] {
+        background-color: #7cb342 !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 6px !important;
+        padding: 8px 20px !important;
+        font-weight: 600 !important;
+        font-size: 14px !important;
+        margin-top: 10px !important;
+        cursor: pointer !important;
+    }
+    
+    [data-testid="stSidebar"] [data-testid="stFileUploader"] button[kind="secondary"]:hover {
+        background-color: #689f38 !important;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
+    }
+    
+    /* Archivo cargado - estilo badge */
+    [data-testid="stSidebar"] [data-testid="stFileUploader"] [data-testid="stMarkdownContainer"] {
+        background-color: rgba(124, 179, 66, 0.2) !important;
+        border: 1px solid #7cb342 !important;
+        border-radius: 6px !important;
+        padding: 10px 12px !important;
+        margin-top: 10px !important;
+        color: white !important;
+        font-size: 13px !important;
+    }
+    
+    /* Botón X para eliminar - más visible */
+    [data-testid="stSidebar"] [data-testid="stFileUploader"] button[kind="icon"] {
+        color: #ff5252 !important;
+        background-color: rgba(255, 82, 82, 0.1) !important;
+        border-radius: 4px !important;
+        padding: 4px !important;
+    }
+    
+    [data-testid="stSidebar"] [data-testid="stFileUploader"] button[kind="icon"]:hover {
+        background-color: rgba(255, 82, 82, 0.2) !important;
+        color: #ff1744 !important;
+    }
+    
+    /* Dividers */
+    [data-testid="stSidebar"] hr {
+        border-color: rgba(255, 255, 255, 0.2) !important;
+        margin: 20px 0 !important;
+    }
+    
+    /* Expander */
+    [data-testid="stSidebar"] [data-testid="stExpander"] {
+        background-color: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 8px !important;
+    }
+    
+    [data-testid="stSidebar"] [data-testid="stExpander"] summary {
+        color: white !important;
+    }
+    
+    /* Info boxes */
+    [data-testid="stSidebar"] .stAlert {
+        background-color: rgba(124, 179, 66, 0.15) !important;
+        border: 1px solid rgba(124, 179, 66, 0.3) !important;
+        border-radius: 8px !important;
+        color: white !important;
+    }
+    
+    /* Inputs - FONDO BLANCO con texto oscuro */
+    [data-testid="stSidebar"] input[type="number"],
+    [data-testid="stSidebar"] input[type="text"] {
+        background-color: white !important;
+        color: #333333 !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        border-radius: 6px !important;
+        padding: 8px 12px !important;
+    }
+    
+    [data-testid="stSidebar"] input[type="number"]:focus,
+    [data-testid="stSidebar"] input[type="text"]:focus {
+        border-color: #7cb342 !important;
+        box-shadow: 0 0 0 1px #7cb342 !important;
+    }
+    
+    /* Selects */
+    [data-testid="stSidebar"] select {
+        background-color: white !important;
+        color: #333333 !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        border-radius: 6px !important;
+    }
+    
+    /* Number input - botones +/- GRISES OSCUROS sobre blanco */
+    [data-testid="stSidebar"] button[kind="icon"] svg {
+        color: #333333 !important;
+        fill: #333333 !important;
+    }
+    
+    [data-testid="stSidebar"] [data-testid="stNumberInput"] button {
+        background-color: #f0f0f0 !important;
+        color: #333333 !important;
+    }
+    
+    [data-testid="stSidebar"] [data-testid="stNumberInput"] button:hover {
+        background-color: #e0e0e0 !important;
+    }
+    
+    [data-testid="stSidebar"] [data-testid="stNumberInput"] button svg {
+        color: #333333 !important;
+        fill: #333333 !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+
+# VERIFICACIÓN DE AUTENTICACIÓN
 if not check_password():
     st.stop()
 
@@ -237,6 +417,50 @@ def create_residuals_heatmap(spectra_list: List[np.ndarray], names: List[str]) -
     )
     
     return fig
+
+def calculate_correlation_matrix(spectra_list: List[np.ndarray], names: List[str]) -> np.ndarray:
+    """Calcula matriz de correlación entre todos los espectros."""
+    n_spectra = len(spectra_list)
+    corr_matrix = np.ones((n_spectra, n_spectra))  # Inicializar con 1s
+    
+    for i in range(n_spectra):
+        for j in range(i+1, n_spectra):  # Solo calcular triángulo superior
+            try:
+                # Validar, aplanar y CONVERTIR A FLOAT
+                spec_i = np.asarray(spectra_list[i], dtype=np.float64).flatten()
+                spec_j = np.asarray(spectra_list[j], dtype=np.float64).flatten()
+                
+                # Validaciones
+                if len(spec_i) != len(spec_j) or len(spec_i) < 2:
+                    corr_matrix[i, j] = np.nan
+                    corr_matrix[j, i] = np.nan
+                    continue
+                
+                if np.any(~np.isfinite(spec_i)) or np.any(~np.isfinite(spec_j)):
+                    corr_matrix[i, j] = np.nan
+                    corr_matrix[j, i] = np.nan
+                    continue
+                
+                # Normalizar
+                spec_i_norm = (spec_i - np.mean(spec_i)) / (np.std(spec_i) + 1e-10)
+                spec_j_norm = (spec_j - np.mean(spec_j)) / (np.std(spec_j) + 1e-10)
+                
+                # Correlación manual
+                corr = np.sum(spec_i_norm * spec_j_norm) / len(spec_i_norm)
+                
+                if np.isfinite(corr):
+                    corr_matrix[i, j] = corr
+                    corr_matrix[j, i] = corr
+                else:
+                    corr_matrix[i, j] = np.nan
+                    corr_matrix[j, i] = np.nan
+                    
+            except Exception as e:
+                print(f"Error calculando correlación ({i},{j}): {e}")
+                corr_matrix[i, j] = np.nan
+                corr_matrix[j, i] = np.nan
+    
+    return corr_matrix
 
 
 # ============================================================================
@@ -635,7 +859,68 @@ def main():
             file_name="estadisticas_espectrales.csv",
             mime="text/csv"
         )
-    
+        
+    with st.expander("🔗 Correlación con Referencia"):
+        reference_idx_corr = st.selectbox(
+            "Selecciona espectro de referencia:",
+            range(len(spectrum_labels)),
+            format_func=lambda x: f"{x+1}. {spectrum_labels[x]}",
+            key="corr_ref_selector"
+        )
+        
+        corr_stats = []
+        ref_spectrum = selected_spectra[reference_idx_corr]
+        
+        # CONVERTIR A FLOAT64 explícitamente
+        ref_flat = np.asarray(ref_spectrum, dtype=np.float64).flatten()
+        
+        for i, (spectrum, label) in enumerate(zip(selected_spectra, spectrum_labels)):
+            if i != reference_idx_corr:
+                try:
+                    # CONVERTIR A FLOAT64 explícitamente
+                    spec_flat = np.asarray(spectrum, dtype=np.float64).flatten()
+                    
+                    # Validación de compatibilidad
+                    if len(ref_flat) != len(spec_flat):
+                        st.error(f"Error en {label}: diferentes longitudes ({len(ref_flat)} vs {len(spec_flat)})")
+                        continue
+                    
+                    if len(ref_flat) < 2:
+                        st.error(f"Error en {label}: espectro demasiado corto ({len(ref_flat)} puntos)")
+                        continue
+                    
+                    # Verificar que no hay NaN o Inf
+                    if np.any(~np.isfinite(ref_flat)) or np.any(~np.isfinite(spec_flat)):
+                        st.error(f"Error en {label}: contiene valores NaN o Inf")
+                        continue
+                    
+                    # Normalizar
+                    ref_norm = (ref_flat - np.mean(ref_flat)) / (np.std(ref_flat) + 1e-10)
+                    spec_norm = (spec_flat - np.mean(spec_flat)) / (np.std(spec_flat) + 1e-10)
+                    
+                    # Correlación de Pearson manual
+                    correlation = np.sum(ref_norm * spec_norm) / len(ref_norm)
+                    
+                    # Validar resultado
+                    if not np.isfinite(correlation):
+                        st.error(f"Error en {label}: correlación no válida")
+                        continue
+                    
+                    corr_stats.append({
+                        'Espectro': label,
+                        'Correlación': f"{correlation:.8f}",
+                        'Estado': '✅ Excelente' if correlation > 0.999 else ('✓ Bueno' if correlation > 0.995 else '⚠️ Revisar')
+                    })
+                    
+                except Exception as e:
+                    st.error(f"Error procesando {label}: {str(e)}")
+                    continue
+        
+        if corr_stats:
+            st.dataframe(pd.DataFrame(corr_stats), use_container_width=True, hide_index=True)
+        else:
+            st.warning("No se pudieron calcular correlaciones")
+        
     # TAB 4: Matriz RMS
     with tab4:
         st.subheader("Matriz de Diferencias RMS")
@@ -666,6 +951,33 @@ def main():
             
             st.markdown("**Pares más diferentes:**")
             st.dataframe(rms_df.tail(5), use_container_width=True, hide_index=True)
+        
+        st.divider()
+        st.subheader("Matriz de Correlación Espectral")
+        st.markdown("Valores más cercanos a 1.0 indican mayor similitud")
+
+        corr_matrix = calculate_correlation_matrix(selected_spectra, spectrum_labels)
+
+        fig_corr = go.Figure(data=go.Heatmap(
+            z=corr_matrix,
+            x=spectrum_labels,
+            y=spectrum_labels,
+            colorscale='RdYlGn',
+            zmin=0.99,  # Zoom en el rango relevante
+            zmax=1.0,
+            text=np.round(corr_matrix, 6),
+            texttemplate='%{text}',
+            textfont={"size": 10},
+            colorbar=dict(title="Correlación")
+        ))
+
+        fig_corr.update_layout(
+            title='Matriz de Correlación Espectral',
+            height=max(400, 50 * len(selected_spectra)),
+            template='plotly_white'
+        )
+
+        st.plotly_chart(fig_corr, use_container_width=True)
 
 
 if __name__ == "__main__":

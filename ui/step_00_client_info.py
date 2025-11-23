@@ -15,7 +15,7 @@ def render_client_info_step():
     """
     Renderiza el formulario de informacion del cliente (Paso 0).
     """
-    st.markdown("## PASO 1 DE 7: Informacion del Cliente")
+    st.markdown("## PASO 1 DE 5: Informacion del Cliente")
     st.info(INSTRUCTIONS['client_info'])
     
     with st.form("client_form"):

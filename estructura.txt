@@ -1,0 +1,680 @@
+C:\coref-coref2\.devcontainer
+C:\coref-coref2\.gitignore
+C:\coref-coref2\.streamlit
+C:\coref-coref2\app.py
+C:\coref-coref2\app2.py
+C:\coref-coref2\auth.py
+C:\coref-coref2\buchi_report_styles_simple.css
+C:\coref-coref2\buchi_streamlit_theme.py
+C:\coref-coref2\config.py
+C:\coref-coref2\core
+C:\coref-coref2\Documentacion COREF2.docx
+C:\coref-coref2\Documentaci¢n de Arquitectura Modular.docx
+C:\coref-coref2\estructura.txt
+C:\coref-coref2\readme.md
+C:\coref-coref2\requirements.txt
+C:\coref-coref2\runtime.txt
+C:\coref-coref2\session_manager.py
+C:\coref-coref2\streamlit
+C:\coref-coref2\test_datsa
+C:\coref-coref2\ui
+C:\coref-coref2\utils
+C:\coref-coref2\__pycache__
+C:\coref-coref2\~$cumentaci¢n de Arquitectura Modular.docx
+C:\coref-coref2\.devcontainer\devcontainer.json
+C:\coref-coref2\.git\.COMMIT_EDITMSG.swp
+C:\coref-coref2\.git\COMMIT_EDITMSG
+C:\coref-coref2\.git\config
+C:\coref-coref2\.git\description
+C:\coref-coref2\.git\FETCH_HEAD
+C:\coref-coref2\.git\HEAD
+C:\coref-coref2\.git\hooks
+C:\coref-coref2\.git\index
+C:\coref-coref2\.git\info
+C:\coref-coref2\.git\logs
+C:\coref-coref2\.git\objects
+C:\coref-coref2\.git\ORIG_HEAD
+C:\coref-coref2\.git\packed-refs
+C:\coref-coref2\.git\refs
+C:\coref-coref2\.git\hooks\applypatch-msg.sample
+C:\coref-coref2\.git\hooks\commit-msg.sample
+C:\coref-coref2\.git\hooks\fsmonitor-watchman.sample
+C:\coref-coref2\.git\hooks\post-update.sample
+C:\coref-coref2\.git\hooks\pre-applypatch.sample
+C:\coref-coref2\.git\hooks\pre-commit.sample
+C:\coref-coref2\.git\hooks\pre-merge-commit.sample
+C:\coref-coref2\.git\hooks\pre-push.sample
+C:\coref-coref2\.git\hooks\pre-rebase.sample
+C:\coref-coref2\.git\hooks\pre-receive.sample
+C:\coref-coref2\.git\hooks\prepare-commit-msg.sample
+C:\coref-coref2\.git\hooks\push-to-checkout.sample
+C:\coref-coref2\.git\hooks\sendemail-validate.sample
+C:\coref-coref2\.git\hooks\update.sample
+C:\coref-coref2\.git\info\exclude
+C:\coref-coref2\.git\logs\HEAD
+C:\coref-coref2\.git\logs\refs
+C:\coref-coref2\.git\logs\refs\heads
+C:\coref-coref2\.git\logs\refs\remotes
+C:\coref-coref2\.git\logs\refs\heads\backup-antes-de-cambios07112025
+C:\coref-coref2\.git\logs\refs\heads\backup-main-before-refactor
+C:\coref-coref2\.git\logs\refs\heads\Coref2
+C:\coref-coref2\.git\logs\refs\heads\Coref3
+C:\coref-coref2\.git\logs\refs\heads\main
+C:\coref-coref2\.git\logs\refs\heads\predictions-control-samples
+C:\coref-coref2\.git\logs\refs\heads\refactor-report-generator
+C:\coref-coref2\.git\logs\refs\remotes\origin
+C:\coref-coref2\.git\logs\refs\remotes\origin\backup-main-before-refactor
+C:\coref-coref2\.git\logs\refs\remotes\origin\Coref2
+C:\coref-coref2\.git\logs\refs\remotes\origin\Coref3
+C:\coref-coref2\.git\logs\refs\remotes\origin\HEAD
+C:\coref-coref2\.git\logs\refs\remotes\origin\main
+C:\coref-coref2\.git\logs\refs\remotes\origin\predictions-control-samples
+C:\coref-coref2\.git\objects\00
+C:\coref-coref2\.git\objects\02
+C:\coref-coref2\.git\objects\04
+C:\coref-coref2\.git\objects\05
+C:\coref-coref2\.git\objects\06
+C:\coref-coref2\.git\objects\08
+C:\coref-coref2\.git\objects\09
+C:\coref-coref2\.git\objects\0b
+C:\coref-coref2\.git\objects\0c
+C:\coref-coref2\.git\objects\0d
+C:\coref-coref2\.git\objects\0e
+C:\coref-coref2\.git\objects\0f
+C:\coref-coref2\.git\objects\10
+C:\coref-coref2\.git\objects\11
+C:\coref-coref2\.git\objects\12
+C:\coref-coref2\.git\objects\13
+C:\coref-coref2\.git\objects\16
+C:\coref-coref2\.git\objects\17
+C:\coref-coref2\.git\objects\18
+C:\coref-coref2\.git\objects\19
+C:\coref-coref2\.git\objects\1b
+C:\coref-coref2\.git\objects\1c
+C:\coref-coref2\.git\objects\1d
+C:\coref-coref2\.git\objects\1e
+C:\coref-coref2\.git\objects\20
+C:\coref-coref2\.git\objects\21
+C:\coref-coref2\.git\objects\23
+C:\coref-coref2\.git\objects\24
+C:\coref-coref2\.git\objects\25
+C:\coref-coref2\.git\objects\26
+C:\coref-coref2\.git\objects\27
+C:\coref-coref2\.git\objects\28
+C:\coref-coref2\.git\objects\2a
+C:\coref-coref2\.git\objects\2b
+C:\coref-coref2\.git\objects\2d
+C:\coref-coref2\.git\objects\2e
+C:\coref-coref2\.git\objects\2f
+C:\coref-coref2\.git\objects\30
+C:\coref-coref2\.git\objects\31
+C:\coref-coref2\.git\objects\33
+C:\coref-coref2\.git\objects\34
+C:\coref-coref2\.git\objects\35
+C:\coref-coref2\.git\objects\36
+C:\coref-coref2\.git\objects\37
+C:\coref-coref2\.git\objects\3a
+C:\coref-coref2\.git\objects\3b
+C:\coref-coref2\.git\objects\3c
+C:\coref-coref2\.git\objects\40
+C:\coref-coref2\.git\objects\41
+C:\coref-coref2\.git\objects\43
+C:\coref-coref2\.git\objects\45
+C:\coref-coref2\.git\objects\46
+C:\coref-coref2\.git\objects\48
+C:\coref-coref2\.git\objects\4b
+C:\coref-coref2\.git\objects\4e
+C:\coref-coref2\.git\objects\50
+C:\coref-coref2\.git\objects\51
+C:\coref-coref2\.git\objects\52
+C:\coref-coref2\.git\objects\53
+C:\coref-coref2\.git\objects\54
+C:\coref-coref2\.git\objects\56
+C:\coref-coref2\.git\objects\58
+C:\coref-coref2\.git\objects\5b
+C:\coref-coref2\.git\objects\5c
+C:\coref-coref2\.git\objects\5e
+C:\coref-coref2\.git\objects\5f
+C:\coref-coref2\.git\objects\60
+C:\coref-coref2\.git\objects\62
+C:\coref-coref2\.git\objects\63
+C:\coref-coref2\.git\objects\66
+C:\coref-coref2\.git\objects\68
+C:\coref-coref2\.git\objects\69
+C:\coref-coref2\.git\objects\6a
+C:\coref-coref2\.git\objects\6e
+C:\coref-coref2\.git\objects\6f
+C:\coref-coref2\.git\objects\71
+C:\coref-coref2\.git\objects\72
+C:\coref-coref2\.git\objects\73
+C:\coref-coref2\.git\objects\74
+C:\coref-coref2\.git\objects\75
+C:\coref-coref2\.git\objects\79
+C:\coref-coref2\.git\objects\7a
+C:\coref-coref2\.git\objects\7c
+C:\coref-coref2\.git\objects\7e
+C:\coref-coref2\.git\objects\7f
+C:\coref-coref2\.git\objects\80
+C:\coref-coref2\.git\objects\81
+C:\coref-coref2\.git\objects\82
+C:\coref-coref2\.git\objects\84
+C:\coref-coref2\.git\objects\87
+C:\coref-coref2\.git\objects\88
+C:\coref-coref2\.git\objects\8a
+C:\coref-coref2\.git\objects\8c
+C:\coref-coref2\.git\objects\8d
+C:\coref-coref2\.git\objects\8f
+C:\coref-coref2\.git\objects\90
+C:\coref-coref2\.git\objects\91
+C:\coref-coref2\.git\objects\92
+C:\coref-coref2\.git\objects\94
+C:\coref-coref2\.git\objects\95
+C:\coref-coref2\.git\objects\97
+C:\coref-coref2\.git\objects\98
+C:\coref-coref2\.git\objects\9a
+C:\coref-coref2\.git\objects\9b
+C:\coref-coref2\.git\objects\9c
+C:\coref-coref2\.git\objects\9d
+C:\coref-coref2\.git\objects\9f
+C:\coref-coref2\.git\objects\a1
+C:\coref-coref2\.git\objects\a2
+C:\coref-coref2\.git\objects\a5
+C:\coref-coref2\.git\objects\a7
+C:\coref-coref2\.git\objects\a8
+C:\coref-coref2\.git\objects\aa
+C:\coref-coref2\.git\objects\ab
+C:\coref-coref2\.git\objects\ac
+C:\coref-coref2\.git\objects\ad
+C:\coref-coref2\.git\objects\ae
+C:\coref-coref2\.git\objects\af
+C:\coref-coref2\.git\objects\b2
+C:\coref-coref2\.git\objects\b3
+C:\coref-coref2\.git\objects\b5
+C:\coref-coref2\.git\objects\b6
+C:\coref-coref2\.git\objects\b7
+C:\coref-coref2\.git\objects\b8
+C:\coref-coref2\.git\objects\b9
+C:\coref-coref2\.git\objects\ba
+C:\coref-coref2\.git\objects\bb
+C:\coref-coref2\.git\objects\bc
+C:\coref-coref2\.git\objects\bd
+C:\coref-coref2\.git\objects\bf
+C:\coref-coref2\.git\objects\c0
+C:\coref-coref2\.git\objects\c1
+C:\coref-coref2\.git\objects\c3
+C:\coref-coref2\.git\objects\c5
+C:\coref-coref2\.git\objects\c9
+C:\coref-coref2\.git\objects\ca
+C:\coref-coref2\.git\objects\cb
+C:\coref-coref2\.git\objects\cf
+C:\coref-coref2\.git\objects\d0
+C:\coref-coref2\.git\objects\d1
+C:\coref-coref2\.git\objects\d3
+C:\coref-coref2\.git\objects\d6
+C:\coref-coref2\.git\objects\d7
+C:\coref-coref2\.git\objects\d8
+C:\coref-coref2\.git\objects\d9
+C:\coref-coref2\.git\objects\db
+C:\coref-coref2\.git\objects\dc
+C:\coref-coref2\.git\objects\dd
+C:\coref-coref2\.git\objects\de
+C:\coref-coref2\.git\objects\df
+C:\coref-coref2\.git\objects\e0
+C:\coref-coref2\.git\objects\e1
+C:\coref-coref2\.git\objects\e3
+C:\coref-coref2\.git\objects\e5
+C:\coref-coref2\.git\objects\e6
+C:\coref-coref2\.git\objects\e7
+C:\coref-coref2\.git\objects\e8
+C:\coref-coref2\.git\objects\eb
+C:\coref-coref2\.git\objects\ed
+C:\coref-coref2\.git\objects\f0
+C:\coref-coref2\.git\objects\f1
+C:\coref-coref2\.git\objects\f3
+C:\coref-coref2\.git\objects\f4
+C:\coref-coref2\.git\objects\f7
+C:\coref-coref2\.git\objects\f9
+C:\coref-coref2\.git\objects\fa
+C:\coref-coref2\.git\objects\fc
+C:\coref-coref2\.git\objects\fd
+C:\coref-coref2\.git\objects\fe
+C:\coref-coref2\.git\objects\info
+C:\coref-coref2\.git\objects\pack
+C:\coref-coref2\.git\objects\00\7d43af3785c32310fbba9794e4454331eb1bdd
+C:\coref-coref2\.git\objects\02\133d91e9555a1f603edee9f57f20c6c1d3745e
+C:\coref-coref2\.git\objects\02\34e4ae0cefb3a5fa2c40097bda9214268d7ac4
+C:\coref-coref2\.git\objects\02\9803ce42e122954ee1b27d29e0d9013a8d165a
+C:\coref-coref2\.git\objects\04\9591e6b1b253658708f982e01b771fab5c5037
+C:\coref-coref2\.git\objects\04\96331a3592134669af092fd7737ab9720ebe81
+C:\coref-coref2\.git\objects\05\2f4360877efe60de08df79ebfdf7a30ad10659
+C:\coref-coref2\.git\objects\06\0d32f7d2ba72ecb012fb0cd2b190a79febd74c
+C:\coref-coref2\.git\objects\08\a5984fe6e9b7048ca006073ece671cb52234dd
+C:\coref-coref2\.git\objects\09\1247b7bf3052d13c959dd9b68184a006666c44
+C:\coref-coref2\.git\objects\09\63d1fa64d1b9980e5d5ca8d3653f32ac9c3159
+C:\coref-coref2\.git\objects\0b\a28e89b41c3f047379c2f08f0bba06187336cb
+C:\coref-coref2\.git\objects\0c\0a041df372e3fba272cc32872e503685fbb73b
+C:\coref-coref2\.git\objects\0c\5b281685f8f1f63122589e811a79baebb22962
+C:\coref-coref2\.git\objects\0d\e88843cadec08ad340a6578fa81c15b48a94e9
+C:\coref-coref2\.git\objects\0e\60829f8b7912ef05aa8f0a1c09afbb19a5375a
+C:\coref-coref2\.git\objects\0e\841442ce3027bd45c317cb83c4362e4a0a16b0
+C:\coref-coref2\.git\objects\0f\854273cc893b8320d0c5d0b8302a0b1c924294
+C:\coref-coref2\.git\objects\0f\d2bf234157e00b763599b810615d5064f30a83
+C:\coref-coref2\.git\objects\10\4147b9aea670a772462d22cf055244faf6bec4
+C:\coref-coref2\.git\objects\10\65823f4f66879d45b2a1c264f91f889a947e49
+C:\coref-coref2\.git\objects\10\860cb691d9ee22eec3a440d67b1a03d8a44748
+C:\coref-coref2\.git\objects\10\dbe8d37766cffb7f853ae4716f0e3bf533b6aa
+C:\coref-coref2\.git\objects\11\98191d277bba7ca4033e6d2be9dec8c535a053
+C:\coref-coref2\.git\objects\12\95fa7596b58557a42bb2ef55036f9e725bdf7e
+C:\coref-coref2\.git\objects\12\ad87d7f31ab2cab348b1aa2bfc2dcb991febf0
+C:\coref-coref2\.git\objects\13\e73db2da4f5c9ef3d51ac6bd31d3110a13b28b
+C:\coref-coref2\.git\objects\16\088ae200277735206db2cce934fa7a17907606
+C:\coref-coref2\.git\objects\17\e91515f15ce906fb6332509834caf1467b0b55
+C:\coref-coref2\.git\objects\18\bf7bb53549c8981d95b97eeae66549086a9d28
+C:\coref-coref2\.git\objects\19\580ddc0dd2ad610fdeced54409965d6a3af925
+C:\coref-coref2\.git\objects\1b\53c53c66f2746fec773c4ebf450e3fe001286b
+C:\coref-coref2\.git\objects\1b\c9126e0760cd89a5644384b7f58f13d3349f25
+C:\coref-coref2\.git\objects\1c\732ca8099948908b8f6ecefd79db3a82d5d45d
+C:\coref-coref2\.git\objects\1d\c633547ee8b6d7076d48cb3420dda634e24914
+C:\coref-coref2\.git\objects\1e\0f673f4d08379c28580588bb3f03e4f594855a
+C:\coref-coref2\.git\objects\20\3c3e772c26f2ea9f3b5cb7172b14c19f7175fd
+C:\coref-coref2\.git\objects\21\9989622f82805c6fe0b4d2f34fcb4bb2d4b78d
+C:\coref-coref2\.git\objects\21\f55c13d116ab5402d04c3d4b45ba0826fa1e60
+C:\coref-coref2\.git\objects\23\1a4c0edea6ce1a02875bbabd843d8d77515f66
+C:\coref-coref2\.git\objects\24\6b3a685d30f54de644304cb9d28264a77dd663
+C:\coref-coref2\.git\objects\24\791207f4d8f9d3fff6bee75be2bf3dd436871d
+C:\coref-coref2\.git\objects\25\1fdec90a93ad475b57d42401138843d6eafdba
+C:\coref-coref2\.git\objects\25\53f5fa11ddd2ff90a6ac78578cb7ea1e5a8c77
+C:\coref-coref2\.git\objects\25\fde581856bbecbf01b83cf9c358a169d246eaa
+C:\coref-coref2\.git\objects\26\dc8d50a8240ac6d691baaf1325a529249992d9
+C:\coref-coref2\.git\objects\26\e74e085ac5378b684ad85e844b1b471618c8b7
+C:\coref-coref2\.git\objects\27\24fa3ebfb6a42361fb8a2e8e1d74e2729c8bca
+C:\coref-coref2\.git\objects\28\006061cff6469a4c416ede3ed32e8bebf2144f
+C:\coref-coref2\.git\objects\2a\c8dc0b50b46df29cb7f80cdf8b0e89a93d4223
+C:\coref-coref2\.git\objects\2b\a56e2e46e0639dd9b9705058929df59a6346b5
+C:\coref-coref2\.git\objects\2d\d638d141f9cb72b982e7ae9759953b19ee42e8
+C:\coref-coref2\.git\objects\2e\2989ab69a3a2ef948d703ee5c91ba9c7fd2e1b
+C:\coref-coref2\.git\objects\2f\903b60a4039683b296fcdf54a7a462b471ecd7
+C:\coref-coref2\.git\objects\30\7ccc2651812c186be8c6f35b9bb15f1f0c0478
+C:\coref-coref2\.git\objects\31\0f79d6b58ad74dbfa73c469cd2b1e7d7fc14df
+C:\coref-coref2\.git\objects\31\df2a9d3dda1961a51bbfa74b28e62f98b6ed88
+C:\coref-coref2\.git\objects\33\4efc077fbb643823544eac04752f571e8c1395
+C:\coref-coref2\.git\objects\33\c485a99d88658477cc6e308f00f8c889499667
+C:\coref-coref2\.git\objects\34\158b078d3b484c2659e846785441030f1df4bd
+C:\coref-coref2\.git\objects\34\ad11e217fe39add8c250ef4396fc4a4b26f662
+C:\coref-coref2\.git\objects\34\e363d7268d3ca5c5571288c017699a33991ff9
+C:\coref-coref2\.git\objects\35\86623f138c8397be4629a222f91a147c1fbfbd
+C:\coref-coref2\.git\objects\36\2afff582569fbd82553f99474e2bd106f3320a
+C:\coref-coref2\.git\objects\37\356269c448f665ed182dc5812cc5a343c580e9
+C:\coref-coref2\.git\objects\37\7198c54901d10da0f4568f003c802115ab1384
+C:\coref-coref2\.git\objects\3a\ee3b5984c1fb9e0178801172bdfd479fc1cfea
+C:\coref-coref2\.git\objects\3b\43d4b33e39865d73336415d6563baccd79ea1f
+C:\coref-coref2\.git\objects\3b\afcf6a595e71e12bdbaf7b3e474c0a92710ba9
+C:\coref-coref2\.git\objects\3c\74d8129bab8b17d1e9fd85c6b561ec146225c1
+C:\coref-coref2\.git\objects\3c\fe307625ecdfb04a57e8c44a31fb81b8ac8cbf
+C:\coref-coref2\.git\objects\40\173687296bdd6c5437b8a3046a125969b45662
+C:\coref-coref2\.git\objects\40\4822b6b8e97b06d4c6110c602730ba53119de9
+C:\coref-coref2\.git\objects\41\68f556ff7066510c6dcdc96a788cc6c0ef572c
+C:\coref-coref2\.git\objects\43\a3a554198a8d4c2174a7d8c49f215111481942
+C:\coref-coref2\.git\objects\45\50cebf34fe80d9f8412e0ee137b1074b5afad8
+C:\coref-coref2\.git\objects\45\eec2df5934d7f1c7d49adcc2ddd80c45288135
+C:\coref-coref2\.git\objects\46\ff85da59858f8328e5680ce3b8f950f356057a
+C:\coref-coref2\.git\objects\48\0021851a31c9f389dac04223d83360a377b19f
+C:\coref-coref2\.git\objects\48\6540de29fda9f36f6cdf6c2d5a0357315bb145
+C:\coref-coref2\.git\objects\48\70253989dddb4373795c12f4f05d5db4298272
+C:\coref-coref2\.git\objects\48\d968a34c6e1233a94a2b822f1910f68d730d80
+C:\coref-coref2\.git\objects\48\e949e0248c123df0f390757c9925b9caa5c5cd
+C:\coref-coref2\.git\objects\48\fd69110e1832ba9abf707467882d60ebe89fd8
+C:\coref-coref2\.git\objects\4b\1055923ec86ac1f9e556a9b12f82fc54226673
+C:\coref-coref2\.git\objects\4e\354ba71af6ec032018a1269dbd4b068b921dec
+C:\coref-coref2\.git\objects\4e\8b4c537c4f5a8680e4c92dc6477000ea868018
+C:\coref-coref2\.git\objects\50\ec1582241bd0735aa582a63c30a160eafb96b1
+C:\coref-coref2\.git\objects\51\2f677419866a5066f644d61c500762e7b7c1a7
+C:\coref-coref2\.git\objects\51\9a662f26def4b7f2b9ee5c8d83a76d6926ea27
+C:\coref-coref2\.git\objects\51\d0704b7b1d19c5dc41b9b1aca08c24feca83ae
+C:\coref-coref2\.git\objects\52\9583bc7d271338a5bd8360e878ca2485cc41e4
+C:\coref-coref2\.git\objects\52\e678f1cc27efc15f8799eb2fdf0e1396038caa
+C:\coref-coref2\.git\objects\53\0643e5efce6fae3f8d0aace600260a3bd38749
+C:\coref-coref2\.git\objects\53\aa5689c84337bda535069e8fdb78cee1e41d8a
+C:\coref-coref2\.git\objects\53\c92d02aa62817393f4f201a44f6d8c740f63bf
+C:\coref-coref2\.git\objects\54\15b70c75bdb59678c87d4d5c92d538771dc29b
+C:\coref-coref2\.git\objects\54\dc305daecd9c74bd21cf7278058808013328f3
+C:\coref-coref2\.git\objects\56\1deda513b6630afd42fafc8f397c3172f98cbf
+C:\coref-coref2\.git\objects\58\2e708030e8aa8e07d5926e573a15aa74c8e827
+C:\coref-coref2\.git\objects\5b\2b0bbaf86bf43dfe12566acd2cb4ab00866f44
+C:\coref-coref2\.git\objects\5b\b8ee033a8c434dbef399ba8869097b46325153
+C:\coref-coref2\.git\objects\5c\60cae599527bf3e3b04b91bc685d7537ca284d
+C:\coref-coref2\.git\objects\5c\e6d300cc6bfe4f843dbc87b462fff6910d7865
+C:\coref-coref2\.git\objects\5e\4d67e868c7bedce3d782ad1a1c98acfba1dbeb
+C:\coref-coref2\.git\objects\5f\3bbf8b3df5a9da94afbac54460a3de73a28823
+C:\coref-coref2\.git\objects\5f\91dfd1ebe2f90b792385f8aa8278eed64e35f8
+C:\coref-coref2\.git\objects\60\f132b00acf2c000d4924b3bdf6a17dd652bbef
+C:\coref-coref2\.git\objects\62\0b6da64634143694c17d7d5ccb1d3856e3b171
+C:\coref-coref2\.git\objects\63\05f391a53258073fe2fa1f9e7434932bb806bf
+C:\coref-coref2\.git\objects\63\54d83e811fd89cd574a35192ab71a213ca4362
+C:\coref-coref2\.git\objects\63\aa37529a9821d2f323797c42cc3a6d78330806
+C:\coref-coref2\.git\objects\63\da5ca05112ec6726681aaa003c69f5ffbc1153
+C:\coref-coref2\.git\objects\66\29a675d03aa6227276207ee4571537136db402
+C:\coref-coref2\.git\objects\68\6fbccab3fc72b40d9336b94a71d4e2befdeb31
+C:\coref-coref2\.git\objects\69\d83e47c320a982b002d19f30947ac08cdae065
+C:\coref-coref2\.git\objects\6a\768c228ab7aa1967b1f83a2c5c055c9e017fc4
+C:\coref-coref2\.git\objects\6e\962534bf4a79837878013fd2b46387d12d1040
+C:\coref-coref2\.git\objects\6e\ef08fad1c24e4702f8280f84ccfc753284ffbe
+C:\coref-coref2\.git\objects\6f\5792a66d628955e70522155b7ddfef0cbb2301
+C:\coref-coref2\.git\objects\71\f99ff756b130aef07a2e8233f122b65c5af824
+C:\coref-coref2\.git\objects\72\41857c7e1960a56c00f9c91b414c1fcbf03309
+C:\coref-coref2\.git\objects\73\a3a0ff01630cf5de31de665e4dae56f71bc5c8
+C:\coref-coref2\.git\objects\73\b1d10463a943a7c0a4efd8b7444050dafce0df
+C:\coref-coref2\.git\objects\73\b50613f70ebaad6afa6a4eb4233d27ab1af46e
+C:\coref-coref2\.git\objects\73\fbd60cec0a2cf337477e81999f2ba27a28f5ca
+C:\coref-coref2\.git\objects\73\fd0ed6b638e4ff82843c4489b7a3475013177c
+C:\coref-coref2\.git\objects\74\a04e538639aeff28d448b27bcecb1cb9fc24b1
+C:\coref-coref2\.git\objects\75\6866b90b2cf1095d04722f5589fa8d0670d9c8
+C:\coref-coref2\.git\objects\75\714052e0a392c44a81b01b4244250fa2dde946
+C:\coref-coref2\.git\objects\75\d9a336148b74406dae405486f3473cc438c999
+C:\coref-coref2\.git\objects\79\84d041790c44efc6d331dbc9a8f3e981107079
+C:\coref-coref2\.git\objects\7a\92c5a961ab76433f2e307967fbf3f3ecf22065
+C:\coref-coref2\.git\objects\7a\ae0d78a96fa5d9bdedc883308fb5ab123a5cea
+C:\coref-coref2\.git\objects\7c\f00b2b833e928f97264424822908a2f7c8c1ac
+C:\coref-coref2\.git\objects\7e\63c701615e75f829b4c347d7736d15a5c49e47
+C:\coref-coref2\.git\objects\7e\a71e05e53f6354ed8b3057b74284d1a0b802d4
+C:\coref-coref2\.git\objects\7e\d267a7beec7cdad2976dde624644e81d439e90
+C:\coref-coref2\.git\objects\7f\b9b75b5ea9a217d5525e485a55c10f7148def6
+C:\coref-coref2\.git\objects\80\40b6ceebbe37a0ae5af3ee6409d28108d36f0a
+C:\coref-coref2\.git\objects\80\d36a079d03709269826494fb32cbc681153798
+C:\coref-coref2\.git\objects\80\f19616a1866dc598b1b8918d5604c5ad36a1d8
+C:\coref-coref2\.git\objects\81\053893002b3ebb9c7df3a0ccba0e5afa72d6b7
+C:\coref-coref2\.git\objects\81\89557d6d5959ac58d42b9dfcfddf2a06fc285f
+C:\coref-coref2\.git\objects\81\9bac2fd9cc40592a26e5ae5b6089ae04488bf6
+C:\coref-coref2\.git\objects\82\9993a5bb31681d2bbf55344f36cba61ad7600c
+C:\coref-coref2\.git\objects\82\ab0166c804ba784de4fcb661c04afd455f9947
+C:\coref-coref2\.git\objects\84\979f3c6f51942709b5c6c09ff78d49aed55430
+C:\coref-coref2\.git\objects\87\80438deb0a0a7c7ff242926e2d19b601abd947
+C:\coref-coref2\.git\objects\87\e18526e445a6cf2ce5a242bbe7225ba923189f
+C:\coref-coref2\.git\objects\88\6225b9e95f78bb0b50b227b529ca8e3b4b0931
+C:\coref-coref2\.git\objects\8a\0be07c26ae9aa83ba75a98a777187d5e2b92dc
+C:\coref-coref2\.git\objects\8c\35443eb35e96c4f843350dbf08b22d6e927201
+C:\coref-coref2\.git\objects\8d\9dab0eb57c11a659b7fd35c34eac1585300ba1
+C:\coref-coref2\.git\objects\8d\bf78647c073a01ad289d113f9f004eeeb59b0e
+C:\coref-coref2\.git\objects\8f\ab4318cf7f18bbd51339fa2ee1cb394162cf93
+C:\coref-coref2\.git\objects\90\c1a54de60e099fe3f1655b7b3bd0598b4254ee
+C:\coref-coref2\.git\objects\91\607121641e4192f7450d4070614f295526d8a3
+C:\coref-coref2\.git\objects\91\de23c2c120a03ad63aa857e632281f16290801
+C:\coref-coref2\.git\objects\92\53e72534d88b4ff35d084c0e34da6f408bcf7c
+C:\coref-coref2\.git\objects\94\0e2da2fefdb33793fe8ba054663ae95e007961
+C:\coref-coref2\.git\objects\94\b4bbeb57c4715ab10c171fa90b185ea74267a1
+C:\coref-coref2\.git\objects\95\2d80f1e195835d64078e004441e4df5ea93714
+C:\coref-coref2\.git\objects\95\4214138a4ad11aeb53f2fb4dc89b1c9d5991a1
+C:\coref-coref2\.git\objects\97\03c0477ba7bb4c773434b3ec4f28fb366ac17c
+C:\coref-coref2\.git\objects\98\0ed26bd475ed77e27af8552c547a3a426db099
+C:\coref-coref2\.git\objects\9a\2e4dc5372272940e779384a1ef07da84b5dcc9
+C:\coref-coref2\.git\objects\9b\0c043ad3fed2bfc585d97d7adfc104595b92bb
+C:\coref-coref2\.git\objects\9b\185e82c5221999936b71d545d482a466309111
+C:\coref-coref2\.git\objects\9b\89bd79bf6e65d7db6cb19e6f6e7457724d9aef
+C:\coref-coref2\.git\objects\9c\fb16329e8921ce46ea2b6bce0fd2f9838c89ce
+C:\coref-coref2\.git\objects\9d\aefaca3830eec89f2e57237c12052645108194
+C:\coref-coref2\.git\objects\9d\b05716243c63ecd5ded3808f6362a9389eea95
+C:\coref-coref2\.git\objects\9d\ddf38c4fd44a41996b1d44e831397ca251b45c
+C:\coref-coref2\.git\objects\9f\4e65bf02836ff0aa49817c2bf482848c39e6c8
+C:\coref-coref2\.git\objects\a1\18137955b6f17f03634dbd020823a6faa4304e
+C:\coref-coref2\.git\objects\a1\2187b96c37afb81366e4804bebefe42b145e61
+C:\coref-coref2\.git\objects\a2\4ba99b997f1df0ccc91ad1280ee3e62b3f8bb9
+C:\coref-coref2\.git\objects\a2\df296deedf55d93df145d44eee9914f92f82a6
+C:\coref-coref2\.git\objects\a5\18fb02ac7b5842703655204228682cc3a9700e
+C:\coref-coref2\.git\objects\a5\4f08f7488fb213e28575c9416bc7d73a70e77c
+C:\coref-coref2\.git\objects\a7\02283b3147c4480e3ad39b5e5dc003f2cdd4e0
+C:\coref-coref2\.git\objects\a7\7c4a44bc786a48bc130bfbb0f2763845f3380e
+C:\coref-coref2\.git\objects\a7\9ad409ab4ec1a0bfb1d1eaacd98e4698b07f15
+C:\coref-coref2\.git\objects\a8\a2b11854877494b7ad9a5d729ed78c7b4d91ae
+C:\coref-coref2\.git\objects\a8\bd53d39ff7af8e9986bb23c8a0ea211b95360a
+C:\coref-coref2\.git\objects\aa\ed1e9595d76585441c9cf0faa615e5f84efb75
+C:\coref-coref2\.git\objects\ab\57dfbcf7b1fe6169445e1da3bea8f5d2fb68ad
+C:\coref-coref2\.git\objects\ab\973a9030d3434880cb933bc0e369b443d97d82
+C:\coref-coref2\.git\objects\ac\786c2bc5e61c4ee06b60c0b86ca7bd5df77373
+C:\coref-coref2\.git\objects\ad\1892863ebba65ee75b688fc4607c1c16b0b0ed
+C:\coref-coref2\.git\objects\ad\aa133eef3061c6768fc153895af6841319cd0f
+C:\coref-coref2\.git\objects\ad\bf308176834a1c8cc6845fa1df323188942805
+C:\coref-coref2\.git\objects\ad\f4e6f90e19a78188a49a142d7d748ecb724c41
+C:\coref-coref2\.git\objects\ae\407f172773f72c7bd8390dbe5221dbe65ad6ae
+C:\coref-coref2\.git\objects\af\2d5e83c0384f26f8822588143da8344cf823ed
+C:\coref-coref2\.git\objects\b2\184735b16184c2f1c91b12b7107586de42ba7a
+C:\coref-coref2\.git\objects\b2\a2ff9c2f8c977f2fda2fb63440cc578742ec83
+C:\coref-coref2\.git\objects\b2\b9e570644191926750bd84ee47179e0069a582
+C:\coref-coref2\.git\objects\b3\ae23595efe4bfc31490fb353f98f37a0475f8f
+C:\coref-coref2\.git\objects\b3\c52af2d320a736f3b79956e06ddcd4ca9221c3
+C:\coref-coref2\.git\objects\b5\17f4a33966760fbe7160045f29d27c771c5fbf
+C:\coref-coref2\.git\objects\b5\72e033150d28e7950af42805254f282fb301d1
+C:\coref-coref2\.git\objects\b5\b0e8f44c9e266c72c95be5e34eef95be0e643a
+C:\coref-coref2\.git\objects\b6\640d3e1bb66bdea769ee7430bc960e6b0db5fb
+C:\coref-coref2\.git\objects\b7\2c3c2fb7649cd27cdc1ee232581b87de8f4c60
+C:\coref-coref2\.git\objects\b8\2542ccc3599b327dc1f5651778b12c267b09a5
+C:\coref-coref2\.git\objects\b8\52574f0a6b277212f56805a9ff213c3c4a97c4
+C:\coref-coref2\.git\objects\b9\ffd2144695ad34e01ffc38596e0b0fc60ec2a8
+C:\coref-coref2\.git\objects\ba\8baae14d42f7c4cd51f7ca6feb739e42355a4f
+C:\coref-coref2\.git\objects\bb\0773bb664e9f3aaeeb99321a9620b76e07e6d9
+C:\coref-coref2\.git\objects\bb\de46043c0cce18d839d8b3001afb02e1289aad
+C:\coref-coref2\.git\objects\bc\81f435075ac11b709445b0bae68b3207138839
+C:\coref-coref2\.git\objects\bd\69749b3bb9b84fad0cedd055e1357516f28289
+C:\coref-coref2\.git\objects\bd\e4dfda668f87139de13438bf6b9bb1f23f8b3b
+C:\coref-coref2\.git\objects\bf\8772fe5519027fa78a91683af7f0410e9fdc90
+C:\coref-coref2\.git\objects\c0\c1cd132dc692ceea84231839fe330edfc99ac2
+C:\coref-coref2\.git\objects\c1\53a98f47584d946ac987e31c7a20e1def5dd2f
+C:\coref-coref2\.git\objects\c3\eacaf23244ae08313c1a4cd56d4c4d8c5c80fa
+C:\coref-coref2\.git\objects\c3\f615247552f807196ae904bd18ba3d7ac030d4
+C:\coref-coref2\.git\objects\c5\3880c7635d78e75ef9e172eb8166d7aa8d1997
+C:\coref-coref2\.git\objects\c9\cc8f2f55b0b37320a5aa3fe7dc0b19400476e2
+C:\coref-coref2\.git\objects\ca\57ef6cd3d99a441d772965dc774e163bf7c00b
+C:\coref-coref2\.git\objects\cb\912ddc4ae49cb025a1f309fb8e3529706093c0
+C:\coref-coref2\.git\objects\cf\5b281a86179b6a88ef895ab9818bdbf2d6265d
+C:\coref-coref2\.git\objects\cf\a03b178a5578cc86a4fd9f2d50ff7e3a497ae5
+C:\coref-coref2\.git\objects\d0\54fa738a18690a582bab02f3ab819ecee62451
+C:\coref-coref2\.git\objects\d1\1bf97d8da32013c753cb3ddb75573773641031
+C:\coref-coref2\.git\objects\d1\3e8ec89fb9ef2e77669df90cb3eca9fca45b2f
+C:\coref-coref2\.git\objects\d3\43c297a54f97c43eb0ba24a3daad37fc37186a
+C:\coref-coref2\.git\objects\d6\36fc691515a7d324b155b0f7f371d0c1621fe7
+C:\coref-coref2\.git\objects\d7\33b0cf9bfcd407304d625e7b62d9dba8c3a7d4
+C:\coref-coref2\.git\objects\d8\554bdb6806f90ccf626235a0395fedabb49e04
+C:\coref-coref2\.git\objects\d9\cb3bb2f6e04b33790bf05d760665588a36e4b8
+C:\coref-coref2\.git\objects\db\88a5ad49f34c59a3fb1c79ffd4003a7d07186a
+C:\coref-coref2\.git\objects\dc\c7bf11411784c9a8f17455f4033c5c031e47ac
+C:\coref-coref2\.git\objects\dd\576484578427c4c1327c97ac7b9bbf76a4ba80
+C:\coref-coref2\.git\objects\de\6b530ee00e99ff6217173285cc405e368b0236
+C:\coref-coref2\.git\objects\de\773d7a9a542c7886f93dfd283dfd2472cceb21
+C:\coref-coref2\.git\objects\df\64bda0bc2ed0edb2d95ef28d53c9a747972aae
+C:\coref-coref2\.git\objects\e0\0671d9fe825dd212eb7488dcc136651e6a76f5
+C:\coref-coref2\.git\objects\e0\9c8888ff8d8094fdad939bf4026235a1d37534
+C:\coref-coref2\.git\objects\e0\fa39226283fda22a858e11083add95cba05e51
+C:\coref-coref2\.git\objects\e1\4738bce0c59031a359e8a5c3679c196395a722
+C:\coref-coref2\.git\objects\e3\f692708167da46f0493b91264b4236c490026f
+C:\coref-coref2\.git\objects\e5\5df66200c822bd57b99e6449ae22ba18cbfe42
+C:\coref-coref2\.git\objects\e6\75e9c239045cdeeb7a869dbfb2b698fcb56b89
+C:\coref-coref2\.git\objects\e6\c0f2ff17f7ee7e795a1182b15e949167b3eb88
+C:\coref-coref2\.git\objects\e7\00e414acafd7a8d2f6f2eb421cf09c64ad4d85
+C:\coref-coref2\.git\objects\e7\2518b1c5f2faff541a6c6f0e770dc7fde1b255
+C:\coref-coref2\.git\objects\e7\5477415c8cc85622902d561171db8e48d432d8
+C:\coref-coref2\.git\objects\e8\0a526a9aac47ba7d25d1da1a503dba21fab1c3
+C:\coref-coref2\.git\objects\e8\1860c14ee1dd6fad525e333c5bb027f2d48a59
+C:\coref-coref2\.git\objects\eb\16ed9a8b13775987677bde6f6f2b678221ab49
+C:\coref-coref2\.git\objects\eb\285b806a29ec1c1485e15e835f79e056dd9e0e
+C:\coref-coref2\.git\objects\eb\38ce64a3a8fa73ce620649f0778ed893c06ba9
+C:\coref-coref2\.git\objects\ed\37ad91059e155ebd64c8740c84bb0ef2e97edf
+C:\coref-coref2\.git\objects\ed\80df40269b8a001a90737e55e9b566429e3b71
+C:\coref-coref2\.git\objects\ed\b34b698eb42136ff55f438358b10b29913c7ac
+C:\coref-coref2\.git\objects\ed\c1ccde2d4b1401c64cb0c5d8b46e9dd93405e0
+C:\coref-coref2\.git\objects\f0\ecbcf481ae7d9d5c1e5fa917ada5c572ffffaa
+C:\coref-coref2\.git\objects\f1\46bb9663de1da169bd30d2a0a924f7920567d1
+C:\coref-coref2\.git\objects\f3\6292456365e8f7f3b3dc934b9ed9617d6dee17
+C:\coref-coref2\.git\objects\f4\ca50bb2d9bc0b30aaf255bcdd1d0bb9e6a145f
+C:\coref-coref2\.git\objects\f7\5374d993a04d5f0da6f2f78c400b2fabc7792a
+C:\coref-coref2\.git\objects\f9\7992f3f3679c8cc3542baa1e0bdd47f1144a89
+C:\coref-coref2\.git\objects\f9\b13a24cd7b58bdb9b43c726388d38a1578c8d1
+C:\coref-coref2\.git\objects\fa\50bdb3222bb955dd45c3ed149c9f527bbe92be
+C:\coref-coref2\.git\objects\fc\37165b205e60c70959de00dcb005e6b286604b
+C:\coref-coref2\.git\objects\fc\96549678521beddeb62b4b8e2a08a7a5f48d29
+C:\coref-coref2\.git\objects\fc\983ea56e38588c55b70cea0254379a37879f3a
+C:\coref-coref2\.git\objects\fd\510457275d2adc6cd8928c721759e028f7a6ce
+C:\coref-coref2\.git\objects\fe\aed1585d71f76ab0dc2001e56bd770b9b901e6
+C:\coref-coref2\.git\objects\pack\pack-c543b0401373c94dc7736de77ed2a7d3ed41f206.idx
+C:\coref-coref2\.git\objects\pack\pack-c543b0401373c94dc7736de77ed2a7d3ed41f206.pack
+C:\coref-coref2\.git\objects\pack\pack-c543b0401373c94dc7736de77ed2a7d3ed41f206.rev
+C:\coref-coref2\.git\refs\heads
+C:\coref-coref2\.git\refs\remotes
+C:\coref-coref2\.git\refs\tags
+C:\coref-coref2\.git\refs\heads\backup-antes-de-cambios07112025
+C:\coref-coref2\.git\refs\heads\backup-main-before-refactor
+C:\coref-coref2\.git\refs\heads\Coref2
+C:\coref-coref2\.git\refs\heads\Coref3
+C:\coref-coref2\.git\refs\heads\main
+C:\coref-coref2\.git\refs\heads\predictions-control-samples
+C:\coref-coref2\.git\refs\heads\refactor-report-generator
+C:\coref-coref2\.git\refs\remotes\origin
+C:\coref-coref2\.git\refs\remotes\origin\backup-main-before-refactor
+C:\coref-coref2\.git\refs\remotes\origin\Coref2
+C:\coref-coref2\.git\refs\remotes\origin\Coref3
+C:\coref-coref2\.git\refs\remotes\origin\HEAD
+C:\coref-coref2\.git\refs\remotes\origin\main
+C:\coref-coref2\.git\refs\remotes\origin\predictions-control-samples
+C:\coref-coref2\.streamlit\secrets.toml
+C:\coref-coref2\core\file_handlers.py
+C:\coref-coref2\core\report_generator.py
+C:\coref-coref2\core\spectral_processing.py
+C:\coref-coref2\core\__init__.py
+C:\coref-coref2\core\__pycache__
+C:\coref-coref2\core\__pycache__\file_handlers.cpython-312.pyc
+C:\coref-coref2\core\__pycache__\report_generator.cpython-312.pyc
+C:\coref-coref2\core\__pycache__\spectral_processing.cpython-312.pyc
+C:\coref-coref2\core\__pycache__\__init__.cpython-312.pyc
+C:\coref-coref2\streamlit\config.toml
+C:\coref-coref2\test_datsa\223FG007
+C:\coref-coref2\test_datsa\223FG009
+C:\coref-coref2\test_datsa\223FG012
+C:\coref-coref2\test_datsa\316FG103.1.2025-09-25.csv
+C:\coref-coref2\test_datsa\316FG103.1.2025-09-25.ref
+C:\coref-coref2\test_datsa\316FG103.2025-09-16 REFERENCE FILE.tsv
+C:\coref-coref2\test_datsa\316FG103.2025-09-16 REFERENCE FILE2.tsv
+C:\coref-coref2\test_datsa\316FG103.2025-09-16. NEW FILE.tsv
+C:\coref-coref2\test_datsa\316FG103.2025-09-16.proves mostres estandar.tsv
+C:\coref-coref2\test_datsa\316FG103.2025-09-16.proves mostres estandarS01S14V.tsv
+C:\coref-coref2\test_datsa\316FG103.2025-09-16.VALIDATION.tsv
+C:\coref-coref2\test_datsa\316FG103.2025-09-25.WTSD NEW.tsv
+C:\coref-coref2\test_datsa\316FG103.2025-09-25.WTSD.tsv
+C:\coref-coref2\test_datsa\baseline_L2_corregido.csv
+C:\coref-coref2\test_datsa\baseline_L2_corregido.ref
+C:\coref-coref2\test_datsa\Muestras control - VAL.tsv
+C:\coref-coref2\test_datsa\Muestras control.tsv
+C:\coref-coref2\test_datsa\refs
+C:\coref-coref2\test_datsa\223FG007\223FG007.2025-11-13.ALL SAMPLES  MEASUREMENTS BPM APM.tsv
+C:\coref-coref2\test_datsa\223FG007\223FG007.2025-11-13_ALL MEASUREMENTS.Batches.tsv
+C:\coref-coref2\test_datsa\223FG007\223FG007.2025-11-14APM Samples.tsv
+C:\coref-coref2\test_datsa\223FG007\223FG007.2025-11-14APM WHITE LBF.tsv
+C:\coref-coref2\test_datsa\223FG007\CON BL
+C:\coref-coref2\test_datsa\223FG007\Informe_Validacion_223FG007_con linea base STD kit_20251118_084657.html
+C:\coref-coref2\test_datsa\223FG007\Informe_Validacion_223FG007_sin LB_ STD kit_20251118_081907.html
+C:\coref-coref2\test_datsa\223FG007\Report resultados 11 a 17 de nov 2025 ALL.xlsx
+C:\coref-coref2\test_datsa\223FG007\SIN BL
+C:\coref-coref2\test_datsa\223FG007\CON BL\223FG007.2025-11-13.PRE CON LB MUESTRAS.tsv
+C:\coref-coref2\test_datsa\223FG007\CON BL\223FG007.2025-11-13.PRE CON LB STANDARDS Y MUESTRAS.tsv
+C:\coref-coref2\test_datsa\223FG007\CON BL\223FG007.2025-11-18.L1 APM LB STANDARDS AND WHITE.tsv
+C:\coref-coref2\test_datsa\223FG007\SIN BL\223FG007.2025-11-13.PRE CON LB_ MUESTRAS.tsv
+C:\coref-coref2\test_datsa\223FG007\SIN BL\223FG007.2025-11-13.PRE_L1NBL_WHITE Y STD KIT.tsv
+C:\coref-coref2\test_datsa\223FG007\SIN BL\223FG007.2025-11-14.L1 APM BL - WHITE.tsv
+C:\coref-coref2\test_datsa\223FG007\SIN BL\223FG007.2025-11-14.L1 APM NB - White.tsv
+C:\coref-coref2\test_datsa\223FG007\SIN BL\223FG007.2025-11-17.L1 APM LBF WHITE.tsv
+C:\coref-coref2\test_datsa\223FG007\SIN BL\223FG007.2025-11-17.L2 APM LB_WHITE.tsv
+C:\coref-coref2\test_datsa\223FG007\SIN BL\223FG007.2025-11-18.L1 APM LBFNB STANDARDS AND WHITE.tsv
+C:\coref-coref2\test_datsa\223FG009\223FG009.1.2025-11-11.ref
+C:\coref-coref2\test_datsa\223FG009\223FG009.1.2025-11-11_ajuste conLB.ref
+C:\coref-coref2\test_datsa\223FG009\223FG009.1.2025-11-11_ajuste sinLB.ref
+C:\coref-coref2\test_datsa\223FG009\223FG009.2025-11-11.Batches_MEDIDAS TRAS AJUSTES DE LBA LBF.tsv
+C:\coref-coref2\test_datsa\223FG009\223FG009.2025-11-11.WSTD NLB.tsv
+C:\coref-coref2\test_datsa\223FG009\223FG009.2025-11-12. APM LBF4 White and VAL.tsv
+C:\coref-coref2\test_datsa\223FG009\223FG009.2025-11-12.LB2_STANDARDS SAMPLES.tsv
+C:\coref-coref2\test_datsa\223FG009\223FG009.2025-11-12.LBA2 VAL STD.tsv
+C:\coref-coref2\test_datsa\223FG009\223FG009.2025-11-12.LBA2_SAMPLES.tsv
+C:\coref-coref2\test_datsa\223FG009\223FG009.2025-11-12.LBF3 VAL STD.tsv
+C:\coref-coref2\test_datsa\223FG009\223FG009.2025-11-12.LBFW SAMPLES.tsv
+C:\coref-coref2\test_datsa\223FG009\223FG009.2025-11-12.LBFW-VAL.tsv
+C:\coref-coref2\test_datsa\223FG009\223FG009.2025-11-12.WSTD-LB despues mant.tsv
+C:\coref-coref2\test_datsa\223FG009\223FG009._POST con LB_Samples2025-11-11.Batches.tsv
+C:\coref-coref2\test_datsa\223FG009\223FG009._POST_standards_LB_11112025.Batches.tsv
+C:\coref-coref2\test_datsa\223FG009\223FG009_CONLB_standards_2025_11_11.tsv
+C:\coref-coref2\test_datsa\223FG009\223FG009_PRE_CONLB_samples_2025_11_11.tsv
+C:\coref-coref2\test_datsa\223FG009\223FG009_PRE_samples_2025_11_11.tsv
+C:\coref-coref2\test_datsa\223FG009\223FG009_REFERENCIA_standards_2025_11_11.tsv
+C:\coref-coref2\test_datsa\223FG009\Informe_Validacion_223FG009_20251112_085019_LINEA BASE Y AJUSTE CON LINEA BASE.html
+C:\coref-coref2\test_datsa\223FG012\223FG012 all samples 1811.xlsx
+C:\coref-coref2\test_datsa\223FG012\223FG012.2025-11-13.Batches_ALL MEASUREMENTS.tsv
+C:\coref-coref2\test_datsa\223FG012\223FG012.2025-11-18. antes de PM ALL SAMPLES PREDICTIONS.tsv
+C:\coref-coref2\test_datsa\223FG012\223FG012.2025-11-18.ALLMEASUREMENTS Batches.tsv
+C:\coref-coref2\test_datsa\223FG012\223FG012.2025-11-18.ALLMEASUREMENTS Linea WHITE WRONG 1811 10 52.tsv
+C:\coref-coref2\test_datsa\223FG012\223FG012.2025-11-18.L1 APM - LB WHITE AND SAMPLESBatches.tsv
+C:\coref-coref2\test_datsa\223FG012\CON BASELINE
+C:\coref-coref2\test_datsa\223FG012\Custom 20251118170207.xml
+C:\coref-coref2\test_datsa\223FG012\SIN BASELINE
+C:\coref-coref2\test_datsa\223FG012\white lb 13-11.tsv
+C:\coref-coref2\test_datsa\223FG012\CON BASELINE\223FG012.2025-11-13.L1 - B STANDARD KIT Y MUESTRAS.tsv
+C:\coref-coref2\test_datsa\223FG012\CON BASELINE\223FG012.2025-11-18.L1 APM - LB WHITE AND SAMPLESBatches.tsv
+C:\coref-coref2\test_datsa\223FG012\SIN BASELINE\223FG012.2025-11-13. PRE L1 - NB STANDARDS Y MUESTRAS.tsv
+C:\coref-coref2\test_datsa\223FG012\SIN BASELINE\223FG012.2025-11-18.L1 APM - LBF WHITE.Batches.tsv
+C:\coref-coref2\test_datsa\refs\223FG007
+C:\coref-coref2\test_datsa\refs\223FG009
+C:\coref-coref2\test_datsa\refs\223FG012
+C:\coref-coref2\test_datsa\refs\223FG007\223FG007.1.2025-11-13 before PM.ref
+C:\coref-coref2\test_datsa\refs\223FG007\223FG007.1.2025-11-14 after PM (2).ref
+C:\coref-coref2\test_datsa\refs\223FG007\223FG007.1.2025-11-14 after PM.ref
+C:\coref-coref2\test_datsa\refs\223FG007\223FG007.1.2025-11-14_L1 APM - LBFNB ajustada con white a NB antes de PM.ref
+C:\coref-coref2\test_datsa\refs\223FG009\223FG009.1.2025-11-11_ajuste conLB.ref
+C:\coref-coref2\test_datsa\refs\223FG009\223FG009.1.2025-11-12_ajuste sinLB2.ref
+C:\coref-coref2\test_datsa\refs\223FG009\223FG009.1.2025-11-12_con LB normal despues mantenimiento.ref
+C:\coref-coref2\test_datsa\refs\223FG009\223FG009.1.2025-11-12_con LBF con white.ref
+C:\coref-coref2\test_datsa\refs\223FG009\223FG009.1.2025-11-12_LBA2.ref
+C:\coref-coref2\test_datsa\refs\223FG009\223FG009.2.2025-11-12.ref
+C:\coref-coref2\test_datsa\refs\223FG009\223FG009.2.2025-11-12_LBF4_val adj.ref
+C:\coref-coref2\test_datsa\refs\223FG009\223FG009.2.2025-11-12_LBF4_white adjustment.ref
+C:\coref-coref2\test_datsa\refs\223FG009\BASELINE AFTER PM
+C:\coref-coref2\test_datsa\refs\223FG009\lbf_223FG009.1.2025-11-11_ajuste sinLB.ref
+C:\coref-coref2\test_datsa\refs\223FG009\original_223FG009.1.2025-11-11.ref
+C:\coref-coref2\test_datsa\refs\223FG009\BASELINE AFTER PM\223FG009.1.2025-11-12.ref
+C:\coref-coref2\test_datsa\refs\223FG009\BASELINE AFTER PM\223FG009.2.2025-11-12.ref
+C:\coref-coref2\test_datsa\refs\223FG012\223FG012.1.2025-11-13 L1 ANTE DE PM.ref
+C:\coref-coref2\test_datsa\refs\223FG012\223FG012.1.2025-11-18 L1 despues de PM.ref
+C:\coref-coref2\test_datsa\refs\223FG012\223FG012.1.2025-11-18 L1 despues de PM_ajustada.ref
+C:\coref-coref2\test_datsa\refs\223FG012\223FG012.1.2025-11-18_L1 APM LBFNB.ref
+C:\coref-coref2\ui\History
+C:\coref-coref2\ui\sidebar.py
+C:\coref-coref2\ui\step_00_client_info.py
+C:\coref-coref2\ui\step_01_backup.py
+C:\coref-coref2\ui\step_02_wstd.py
+C:\coref-coref2\ui\step_04_baseline_alignment.py
+C:\coref-coref2\ui\step_06_validation.py
+C:\coref-coref2\ui\step_06_validation_with control samples.py
+C:\coref-coref2\ui\utilities.py
+C:\coref-coref2\ui\__init__.py
+C:\coref-coref2\ui\__pycache__
+C:\coref-coref2\ui\History\step_05_baseline.py
+C:\coref-coref2\ui\History\step_06_export.py
+C:\coref-coref2\ui\__pycache__\sidebar.cpython-312.pyc
+C:\coref-coref2\ui\__pycache__\step_00_client_info.cpython-312.pyc
+C:\coref-coref2\ui\__pycache__\step_01_backup.cpython-312.pyc
+C:\coref-coref2\ui\__pycache__\step_02_wstd.cpython-312.pyc
+C:\coref-coref2\ui\__pycache__\step_03_kit.cpython-312.pyc
+C:\coref-coref2\ui\__pycache__\step_04_baseline_alignment.cpython-312.pyc
+C:\coref-coref2\ui\__pycache__\step_04_correction.cpython-312.pyc
+C:\coref-coref2\ui\__pycache__\step_05_baseline.cpython-312.pyc
+C:\coref-coref2\ui\__pycache__\step_05_baseline_and_export.cpython-312.pyc
+C:\coref-coref2\ui\__pycache__\step_06_export.cpython-312.pyc
+C:\coref-coref2\ui\__pycache__\step_06_validation.cpython-312.pyc
+C:\coref-coref2\ui\__pycache__\utilities.cpython-312.pyc
+C:\coref-coref2\ui\__pycache__\__init__.cpython-312.pyc
+C:\coref-coref2\utils\control_samples.py
+C:\coref-coref2\utils\plotting.py
+C:\coref-coref2\utils\validators.py
+C:\coref-coref2\utils\__init__.py
+C:\coref-coref2\utils\__pycache__
+C:\coref-coref2\utils\__pycache__\control_samples.cpython-312.pyc
+C:\coref-coref2\utils\__pycache__\plotting.cpython-312.pyc
+C:\coref-coref2\utils\__pycache__\validators.cpython-312.pyc
+C:\coref-coref2\utils\__pycache__\__init__.cpython-312.pyc
+C:\coref-coref2\__pycache__\auth.cpython-312.pyc
+C:\coref-coref2\__pycache__\buchi_streamlit_theme.cpython-312.pyc
+C:\coref-coref2\__pycache__\config.cpython-312.pyc
+C:\coref-coref2\__pycache__\session_manager.cpython-312.pyc

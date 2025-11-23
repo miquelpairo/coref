@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Paso 7: Validacion Post-Correccion
+Paso 5: Verificación Post-Correccion
 """
 import streamlit as st
 import pandas as pd
@@ -12,8 +12,8 @@ from session_manager import (
     has_kit_data, 
     has_correction_data, 
     reset_session_state,
-    has_reference_tsv,      # ⭐ AÑADIR
-    get_reference_tsv,      # ⭐ AÑADIR
+    has_reference_tsv,      
+    get_reference_tsv,      
 )
 from core.file_handlers import load_tsv_file, get_spectral_columns
 from core.spectral_processing import (
@@ -26,7 +26,15 @@ from utils.validators import validate_common_samples
 
 
 def render_validation_step():
-    st.markdown("## PASO 7 DE 7: Validación Post-Corrección")
+    st.markdown("## PASO 5 DE 5: Verificación del Alineamiento")
+    
+    # Usar instrucciones desde config
+    st.info(INSTRUCTIONS['validation_intro'])
+    
+    with st.expander("📋 Ver procedimiento completo", expanded=False):
+        st.markdown(INSTRUCTIONS['validation_procedure'])
+    
+    st.markdown("---")
 
     has_kit = has_kit_data()
     has_corr = has_correction_data()
@@ -36,9 +44,9 @@ def render_validation_step():
         render_standard_kit_validation()
     else:
         st.info("""
-        ℹ️ **Validación con Standard Kit no disponible**  
-        No se han encontrado datos suficientes de los pasos anteriores
-        (Paso 4 y/o Paso 5).
+        ℹ️ **Verificación no disponible**  
+        No se han encontrado datos suficientes de los pasos anteriores.
+        Completa el Paso 4 para poder validar el ajuste.
         """)
 
     # Botón de informe
@@ -52,34 +60,20 @@ def render_validation_step():
         reset_session_state()
         st.rerun()
 
-
 def render_standard_kit_validation():
     """
     Renderiza la sección de validación con External White Standard.
     """
-    st.markdown("### 📊 Validación con External White Standard")
+    st.markdown("### 📊 Verificación del Alineamiento")
     
     kit_data = st.session_state.kit_data
     mean_diff_original = kit_data['mean_diff']
     
-    # Instrucciones
-    st.info(f"""
-    **Instrucciones para la validación con External White Standard:**
-    
-    1. **Instala el baseline corregido** en tu espectrómetro (archivo .ref o .csv del Paso 6)
-    2. **Reinicia SX-Server** para que cargue el nuevo baseline
-    3. **Mide el External White Standard** con 3 repeticiones usando el **mismo ID que en el Paso 3**
-    4. **Exporta las mediciones** a 1 archivo TSV
-    5. **Sube aquí abajo el TSV recién medido** (DESPUÉS del ajuste)
-    
-    El sistema comparará las mediciones ANTES y DESPUÉS de la corrección para verificar 
-    que el External White está correctamente alineado tras el ajuste de baseline.
-    """)
-    
     st.markdown("---")
     
     # ========== TSV REFERENCIA (PRE-CARGADO) ==========
-    st.markdown("#### 1️⃣ TSV External White (ANTES - Paso 3)")
+    st.markdown("#### 1️⃣ TSV de Referencia (ANTES del ajuste)")
+    st.info(INSTRUCTIONS['validation_ref_tsv'])
     
     # Verificar si hay TSV de referencia del Paso 3
     if has_reference_tsv():
@@ -95,10 +89,10 @@ def render_standard_kit_validation():
             st.write(f"**Total de filas:** {len(df_ref)}")
             st.write(f"**Canales espectrales:** {len(spectral_cols_ref)}")
         
-        # Opción de override (igual que en Paso 4)
+        # Opción de override
         if st.checkbox("🔄 Cargar otro archivo TSV de referencia", key="override_ref_tsv_validation"):
             ref_val_file = st.file_uploader(
-                "Nuevo archivo TSV del External White ANTES del ajuste",
+                "Nuevo archivo TSV de referencia (ANTES del ajuste)",
                 type=["tsv", "txt", "csv"],
                 key="ref_validation_override"
             )
@@ -126,10 +120,10 @@ def render_standard_kit_validation():
         
     else:
         st.error("❌ No hay TSV de referencia disponible del Paso 3")
-        st.info("Puedes cargar manualmente el archivo TSV del External White medido ANTES del ajuste:")
+        st.info("Puedes cargar manualmente el archivo TSV medido ANTES del ajuste:")
         
         ref_val_file = st.file_uploader(
-            "Sube el TSV del External White ANTES del ajuste",
+            "Sube el TSV de referencia (ANTES del ajuste)",
             type=["tsv", "txt", "csv"],
             key="ref_validation_manual"
         )
@@ -155,20 +149,21 @@ def render_standard_kit_validation():
     
     # ========== TSV NUEVO (POST-AJUSTE) ==========
     st.markdown("---")
-    st.markdown("#### 2️⃣ TSV External White (DESPUÉS - Post-ajuste)")
+    st.markdown("#### 2️⃣ TSV Post-Ajuste (DESPUÉS del ajuste)")
+    st.info(INSTRUCTIONS['validation_new_tsv'])
     
     new_val_file = st.file_uploader(
-        "Sube el TSV del External White DESPUÉS del ajuste",
+        "Sube el TSV post-ajuste (DESPUÉS del ajuste)",
         type=["tsv", "txt", "csv"],
         key="new_validation_upload",
-        help="Mediciones del External White con el baseline corregido instalado"
+        help="Mediciones realizadas con el baseline corregido instalado"
     )
     
     if new_val_file:
         try:
             # Procesar ambos archivos
             process_validation_files(
-                ref_val_file_data,  # ← Ahora pasamos el dict con los datos
+                ref_val_file_data,
                 new_val_file,
                 mean_diff_original
             )
@@ -179,7 +174,7 @@ def render_standard_kit_validation():
 
 def process_validation_files(ref_val_file_data, new_val_file, mean_diff_original):
     """
-    Procesa los archivos de validacion.
+    Procesa los archivos de verificación.
     
     Args:
         ref_val_file_data: Dict con 'df' y 'spectral_cols' del TSV de referencia (pre-cargado)
@@ -219,7 +214,7 @@ def process_validation_files(ref_val_file_data, new_val_file, mean_diff_original
     sample_ids_new = df_new_val["ID"].unique()
     
     # Mostrar informacion
-    st.success("✅ Archivos de validacion cargados correctamente")
+    st.success("✅ Archivos de verificación cargados correctamente")
     
     col1, col2 = st.columns(2)
     with col1:
@@ -251,7 +246,7 @@ def process_validation_files(ref_val_file_data, new_val_file, mean_diff_original
     df_new_val_grouped = df_new_val_grouped.loc[common_ids_val]
     
     st.success(f"✅ IDs comunes encontrados: {len(common_ids_val)}")
-    st.info(f"📋 IDs disponibles para validación: {', '.join(str(x) for x in common_ids_val)}")
+    st.info(f"📋 IDs disponibles para verificación: {', '.join(str(x) for x in common_ids_val)}")
     
     # Seleccion de muestras para validacion
     render_validation_sample_selection(common_ids_val)
@@ -271,7 +266,7 @@ def render_validation_sample_selection(common_ids):
     """
     Renderiza la interfaz de seleccion de muestras para validacion.
     """
-    st.markdown("#### Selección de muestras para validación")
+    st.markdown("#### Selección de muestras para verificación")
     
     # Inicializar seleccion si no existe
     if 'validation_selected_ids' not in st.session_state:
@@ -342,7 +337,7 @@ def render_validation_spectra_visualization(df_ref_val, df_new_val, spectral_col
     """
     Renderiza la visualizacion de espectros de validacion.
     """
-    with st.expander("📊 Ver espectros de validación", expanded=False):
+    with st.expander("📊 Ver espectros de verificación", expanded=False):
         # Obtener muestras seleccionadas
         selected_ids = st.session_state.get('validation_selected_ids', list(common_ids))
         ids_to_plot = selected_ids if len(selected_ids) > 0 else list(common_ids)
@@ -364,7 +359,7 @@ def render_validation_analysis(df_ref_val, df_new_val, spectral_cols, common_ids
     """
     Renderiza el analisis de validacion comparando antes y despues.
     """
-    st.markdown("#### Análisis de Validación")
+    st.markdown("#### Análisis de Verificación")
     
     # Obtener IDs seleccionados
     ids_for_val = st.session_state.get('validation_selected_ids', list(common_ids))
@@ -537,54 +532,87 @@ def render_validation_download(df_comparison):
     )
 
 
-def render_validation_conclusion(mean_diff_before, mean_diff_after):
+def render_validation_conclusion(mean_diff_before, mean_diff_after, white_id=None):
     """
-    Renderiza la conclusion del proceso de validacion.
-    """
-    st.markdown("---")
-    st.markdown("##### Conclusión: Validación con Standard Kit")
+    Renderiza la conclusión del proceso de validación.
+    Evalúa solo el resultado final, no la mejora porcentual.
     
-    # Calcular mejora
-    max_before = np.max(np.abs(mean_diff_before))
+    Args:
+        mean_diff_before: Diferencia antes del ajuste
+        mean_diff_after: Diferencia después del ajuste
+        white_id: ID del White Standard (para análisis específico)
+    """
+    from config import VALIDATION_THRESHOLDS
+    
+    st.markdown("---")
+    st.markdown("##### ✅ Conclusión: Verificación del Alineamiento")
+    
+    # Evaluar solo el resultado FINAL
     max_after = np.max(np.abs(mean_diff_after))
+    mean_after = np.mean(np.abs(mean_diff_after))
+    
+    # Calcular mejora (solo informativo)
+    max_before = np.max(np.abs(mean_diff_before))
     improvement = ((max_before - max_after) / max_before * 100) if max_before != 0 else 0
     
-    # Umbrales de evaluacion
-    if max_after < 0.001:  # Excelente
+    st.info(INSTRUCTIONS['validation_analysis'])
+    
+    # Criterios basados SOLO en el resultado final (usando umbrales de config)
+    if max_after < VALIDATION_THRESHOLDS['excellent']:  # Excelente
         st.success(f"""
-        ✅ **EXCELENTE: Corrección muy exitosa**
+        ✅ **EXCELENTE: Alineamiento exitoso**
         
-        La diferencia máxima entre lámparas se redujo a {max_after:.6f} (mejora del {improvement:.1f}%).
-        El ajuste de baseline es óptimo y las lámparas están perfectamente alineadas.
+        **Diferencia espectral final:** {max_after:.6f} (máxima) | {mean_after:.6f} (media)
+        
+        El baseline está perfectamente alineado. Las diferencias son mínimas y el 
+        equipo medirá de forma consistente con el estado de referencia.
+        
+        **Mejora respecto al estado anterior:** {improvement:.1f}%
         """)
-    elif max_after < 0.01:  # Bueno
+    elif max_after < VALIDATION_THRESHOLDS['good']:  # Bueno
         st.success(f"""
-        ✅ **BUENO: Corrección exitosa**
+        ✅ **BUENO: Alineamiento correcto**
         
-        La diferencia máxima entre lámparas se redujo a {max_after:.6f} (mejora del {improvement:.1f}%).
-        El ajuste de baseline funciona correctamente.
-        """)
-    elif improvement > 50:  # Aceptable pero hay mejora
-        st.info(f"""
-        ℹ️ **ACEPTABLE: Corrección parcial**
+        **Diferencia espectral final:** {max_after:.6f} (máxima) | {mean_after:.6f} (media)
         
-        La diferencia máxima se redujo en un {improvement:.1f}%, pero aún queda una diferencia de {max_after:.6f}.
-        Considera revisar:
-        - La calidad de las mediciones del Standard Kit
-        - Las condiciones ambientales durante las mediciones
-        - El estado de las lámparas
+        El baseline está correctamente alineado. Las diferencias son aceptables 
+        para uso analítico normal.
+        
+        **Mejora respecto al estado anterior:** {improvement:.1f}%
         """)
-    else:  # Problema
+    elif max_after < VALIDATION_THRESHOLDS['acceptable']:  # Aceptable
         st.warning(f"""
-        ⚠️ **ATENCIÓN: Corrección insuficiente**
+        ⚠️ **ACEPTABLE: Alineamiento marginal**
         
-        La diferencia máxima solo mejoró un {improvement:.1f}%. Diferencia actual: {max_after:.6f}.
+        **Diferencia espectral final:** {max_after:.6f} (máxima) | {mean_after:.6f} (media)
+        
+        El baseline muestra un alineamiento aceptable pero no óptimo. 
         
         **Recomendaciones:**
-        1. Verifica que instalaste el baseline corregido correctamente
-        2. Asegúrate de que reiniciaste el equipo si es necesario
-        3. Revisa que las mediciones se tomaron en condiciones estables
-        4. Considera repetir el proceso de ajuste con diferentes muestras
+        - Verifica que el baseline corregido se instaló correctamente
+        - Confirma que el equipo está estabilizado (temperatura, tiempo)
+        - Considera repetir las mediciones en condiciones más estables
+        
+        **Mejora respecto al estado anterior:** {improvement:.1f}%
+        """)
+    else:  # Requiere atención
+        st.error(f"""
+        ❌ **REQUIERE ATENCIÓN: Alineamiento insuficiente**
+        
+        **Diferencia espectral final:** {max_after:.6f} (máxima) | {mean_after:.6f} (media)
+        
+        El baseline NO está correctamente alineado. La diferencia final es demasiado alta.
+        
+        **Acciones requeridas:**
+        1. ✓ Verifica que instalaste el baseline corregido del Paso 4
+        2. ✓ Confirma que reiniciaste SX Suite después de copiar el baseline
+        3. ✓ Asegúrate de que el equipo estuvo estabilizado ≥30 minutos
+        4. ✓ Verifica que estás usando el MISMO White Standard
+        5. ✓ Comprueba las condiciones ambientales (temperatura estable)
+        6. ✓ Si persiste el problema, considera repetir todo el proceso desde el Paso 3
+        
+        **Nota:** Mejora del {improvement:.1f}% respecto al estado anterior, 
+        pero el resultado final sigue siendo insuficiente.
         """)
 
 

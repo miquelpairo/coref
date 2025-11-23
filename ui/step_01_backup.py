@@ -10,7 +10,7 @@ def render_backup_step():
     """
     Renderiza la pantalla de advertencia de backup (Paso 1).
     """
-    st.markdown("## PASO 2 de 7: Advertencia Importante")
+    st.markdown("## PASO 2 de 5: Advertencia Importante")
     st.warning(INSTRUCTIONS['backup'])
 
     st.markdown("### Ubicaciones de los archivos baseline:")
