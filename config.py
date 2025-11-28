@@ -509,6 +509,9 @@ VALIDATION_STATUS = {
     }
 }
 
+
+
+
 # Umbrales para White Reference Comparison
 WHITE_REFERENCE_THRESHOLDS = {
     'excellent': {'rms': 0.002, 'max_diff': 0.005, 'color': '#4caf50'},
@@ -516,6 +519,28 @@ WHITE_REFERENCE_THRESHOLDS = {
     'acceptable': {'rms': 0.01, 'max_diff': 0.02, 'color': '#ffc107'},
     'review': {'color': '#f44336'}
 }
+
+
+# ============================================================================
+# UMBRALES DE VALIDACIÓN - STANDARD VALIDATION TOOL
+# ============================================================================
+
+DEFAULT_VALIDATION_THRESHOLDS = {
+    'correlation': 0.999,
+    'max_diff': 0.02,
+    'rms': 0.015
+}
+
+# Regiones espectrales críticas para análisis (nm)
+CRITICAL_REGIONS = [(1100, 1200), (1400, 1500), (1600, 1700)]
+
+# Límites para interpretación de offset global
+OFFSET_LIMITS = {
+    'negligible': 0.001,  # Offset despreciable
+    'acceptable': 0.005,  # Offset aceptable
+    # Por encima de 0.005 se considera significativo
+}
+
 
 # Información de versión
 VERSION = "3.0.0"  # ⭐ ACTUALIZADO

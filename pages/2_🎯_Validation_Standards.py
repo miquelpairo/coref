@@ -24,6 +24,7 @@ sys.path.insert(0, str(root_dir))
 from core.file_handlers import load_tsv_file, get_spectral_columns
 from auth import check_password
 from buchi_streamlit_theme import apply_buchi_styles
+from config import DEFAULT_VALIDATION_THRESHOLDS, CRITICAL_REGIONS, OFFSET_LIMITS
 
 apply_buchi_styles()
 
@@ -216,13 +217,7 @@ if not check_password():
 # CONFIGURACIÓN DE UMBRALES
 # ============================================================================
 
-DEFAULT_THRESHOLDS = {
-    'correlation': 0.999,
-    'max_diff': 0.02,
-    'rms': 0.015
-}
 
-CRITICAL_REGIONS = [(1100, 1200), (1400, 1500), (1600, 1700)]
 
 # ============================================================================
 # FUNCIONES DE VALIDACIÓN
@@ -490,7 +485,141 @@ def create_validation_plot(reference: np.ndarray, current: np.ndarray,
     
     return fig
 
+def create_overlay_plot(validation_data: List[Dict], show_reference: bool = True,
+                       show_current: bool = True) -> go.Figure:
+    """
+    Crea gráfico con overlay de todos los espectros de validación.
+    
+    Args:
+        validation_data: Lista de diccionarios con datos de validación
+        show_reference: Si True, muestra espectros de referencia
+        show_current: Si True, muestra espectros actuales
+    """
+    colors_ref = ['#1f77b4', '#2ca02c', '#9467bd', '#8c564b', '#e377c2', 
+                  '#7f7f7f', '#bcbd22', '#17becf', '#ff9896', '#c5b0d5']
+    colors_curr = ['#ff7f0e', '#d62728', '#ff69b4', '#ffa500', '#dc143c',
+                   '#ff4500', '#ff1493', '#ff6347', '#ff8c00', '#ff00ff']
+    
+    fig = go.Figure()
+    
+    if len(validation_data) == 0:
+        return fig
+    
+    channels = list(range(1, len(validation_data[0]['reference']) + 1))
+    
+    # Añadir espectros de referencia
+    if show_reference:
+        for i, data in enumerate(validation_data):
+            color = colors_ref[i % len(colors_ref)]
+            sample_label = f"{data['id']} - Ref"
+            
+            fig.add_trace(go.Scatter(
+                x=channels,
+                y=data['reference'],
+                mode='lines',
+                name=sample_label,
+                line=dict(color=color, width=2),
+                legendgroup='reference',
+                hovertemplate=f'<b>{sample_label}</b><br>' +
+                             'Canal: %{x}<br>' +
+                             'Absorbancia: %{y:.6f}<br>' +
+                             '<extra></extra>'
+            ))
+    
+    # Añadir espectros actuales
+    if show_current:
+        for i, data in enumerate(validation_data):
+            color = colors_curr[i % len(colors_curr)]
+            sample_label = f"{data['id']} - Act"
+            
+            fig.add_trace(go.Scatter(
+                x=channels,
+                y=data['current'],
+                mode='lines',
+                name=sample_label,
+                line=dict(color=color, width=2, dash='dash'),
+                legendgroup='current',
+                hovertemplate=f'<b>{sample_label}</b><br>' +
+                             'Canal: %{x}<br>' +
+                             'Absorbancia: %{y:.6f}<br>' +
+                             '<extra></extra>'
+            ))
+    
+    fig.update_layout(
+        title={
+            'text': 'Comparación Global de Todos los Estándares',
+            'x': 0.5,
+            'xanchor': 'center',
+            'font': {'size': 20, 'color': '#2c5f3f'}
+        },
+        xaxis_title='Canal espectral',
+        yaxis_title='Absorbancia',
+        hovermode='closest',
+        template='plotly_white',
+        height=600,
+        showlegend=True,
+        legend=dict(
+            orientation="v",
+            yanchor="top",
+            y=1,
+            xanchor="left",
+            x=1.02,
+            font=dict(size=10)
+        )
+    )
+    
+    return fig
 
+def create_global_statistics_table(validation_data: List[Dict]) -> pd.DataFrame:
+    """
+    Crea tabla con estadísticas globales de todos los estándares.
+    """
+    if len(validation_data) == 0:
+        return pd.DataFrame()
+    
+    # Recopilar métricas de todos los estándares
+    all_correlations = []
+    all_max_diffs = []
+    all_rms = []
+    all_mean_diffs = []  # ESTE es el offset por estándar
+    
+    for data in validation_data:
+        val_res = data['validation_results']
+        all_correlations.append(val_res['correlation'])
+        all_max_diffs.append(val_res['max_diff'])
+        all_rms.append(val_res['rms'])
+        all_mean_diffs.append(val_res['mean_diff'])  # Sin abs() para ver la dirección
+    
+    # Calcular estadísticas
+    stats = {
+        'Métrica': ['Correlación', 'Max Diferencia (AU)', 'RMS', 'Offset Medio (AU)'],  # Cambiado nombre
+        'Mínimo': [
+            f"{min(all_correlations):.6f}",
+            f"{min(all_max_diffs):.6f}",
+            f"{min(all_rms):.6f}",
+            f"{min(all_mean_diffs):.6f}"
+        ],
+        'Máximo': [
+            f"{max(all_correlations):.6f}",
+            f"{max(all_max_diffs):.6f}",
+            f"{max(all_rms):.6f}",
+            f"{max(all_mean_diffs):.6f}"
+        ],
+        'Media': [
+            f"{np.mean(all_correlations):.6f}",
+            f"{np.mean(all_max_diffs):.6f}",
+            f"{np.mean(all_rms):.6f}",
+            f"{np.mean(all_mean_diffs):.6f}"  # ESTE es el offset global del kit
+        ],
+        'Desv. Est.': [
+            f"{np.std(all_correlations):.6f}",
+            f"{np.std(all_max_diffs):.6f}",
+            f"{np.std(all_rms):.6f}",
+            f"{np.std(all_mean_diffs):.6f}"
+        ]
+    }
+    
+    return pd.DataFrame(stats)
 # ============================================================================
 # INTERFAZ PRINCIPAL
 # ============================================================================
@@ -525,7 +654,7 @@ def main():
                 "Correlación mínima:",
                 min_value=0.990,
                 max_value=1.000,
-                value=DEFAULT_THRESHOLDS['correlation'],
+                value=DEFAULT_VALIDATION_THRESHOLDS['correlation'],
                 step=0.001,
                 format="%.3f"
             )
@@ -534,7 +663,7 @@ def main():
                 "Diferencia máxima (AU):",
                 min_value=0.001,
                 max_value=0.100,
-                value=DEFAULT_THRESHOLDS['max_diff'],
+                value=DEFAULT_VALIDATION_THRESHOLDS['max_diff'],
                 step=0.001,
                 format="%.3f"
             )
@@ -543,7 +672,7 @@ def main():
                 "RMS máximo:",
                 min_value=0.001,
                 max_value=0.100,
-                value=DEFAULT_THRESHOLDS['rms'],
+                value=DEFAULT_VALIDATION_THRESHOLDS['rms'],
                 step=0.001,
                 format="%.3f"
             )
@@ -555,7 +684,7 @@ def main():
             }
         
         if 'thresholds' not in locals():
-            thresholds = DEFAULT_THRESHOLDS
+            thresholds = DEFAULT_VALIDATION_THRESHOLDS
         
         st.divider()
         st.markdown("""
@@ -617,7 +746,7 @@ def main():
                 
                 return
             
-            st.success(f"✅ {len(matches)} estándar(es) común(es) detectado(s)")
+        st.success(f"✅ {len(matches)} estándar(es) común(es) detectado(s)")
             
     except Exception as e:
         st.error(f"❌ Error al cargar archivos: {str(e)}")
@@ -625,14 +754,104 @@ def main():
     
     st.divider()
     
-    # VALIDACIÓN AUTOMÁTICA DE TODOS LOS ESTÁNDARES
+    # SELECCIÓN DE MUESTRAS A VALIDAR
+    st.subheader("🎯 Selección de Estándares a Validar")
+    
+    # Crear DataFrame para mostrar con checkbox
+    selection_data = []
+    for idx, row in matches.iterrows():
+        selection_data.append({
+            'Seleccionar': True,  # Por defecto todos seleccionados
+            'ID': row['ID'],
+            'Note (Ref)': row['ref_note'],
+            'Note (Actual)': row['curr_note']
+        })
+    
+    selection_df = pd.DataFrame(selection_data)
+    
+    # Usar data_editor para permitir edición de checkboxes
+    edited_df = st.data_editor(
+        selection_df,
+        hide_index=True,
+        use_container_width=True,
+        column_config={
+            "Seleccionar": st.column_config.CheckboxColumn(
+                "✓ Validar",
+                help="Marcar para incluir en la validación",
+                default=True,
+            )
+        },
+        disabled=["ID", "Note (Ref)", "Note (Actual)"]  # Solo checkbox editable
+    )
+    
+    # Botones de selección rápida
+    col1, col2, col3, col4 = st.columns([1, 1, 1, 3])
+    with col1:
+        if st.button("✅ Seleccionar Todos", use_container_width=True):
+            st.session_state['select_all'] = True
+            st.rerun()
+    with col2:
+        if st.button("❌ Deseleccionar Todos", use_container_width=True):
+            st.session_state['deselect_all'] = True
+            st.rerun()
+    
+    # Aplicar selección/deselección masiva si se presionó el botón
+    if 'select_all' in st.session_state and st.session_state['select_all']:
+        edited_df['Seleccionar'] = True
+        st.session_state['select_all'] = False
+    
+    if 'deselect_all' in st.session_state and st.session_state['deselect_all']:
+        edited_df['Seleccionar'] = False
+        st.session_state['deselect_all'] = False
+    
+    # Contar seleccionados
+    n_selected = edited_df['Seleccionar'].sum()
+    
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        if n_selected == 0:
+            st.warning("⚠️ No hay estándares seleccionados para validar")
+        else:
+            st.info(f"📊 {n_selected} de {len(edited_df)} estándares seleccionados")
+    
+    with col2:
+        confirm_button = st.button(
+            "🚀 Validar Selección",
+            type="primary",
+            use_container_width=True,
+            disabled=(n_selected == 0)
+        )
+    
+    # Guardar selección en session_state al confirmar
+    if confirm_button:
+        st.session_state['validated'] = True
+        st.session_state['selected_ids'] = edited_df[edited_df['Seleccionar']]['ID'].tolist()
+        st.rerun()
+    
+    # Solo proceder si ya se validó
+    if 'validated' not in st.session_state or not st.session_state['validated']:
+        st.info("👆 Ajusta la selección y presiona 'Validar Selección' para continuar")
+        return
+    
+    # Recuperar selección guardada
+    selected_ids = st.session_state['selected_ids']
+    matches_filtered = matches[matches['ID'].isin(selected_ids)].copy()
+    
+    st.divider()
+    
+    # Botón para volver a la selección
+    if st.button("🔄 Cambiar Selección de Estándares"):
+        st.session_state['validated'] = False
+        st.rerun()
+    
+    # VALIDACIÓN AUTOMÁTICA DE ESTÁNDARES SELECCIONADOS
     st.header("📊 Resultados de Validación")
     
     all_results = []
     all_validation_data = []  # Para guardar datos completos para análisis detallado
     
     with st.spinner(f"Validando {len(matches)} estándar(es)..."):
-        for idx, row in matches.iterrows():
+        for idx, row in matches_filtered.iterrows():
             sample_id = row['ID']
             ref_note = row['ref_note']
             curr_note = row['curr_note']
@@ -695,7 +914,7 @@ def main():
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        st.metric("Total Estándares", len(matches))
+        st.metric("Total Estándares", len(matches_filtered))
     with col2:
         st.metric("✅ Validados", n_ok)
     with col3:
@@ -717,6 +936,65 @@ def main():
         file_name=f"validation_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
         mime="text/csv"
     )
+    
+    st.divider()
+    
+    # NUEVO: Gráfico de overlay global en expandable
+    with st.expander("📊 Vista Global de Todos los Estándares", expanded=False):
+        st.caption("Comparación simultánea de todos los espectros validados")
+        
+        col1, col2 = st.columns([3, 1])
+        
+        with col2:
+            show_ref = st.checkbox("Mostrar Referencia", value=True, key="show_ref_overlay")
+            show_curr = st.checkbox("Mostrar Actual", value=True, key="show_curr_overlay")
+        
+        overlay_fig = create_overlay_plot(all_validation_data, show_ref, show_curr)
+        st.plotly_chart(overlay_fig, use_container_width=True)
+    
+    # NUEVO: Tabla de estadísticas globales
+    st.markdown("### 📈 Estadísticas Globales")
+    st.caption(f"Análisis agregado de {len(all_validation_data)} estándar(es)")
+    
+    stats_df = create_global_statistics_table(all_validation_data)
+    st.dataframe(stats_df, use_container_width=True, hide_index=True)
+    
+    # Opcional: destacar valores según umbrales
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        avg_corr = np.mean([d['validation_results']['correlation'] for d in all_validation_data])
+        st.metric("Correlación Media", f"{avg_corr:.6f}", 
+                 delta="OK" if avg_corr >= thresholds['correlation'] else "Revisar",
+                 delta_color="normal" if avg_corr >= thresholds['correlation'] else "inverse")
+    with col2:
+        avg_max_diff = np.mean([d['validation_results']['max_diff'] for d in all_validation_data])
+        st.metric("Max Δ Media", f"{avg_max_diff:.6f} AU",
+                 delta="OK" if avg_max_diff <= thresholds['max_diff'] else "Revisar",
+                 delta_color="normal" if avg_max_diff <= thresholds['max_diff'] else "inverse")
+    with col3:
+        avg_rms = np.mean([d['validation_results']['rms'] for d in all_validation_data])
+        st.metric("RMS Media", f"{avg_rms:.6f}",
+                 delta="OK" if avg_rms <= thresholds['rms'] else "Revisar",
+                 delta_color="normal" if avg_rms <= thresholds['rms'] else "inverse")
+    
+    st.divider()
+    
+   
+    # Offset global del kit
+    global_offset = np.mean([d['validation_results']['mean_diff'] for d in all_validation_data])
+    
+    st.metric(
+        "🎯 Offset Global del Kit", 
+        f"{global_offset:.6f} AU",
+        help="Desplazamiento sistemático promedio entre mediciones pre y post-mantenimiento"
+    )
+    
+    if abs(global_offset) < OFFSET_LIMITS['negligible']:
+        st.success("✅ Offset despreciable - Excelente alineamiento")
+    elif abs(global_offset) < OFFSET_LIMITS['acceptable']:
+        st.info("ℹ️ Offset pequeño - Alineamiento aceptable")
+    else:
+        st.warning(f"⚠️ Offset significativo detectado ({'+' if global_offset > 0 else ''}{global_offset:.6f} AU)")
     
     st.divider()
     
@@ -819,6 +1097,89 @@ def main():
                 ]
             }
             st.dataframe(pd.DataFrame(checks_data), use_container_width=True, hide_index=True)
+    
+    st.divider()
+    
+    # GENERACIÓN DE INFORME
+    st.subheader("📄 Generar Informe de Validación")
+    
+    st.markdown("**Información del Servicio:**")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        sensor_serial = st.text_input(
+            "Número de Serie del Sensor:",
+            placeholder="Ej: NIR-2024-001",
+            help="Número de serie del equipo NIR"
+        )
+        
+        customer_name = st.text_input(
+            "Cliente:",
+            placeholder="Ej: Universidad de Barcelona",
+            help="Nombre del cliente o institución"
+        )
+    
+    with col2:
+        technician_name = st.text_input(
+            "Técnico:",
+            placeholder="Ej: Juan Pérez",
+            help="Nombre del técnico que realizó el servicio"
+        )
+        
+        service_notes = st.text_area(
+            "Notas del Servicio:",
+            placeholder="Cambio de lámpara, ajuste óptico, etc.",
+            help="Observaciones relevantes del mantenimiento realizado",
+            height=100
+        )
+    
+    # Botón de generación
+    col1, col2, col3 = st.columns([2, 1, 2])
+    
+    with col2:
+        if st.button("📥 Generar Informe HTML", type="primary", use_container_width=True):
+            if not sensor_serial or not customer_name or not technician_name:
+                st.error("❌ Por favor completa al menos: Número de Serie, Cliente y Técnico")
+            else:
+                with st.spinner("Generando informe..."):
+                    try:
+                        from core.validation_kit_report_generator import generate_validation_report
+                        
+                        # Preparar datos para el reporte
+                        report_data = {
+                            'sensor_serial': sensor_serial,
+                            'customer_name': customer_name,
+                            'technician_name': technician_name,
+                            'service_notes': service_notes,
+                            'validation_data': all_validation_data,
+                            'results_df': results_df,
+                            'thresholds': thresholds,
+                            'n_ok': n_ok,
+                            'n_warn': n_warn,
+                            'n_fail': n_fail,
+                            'num_channels': num_channels,
+                            'ref_filename': ref_file.name,
+                            'curr_filename': curr_file.name
+                        }
+                        
+                        html_content = generate_validation_report(report_data)
+                        
+                        # Descargar
+                        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                        filename = f"Validation_Report_{sensor_serial.replace(' ', '_')}_{timestamp}.html"
+                        
+                        st.download_button(
+                            label="💾 Descargar Informe HTML",
+                            data=html_content,
+                            file_name=filename,
+                            mime="text/html"
+                        )
+                        
+                        st.success("✅ Informe generado correctamente")
+                        
+                    except Exception as e:
+                        st.error(f"❌ Error al generar informe: {str(e)}")
 
 
 if __name__ == "__main__":

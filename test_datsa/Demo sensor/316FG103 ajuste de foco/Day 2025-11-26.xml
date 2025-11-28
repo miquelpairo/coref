@@ -1,0 +1,2583 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<ss:Workbook xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+ <DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
+  <LastAuthor>NIR-Online GmbH VX.0 - DEMO</LastAuthor>
+  <Created>2025-11-26T10:13:43Z</Created>
+  <Version>11.6360</Version>
+ </DocumentProperties>
+ <ss:Styles>
+  <ss:Style ss:ID="sHeader">
+   <ss:Alignment ss:Vertical="Bottom"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="sColumns">
+   <ss:Alignment ss:Horizontal="Center" ss:Vertical="Bottom"/>
+   <ss:Font ss:Bold="1"/>
+   <ss:Borders>
+    <ss:Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <ss:Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <ss:Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </ss:Borders>
+  </ss:Style>
+  <ss:Style ss:ID="sDateTime">
+   <ss:NumberFormat ss:Format="dd/mm/yyyy\ hh:mm:ss"/>
+  </ss:Style>
+  <ss:Style ss:ID="sTime">
+   <ss:NumberFormat ss:Format="hh:mm:ss"/>
+  </ss:Style>
+  <ss:Style ss:ID="sResult">
+   <ss:Alignment ss:Horizontal="Center" ss:Vertical="Bottom"/>
+   <ss:Font ss:Bold="1" ss:Italic="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Espectros_1">
+   <ss:NumberFormat ss:Format="0.000"/>
+  </ss:Style>
+  <ss:Style ss:ID="Espectros_A1">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.000"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Espectros_2">
+   <ss:NumberFormat ss:Format="0.000"/>
+  </ss:Style>
+  <ss:Style ss:ID="Espectros_A2">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.000"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Colza_1">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Colza_A1">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Colza_2">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Colza_A2">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Colza_3">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Colza_A3">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Colza_4">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Colza_A4">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Colza_5">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Colza_A5">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Colza_6">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Colza_A6">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Colza_7">
+   <ss:NumberFormat ss:Format="0.000"/>
+  </ss:Style>
+  <ss:Style ss:ID="Colza_A7">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.000"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Colza_8">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Colza_A8">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Colza_9">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Colza_A9">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Colza_10">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Colza_A10">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Colza_11">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Colza_A11">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Colza_12">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Colza_A12">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Colza_13">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Colza_A13">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Cerdos_1">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Cerdos_A1">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Cerdos_2">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Cerdos_A2">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Cerdos_3">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Cerdos_A3">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Cerdos_4">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Cerdos_A4">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Cerdos_5">
+   <ss:NumberFormat ss:Format="0.00"/>
+  </ss:Style>
+  <ss:Style ss:ID="Cerdos_A5">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.00"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Cerdos_6">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Cerdos_A6">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Cerdos_7">
+   <ss:NumberFormat ss:Format="0.00"/>
+  </ss:Style>
+  <ss:Style ss:ID="Cerdos_A7">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.00"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Cerdos_8">
+   <ss:NumberFormat ss:Format="0.00"/>
+  </ss:Style>
+  <ss:Style ss:ID="Cerdos_A8">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.00"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Cerdos_9">
+   <ss:NumberFormat ss:Format="0.000"/>
+  </ss:Style>
+  <ss:Style ss:ID="Cerdos_A9">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.000"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Cerdos_10">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Cerdos_A10">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Cerdos_11">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Cerdos_A11">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Cerdos_12">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Cerdos_A12">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Cerdos_13">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Cerdos_A13">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Cerdos_14">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Cerdos_A14">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Cerdos_15">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Cerdos_A15">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Cerdos_16">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Cerdos_A16">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Cerdos_17">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Cerdos_A17">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="TrigoTriti_1">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="TrigoTriti_A1">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="TrigoTriti_2">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="TrigoTriti_A2">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="TrigoTriti_3">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="TrigoTriti_A3">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="TrigoTriti_4">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="TrigoTriti_A4">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="TrigoTriti_5">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="TrigoTriti_A5">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="TrigoTriti_6">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="TrigoTriti_A6">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="TrigoTriti_7">
+   <ss:NumberFormat ss:Format="0.000"/>
+  </ss:Style>
+  <ss:Style ss:ID="TrigoTriti_A7">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.000"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="TrigoTriti_8">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="TrigoTriti_A8">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="TrigoTriti_9">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="TrigoTriti_A9">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="TrigoTriti_10">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="TrigoTriti_A10">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="TrigoTriti_11">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="TrigoTriti_A11">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="TrigoTriti_12">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="TrigoTriti_A12">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="TrigoTriti_13">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="TrigoTriti_A13">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Soja_1">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Soja_A1">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Soja_2">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Soja_A2">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Soja_3">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Soja_A3">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Soja_4">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Soja_A4">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Soja_5">
+   <ss:NumberFormat ss:Format="0.00"/>
+  </ss:Style>
+  <ss:Style ss:ID="Soja_A5">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.00"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Soja_6">
+   <ss:NumberFormat ss:Format="0.000"/>
+  </ss:Style>
+  <ss:Style ss:ID="Soja_A6">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.000"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Soja_7">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Soja_A7">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Soja_8">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Soja_A8">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Soja_9">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Soja_A9">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Soja_10">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Soja_A10">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Soja_11">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Soja_A11">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Maiz_1">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Maiz_A1">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Maiz_2">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Maiz_A2">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Maiz_3">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Maiz_A3">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Maiz_4">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Maiz_A4">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Maiz_5">
+   <ss:NumberFormat ss:Format="0.00"/>
+  </ss:Style>
+  <ss:Style ss:ID="Maiz_A5">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.00"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Maiz_6">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Maiz_A6">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Maiz_7">
+   <ss:NumberFormat ss:Format="0.000"/>
+  </ss:Style>
+  <ss:Style ss:ID="Maiz_A7">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.000"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Maiz_8">
+   <ss:NumberFormat ss:Format="0.000"/>
+  </ss:Style>
+  <ss:Style ss:ID="Maiz_A8">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.000"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Maiz_9">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Maiz_A9">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Maiz_10">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Maiz_A10">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Maiz_11">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Maiz_A11">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Maiz_12">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Maiz_A12">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Maiz_13">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Maiz_A13">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Maiz_14">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Maiz_A14">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+  <ss:Style ss:ID="Maiz_15">
+   <ss:NumberFormat ss:Format="0.0"/>
+  </ss:Style>
+  <ss:Style ss:ID="Maiz_A15">
+  <ss:Borders>
+   <ss:Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+  </ss:Borders>
+   <ss:NumberFormat ss:Format="0.0"/>
+   <ss:Font ss:Size="11" ss:Bold="1"/>
+  </ss:Style>
+ </ss:Styles>
+ <ss:Worksheet ss:Name="Espectros">
+  <ss:Table>
+   <ss:Column ss:Width="20"/>
+   <ss:Column ss:Width="160"/>
+   <ss:Column ss:Width="40"/>
+   <ss:Column ss:Width="80"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Row ss:StyleID="sHeader"><ss:Cell><ss:Data ss:Type="String">26/11/2025 ... 26/11/2025 23:59:59</ss:Data></ss:Cell></ss:Row>
+   <ss:Row/>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">#</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Espectros</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Unit</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">ID</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Note</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Product</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Speed</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Espectro</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Begin</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">End</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Length</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">1</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:08:06 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">WHITE</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L1.2 NB</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Espectros</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Espectros_1"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sResult"><ss:Data ss:Type="String">OUTLIER</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:08:06</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:08:46</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:40</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">2</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:09:03 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">WHITE</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L1.2 NB</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Espectros</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sResult"><ss:Data ss:Type="String">Product</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sResult"><ss:Data ss:Type="String"></ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:09:03</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:09:38</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:35</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">3</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:10:10 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">V01</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L1.2 NB</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Espectros</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Espectros_1"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sResult"><ss:Data ss:Type="String">OUTLIER</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:10:10</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:10:26</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:16</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">4</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:10:36 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">V02</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L1.2 NB</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Espectros</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sResult"><ss:Data ss:Type="String">Product</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sResult"><ss:Data ss:Type="String"></ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:10:36</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:10:48</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:12</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">5</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:10:58 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">V03</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L1.2 NB</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Espectros</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Espectros_1"><ss:Data ss:Type="Number">9.8</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Espectros_2"><ss:Data ss:Type="Number">18</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:10:58</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:11:19</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:21</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">6</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:11:28 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">V04</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L1.2 NB</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Espectros</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sResult"><ss:Data ss:Type="String">Product</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sResult"><ss:Data ss:Type="String"></ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:11:28</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:11:39</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:11</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">7</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:11:48 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">V05</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L1.2 NB</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Espectros</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sResult"><ss:Data ss:Type="String">Product</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sResult"><ss:Data ss:Type="String"></ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:11:48</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:12:07</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:19</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">8</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:23:37 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">WHITE</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L1.2 NB</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Espectros</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Espectros_1"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sResult"><ss:Data ss:Type="String">OUTLIER</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:23:37</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:24:04</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:27</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">9</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:34:55 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">WHITE</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L2.2 NB</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Espectros</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Espectros_1"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sResult"><ss:Data ss:Type="String">OUTLIER</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:34:55</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:34:59</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:04</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">10</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:35:00 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">WHITE</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L2.2 NB</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Espectros</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Espectros_1"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sResult"><ss:Data ss:Type="String">OUTLIER</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:35:00</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:35:54</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:54</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">11</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:36:01 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">WHITE</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L2.2 NB</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Espectros</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Espectros_1"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sResult"><ss:Data ss:Type="String">OUTLIER</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:36:01</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:36:15</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:14</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">12</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:37:06 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">WHITE</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L2.2 BL</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Espectros</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Espectros_1"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sResult"><ss:Data ss:Type="String">OUTLIER</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:37:06</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:37:26</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:20</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">13</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:37:42 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">WHITE</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L2.2 BL</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Espectros</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Espectros_1"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sResult"><ss:Data ss:Type="String">OUTLIER</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:37:42</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:37:58</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:16</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">14</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:47:50 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">WHITE</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L2.2 BL AD</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Espectros</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Espectros_1"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sResult"><ss:Data ss:Type="String">OUTLIER</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:47:50</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:48:09</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:19</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">15</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:48:18 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">WHITE</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L2.2 BL AD</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Espectros</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Espectros_1"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sResult"><ss:Data ss:Type="String">OUTLIER</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:48:18</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:48:31</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:13</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">16</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:51:11 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">V01</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L2.2 BL AD</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Espectros</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Espectros_1"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sResult"><ss:Data ss:Type="String">OUTLIER</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:51:11</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:51:28</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:17</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">17</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:51:38 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">V02</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L2.2 BL AD</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Espectros</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Espectros_1"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sResult"><ss:Data ss:Type="String">OUTLIER</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:51:38</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:51:51</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:13</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">18</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:52:02 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">V03</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L2.2 BL AD</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Espectros</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Espectros_1"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sResult"><ss:Data ss:Type="String">OUTLIER</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:52:02</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:52:15</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:13</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">19</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:52:24 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">V04</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L2.2 BL AD</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Espectros</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Espectros_1"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sResult"><ss:Data ss:Type="String">OUTLIER</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:52:24</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:52:37</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:13</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">20</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:52:49 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">V05</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L2.2 BL AD</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Espectros</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Espectros_1"><ss:Data ss:Type="Number">10.6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Espectros_2"><ss:Data ss:Type="Number">4.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:52:49</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:53:04</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:15</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+   <ss:Cell ss:StyleID="sHeader" ss:Index="2"><ss:Data ss:Type="String">Average</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Espectros_A1" ss:Index="7" ss:Formula="=AVERAGE(R[-20]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Espectros_A2" ss:Index="8" ss:Formula="=AVERAGE(R[-20]C:R[-1]C)"></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+   <ss:Cell ss:StyleID="sHeader" ss:Index="2"><ss:Data ss:Type="String">Min</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Espectros_A1" ss:Index="7" ss:Formula="=MIN(R[-21]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Espectros_A2" ss:Index="8" ss:Formula="=MIN(R[-21]C:R[-2]C)"></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+   <ss:Cell ss:StyleID="sHeader" ss:Index="2"><ss:Data ss:Type="String">Max</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Espectros_A1" ss:Index="7" ss:Formula="=MAX(R[-22]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Espectros_A2" ss:Index="8" ss:Formula="=MAX(R[-22]C:R[-3]C)"></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+   <ss:Cell ss:StyleID="sHeader" ss:Index="2"><ss:Data ss:Type="String">Std.Dev.</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Espectros_A1" ss:Index="7" ss:Formula="=STDEV(R[-23]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Espectros_A2" ss:Index="8" ss:Formula="=STDEV(R[-23]C:R[-4]C)"></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+   </ss:Row>
+   <ss:Row>
+   <ss:Cell ss:StyleID="sHeader" ss:Index="2"><ss:Data ss:Type="String">Target</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Espectros_A1" ss:Index="7"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Espectros_A2" ss:Index="8"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+   </ss:Row>
+  </ss:Table>
+ </ss:Worksheet>
+ <ss:Worksheet ss:Name="Colza">
+  <ss:Table>
+   <ss:Column ss:Width="20"/>
+   <ss:Column ss:Width="160"/>
+   <ss:Column ss:Width="40"/>
+   <ss:Column ss:Width="80"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Row ss:StyleID="sHeader"><ss:Cell><ss:Data ss:Type="String">26/11/2025 ... 26/11/2025 23:59:59</ss:Data></ss:Cell></ss:Row>
+   <ss:Row/>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">#</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Colza</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Unit</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">ID</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Note</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Product</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">H</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">PB</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">GB</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Grasa total</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">FB</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Cz</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Speed</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">MahalanobisH</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">MahalanobisPB</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">MahalanobisGB</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">MahalanobisGT</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">MahalanobisFB</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">MahalanobisCz</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Begin</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">End</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Length</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">21</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:12:34 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">COLZA</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L1.2 NB</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Colza</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_1"><ss:Data ss:Type="Number">8.3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_2"><ss:Data ss:Type="Number">34.6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_3"><ss:Data ss:Type="Number">2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_4"><ss:Data ss:Type="Number">5.8</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_5"><ss:Data ss:Type="Number">12.7</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_6"><ss:Data ss:Type="Number">6.1</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_7"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_8"><ss:Data ss:Type="Number">10.6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_9"><ss:Data ss:Type="Number">18.4</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_10"><ss:Data ss:Type="Number">23</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_11"><ss:Data ss:Type="Number">33.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_12"><ss:Data ss:Type="Number">19.6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_13"><ss:Data ss:Type="Number">17.6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:12:34</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:12:49</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:15</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">22</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:13:01 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">COLZA</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L1.2 NB</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Colza</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_1"><ss:Data ss:Type="Number">8.3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_2"><ss:Data ss:Type="Number">34.1</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_3"><ss:Data ss:Type="Number">2.1</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_4"><ss:Data ss:Type="Number">5.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_5"><ss:Data ss:Type="Number">13.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_6"><ss:Data ss:Type="Number">6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_7"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_8"><ss:Data ss:Type="Number">11.6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_9"><ss:Data ss:Type="Number">20.7</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_10"><ss:Data ss:Type="Number">23.4</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_11"><ss:Data ss:Type="Number">36</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_12"><ss:Data ss:Type="Number">19.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_13"><ss:Data ss:Type="Number">18.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:13:01</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:13:25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:24</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">23</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:13:37 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">COLZA</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L1.2 NB</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Colza</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_1"><ss:Data ss:Type="Number">8.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_2"><ss:Data ss:Type="Number">34.4</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_3"><ss:Data ss:Type="Number">2.1</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_4"><ss:Data ss:Type="Number">5.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_5"><ss:Data ss:Type="Number">13.1</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_6"><ss:Data ss:Type="Number">6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_7"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_8"><ss:Data ss:Type="Number">12.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_9"><ss:Data ss:Type="Number">20.3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_10"><ss:Data ss:Type="Number">23.7</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_11"><ss:Data ss:Type="Number">36.8</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_12"><ss:Data ss:Type="Number">20.3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_13"><ss:Data ss:Type="Number">21.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:13:37</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:13:48</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:11</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">24</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:55:09 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">COLZA</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L2.2 BL AD</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Colza</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_1"><ss:Data ss:Type="Number">8.3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_2"><ss:Data ss:Type="Number">34.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_3"><ss:Data ss:Type="Number">2.1</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_4"><ss:Data ss:Type="Number">5.7</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_5"><ss:Data ss:Type="Number">13.1</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_6"><ss:Data ss:Type="Number">5.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_7"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_8"><ss:Data ss:Type="Number">10</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_9"><ss:Data ss:Type="Number">18.5</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_10"><ss:Data ss:Type="Number">20.1</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_11"><ss:Data ss:Type="Number">31.3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_12"><ss:Data ss:Type="Number">17.7</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_13"><ss:Data ss:Type="Number">13.8</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:55:09</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:55:26</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:17</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:55:37 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">COLZA</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L2.2 BL AD</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Colza</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_1"><ss:Data ss:Type="Number">8.3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_2"><ss:Data ss:Type="Number">34.6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_3"><ss:Data ss:Type="Number">1.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_4"><ss:Data ss:Type="Number">5.7</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_5"><ss:Data ss:Type="Number">12.8</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_6"><ss:Data ss:Type="Number">5.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_7"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_8"><ss:Data ss:Type="Number">9.7</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_9"><ss:Data ss:Type="Number">17.6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_10"><ss:Data ss:Type="Number">19.5</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_11"><ss:Data ss:Type="Number">32.5</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_12"><ss:Data ss:Type="Number">17.5</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_13"><ss:Data ss:Type="Number">14.1</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:55:37</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:55:45</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:08</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">26</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:55:56 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">COLZA</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L2.2 BL AD</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Colza</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_1"><ss:Data ss:Type="Number">8.3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_2"><ss:Data ss:Type="Number">34.5</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_3"><ss:Data ss:Type="Number">2.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_4"><ss:Data ss:Type="Number">5.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_5"><ss:Data ss:Type="Number">12.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_6"><ss:Data ss:Type="Number">5.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_7"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_8"><ss:Data ss:Type="Number">11.3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_9"><ss:Data ss:Type="Number">19.3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_10"><ss:Data ss:Type="Number">21.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_11"><ss:Data ss:Type="Number">35.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_12"><ss:Data ss:Type="Number">20.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_13"><ss:Data ss:Type="Number">15.7</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:55:56</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:56:10</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:14</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+   <ss:Cell ss:StyleID="sHeader" ss:Index="2"><ss:Data ss:Type="String">Average</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A1" ss:Index="7" ss:Formula="=AVERAGE(R[-6]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A2" ss:Index="8" ss:Formula="=AVERAGE(R[-6]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A3" ss:Index="9" ss:Formula="=AVERAGE(R[-6]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A4" ss:Index="10" ss:Formula="=AVERAGE(R[-6]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A5" ss:Index="11" ss:Formula="=AVERAGE(R[-6]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A6" ss:Index="12" ss:Formula="=AVERAGE(R[-6]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A7" ss:Index="13" ss:Formula="=AVERAGE(R[-6]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A8" ss:Index="14" ss:Formula="=AVERAGE(R[-6]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A9" ss:Index="15" ss:Formula="=AVERAGE(R[-6]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A10" ss:Index="16" ss:Formula="=AVERAGE(R[-6]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A11" ss:Index="17" ss:Formula="=AVERAGE(R[-6]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A12" ss:Index="18" ss:Formula="=AVERAGE(R[-6]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A13" ss:Index="19" ss:Formula="=AVERAGE(R[-6]C:R[-1]C)"></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+   <ss:Cell ss:StyleID="sHeader" ss:Index="2"><ss:Data ss:Type="String">Min</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A1" ss:Index="7" ss:Formula="=MIN(R[-7]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A2" ss:Index="8" ss:Formula="=MIN(R[-7]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A3" ss:Index="9" ss:Formula="=MIN(R[-7]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A4" ss:Index="10" ss:Formula="=MIN(R[-7]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A5" ss:Index="11" ss:Formula="=MIN(R[-7]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A6" ss:Index="12" ss:Formula="=MIN(R[-7]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A7" ss:Index="13" ss:Formula="=MIN(R[-7]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A8" ss:Index="14" ss:Formula="=MIN(R[-7]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A9" ss:Index="15" ss:Formula="=MIN(R[-7]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A10" ss:Index="16" ss:Formula="=MIN(R[-7]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A11" ss:Index="17" ss:Formula="=MIN(R[-7]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A12" ss:Index="18" ss:Formula="=MIN(R[-7]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A13" ss:Index="19" ss:Formula="=MIN(R[-7]C:R[-2]C)"></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+   <ss:Cell ss:StyleID="sHeader" ss:Index="2"><ss:Data ss:Type="String">Max</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A1" ss:Index="7" ss:Formula="=MAX(R[-8]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A2" ss:Index="8" ss:Formula="=MAX(R[-8]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A3" ss:Index="9" ss:Formula="=MAX(R[-8]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A4" ss:Index="10" ss:Formula="=MAX(R[-8]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A5" ss:Index="11" ss:Formula="=MAX(R[-8]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A6" ss:Index="12" ss:Formula="=MAX(R[-8]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A7" ss:Index="13" ss:Formula="=MAX(R[-8]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A8" ss:Index="14" ss:Formula="=MAX(R[-8]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A9" ss:Index="15" ss:Formula="=MAX(R[-8]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A10" ss:Index="16" ss:Formula="=MAX(R[-8]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A11" ss:Index="17" ss:Formula="=MAX(R[-8]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A12" ss:Index="18" ss:Formula="=MAX(R[-8]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A13" ss:Index="19" ss:Formula="=MAX(R[-8]C:R[-3]C)"></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+   <ss:Cell ss:StyleID="sHeader" ss:Index="2"><ss:Data ss:Type="String">Std.Dev.</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A1" ss:Index="7" ss:Formula="=STDEV(R[-9]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A2" ss:Index="8" ss:Formula="=STDEV(R[-9]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A3" ss:Index="9" ss:Formula="=STDEV(R[-9]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A4" ss:Index="10" ss:Formula="=STDEV(R[-9]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A5" ss:Index="11" ss:Formula="=STDEV(R[-9]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A6" ss:Index="12" ss:Formula="=STDEV(R[-9]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A7" ss:Index="13" ss:Formula="=STDEV(R[-9]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A8" ss:Index="14" ss:Formula="=STDEV(R[-9]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A9" ss:Index="15" ss:Formula="=STDEV(R[-9]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A10" ss:Index="16" ss:Formula="=STDEV(R[-9]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A11" ss:Index="17" ss:Formula="=STDEV(R[-9]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A12" ss:Index="18" ss:Formula="=STDEV(R[-9]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A13" ss:Index="19" ss:Formula="=STDEV(R[-9]C:R[-4]C)"></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+   </ss:Row>
+   <ss:Row>
+   <ss:Cell ss:StyleID="sHeader" ss:Index="2"><ss:Data ss:Type="String">Target</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A1" ss:Index="7"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A2" ss:Index="8"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A3" ss:Index="9"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A4" ss:Index="10"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A5" ss:Index="11"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A6" ss:Index="12"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A7" ss:Index="13"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A8" ss:Index="14"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A9" ss:Index="15"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A10" ss:Index="16"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A11" ss:Index="17"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A12" ss:Index="18"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Colza_A13" ss:Index="19"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+   </ss:Row>
+  </ss:Table>
+ </ss:Worksheet>
+ <ss:Worksheet ss:Name="Cerdos">
+  <ss:Table>
+   <ss:Column ss:Width="20"/>
+   <ss:Column ss:Width="160"/>
+   <ss:Column ss:Width="40"/>
+   <ss:Column ss:Width="80"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Row ss:StyleID="sHeader"><ss:Cell><ss:Data ss:Type="String">26/11/2025 ... 26/11/2025 23:59:59</ss:Data></ss:Cell></ss:Row>
+   <ss:Row/>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">#</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Cerdos</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Unit</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">ID</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Note</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Product</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">H</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">PB</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">GB</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">FB</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Cz</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">ALM</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Fosforo</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Calcio</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Speed</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">MahalanobisH</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">MahalanobisPB</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">MahalanobisGrasa</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">MahalanobisFB</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">MahalanobisCz</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">MahalanobisALM</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">MahalanobisP</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">MahalanobisCa</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Begin</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">End</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Length</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">27</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:14:01 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">PIENSO</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L1.2 NB</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Cerdos</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_1"><ss:Data ss:Type="Number">9.7</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_2"><ss:Data ss:Type="Number">14.6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_3"><ss:Data ss:Type="Number">5.1</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_4"><ss:Data ss:Type="Number">3.7</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_5"><ss:Data ss:Type="Number">3.98</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_6"><ss:Data ss:Type="Number">46.6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_7"><ss:Data ss:Type="Number">.19</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_8"><ss:Data ss:Type="Number">.54</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_9"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_10"><ss:Data ss:Type="Number">2.4</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_11"><ss:Data ss:Type="Number">4.1</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_12"><ss:Data ss:Type="Number">2.1</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_13"><ss:Data ss:Type="Number">3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_14"><ss:Data ss:Type="Number">2.1</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_15"><ss:Data ss:Type="Number">5.3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_16"><ss:Data ss:Type="Number">3.3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_17"><ss:Data ss:Type="Number">3.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:14:01</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:14:26</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:25</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">28</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:14:33 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">PIENSO</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L1.2 NB</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Cerdos</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_1"><ss:Data ss:Type="Number">9.7</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_2"><ss:Data ss:Type="Number">14.4</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_3"><ss:Data ss:Type="Number">5</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_4"><ss:Data ss:Type="Number">3.7</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_5"><ss:Data ss:Type="Number">3.95</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_6"><ss:Data ss:Type="Number">47</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_7"><ss:Data ss:Type="Number">.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_8"><ss:Data ss:Type="Number">.54</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_9"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_10"><ss:Data ss:Type="Number">2.3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_11"><ss:Data ss:Type="Number">4</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_12"><ss:Data ss:Type="Number">2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_13"><ss:Data ss:Type="Number">2.6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_14"><ss:Data ss:Type="Number">2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_15"><ss:Data ss:Type="Number">4.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_16"><ss:Data ss:Type="Number">3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_17"><ss:Data ss:Type="Number">3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:14:33</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:14:49</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:16</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">29</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:15:01 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">PIENSO</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L1.2 NB</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Cerdos</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_1"><ss:Data ss:Type="Number">9.7</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_2"><ss:Data ss:Type="Number">14.3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_3"><ss:Data ss:Type="Number">5</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_4"><ss:Data ss:Type="Number">3.6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_5"><ss:Data ss:Type="Number">3.91</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_6"><ss:Data ss:Type="Number">47.6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_7"><ss:Data ss:Type="Number">.19</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_8"><ss:Data ss:Type="Number">.53</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_9"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_10"><ss:Data ss:Type="Number">2.3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_11"><ss:Data ss:Type="Number">3.8</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_12"><ss:Data ss:Type="Number">1.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_13"><ss:Data ss:Type="Number">2.3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_14"><ss:Data ss:Type="Number">2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_15"><ss:Data ss:Type="Number">4.8</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_16"><ss:Data ss:Type="Number">3.1</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_17"><ss:Data ss:Type="Number">2.8</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:15:01</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:15:16</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:15</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">30</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:56:31 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">PIENSO</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L2.2 BL AD</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Cerdos</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_1"><ss:Data ss:Type="Number">9.7</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_2"><ss:Data ss:Type="Number">13.8</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_3"><ss:Data ss:Type="Number">5</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_4"><ss:Data ss:Type="Number">3.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_5"><ss:Data ss:Type="Number">3.94</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_6"><ss:Data ss:Type="Number">47.5</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_7"><ss:Data ss:Type="Number">.18</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_8"><ss:Data ss:Type="Number">.5</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_9"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_10"><ss:Data ss:Type="Number">2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_11"><ss:Data ss:Type="Number">4</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_12"><ss:Data ss:Type="Number">2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_13"><ss:Data ss:Type="Number">2.6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_14"><ss:Data ss:Type="Number">2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_15"><ss:Data ss:Type="Number">5.1</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_16"><ss:Data ss:Type="Number">3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_17"><ss:Data ss:Type="Number">3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:56:31</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:56:46</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:15</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">31</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:57:01 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">PIENSO</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L2.2 BL AD</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Cerdos</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_1"><ss:Data ss:Type="Number">9.7</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_2"><ss:Data ss:Type="Number">14.4</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_3"><ss:Data ss:Type="Number">5</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_4"><ss:Data ss:Type="Number">3.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_5"><ss:Data ss:Type="Number">3.98</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_6"><ss:Data ss:Type="Number">46.8</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_7"><ss:Data ss:Type="Number">.14</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_8"><ss:Data ss:Type="Number">.55</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_9"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_10"><ss:Data ss:Type="Number">2.1</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_11"><ss:Data ss:Type="Number">3.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_12"><ss:Data ss:Type="Number">2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_13"><ss:Data ss:Type="Number">2.3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_14"><ss:Data ss:Type="Number">1.8</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_15"><ss:Data ss:Type="Number">4.8</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_16"><ss:Data ss:Type="Number">3.4</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_17"><ss:Data ss:Type="Number">2.4</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:57:01</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:57:16</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:15</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">32</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:57:26 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">PIENSO</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L2.2 BL AD</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Cerdos</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_1"><ss:Data ss:Type="Number">9.7</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_2"><ss:Data ss:Type="Number">13.6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_3"><ss:Data ss:Type="Number">4.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_4"><ss:Data ss:Type="Number">3.8</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_5"><ss:Data ss:Type="Number">3.88</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_6"><ss:Data ss:Type="Number">48.4</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_7"><ss:Data ss:Type="Number">.17</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_8"><ss:Data ss:Type="Number">.5</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_9"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_10"><ss:Data ss:Type="Number">2.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_11"><ss:Data ss:Type="Number">3.8</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_12"><ss:Data ss:Type="Number">1.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_13"><ss:Data ss:Type="Number">2.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_14"><ss:Data ss:Type="Number">2.1</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_15"><ss:Data ss:Type="Number">4.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_16"><ss:Data ss:Type="Number">3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_17"><ss:Data ss:Type="Number">2.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:57:26</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:57:50</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:24</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">33</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:58:00 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">PIENSO</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L2.2 BL AD</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Cerdos</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_1"><ss:Data ss:Type="Number">9.6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_2"><ss:Data ss:Type="Number">14.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_3"><ss:Data ss:Type="Number">5.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_4"><ss:Data ss:Type="Number">4.1</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_5"><ss:Data ss:Type="Number">4.17</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_6"><ss:Data ss:Type="Number">45.3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_7"><ss:Data ss:Type="Number">.19</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_8"><ss:Data ss:Type="Number">.56</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_9"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_10"><ss:Data ss:Type="Number">2.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_11"><ss:Data ss:Type="Number">4.1</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_12"><ss:Data ss:Type="Number">2.1</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_13"><ss:Data ss:Type="Number">2.5</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_14"><ss:Data ss:Type="Number">1.5</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_15"><ss:Data ss:Type="Number">5.7</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_16"><ss:Data ss:Type="Number">3.1</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_17"><ss:Data ss:Type="Number">2.7</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:58:00</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:58:18</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:18</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+   <ss:Cell ss:StyleID="sHeader" ss:Index="2"><ss:Data ss:Type="String">Average</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A1" ss:Index="7" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A2" ss:Index="8" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A3" ss:Index="9" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A4" ss:Index="10" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A5" ss:Index="11" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A6" ss:Index="12" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A7" ss:Index="13" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A8" ss:Index="14" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A9" ss:Index="15" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A10" ss:Index="16" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A11" ss:Index="17" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A12" ss:Index="18" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A13" ss:Index="19" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A14" ss:Index="20" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A15" ss:Index="21" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A16" ss:Index="22" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A17" ss:Index="23" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+   <ss:Cell ss:StyleID="sHeader" ss:Index="2"><ss:Data ss:Type="String">Min</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A1" ss:Index="7" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A2" ss:Index="8" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A3" ss:Index="9" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A4" ss:Index="10" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A5" ss:Index="11" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A6" ss:Index="12" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A7" ss:Index="13" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A8" ss:Index="14" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A9" ss:Index="15" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A10" ss:Index="16" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A11" ss:Index="17" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A12" ss:Index="18" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A13" ss:Index="19" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A14" ss:Index="20" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A15" ss:Index="21" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A16" ss:Index="22" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A17" ss:Index="23" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+   <ss:Cell ss:StyleID="sHeader" ss:Index="2"><ss:Data ss:Type="String">Max</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A1" ss:Index="7" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A2" ss:Index="8" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A3" ss:Index="9" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A4" ss:Index="10" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A5" ss:Index="11" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A6" ss:Index="12" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A7" ss:Index="13" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A8" ss:Index="14" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A9" ss:Index="15" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A10" ss:Index="16" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A11" ss:Index="17" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A12" ss:Index="18" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A13" ss:Index="19" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A14" ss:Index="20" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A15" ss:Index="21" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A16" ss:Index="22" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A17" ss:Index="23" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+   <ss:Cell ss:StyleID="sHeader" ss:Index="2"><ss:Data ss:Type="String">Std.Dev.</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A1" ss:Index="7" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A2" ss:Index="8" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A3" ss:Index="9" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A4" ss:Index="10" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A5" ss:Index="11" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A6" ss:Index="12" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A7" ss:Index="13" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A8" ss:Index="14" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A9" ss:Index="15" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A10" ss:Index="16" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A11" ss:Index="17" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A12" ss:Index="18" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A13" ss:Index="19" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A14" ss:Index="20" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A15" ss:Index="21" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A16" ss:Index="22" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A17" ss:Index="23" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+   </ss:Row>
+   <ss:Row>
+   <ss:Cell ss:StyleID="sHeader" ss:Index="2"><ss:Data ss:Type="String">Target</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A1" ss:Index="7"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A2" ss:Index="8"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A3" ss:Index="9"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A4" ss:Index="10"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A5" ss:Index="11"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A6" ss:Index="12"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A7" ss:Index="13"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A8" ss:Index="14"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A9" ss:Index="15"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A10" ss:Index="16"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A11" ss:Index="17"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A12" ss:Index="18"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A13" ss:Index="19"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A14" ss:Index="20"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A15" ss:Index="21"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A16" ss:Index="22"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Cerdos_A17" ss:Index="23"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+   </ss:Row>
+  </ss:Table>
+ </ss:Worksheet>
+ <ss:Worksheet ss:Name="TrigoTriti">
+  <ss:Table>
+   <ss:Column ss:Width="20"/>
+   <ss:Column ss:Width="160"/>
+   <ss:Column ss:Width="40"/>
+   <ss:Column ss:Width="80"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Row ss:StyleID="sHeader"><ss:Cell><ss:Data ss:Type="String">26/11/2025 ... 26/11/2025 23:59:59</ss:Data></ss:Cell></ss:Row>
+   <ss:Row/>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">#</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">TrigoTriti</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Unit</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">ID</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Note</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Product</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">H</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">PB</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">GB</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">FB</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Cz</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">ALM</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Speed</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">MahalanobisH</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">MahalanobisPB</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">MahalanobisGrasa</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">MahalanobisFB</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">MahalanobisCz</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">MahalanobisALM</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Begin</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">End</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Length</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">34</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:15:31 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">TRIGO</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L1.2 NB</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">TrigoTriti</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_1"><ss:Data ss:Type="Number">12.1</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_2"><ss:Data ss:Type="Number">6.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_3"><ss:Data ss:Type="Number">1.8</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_4"><ss:Data ss:Type="Number">3.1</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_5"><ss:Data ss:Type="Number">1.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_6"><ss:Data ss:Type="Number">59.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_7"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_8"><ss:Data ss:Type="Number">19</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_9"><ss:Data ss:Type="Number">21.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_10"><ss:Data ss:Type="Number">13.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_11"><ss:Data ss:Type="Number">10.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_12"><ss:Data ss:Type="Number">11.5</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_13"><ss:Data ss:Type="Number">8.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:15:31</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:15:58</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:27</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">35</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:16:07 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">TRIGO</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L1.2 NB</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">TrigoTriti</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_1"><ss:Data ss:Type="Number">12</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_2"><ss:Data ss:Type="Number">7</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_3"><ss:Data ss:Type="Number">1.7</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_4"><ss:Data ss:Type="Number">3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_5"><ss:Data ss:Type="Number">1.1</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_6"><ss:Data ss:Type="Number">59.6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_7"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_8"><ss:Data ss:Type="Number">15.8</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_9"><ss:Data ss:Type="Number">15.7</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_10"><ss:Data ss:Type="Number">12.1</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_11"><ss:Data ss:Type="Number">9.7</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_12"><ss:Data ss:Type="Number">11.5</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_13"><ss:Data ss:Type="Number">7.3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:16:07</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:17:08</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:01:01</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">36</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:17:17 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">TRIGO</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L1.2 NB</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">TrigoTriti</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_1"><ss:Data ss:Type="Number">12</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_2"><ss:Data ss:Type="Number">6.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_3"><ss:Data ss:Type="Number">1.7</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_4"><ss:Data ss:Type="Number">3.1</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_5"><ss:Data ss:Type="Number">1.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_6"><ss:Data ss:Type="Number">58.6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_7"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_8"><ss:Data ss:Type="Number">17.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_9"><ss:Data ss:Type="Number">19.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_10"><ss:Data ss:Type="Number">13.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_11"><ss:Data ss:Type="Number">10.6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_12"><ss:Data ss:Type="Number">11.5</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_13"><ss:Data ss:Type="Number">8</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:17:17</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:17:30</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:13</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">37</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:58:41 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">TRIGO</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L2.2 BL AD</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">TrigoTriti</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_1"><ss:Data ss:Type="Number">12</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_2"><ss:Data ss:Type="Number">6.6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_3"><ss:Data ss:Type="Number">1.7</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_4"><ss:Data ss:Type="Number">3.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_5"><ss:Data ss:Type="Number">1.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_6"><ss:Data ss:Type="Number">59.4</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_7"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_8"><ss:Data ss:Type="Number">17.4</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_9"><ss:Data ss:Type="Number">18.8</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_10"><ss:Data ss:Type="Number">12.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_11"><ss:Data ss:Type="Number">10.4</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_12"><ss:Data ss:Type="Number">11.5</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_13"><ss:Data ss:Type="Number">6.5</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:58:41</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:58:54</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:13</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">38</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:59:05 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">TRIGO</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L2.2 BL AD</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">TrigoTriti</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_1"><ss:Data ss:Type="Number">11.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_2"><ss:Data ss:Type="Number">7</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_3"><ss:Data ss:Type="Number">1.6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_4"><ss:Data ss:Type="Number">3.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_5"><ss:Data ss:Type="Number">1.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_6"><ss:Data ss:Type="Number">59</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_7"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_8"><ss:Data ss:Type="Number">16.3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_9"><ss:Data ss:Type="Number">18.6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_10"><ss:Data ss:Type="Number">13.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_11"><ss:Data ss:Type="Number">10</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_12"><ss:Data ss:Type="Number">11.5</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_13"><ss:Data ss:Type="Number">6.5</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:59:05</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:59:31</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:26</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">39</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:59:41 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">TRIGO</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L2.2 BL AD</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">TrigoTriti</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_1"><ss:Data ss:Type="Number">11.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_2"><ss:Data ss:Type="Number">7</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_3"><ss:Data ss:Type="Number">1.6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_4"><ss:Data ss:Type="Number">3.1</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_5"><ss:Data ss:Type="Number">1.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_6"><ss:Data ss:Type="Number">60</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_7"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_8"><ss:Data ss:Type="Number">14.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_9"><ss:Data ss:Type="Number">16.8</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_10"><ss:Data ss:Type="Number">11.3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_11"><ss:Data ss:Type="Number">9.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_12"><ss:Data ss:Type="Number">17.6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_13"><ss:Data ss:Type="Number">5.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:59:41</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:59:59</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:18</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">40</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 11:00:00 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">TRIGO</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String"></ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">TrigoTriti</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_1"><ss:Data ss:Type="Number">11.8</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_2"><ss:Data ss:Type="Number">7</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_3"><ss:Data ss:Type="Number">1.6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_4"><ss:Data ss:Type="Number">3.1</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_5"><ss:Data ss:Type="Number">1.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_6"><ss:Data ss:Type="Number">60</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_7"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_8"><ss:Data ss:Type="Number">14.1</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_9"><ss:Data ss:Type="Number">17</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_10"><ss:Data ss:Type="Number">11.5</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_11"><ss:Data ss:Type="Number">9.4</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_12"><ss:Data ss:Type="Number">17.3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_13"><ss:Data ss:Type="Number">6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T11:00:00</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T11:00:01</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:01</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+   <ss:Cell ss:StyleID="sHeader" ss:Index="2"><ss:Data ss:Type="String">Average</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A1" ss:Index="7" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A2" ss:Index="8" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A3" ss:Index="9" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A4" ss:Index="10" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A5" ss:Index="11" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A6" ss:Index="12" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A7" ss:Index="13" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A8" ss:Index="14" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A9" ss:Index="15" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A10" ss:Index="16" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A11" ss:Index="17" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A12" ss:Index="18" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A13" ss:Index="19" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+   <ss:Cell ss:StyleID="sHeader" ss:Index="2"><ss:Data ss:Type="String">Min</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A1" ss:Index="7" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A2" ss:Index="8" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A3" ss:Index="9" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A4" ss:Index="10" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A5" ss:Index="11" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A6" ss:Index="12" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A7" ss:Index="13" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A8" ss:Index="14" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A9" ss:Index="15" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A10" ss:Index="16" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A11" ss:Index="17" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A12" ss:Index="18" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A13" ss:Index="19" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+   <ss:Cell ss:StyleID="sHeader" ss:Index="2"><ss:Data ss:Type="String">Max</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A1" ss:Index="7" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A2" ss:Index="8" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A3" ss:Index="9" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A4" ss:Index="10" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A5" ss:Index="11" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A6" ss:Index="12" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A7" ss:Index="13" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A8" ss:Index="14" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A9" ss:Index="15" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A10" ss:Index="16" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A11" ss:Index="17" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A12" ss:Index="18" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A13" ss:Index="19" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+   <ss:Cell ss:StyleID="sHeader" ss:Index="2"><ss:Data ss:Type="String">Std.Dev.</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A1" ss:Index="7" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A2" ss:Index="8" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A3" ss:Index="9" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A4" ss:Index="10" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A5" ss:Index="11" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A6" ss:Index="12" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A7" ss:Index="13" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A8" ss:Index="14" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A9" ss:Index="15" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A10" ss:Index="16" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A11" ss:Index="17" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A12" ss:Index="18" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A13" ss:Index="19" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+   </ss:Row>
+   <ss:Row>
+   <ss:Cell ss:StyleID="sHeader" ss:Index="2"><ss:Data ss:Type="String">Target</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A1" ss:Index="7"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A2" ss:Index="8"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A3" ss:Index="9"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A4" ss:Index="10"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A5" ss:Index="11"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A6" ss:Index="12"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A7" ss:Index="13"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A8" ss:Index="14"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A9" ss:Index="15"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A10" ss:Index="16"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A11" ss:Index="17"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A12" ss:Index="18"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="TrigoTriti_A13" ss:Index="19"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+   </ss:Row>
+  </ss:Table>
+ </ss:Worksheet>
+ <ss:Worksheet ss:Name="Soja">
+  <ss:Table>
+   <ss:Column ss:Width="20"/>
+   <ss:Column ss:Width="160"/>
+   <ss:Column ss:Width="40"/>
+   <ss:Column ss:Width="80"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Row ss:StyleID="sHeader"><ss:Cell><ss:Data ss:Type="String">26/11/2025 ... 26/11/2025 23:59:59</ss:Data></ss:Cell></ss:Row>
+   <ss:Row/>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">#</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Soja</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Unit</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">ID</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Note</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Product</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">H</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">PB</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Grasa bruta</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">FB</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Cz</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Speed</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">MahalanobisH</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">MahalanobisPB</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">MahalanobisGrasa</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">MahalanobisFB</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">MahalanobisCz</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Begin</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">End</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Length</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">41</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:18:02 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">SOJA</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L1.2 NB</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Soja</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_1"><ss:Data ss:Type="Number">10.4</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_2"><ss:Data ss:Type="Number">46.5</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_3"><ss:Data ss:Type="Number">.6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_4"><ss:Data ss:Type="Number">6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_5"><ss:Data ss:Type="Number">5.26</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_6"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_7"><ss:Data ss:Type="Number">47.5</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_8"><ss:Data ss:Type="Number">27</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_9"><ss:Data ss:Type="Number">90</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_10"><ss:Data ss:Type="Number">8.8</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_11"><ss:Data ss:Type="Number">20.6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:18:02</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:18:45</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:43</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">42</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:18:56 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">SOJA</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L1.2 NB</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Soja</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_1"><ss:Data ss:Type="Number">10.4</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_2"><ss:Data ss:Type="Number">46.3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_3"><ss:Data ss:Type="Number">.6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_4"><ss:Data ss:Type="Number">5.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_5"><ss:Data ss:Type="Number">5.32</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_6"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_7"><ss:Data ss:Type="Number">46.6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_8"><ss:Data ss:Type="Number">26.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_9"><ss:Data ss:Type="Number">123.8</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_10"><ss:Data ss:Type="Number">9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_11"><ss:Data ss:Type="Number">19.8</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:18:56</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:19:40</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:44</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">43</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:19:50 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">SOJA</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L1.2 NB</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Soja</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_1"><ss:Data ss:Type="Number">10.4</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_2"><ss:Data ss:Type="Number">46.3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_3"><ss:Data ss:Type="Number">.7</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_4"><ss:Data ss:Type="Number">6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_5"><ss:Data ss:Type="Number">5.28</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_6"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_7"><ss:Data ss:Type="Number">47</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_8"><ss:Data ss:Type="Number">27.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_9"><ss:Data ss:Type="Number">129.5</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_10"><ss:Data ss:Type="Number">9.1</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_11"><ss:Data ss:Type="Number">21.5</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:19:50</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:19:59</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:09</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">44</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:20:00 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">SOJA</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L1.2 NB</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Soja</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_1"><ss:Data ss:Type="Number">10.4</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_2"><ss:Data ss:Type="Number">46.3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_3"><ss:Data ss:Type="Number">.7</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_4"><ss:Data ss:Type="Number">6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_5"><ss:Data ss:Type="Number">5.29</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_6"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_7"><ss:Data ss:Type="Number">47.5</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_8"><ss:Data ss:Type="Number">27.4</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_9"><ss:Data ss:Type="Number">90</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_10"><ss:Data ss:Type="Number">9.3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_11"><ss:Data ss:Type="Number">21.6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:20:00</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:20:12</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:12</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">45</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 11:00:47 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">SOJA</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L2.2 BL AD</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Soja</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_1"><ss:Data ss:Type="Number">10.3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_2"><ss:Data ss:Type="Number">46.3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_3"><ss:Data ss:Type="Number">.8</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_4"><ss:Data ss:Type="Number">6.1</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_5"><ss:Data ss:Type="Number">4.79</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_6"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_7"><ss:Data ss:Type="Number">46.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_8"><ss:Data ss:Type="Number">29</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_9"><ss:Data ss:Type="Number">90</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_10"><ss:Data ss:Type="Number">13</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_11"><ss:Data ss:Type="Number">24.4</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T11:00:47</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T11:01:16</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:29</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">46</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 11:01:26 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">SOJA</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L2.2 BL AD</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Soja</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_1"><ss:Data ss:Type="Number">10.4</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_2"><ss:Data ss:Type="Number">46.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_3"><ss:Data ss:Type="Number">.8</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_4"><ss:Data ss:Type="Number">6.3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_5"><ss:Data ss:Type="Number">4.8</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_6"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_7"><ss:Data ss:Type="Number">50.8</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_8"><ss:Data ss:Type="Number">32.4</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_9"><ss:Data ss:Type="Number">90</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_10"><ss:Data ss:Type="Number">15.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_11"><ss:Data ss:Type="Number">25.7</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T11:01:26</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T11:01:46</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:20</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">47</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 11:01:57 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">SOJA</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L2.2 BL AD</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Soja</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_1"><ss:Data ss:Type="Number">10.3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_2"><ss:Data ss:Type="Number">46.1</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_3"><ss:Data ss:Type="Number">.7</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_4"><ss:Data ss:Type="Number">6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_5"><ss:Data ss:Type="Number">4.89</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_6"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_7"><ss:Data ss:Type="Number">44.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_8"><ss:Data ss:Type="Number">26.8</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_9"><ss:Data ss:Type="Number">90</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_10"><ss:Data ss:Type="Number">13.3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_11"><ss:Data ss:Type="Number">21.7</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T11:01:57</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T11:02:17</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:20</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+   <ss:Cell ss:StyleID="sHeader" ss:Index="2"><ss:Data ss:Type="String">Average</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A1" ss:Index="7" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A2" ss:Index="8" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A3" ss:Index="9" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A4" ss:Index="10" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A5" ss:Index="11" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A6" ss:Index="12" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A7" ss:Index="13" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A8" ss:Index="14" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A9" ss:Index="15" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A10" ss:Index="16" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A11" ss:Index="17" ss:Formula="=AVERAGE(R[-7]C:R[-1]C)"></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+   <ss:Cell ss:StyleID="sHeader" ss:Index="2"><ss:Data ss:Type="String">Min</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A1" ss:Index="7" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A2" ss:Index="8" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A3" ss:Index="9" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A4" ss:Index="10" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A5" ss:Index="11" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A6" ss:Index="12" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A7" ss:Index="13" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A8" ss:Index="14" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A9" ss:Index="15" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A10" ss:Index="16" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A11" ss:Index="17" ss:Formula="=MIN(R[-8]C:R[-2]C)"></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+   <ss:Cell ss:StyleID="sHeader" ss:Index="2"><ss:Data ss:Type="String">Max</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A1" ss:Index="7" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A2" ss:Index="8" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A3" ss:Index="9" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A4" ss:Index="10" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A5" ss:Index="11" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A6" ss:Index="12" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A7" ss:Index="13" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A8" ss:Index="14" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A9" ss:Index="15" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A10" ss:Index="16" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A11" ss:Index="17" ss:Formula="=MAX(R[-9]C:R[-3]C)"></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+   <ss:Cell ss:StyleID="sHeader" ss:Index="2"><ss:Data ss:Type="String">Std.Dev.</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A1" ss:Index="7" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A2" ss:Index="8" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A3" ss:Index="9" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A4" ss:Index="10" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A5" ss:Index="11" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A6" ss:Index="12" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A7" ss:Index="13" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A8" ss:Index="14" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A9" ss:Index="15" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A10" ss:Index="16" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A11" ss:Index="17" ss:Formula="=STDEV(R[-10]C:R[-4]C)"></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+   </ss:Row>
+   <ss:Row>
+   <ss:Cell ss:StyleID="sHeader" ss:Index="2"><ss:Data ss:Type="String">Target</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A1" ss:Index="7"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A2" ss:Index="8"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A3" ss:Index="9"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A4" ss:Index="10"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A5" ss:Index="11"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A6" ss:Index="12"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A7" ss:Index="13"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A8" ss:Index="14"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A9" ss:Index="15"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A10" ss:Index="16"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Soja_A11" ss:Index="17"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+   </ss:Row>
+  </ss:Table>
+ </ss:Worksheet>
+ <ss:Worksheet ss:Name="Maiz">
+  <ss:Table>
+   <ss:Column ss:Width="20"/>
+   <ss:Column ss:Width="160"/>
+   <ss:Column ss:Width="40"/>
+   <ss:Column ss:Width="80"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Column ss:AutoFitWidth="1"/>
+   <ss:Row ss:StyleID="sHeader"><ss:Cell><ss:Data ss:Type="String">26/11/2025 ... 26/11/2025 23:59:59</ss:Data></ss:Cell></ss:Row>
+   <ss:Row/>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">#</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Maiz</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Unit</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">ID</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Note</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Product</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">H</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">PB</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">GB</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">FB</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Cz</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">ALM</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Aw</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Speed</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">MahalanobisH</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">MahalanobisPB</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">MahalanobisGB</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">MahalanobisFB</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">MahalanobisCz</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">MahalanobisALM</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">MahalanobisAw</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Begin</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">End</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="String">Length</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">48</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:21:18 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">MAIZ</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L1.2 NB</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Maiz</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_1"><ss:Data ss:Type="Number">13.6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_2"><ss:Data ss:Type="Number">6.1</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_3"><ss:Data ss:Type="Number">3.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_4"><ss:Data ss:Type="Number">2.4</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_5"><ss:Data ss:Type="Number">.78</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_6"><ss:Data ss:Type="Number">71.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_7"><ss:Data ss:Type="Number">.575</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_8"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_9"><ss:Data ss:Type="Number">36</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_10"><ss:Data ss:Type="Number">26.6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_11"><ss:Data ss:Type="Number">15.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_12"><ss:Data ss:Type="Number">6.8</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_13"><ss:Data ss:Type="Number">20</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_14"><ss:Data ss:Type="Number">21.6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_15"><ss:Data ss:Type="Number">2.6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:21:18</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:22:22</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:01:04</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">49</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:22:32 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">MAIZ</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L1.2 NB</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Maiz</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_1"><ss:Data ss:Type="Number">13.5</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_2"><ss:Data ss:Type="Number">5.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_3"><ss:Data ss:Type="Number">3.1</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_4"><ss:Data ss:Type="Number">2.4</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_5"><ss:Data ss:Type="Number">.82</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_6"><ss:Data ss:Type="Number">70.8</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_7"><ss:Data ss:Type="Number">.59</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_8"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_9"><ss:Data ss:Type="Number">32.1</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_10"><ss:Data ss:Type="Number">23.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_11"><ss:Data ss:Type="Number">16.4</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_12"><ss:Data ss:Type="Number">6.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_13"><ss:Data ss:Type="Number">20</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_14"><ss:Data ss:Type="Number">20.4</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_15"><ss:Data ss:Type="Number">1.6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:22:32</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:22:48</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:16</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">50</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 10:23:00 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">MAIZ</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L1.2 NB</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Maiz</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_1"><ss:Data ss:Type="Number">13.3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_2"><ss:Data ss:Type="Number">5.7</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_3"><ss:Data ss:Type="Number">3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_4"><ss:Data ss:Type="Number">2.5</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_5"><ss:Data ss:Type="Number">.81</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_6"><ss:Data ss:Type="Number">71.1</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_7"><ss:Data ss:Type="Number">.583</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_8"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_9"><ss:Data ss:Type="Number">31.8</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_10"><ss:Data ss:Type="Number">26.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_11"><ss:Data ss:Type="Number">16</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_12"><ss:Data ss:Type="Number">8.8</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_13"><ss:Data ss:Type="Number">20</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_14"><ss:Data ss:Type="Number">21.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_15"><ss:Data ss:Type="Number">2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:23:00</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T10:23:15</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:15</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">51</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 11:02:29 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">MAIZ</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L2.2 BL AD</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Maiz</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_1"><ss:Data ss:Type="Number">13.4</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_2"><ss:Data ss:Type="Number">6.1</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_3"><ss:Data ss:Type="Number">3.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_4"><ss:Data ss:Type="Number">2.6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_5"><ss:Data ss:Type="Number">.81</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_6"><ss:Data ss:Type="Number">70.3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_7"><ss:Data ss:Type="Number">.555</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_8"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_9"><ss:Data ss:Type="Number">32.6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_10"><ss:Data ss:Type="Number">17.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_11"><ss:Data ss:Type="Number">10.4</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_12"><ss:Data ss:Type="Number">5.6</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_13"><ss:Data ss:Type="Number">20</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_14"><ss:Data ss:Type="Number">16.5</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_15"><ss:Data ss:Type="Number">1.7</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T11:02:29</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T11:03:02</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:33</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">52</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 11:03:11 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">MAIZ</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L2.2 BL AD</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Maiz</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_1"><ss:Data ss:Type="Number">13.4</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_2"><ss:Data ss:Type="Number">5.8</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_3"><ss:Data ss:Type="Number">3.4</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_4"><ss:Data ss:Type="Number">2.7</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_5"><ss:Data ss:Type="Number">.79</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_6"><ss:Data ss:Type="Number">70.1</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_7"><ss:Data ss:Type="Number">.528</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_8"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_9"><ss:Data ss:Type="Number">38</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_10"><ss:Data ss:Type="Number">22.4</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_11"><ss:Data ss:Type="Number">10.5</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_12"><ss:Data ss:Type="Number">3.5</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_13"><ss:Data ss:Type="Number">20</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_14"><ss:Data ss:Type="Number">14.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_15"><ss:Data ss:Type="Number">3.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T11:03:11</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T11:03:27</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:16</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+    <ss:Cell ss:StyleID="sColumns"><ss:Data ss:Type="Number">53</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">#2025-11-26 11:03:41 316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">316FG103</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">MAIZ</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">L2.2 BL AD</ss:Data></ss:Cell>
+    <ss:Cell><ss:Data ss:Type="String">Maiz</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_1"><ss:Data ss:Type="Number">13.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_2"><ss:Data ss:Type="Number">6.1</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_3"><ss:Data ss:Type="Number">3.3</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_4"><ss:Data ss:Type="Number">2.7</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_5"><ss:Data ss:Type="Number">.82</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_6"><ss:Data ss:Type="Number">70.2</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_7"><ss:Data ss:Type="Number">.538</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_8"><ss:Data ss:Type="Number">25</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_9"><ss:Data ss:Type="Number">34</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_10"><ss:Data ss:Type="Number">19.5</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_11"><ss:Data ss:Type="Number">10.4</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_12"><ss:Data ss:Type="Number">4.4</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_13"><ss:Data ss:Type="Number">20</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_14"><ss:Data ss:Type="Number">15.9</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_15"><ss:Data ss:Type="Number">2.8</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T11:03:41</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sDateTime"><ss:Data ss:Type="DateTime">2025-11-26T11:04:09</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="sTime"><ss:Data ss:Type="DateTime">1899-12-31T00:00:28</ss:Data></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+   <ss:Cell ss:StyleID="sHeader" ss:Index="2"><ss:Data ss:Type="String">Average</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A1" ss:Index="7" ss:Formula="=AVERAGE(R[-6]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A2" ss:Index="8" ss:Formula="=AVERAGE(R[-6]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A3" ss:Index="9" ss:Formula="=AVERAGE(R[-6]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A4" ss:Index="10" ss:Formula="=AVERAGE(R[-6]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A5" ss:Index="11" ss:Formula="=AVERAGE(R[-6]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A6" ss:Index="12" ss:Formula="=AVERAGE(R[-6]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A7" ss:Index="13" ss:Formula="=AVERAGE(R[-6]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A8" ss:Index="14" ss:Formula="=AVERAGE(R[-6]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A9" ss:Index="15" ss:Formula="=AVERAGE(R[-6]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A10" ss:Index="16" ss:Formula="=AVERAGE(R[-6]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A11" ss:Index="17" ss:Formula="=AVERAGE(R[-6]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A12" ss:Index="18" ss:Formula="=AVERAGE(R[-6]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A13" ss:Index="19" ss:Formula="=AVERAGE(R[-6]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A14" ss:Index="20" ss:Formula="=AVERAGE(R[-6]C:R[-1]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A15" ss:Index="21" ss:Formula="=AVERAGE(R[-6]C:R[-1]C)"></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+   <ss:Cell ss:StyleID="sHeader" ss:Index="2"><ss:Data ss:Type="String">Min</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A1" ss:Index="7" ss:Formula="=MIN(R[-7]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A2" ss:Index="8" ss:Formula="=MIN(R[-7]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A3" ss:Index="9" ss:Formula="=MIN(R[-7]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A4" ss:Index="10" ss:Formula="=MIN(R[-7]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A5" ss:Index="11" ss:Formula="=MIN(R[-7]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A6" ss:Index="12" ss:Formula="=MIN(R[-7]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A7" ss:Index="13" ss:Formula="=MIN(R[-7]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A8" ss:Index="14" ss:Formula="=MIN(R[-7]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A9" ss:Index="15" ss:Formula="=MIN(R[-7]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A10" ss:Index="16" ss:Formula="=MIN(R[-7]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A11" ss:Index="17" ss:Formula="=MIN(R[-7]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A12" ss:Index="18" ss:Formula="=MIN(R[-7]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A13" ss:Index="19" ss:Formula="=MIN(R[-7]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A14" ss:Index="20" ss:Formula="=MIN(R[-7]C:R[-2]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A15" ss:Index="21" ss:Formula="=MIN(R[-7]C:R[-2]C)"></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+   <ss:Cell ss:StyleID="sHeader" ss:Index="2"><ss:Data ss:Type="String">Max</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A1" ss:Index="7" ss:Formula="=MAX(R[-8]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A2" ss:Index="8" ss:Formula="=MAX(R[-8]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A3" ss:Index="9" ss:Formula="=MAX(R[-8]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A4" ss:Index="10" ss:Formula="=MAX(R[-8]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A5" ss:Index="11" ss:Formula="=MAX(R[-8]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A6" ss:Index="12" ss:Formula="=MAX(R[-8]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A7" ss:Index="13" ss:Formula="=MAX(R[-8]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A8" ss:Index="14" ss:Formula="=MAX(R[-8]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A9" ss:Index="15" ss:Formula="=MAX(R[-8]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A10" ss:Index="16" ss:Formula="=MAX(R[-8]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A11" ss:Index="17" ss:Formula="=MAX(R[-8]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A12" ss:Index="18" ss:Formula="=MAX(R[-8]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A13" ss:Index="19" ss:Formula="=MAX(R[-8]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A14" ss:Index="20" ss:Formula="=MAX(R[-8]C:R[-3]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A15" ss:Index="21" ss:Formula="=MAX(R[-8]C:R[-3]C)"></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+   <ss:Cell ss:StyleID="sHeader" ss:Index="2"><ss:Data ss:Type="String">Std.Dev.</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A1" ss:Index="7" ss:Formula="=STDEV(R[-9]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A2" ss:Index="8" ss:Formula="=STDEV(R[-9]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A3" ss:Index="9" ss:Formula="=STDEV(R[-9]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A4" ss:Index="10" ss:Formula="=STDEV(R[-9]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A5" ss:Index="11" ss:Formula="=STDEV(R[-9]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A6" ss:Index="12" ss:Formula="=STDEV(R[-9]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A7" ss:Index="13" ss:Formula="=STDEV(R[-9]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A8" ss:Index="14" ss:Formula="=STDEV(R[-9]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A9" ss:Index="15" ss:Formula="=STDEV(R[-9]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A10" ss:Index="16" ss:Formula="=STDEV(R[-9]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A11" ss:Index="17" ss:Formula="=STDEV(R[-9]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A12" ss:Index="18" ss:Formula="=STDEV(R[-9]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A13" ss:Index="19" ss:Formula="=STDEV(R[-9]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A14" ss:Index="20" ss:Formula="=STDEV(R[-9]C:R[-4]C)"></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A15" ss:Index="21" ss:Formula="=STDEV(R[-9]C:R[-4]C)"></ss:Cell>
+   </ss:Row>
+   <ss:Row>
+   </ss:Row>
+   <ss:Row>
+   <ss:Cell ss:StyleID="sHeader" ss:Index="2"><ss:Data ss:Type="String">Target</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A1" ss:Index="7"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A2" ss:Index="8"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A3" ss:Index="9"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A4" ss:Index="10"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A5" ss:Index="11"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A6" ss:Index="12"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A7" ss:Index="13"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A8" ss:Index="14"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A9" ss:Index="15"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A10" ss:Index="16"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A11" ss:Index="17"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A12" ss:Index="18"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A13" ss:Index="19"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A14" ss:Index="20"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+    <ss:Cell ss:StyleID="Maiz_A15" ss:Index="21"><ss:Data ss:Type="String">0</ss:Data></ss:Cell>
+   </ss:Row>
+  </ss:Table>
+ </ss:Worksheet>
+</ss:Workbook>
