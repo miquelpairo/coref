@@ -36,6 +36,7 @@ y validación de equipos NIR (Near-Infrared), especialmente NIR Online con detec
 Estas aplicaciones ayudan a técnicos de servicio en:
 - Ajuste de baseline post-cambio de lámpara
 - Validación de estándares ópticos
+- Corrección de offset fino
 - Comparación y análisis de espectros
 """)
 
@@ -44,11 +45,11 @@ st.divider()
 # Tarjetas de navegación
 st.markdown("## 🧰 Herramientas Disponibles")
 
-# CSS para igualar alturas - ahora con 4 columnas
+# CSS para igualar alturas - ahora con más columnas
 st.markdown("""
 <style>
 .card-container {
-    min-height: 280px;
+    min-height: 350px;
     padding: 20px;
     border-radius: 10px;
     background-color: #f5f5f5;
@@ -59,12 +60,14 @@ st.markdown("""
 .card-red { border: 2px solid #d32f2f; }
 .card-green { border: 2px solid #388e3c; }
 .card-purple { border: 2px solid #7b1fa2; }
+.card-orange { border: 2px solid #f57c00; }
 
 .card-container h3 { margin-top: 0; }
 .card-blue h3 { color: #1976d2; }
 .card-red h3 { color: #d32f2f; }
 .card-green h3 { color: #388e3c; }
 .card-purple h3 { color: #7b1fa2; }
+.card-orange h3 { color: #f57c00; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -80,7 +83,7 @@ with col1:
         <ul>
             <li>Análisis de diferencias espectrales</li>
             <li>Cálculo automático de correcciones</li>
-            <li>Exportación de reportes</li>
+            <li>Corrección de forma espectral</li>
         </ul>
     </div>
     """, unsafe_allow_html=True)
@@ -99,6 +102,7 @@ with col2:
             <li>Detección automática de IDs comunes</li>
             <li>Validación múltiple simultánea</li>
             <li>Análisis de regiones críticas</li>
+            <li>Detección de offset global</li>
         </ul>
     </div>
     """, unsafe_allow_html=True)
@@ -108,10 +112,28 @@ with col2:
     if st.button("🚀 Abrir Standard Validation", key="btn_validation", use_container_width=True, type="primary"):
         st.switch_page("pages/2_🎯_Validation_Standards.py")
 
-# Segunda fila - 2 columnas
-col3, col4 = st.columns(2)
+# Segunda fila - 3 columnas (añadida Offset Adjustment)
+col3, col4, col5 = st.columns(3)
 
 with col3:
+    st.markdown("""
+    <div class="card-container card-orange">
+        <h3>🎚️ Offset Adjustment</h3>
+        <p>Ajuste fino de offset vertical al baseline preservando la forma espectral.</p>
+        <ul>
+            <li>Corrección de bias sistemático</li>
+            <li>Simulación con estándares ópticos</li>
+            <li>Visualización de impacto</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.write("")
+    
+    if st.button("🚀 Abrir Offset Adjustment", key="btn_offset", use_container_width=True, type="primary"):
+        st.switch_page("pages/5_🎚️_Offset_Adjustment.py")
+
+with col4:
     st.markdown("""
     <div class="card-container card-green">
         <h3>🔍 Spectrum Comparison</h3>
@@ -129,15 +151,15 @@ with col3:
     if st.button("🚀 Abrir Spectrum Comparison", key="btn_comparison", use_container_width=True, type="primary"):
         st.switch_page("pages/3_🔍_Comparacion_Espectros.py")
 
-with col4:
+with col5:
     st.markdown("""
     <div class="card-container card-purple">
         <h3>⚪ White Reference Analysis</h3>
-        <p>Análisis especializado para referencias blancas con métricas apropiadas (RMS, diferencias absolutas).</p>
+        <p>Análisis especializado para referencias blancas con métricas apropiadas.</p>
         <ul>
             <li>Escala absoluta de evaluación</li>
-            <li>Sin correlación (no aplicable)</li>
-            <li>Umbrales específicos para white refs</li>
+            <li>RMS y diferencias absolutas</li>
+            <li>Umbrales específicos</li>
         </ul>
     </div>
     """, unsafe_allow_html=True)
@@ -149,23 +171,53 @@ with col4:
 
 st.divider()
 
-# Información adicional
+# Información adicional actualizada
 st.markdown("""
 ### 📋 Flujo de trabajo típico
 
-1. **Pre-mantenimiento**: Medir y guardar referencia blanca + estándares ópticos
+**Workflow completo de mantenimiento:**
+
+1. **Pre-mantenimiento**: 
+   - Medir y guardar referencia blanca (TSV)
+   - Medir estándares ópticos certificados (TSV)
+
 2. **Cambio de lámpara** en NIR Online
-3. **Baseline Adjustment**: Nueva medición de referencia blanca y cálculo de corrección
-4. **Standard Validation**: Validar alineamiento con estándares ópticos
-5. **Spectrum Comparison / White Reference Analysis**: Análisis comparativo si es necesario
+   - Warm-up 15-30 minutos
+
+3. **Baseline Adjustment** (Corrección de forma):
+   - Nueva medición de referencia blanca
+   - Cálculo de corrección espectral
+   - Exportar baseline corregido
+
+4. **Standard Validation** (Detección de offset):
+   - Medir mismos estándares ópticos con baseline nuevo
+   - Validar correlación, RMS, Max Δ
+   - **Detectar offset global del kit**
+
+5. **Offset Adjustment** (Corrección de bias - OPCIONAL):
+   - Si offset global > 0.003 AU
+   - Simular impacto del offset en estándares
+   - Aplicar corrección al baseline
+   - Re-exportar baseline final
+
+6. **Verificación Final**:
+   - Medir 2-3 estándares de control
+   - Confirmar bias < 0.002 AU
+   - ✅ Equipo listo para producción
+
+---
+
+**Herramientas complementarias:**
+- **Spectrum Comparison**: Análisis comparativo general
+- **White Reference Analysis**: Análisis específico de referencias blancas
 """)
 
 st.divider()
 
-# Footer
+# Footer actualizado
 st.markdown("""
 <div style="text-align: center; color: #666; padding: 20px;">
-    <p><strong>COREF Suite</strong> | Versión 1.0 | Desarrollado por MPC</p>
+    <p><strong>COREF Suite</strong> | Versión 2.0 | Desarrollado por MPC</p>
     <p>Para soporte técnico o consultas, contacta con el departamento de servicio.</p>
 </div>
 """, unsafe_allow_html=True)

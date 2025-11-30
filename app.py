@@ -17,6 +17,7 @@ pages = [
     st.Page("pages/2_🎯_Validation_Standards.py", title="Validation Standards", icon="🎯"),
     st.Page("pages/3_🔍_Comparacion_Espectros.py", title="Comparación Espectros", icon="🔍"),
     st.Page("pages/4_⚪_White_Reference_Comparison.py", title="White Reference", icon="⚪"),
+    st.Page("pages/5_🎚️_Offset_Adjustment.py", title="Offset Adjustment", icon="🎚️"),
 ]
 
 pg = st.navigation(pages)
