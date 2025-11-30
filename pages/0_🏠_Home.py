@@ -112,7 +112,7 @@ with col2:
     if st.button("🚀 Abrir Standard Validation", key="btn_validation", use_container_width=True, type="primary"):
         st.switch_page("pages/2_🎯_Validation_Standards.py")
 
-# Segunda fila - 3 columnas (añadida Offset Adjustment)
+# Segunda fila - 3 columnas (orden actualizado)
 col3, col4, col5 = st.columns(3)
 
 with col3:
@@ -131,7 +131,7 @@ with col3:
     st.write("")
     
     if st.button("🚀 Abrir Offset Adjustment", key="btn_offset", use_container_width=True, type="primary"):
-        st.switch_page("pages/5_🎚️_Offset_Adjustment.py")
+        st.switch_page("pages/3_🎚️_Offset_Adjustment.py")  # ✅ Actualizado
 
 with col4:
     st.markdown("""
@@ -149,7 +149,7 @@ with col4:
     st.write("")
     
     if st.button("🚀 Abrir Spectrum Comparison", key="btn_comparison", use_container_width=True, type="primary"):
-        st.switch_page("pages/3_🔍_Comparacion_Espectros.py")
+        st.switch_page("pages/4_🔍_Comparacion_Espectros.py")  # ✅ Actualizado
 
 with col5:
     st.markdown("""
@@ -167,7 +167,7 @@ with col5:
     st.write("")
     
     if st.button("🚀 Abrir White Reference Analysis", key="btn_white", use_container_width=True, type="primary"):
-        st.switch_page("pages/4_⚪_White_Reference_Comparison.py")
+        st.switch_page("pages/5_⚪_White_Reference_Comparison.py")
 
 st.divider()
 
