@@ -530,6 +530,95 @@ def find_common_ids_simple(df_ref: pd.DataFrame, df_curr: pd.DataFrame) -> pd.Da
     
     return matches[['ID', 'ref_note', 'curr_note', 'ref_idx', 'curr_idx']]
 
+def render_standards_selection_interface(matches: pd.DataFrame) -> List[str]:
+    """
+    Interfaz de selección de estándares para simulación.
+    Similar a la de baseline_alignment.
+    
+    Returns:
+        Lista de IDs seleccionados
+    """
+    common_ids = matches['ID'].tolist()
+    
+    # Inicializar selección
+    if 'sim_selected_ids' not in st.session_state:
+        st.session_state.sim_selected_ids = common_ids.copy()
+    
+    if 'sim_pending_selection' not in st.session_state:
+        st.session_state.sim_pending_selection = common_ids.copy()
+    
+    # Tabla de selección
+    df_samples = pd.DataFrame({
+        'ID': common_ids,
+        'Note (Ref)': matches['ref_note'].tolist(),
+        'Note (Actual)': matches['curr_note'].tolist(),
+        'Usar en simulación': [
+            id_ in st.session_state.sim_pending_selection 
+            for id_ in common_ids
+        ]
+    })
+    
+    st.info("Selecciona los estándares que deseas incluir en la simulación")
+    
+    with st.form("form_select_standards_sim", clear_on_submit=False):
+        edited = st.data_editor(
+            df_samples,
+            use_container_width=True,
+            hide_index=True,
+            disabled=['ID', 'Note (Ref)', 'Note (Actual)'],
+            column_config={
+                "Usar en simulación": st.column_config.CheckboxColumn(
+                    "✓ Simular",
+                    help="Marcar para incluir en la simulación",
+                    default=True,
+                )
+            },
+            key="editor_select_standards_sim"
+        )
+        
+        col_a, col_b, col_c, col_d = st.columns([1, 1, 1, 2])
+        btn_all = col_a.form_submit_button("✅ Todos", use_container_width=True)
+        btn_none = col_b.form_submit_button("❌ Ninguno", use_container_width=True)
+        btn_invert = col_c.form_submit_button("🔄 Invertir", use_container_width=True)
+        btn_confirm = col_d.form_submit_button("🚀 Confirmar Selección", type="primary", use_container_width=True)
+    
+    if btn_all:
+        st.session_state.sim_pending_selection = common_ids.copy()
+        st.rerun()
+    
+    if btn_none:
+        st.session_state.sim_pending_selection = []
+        st.rerun()
+    
+    if btn_invert:
+        inverted = [id_ for id_ in common_ids if id_ not in st.session_state.sim_pending_selection]
+        st.session_state.sim_pending_selection = inverted
+        st.rerun()
+    
+    if btn_confirm:
+        try:
+            pending = edited.loc[edited['Usar en simulación'], 'ID'].tolist()
+            st.session_state.sim_pending_selection = pending
+            st.session_state.sim_selected_ids = pending
+            st.session_state.sim_selection_confirmed = True
+            st.success(f"✅ Selección confirmada: {len(st.session_state.sim_selected_ids)} estándar(es)")
+        except Exception as e:
+            st.error(f"Error al confirmar selección: {str(e)}")
+    else:
+        # Actualizar pending mientras se edita
+        if isinstance(edited, pd.DataFrame):
+            try:
+                pending = edited.loc[edited['Usar en simulación'], 'ID'].tolist()
+                st.session_state.sim_pending_selection = pending
+            except Exception:
+                pass
+    
+    st.caption(
+        f"Pendientes: {len(st.session_state.sim_pending_selection)} - "
+        f"Confirmados: {len(st.session_state.get('sim_selected_ids', []))}"
+    )
+    
+    return st.session_state.sim_selected_ids
 
 def create_simulation_comparison_plot(original_metrics: Dict, simulated_metrics: Dict, 
                                       offset_value: float) -> go.Figure:
@@ -640,6 +729,34 @@ def render_standards_simulation_section():
             
         st.success(f"✅ {len(matches)} estándar(es) común(es) detectado(s)")
         
+        st.markdown("---")
+        
+        # ==========================================
+        # SECCIÓN: SELECCIÓN DE ESTÁNDARES
+        # ==========================================
+        st.markdown("#### 📋 Selección de Estándares")
+        
+        selected_ids = render_standards_selection_interface(matches)
+        
+        # Verificar si se confirmó la selección
+        if not st.session_state.get('sim_selection_confirmed', False):
+            st.info("👆 Ajusta la selección y presiona **'Confirmar Selección'** para continuar")
+            return
+        
+        # Filtrar matches según selección
+        matches_filtered = matches[matches['ID'].isin(selected_ids)].copy()
+        
+        if len(matches_filtered) == 0:
+            st.warning("⚠️ No hay estándares seleccionados")
+            return
+        
+        st.markdown("---")
+        
+        # Botón para cambiar selección
+        if st.button("🔄 Cambiar Selección de Estándares", use_container_width=False):
+            st.session_state.sim_selection_confirmed = False
+            st.rerun()
+        
         # Obtener offset configurado
         offset_value = st.session_state.get('offset_value', 0.0)
         
@@ -651,7 +768,7 @@ def render_standards_simulation_section():
         all_validation_simulated = []
         
         with st.spinner(f"⏳ Calculando métricas para {len(matches)} estándar(es)..."):
-            for idx, row in matches.iterrows():
+            for idx, row in matches_filtered.iterrows():
                 sample_id = row['ID']
                 ref_note = row['ref_note']
                 curr_note = row['curr_note']
@@ -718,7 +835,7 @@ def render_standards_simulation_section():
         
         # Estadísticas globales
         st.markdown("#### 📈 Estadísticas Globales del Kit")
-        st.caption(f"Análisis agregado de {len(matches)} estándar(es)")
+        st.caption(f"Análisis agregado de {len(selected_ids)} estándar(es) seleccionado(s)")
         
         # Crear tabla de estadísticas comparativas
         stats_comparison = create_global_statistics_comparison(
@@ -811,12 +928,12 @@ def render_standards_simulation_section():
         # Selector de estándar
         selected_idx = st.selectbox(
             "Selecciona estándar para ver detalles:",
-            range(len(matches)),
-            format_func=lambda x: f"{matches.iloc[x]['ID']} - {matches.iloc[x]['ref_note']}",
+            range(len(matches_filtered)),
+            format_func=lambda x: f"{matches_filtered.iloc[x]['ID']} - {matches_filtered.iloc[x]['ref_note']}",
             key="standard_selector_sim"
         )
         
-        row = matches.iloc[selected_idx]
+        row = matches_filtered.iloc[selected_idx]
         sample_id = row['ID']
         
         # Obtener datos del estándar seleccionado
