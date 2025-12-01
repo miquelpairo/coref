@@ -63,15 +63,14 @@ def main():
     st.divider()
     
     # ==========================================
-    # SECCIÓN 1: CARGAR BASELINE
+    # SECCIÓN 1: CARGAR TSV Y SELECCIÓN DE ESTÁNDARES
     # ==========================================
-    st.markdown("### 1️⃣ Cargar Baseline")
-    st.info("Sube el archivo de baseline que deseas ajustar (.ref o .csv)")
+    st.markdown("### 1️⃣ Cargar Estándares Ópticos y Selección")
     
-    baseline_loaded = render_baseline_upload_section()
+    standards_loaded = render_standards_upload_and_selection_section()
     
-    if not baseline_loaded:
-        st.warning("👇 Carga el baseline para continuar")
+    if not standards_loaded:
+        st.warning("👇 Carga los archivos TSV para continuar")
         return
     
     st.divider()
@@ -86,33 +85,672 @@ def main():
     st.divider()
     
     # ==========================================
-    # SECCIÓN 3: VISUALIZACIÓN
+    # SECCIÓN 3: ANÁLISIS GLOBAL DEL KIT
     # ==========================================
-    st.markdown("### 3️⃣ Visualización del Ajuste")
+    st.markdown("### 3️⃣ Análisis Global del Kit")
+    
+    render_global_kit_analysis_section()
+    
+    st.divider()
+    
+    # ==========================================
+    # SECCIÓN 4: CARGAR BASELINE
+    # ==========================================
+    st.markdown("### 4️⃣ Cargar Baseline")
+    st.info("Sube el archivo de baseline que deseas ajustar (.ref o .csv)")
+    
+    baseline_loaded = render_baseline_upload_section()
+    
+    if not baseline_loaded:
+        st.warning("👇 Carga el baseline para continuar")
+        return
+    
+    st.divider()
+    
+    # ==========================================
+    # SECCIÓN 5: VISUALIZACIÓN BASELINE
+    # ==========================================
+    st.markdown("### 5️⃣ Visualización del Ajuste de Baseline")
     
     render_visualization_section()
     
     st.divider()
     
     # ==========================================
-    # SECCIÓN 4 (OPCIONAL): SIMULACIÓN CON ESTÁNDARES
+    # SECCIÓN 6: EXPORTAR
     # ==========================================
-    st.markdown("### 4️⃣ Simulación con Estándares Ópticos (Opcional)")
+    st.markdown("### 6️⃣ Exportar Baseline Ajustado")
     
-    render_standards_simulation_section()
+    render_export_section()
     
     st.divider()
     
     # ==========================================
-    # SECCIÓN 5: EXPORTAR
+    # SECCIÓN 7: NOTAS IMPORTANTES
     # ==========================================
-    st.markdown("### 5️⃣ Exportar Baseline Ajustado")
+    render_important_notes_section()
+
+
+# ============================================================================
+# SECCIÓN 1: CARGAR TSV Y SELECCIÓN DE ESTÁNDARES
+# ============================================================================
+
+def render_standards_upload_and_selection_section():
+    """
+    Sección 1: Carga de TSV con estándares ópticos y selección de muestras.
+    Returns True si hay estándares cargados y seleccionados.
+    """
     
-    render_export_section()
+    st.info("""
+    Carga dos archivos TSV con mediciones de estándares ópticos para calcular 
+    el offset necesario basado en la comparación espectral.
+    
+    **Uso típico:**
+    - Referencia: Mediciones con baseline antigua (antes de mantenimiento)
+    - Actual: Mediciones con baseline nueva (después de mantenimiento)
+    """)
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        ref_tsv = st.file_uploader(
+            "TSV Referencia:",
+            type=['tsv'],
+            key="ref_tsv_main",
+            help="Mediciones de referencia (baseline antigua)"
+        )
+    
+    with col2:
+        curr_tsv = st.file_uploader(
+            "TSV Actual:",
+            type=['tsv'],
+            key="curr_tsv_main",
+            help="Mediciones actuales (baseline nueva)"
+        )
+    
+    if not ref_tsv or not curr_tsv:
+        st.info("👆 Carga ambos archivos TSV para comenzar")
+        return False
+    
+    # Cargar archivos
+    try:
+        with st.spinner("⏳ Cargando archivos TSV..."):
+            df_ref = load_tsv_file(ref_tsv)
+            df_curr = load_tsv_file(curr_tsv)
+            
+            spectral_cols_ref = get_spectral_columns(df_ref)
+            spectral_cols_curr = get_spectral_columns(df_curr)
+            
+            if len(spectral_cols_ref) != len(spectral_cols_curr):
+                st.error("❌ Los archivos tienen diferente número de canales espectrales")
+                return False
+            
+            # Encontrar IDs comunes
+            matches = find_common_ids_simple(df_ref, df_curr)
+            
+            if len(matches) == 0:
+                st.error("❌ No se encontraron IDs comunes entre los archivos")
+                return False
+        
+        st.success(f"✅ {len(matches)} estándar(es) común(es) detectado(s)")
+        
+        # Guardar en session_state
+        st.session_state.standards_data = {
+            'df_ref': df_ref,
+            'df_curr': df_curr,
+            'spectral_cols_ref': spectral_cols_ref,
+            'spectral_cols_curr': spectral_cols_curr,
+            'matches': matches
+        }
+        
+        st.markdown("---")
+        
+        # ==========================================
+        # SELECCIÓN DE ESTÁNDARES
+        # ==========================================
+        st.markdown("#### 📋 Selección de Estándares")
+        
+        selected_ids = render_standards_selection_interface(matches)
+        
+        # Verificar si se confirmó la selección
+        if not st.session_state.get('standards_selection_confirmed', False):
+            st.info("👆 Ajusta la selección y presiona **'Confirmar Selección'** para continuar")
+            return False
+        
+        # Filtrar matches según selección
+        matches_filtered = matches[matches['ID'].isin(selected_ids)].copy()
+        
+        if len(matches_filtered) == 0:
+            st.warning("⚠️ No hay estándares seleccionados")
+            return False
+        
+        # Guardar matches filtrados
+        st.session_state.standards_data['matches_filtered'] = matches_filtered
+        
+        # Botón para cambiar selección
+        if st.button("🔄 Cambiar Selección de Estándares", use_container_width=False):
+            st.session_state.standards_selection_confirmed = False
+            st.rerun()
+        
+        return True
+        
+    except Exception as e:
+        st.error(f"❌ Error al cargar archivos TSV: {str(e)}")
+        import traceback
+        with st.expander("🔍 Ver detalles del error"):
+            st.code(traceback.format_exc())
+        return False
+
+
+def render_standards_selection_interface(matches: pd.DataFrame) -> List[str]:
+    """
+    Interfaz de selección de estándares.
+    
+    Returns:
+        Lista de IDs seleccionados
+    """
+    common_ids = matches['ID'].tolist()
+    
+    # Inicializar selección
+    if 'standards_selected_ids' not in st.session_state:
+        st.session_state.standards_selected_ids = common_ids.copy()
+    
+    if 'standards_pending_selection' not in st.session_state:
+        st.session_state.standards_pending_selection = common_ids.copy()
+    
+    # Tabla de selección
+    df_samples = pd.DataFrame({
+        'ID': common_ids,
+        'Note (Ref)': matches['ref_note'].tolist(),
+        'Note (Actual)': matches['curr_note'].tolist(),
+        'Usar para cálculo': [
+            id_ in st.session_state.standards_pending_selection 
+            for id_ in common_ids
+        ]
+    })
+    
+    st.info("Selecciona los estándares que deseas incluir en el cálculo del offset")
+    
+    with st.form("form_select_standards_main", clear_on_submit=False):
+        edited = st.data_editor(
+            df_samples,
+            use_container_width=True,
+            hide_index=True,
+            disabled=['ID', 'Note (Ref)', 'Note (Actual)'],
+            column_config={
+                "Usar para cálculo": st.column_config.CheckboxColumn(
+                    "✓ Incluir",
+                    help="Marcar para incluir en el cálculo",
+                    default=True,
+                )
+            },
+            key="editor_select_standards_main"
+        )
+        
+        col_a, col_b, col_c, col_d = st.columns([1, 1, 1, 2])
+        btn_all = col_a.form_submit_button("✅ Todos", use_container_width=True)
+        btn_none = col_b.form_submit_button("❌ Ninguno", use_container_width=True)
+        btn_invert = col_c.form_submit_button("🔄 Invertir", use_container_width=True)
+        btn_confirm = col_d.form_submit_button("🚀 Confirmar Selección", type="primary", use_container_width=True)
+    
+    if btn_all:
+        st.session_state.standards_pending_selection = common_ids.copy()
+        st.rerun()
+    
+    if btn_none:
+        st.session_state.standards_pending_selection = []
+        st.rerun()
+    
+    if btn_invert:
+        inverted = [id_ for id_ in common_ids if id_ not in st.session_state.standards_pending_selection]
+        st.session_state.standards_pending_selection = inverted
+        st.rerun()
+    
+    if btn_confirm:
+        try:
+            pending = edited.loc[edited['Usar para cálculo'], 'ID'].tolist()
+            st.session_state.standards_pending_selection = pending
+            st.session_state.standards_selected_ids = pending
+            st.session_state.standards_selection_confirmed = True
+            st.success(f"✅ Selección confirmada: {len(st.session_state.standards_selected_ids)} estándar(es)")
+        except Exception as e:
+            st.error(f"Error al confirmar selección: {str(e)}")
+    else:
+        # Actualizar pending mientras se edita
+        if isinstance(edited, pd.DataFrame):
+            try:
+                pending = edited.loc[edited['Usar para cálculo'], 'ID'].tolist()
+                st.session_state.standards_pending_selection = pending
+            except Exception:
+                pass
+    
+    st.caption(
+        f"Pendientes: {len(st.session_state.standards_pending_selection)} - "
+        f"Confirmados: {len(st.session_state.get('standards_selected_ids', []))}"
+    )
+    
+    return st.session_state.standards_selected_ids
+
+
+# ============================================================================
+# SECCIÓN 2: CONFIGURAR OFFSET
+# ============================================================================
+
+def render_offset_configuration_section():
+    """
+    Sección 2: Configuración del offset.
+    """
+    if 'standards_data' not in st.session_state:
+        return
+    
+    st.info("""
+    Introduce el valor de offset a aplicar. Un valor positivo aumentará todos los valores 
+    del baseline, un valor negativo los disminuirá.
+    
+    **Recomendación:** Usa valores pequeños (< 0.010 AU) para evitar cambios drásticos.
+    """)
+    
+    # Inicializar valor si no existe
+    if 'offset_value' not in st.session_state:
+        st.session_state.offset_value = 0.000
+    
+    col1, col2, col3 = st.columns([2, 1, 2])
+    
+    with col1:
+        # Input de offset con callback
+        def update_offset():
+            st.session_state.offset_value = st.session_state.offset_input
+        
+        offset_value = st.number_input(
+            "Offset a aplicar (AU):",
+            min_value=-0.100,
+            max_value=0.100,
+            value=st.session_state.offset_value,
+            step=0.001,
+            format="%.6f",
+            key="offset_input",
+            help="Valor de offset vertical uniforme a aplicar al baseline",
+            on_change=update_offset
+        )
+    
+    with col2:
+        st.markdown("#### Presets")
+        
+        def reset_offset():
+            st.session_state.offset_value = 0.000
+        
+        def add_offset():
+            st.session_state.offset_value = st.session_state.offset_value + 0.005
+        
+        def subtract_offset():
+            st.session_state.offset_value = st.session_state.offset_value - 0.005
+        
+        if st.button("Resetear (0)", use_container_width=True, on_click=reset_offset):
+            pass
+        
+        if st.button("+0.005", use_container_width=True, on_click=add_offset):
+            pass
+        
+        if st.button("-0.005", use_container_width=True, on_click=subtract_offset):
+            pass
+    
+    with col3:
+        # Información del ajuste
+        st.markdown("#### Información del Offset")
+        st.write(f"**Valor actual:** {st.session_state.offset_value:+.6f} AU")
+        
+        # Indicador visual
+        if abs(st.session_state.offset_value) < 0.003:
+            st.success("✅ Cambio pequeño")
+        elif abs(st.session_state.offset_value) < 0.008:
+            st.info("ℹ️ Cambio moderado")
+        else:
+            st.warning("⚠️ Cambio significativo")
+
+
+# ============================================================================
+# SECCIÓN 3: ANÁLISIS GLOBAL DEL KIT
+# ============================================================================
+
+def render_global_kit_analysis_section():
+    """
+    Sección 3: Análisis global del kit con estándares.
+    """
+    if 'standards_data' not in st.session_state:
+        return
+    
+    standards_data = st.session_state.standards_data
+    df_ref = standards_data['df_ref']
+    df_curr = standards_data['df_curr']
+    spectral_cols_ref = standards_data['spectral_cols_ref']
+    spectral_cols_curr = standards_data['spectral_cols_curr']
+    matches_filtered = standards_data['matches_filtered']
+    
+    offset_value = st.session_state.get('offset_value', 0.0)
+    
+    # Calcular validaciones para todos los estándares seleccionados
+    all_validation_original = []
+    all_validation_simulated = []
+    
+    with st.spinner(f"⏳ Calculando métricas para {len(matches_filtered)} estándar(es)..."):
+        for idx, row in matches_filtered.iterrows():
+            sample_id = row['ID']
+            ref_note = row['ref_note']
+            curr_note = row['curr_note']
+            ref_idx = row['ref_idx']
+            curr_idx = row['curr_idx']
+            
+            # Extraer espectros
+            reference = df_ref.loc[ref_idx, spectral_cols_ref].astype(float).values
+            current_original = df_curr.loc[curr_idx, spectral_cols_curr].astype(float).values
+            
+            # Simular espectro con offset aplicado
+            current_simulated = current_original + offset_value
+            
+            # Calcular métricas sin offset
+            metrics_original = validate_standard_simple(reference, current_original)
+            
+            # Calcular métricas con offset
+            metrics_simulated = validate_standard_simple(reference, current_simulated)
+            
+            # Guardar datos completos
+            all_validation_original.append({
+                'id': sample_id,
+                'ref_note': ref_note,
+                'curr_note': curr_note,
+                'reference': reference,
+                'current': current_original,
+                'diff': metrics_original['diff'],
+                'validation_results': metrics_original
+            })
+            
+            all_validation_simulated.append({
+                'id': sample_id,
+                'ref_note': ref_note,
+                'curr_note': curr_note,
+                'reference': reference,
+                'current': current_simulated,
+                'diff': metrics_simulated['diff'],
+                'validation_results': metrics_simulated
+            })
+    
+    # Guardar en session_state para uso posterior
+    st.session_state.validation_results = {
+        'original': all_validation_original,
+        'simulated': all_validation_simulated
+    }
+    
+    # Gráfico overlay de todos los estándares
+    with st.expander("📈 Vista Global de Todos los Estándares", expanded=True):
+        st.info("""
+        Comparación simultánea de todos los espectros. Las líneas sólidas azules 
+        son la referencia, las líneas rojas son mediciones sin offset, y las líneas 
+        verdes son la simulación con offset aplicado.
+        """)
+        
+        fig_overlay = create_overlay_simulation_plot(
+            all_validation_original,
+            all_validation_simulated,
+            offset_value
+        )
+        st.plotly_chart(fig_overlay, use_container_width=True)
+    
+    # Estadísticas globales
+    st.markdown("#### 📈 Estadísticas Globales del Kit")
+    st.caption(f"Análisis agregado de {len(matches_filtered)} estándar(es) seleccionado(s)")
+    
+    # Crear tabla de estadísticas comparativas
+    stats_comparison = create_global_statistics_comparison(
+        all_validation_original,
+        all_validation_simulated
+    )
+    st.dataframe(stats_comparison, use_container_width=True, hide_index=True)
+    
+    # Métricas destacadas
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        avg_corr_orig = np.mean([d['validation_results']['correlation'] for d in all_validation_original])
+        avg_corr_sim = np.mean([d['validation_results']['correlation'] for d in all_validation_simulated])
+        delta_corr = avg_corr_sim - avg_corr_orig
+        
+        st.metric(
+            "Correlación Media", 
+            f"{avg_corr_sim:.6f}",
+            delta=f"{delta_corr:+.6f}",
+            help=f"Original: {avg_corr_orig:.6f} | Simulado: {avg_corr_sim:.6f}"
+        )
+    
+    with col2:
+        avg_max_orig = np.mean([d['validation_results']['max_diff'] for d in all_validation_original])
+        avg_max_sim = np.mean([d['validation_results']['max_diff'] for d in all_validation_simulated])
+        delta_max = avg_max_sim - avg_max_orig
+        
+        st.metric(
+            "Max Δ Media", 
+            f"{avg_max_sim:.6f} AU",
+            delta=f"{delta_max:+.6f} AU",
+            delta_color="inverse" if delta_max < 0 else "normal",
+            help=f"Original: {avg_max_orig:.6f} | Simulado: {avg_max_sim:.6f}"
+        )
+    
+    with col3:
+        avg_rms_orig = np.mean([d['validation_results']['rms'] for d in all_validation_original])
+        avg_rms_sim = np.mean([d['validation_results']['rms'] for d in all_validation_simulated])
+        delta_rms = avg_rms_sim - avg_rms_orig
+        
+        st.metric(
+            "RMS Media", 
+            f"{avg_rms_sim:.6f}",
+            delta=f"{delta_rms:+.6f}",
+            delta_color="inverse" if delta_rms < 0 else "normal",
+            help=f"Original: {avg_rms_orig:.6f} | Simulado: {avg_rms_sim:.6f}"
+        )
+    
+    st.markdown("---")
+    
+    # Offset global del kit
+    global_offset_orig = np.mean([d['validation_results']['mean_diff'] for d in all_validation_original])
+    global_offset_sim = np.mean([d['validation_results']['mean_diff'] for d in all_validation_simulated])
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.metric(
+            "🎯 Offset Global (Original)", 
+            f"{global_offset_orig:.6f} AU",
+            help="Offset medio sin corrección aplicada"
+        )
+    
+    with col2:
+        st.metric(
+            "🎯 Offset Global (Simulado)", 
+            f"{global_offset_sim:.6f} AU",
+            delta=f"{global_offset_sim - global_offset_orig:+.6f} AU",
+            delta_color="inverse" if abs(global_offset_sim) < abs(global_offset_orig) else "normal",
+            help="Offset medio con corrección aplicada"
+        )
+    
+    # Evaluación del offset simulado
+    if abs(global_offset_sim) < 0.003:
+        st.success(f"✅ **Excelente corrección**: El offset simulado ({offset_value:+.6f} AU) reduce el bias global a nivel despreciable ({global_offset_sim:+.6f} AU)")
+    elif abs(global_offset_sim) < abs(global_offset_orig):
+        reduction = (1 - abs(global_offset_sim)/abs(global_offset_orig)) * 100
+        st.info(f"ℹ️ **Mejora significativa**: El offset reduce el bias en {reduction:.1f}%. Bias residual: {global_offset_sim:+.6f} AU")
+    else:
+        st.warning(f"⚠️ **Empeoramiento**: El offset aplicado ({offset_value:+.6f} AU) aumenta el bias global. Considera ajustar el valor.")
+    
+    # Análisis individual por estándar
+    st.markdown("---")
+    st.markdown("#### 🔍 Análisis Individual por Estándar")
+    
+    # Selector de estándar
+    selected_idx = st.selectbox(
+        "Selecciona estándar para ver detalles:",
+        range(len(matches_filtered)),
+        format_func=lambda x: f"{matches_filtered.iloc[x]['ID']} - {matches_filtered.iloc[x]['ref_note']}",
+        key="standard_selector_global"
+    )
+    
+    row = matches_filtered.iloc[selected_idx]
+    sample_id = row['ID']
+    
+    # Obtener datos del estándar seleccionado
+    data_orig = all_validation_original[selected_idx]
+    data_sim = all_validation_simulated[selected_idx]
+    
+    reference = data_orig['reference']
+    current_original = data_orig['current']
+    current_simulated = data_sim['current']
+    
+    metrics_original = data_orig['validation_results']
+    metrics_simulated = data_sim['validation_results']
+    
+    # Tabs de análisis detallado
+    tab1, tab2 = st.tabs([
+        "📈 Gráficos Comparativos",
+        "📊 Métricas Detalladas"
+    ])
+    
+    with tab1:
+        # Gráfico espectral
+        channels = list(range(1, len(reference) + 1))
+        
+        fig_spectra = make_subplots(
+            rows=2, cols=1,
+            subplot_titles=(
+                f'Espectros: Referencia vs Actual (Original y Simulado) - {sample_id}',
+                'Diferencias vs Referencia'
+            ),
+            vertical_spacing=0.15,
+            row_heights=[0.6, 0.4]
+        )
+        
+        # Panel 1: Overlay de espectros
+        fig_spectra.add_trace(
+            go.Scatter(x=channels, y=reference, name='Referencia',
+                      line=dict(color='blue', width=2)),
+            row=1, col=1
+        )
+        fig_spectra.add_trace(
+            go.Scatter(x=channels, y=current_original, name='Actual (Original)',
+                      line=dict(color='red', width=2, dash='dash')),
+            row=1, col=1
+        )
+        fig_spectra.add_trace(
+            go.Scatter(x=channels, y=current_simulated, name=f'Actual + Offset ({offset_value:+.6f})',
+                      line=dict(color='green', width=2, dash='dot')),
+            row=1, col=1
+        )
+        
+        # Panel 2: Diferencias
+        diff_original = current_original - reference
+        diff_simulated = current_simulated - reference
+        
+        fig_spectra.add_trace(
+            go.Scatter(x=channels, y=diff_original, name='Δ Original',
+                      line=dict(color='red', width=2),
+                      fill='tozeroy', fillcolor='rgba(255,0,0,0.1)'),
+            row=2, col=1
+        )
+        fig_spectra.add_trace(
+            go.Scatter(x=channels, y=diff_simulated, name='Δ Simulado',
+                      line=dict(color='green', width=2),
+                      fill='tozeroy', fillcolor='rgba(0,255,0,0.1)'),
+            row=2, col=1
+        )
+        
+        fig_spectra.add_hline(y=0, line_dash="dash", line_color="gray", 
+                             opacity=0.5, row=2, col=1)
+        
+        fig_spectra.update_xaxes(title_text="Canal espectral", row=2, col=1)
+        fig_spectra.update_yaxes(title_text="Absorbancia", row=1, col=1)
+        fig_spectra.update_yaxes(title_text="Δ Absorbancia", row=2, col=1)
+        
+        fig_spectra.update_layout(
+            height=700,
+            showlegend=True,
+            template='plotly_white',
+            hovermode='x unified'
+        )
+        
+        st.plotly_chart(fig_spectra, use_container_width=True)
+    
+    with tab2:
+        # Mostrar comparación en columnas
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.markdown("##### Sin Offset")
+            st.metric("Correlación", f"{metrics_original['correlation']:.6f}")
+            st.metric("Max Δ", f"{metrics_original['max_diff']:.6f} AU")
+            st.metric("RMS", f"{metrics_original['rms']:.6f}")
+            st.metric("Offset Medio", f"{metrics_original['mean_diff']:+.6f} AU")
+        
+        with col2:
+            st.markdown(f"##### Con Offset ({offset_value:+.6f} AU)")
+            st.metric("Correlación", f"{metrics_simulated['correlation']:.6f}")
+            st.metric("Max Δ", f"{metrics_simulated['max_diff']:.6f} AU")
+            st.metric("RMS", f"{metrics_simulated['rms']:.6f}")
+            st.metric("Offset Medio", f"{metrics_simulated['mean_diff']:+.6f} AU")
+        
+        with col3:
+            st.markdown("##### Δ Cambio")
+            delta_corr = metrics_simulated['correlation'] - metrics_original['correlation']
+            delta_max = metrics_simulated['max_diff'] - metrics_original['max_diff']
+            delta_rms = metrics_simulated['rms'] - metrics_original['rms']
+            delta_offset = metrics_simulated['mean_diff'] - metrics_original['mean_diff']
+            
+            st.metric("Correlación", f"{delta_corr:+.6f}")
+            st.metric("Max Δ", f"{delta_max:+.6f} AU")
+            st.metric("RMS", f"{delta_rms:+.6f}")
+            st.metric("Offset Medio", f"{delta_offset:+.6f} AU")
+        
+        # Gráfico comparativo de barras
+        fig_comparison = create_simulation_comparison_plot(
+            metrics_original, 
+            metrics_simulated, 
+            offset_value
+        )
+        st.plotly_chart(fig_comparison, use_container_width=True)
+    
+    # Exportar datos de simulación completa
+    st.markdown("---")
+    
+    export_data = []
+    for i, (orig, sim) in enumerate(zip(all_validation_original, all_validation_simulated)):
+        export_data.append({
+            'ID': orig['id'],
+            'Note': orig['ref_note'],
+            'Corr_Original': orig['validation_results']['correlation'],
+            'Corr_Simulado': sim['validation_results']['correlation'],
+            'MaxDiff_Original': orig['validation_results']['max_diff'],
+            'MaxDiff_Simulado': sim['validation_results']['max_diff'],
+            'RMS_Original': orig['validation_results']['rms'],
+            'RMS_Simulado': sim['validation_results']['rms'],
+            'Offset_Original': orig['validation_results']['mean_diff'],
+            'Offset_Simulado': sim['validation_results']['mean_diff']
+        })
+    
+    df_export = pd.DataFrame(export_data)
+    csv_export = df_export.to_csv(index=False)
+    
+    st.download_button(
+        "📥 Descargar Resumen Completo de Simulación (CSV)",
+        data=csv_export,
+        file_name=f"simulation_summary_offset_{offset_value:+.6f}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+        mime="text/csv",
+        use_container_width=True
+    )
+
+
+# ============================================================================
+# SECCIÓN 4: CARGAR BASELINE
+# ============================================================================
 
 def render_baseline_upload_section():
     """
-    Sección 1: Carga del baseline (.ref o .csv).
+    Sección 4: Carga del baseline (.ref o .csv).
     Returns True si el baseline está cargado.
     """
     
@@ -202,86 +840,13 @@ def render_baseline_upload_section():
     return False
 
 
-def render_offset_configuration_section():
-    """
-    Sección 2: Configuración del offset.
-    """
-    if 'baseline_offset_tool' not in st.session_state:
-        return
-    
-    st.info("""
-    Introduce el valor de offset a aplicar. Un valor positivo aumentará todos los valores 
-    del baseline, un valor negativo los disminuirá.
-    
-    **Recomendación:** Usa valores pequeños (< 0.010 AU) para evitar cambios drásticos.
-    """)
-    
-    # Inicializar valor si no existe
-    if 'offset_value' not in st.session_state:
-        st.session_state.offset_value = 0.000
-    
-    col1, col2, col3 = st.columns([2, 1, 2])
-    
-    with col1:
-        # Input de offset con callback
-        def update_offset():
-            st.session_state.offset_value = st.session_state.offset_input
-        
-        offset_value = st.number_input(
-            "Offset a aplicar (AU):",
-            min_value=-0.100,
-            max_value=0.100,
-            value=st.session_state.offset_value,
-            step=0.001,
-            format="%.6f",
-            key="offset_input",
-            help="Valor de offset vertical uniforme a aplicar al baseline",
-            on_change=update_offset
-        )
-    
-    with col2:
-        st.markdown("#### Presets")
-        
-        def reset_offset():
-            st.session_state.offset_value = 0.000
-        
-        def add_offset():
-            st.session_state.offset_value = st.session_state.offset_value + 0.005
-        
-        def subtract_offset():
-            st.session_state.offset_value = st.session_state.offset_value - 0.005
-        
-        if st.button("Resetear (0)", use_container_width=True, on_click=reset_offset):
-            pass
-        
-        if st.button("+0.005", use_container_width=True, on_click=add_offset):
-            pass
-        
-        if st.button("-0.005", use_container_width=True, on_click=subtract_offset):
-            pass
-    
-    with col3:
-        # Información del ajuste
-        baseline_data = st.session_state.baseline_offset_tool
-        original_mean = np.mean(baseline_data['spectrum'])
-        new_mean = original_mean + st.session_state.offset_value
-        
-        st.markdown("#### Información")
-        st.write(f"**Original:** {original_mean:.6f} AU")
-        st.write(f"**Ajustado:** {new_mean:.6f} AU")
-        st.write(f"**Cambio:** {st.session_state.offset_value:+.6f} AU")
-        
-        # Indicador visual
-        if abs(st.session_state.offset_value) < 0.003:
-            st.success("✅ Cambio pequeño")
-        elif abs(st.session_state.offset_value) < 0.008:
-            st.info("ℹ️ Cambio moderado")
-        else:
-            st.warning("⚠️ Cambio significativo")
+# ============================================================================
+# SECCIÓN 5: VISUALIZACIÓN BASELINE
+# ============================================================================
 
 def render_visualization_section():
     """
-    Sección 3: Visualización comparativa.
+    Sección 5: Visualización comparativa del baseline.
     """
     if 'baseline_offset_tool' not in st.session_state:
         return
@@ -308,6 +873,21 @@ def render_visualization_section():
     )
     
     st.plotly_chart(fig, use_container_width=True)
+    
+    # Información del ajuste aplicado
+    original_mean = np.mean(ref_spectrum)
+    new_mean = np.mean(adjusted_spectrum)
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.metric("Media Original", f"{original_mean:.6f} AU")
+    
+    with col2:
+        st.metric("Media Ajustada", f"{new_mean:.6f} AU")
+    
+    with col3:
+        st.metric("Cambio Aplicado", f"{offset_value:+.6f} AU")
     
     # Estadísticas del ajuste
     with st.expander("📊 Estadísticas Detalladas", expanded=False):
@@ -347,9 +927,13 @@ def render_visualization_section():
     )
 
 
+# ============================================================================
+# SECCIÓN 6: EXPORTAR
+# ============================================================================
+
 def render_export_section():
     """
-    Sección 4: Exportar baseline ajustado.
+    Sección 6: Exportar baseline ajustado.
     """
     if 'baseline_offset_tool' not in st.session_state:
         return
@@ -410,11 +994,17 @@ def render_export_section():
             key="download_csv_offset",
             use_container_width=True
         )
-    
-    st.markdown("---")
-    
-    # Notas importantes
-    with st.expander("ℹ️ Notas Importantes", expanded=False):
+
+
+# ============================================================================
+# SECCIÓN 7: NOTAS IMPORTANTES
+# ============================================================================
+
+def render_important_notes_section():
+    """
+    Sección 7: Notas importantes y recomendaciones.
+    """
+    with st.expander("ℹ️ Notas Importantes", expanded=True):
         st.markdown("""
         ### Recomendaciones después del ajuste:
         
@@ -447,8 +1037,9 @@ def render_export_section():
         - Compensar problemas de calibración (recalibrar en su lugar)
         """)
 
+
 # ============================================================================
-# SECCIÓN DE SIMULACIÓN CON ESTÁNDARES ÓPTICOS
+# FUNCIONES AUXILIARES
 # ============================================================================
 
 def validate_standard_simple(reference: np.ndarray, current: np.ndarray) -> Dict:
@@ -530,95 +1121,6 @@ def find_common_ids_simple(df_ref: pd.DataFrame, df_curr: pd.DataFrame) -> pd.Da
     
     return matches[['ID', 'ref_note', 'curr_note', 'ref_idx', 'curr_idx']]
 
-def render_standards_selection_interface(matches: pd.DataFrame) -> List[str]:
-    """
-    Interfaz de selección de estándares para simulación.
-    Similar a la de baseline_alignment.
-    
-    Returns:
-        Lista de IDs seleccionados
-    """
-    common_ids = matches['ID'].tolist()
-    
-    # Inicializar selección
-    if 'sim_selected_ids' not in st.session_state:
-        st.session_state.sim_selected_ids = common_ids.copy()
-    
-    if 'sim_pending_selection' not in st.session_state:
-        st.session_state.sim_pending_selection = common_ids.copy()
-    
-    # Tabla de selección
-    df_samples = pd.DataFrame({
-        'ID': common_ids,
-        'Note (Ref)': matches['ref_note'].tolist(),
-        'Note (Actual)': matches['curr_note'].tolist(),
-        'Usar en simulación': [
-            id_ in st.session_state.sim_pending_selection 
-            for id_ in common_ids
-        ]
-    })
-    
-    st.info("Selecciona los estándares que deseas incluir en la simulación")
-    
-    with st.form("form_select_standards_sim", clear_on_submit=False):
-        edited = st.data_editor(
-            df_samples,
-            use_container_width=True,
-            hide_index=True,
-            disabled=['ID', 'Note (Ref)', 'Note (Actual)'],
-            column_config={
-                "Usar en simulación": st.column_config.CheckboxColumn(
-                    "✓ Simular",
-                    help="Marcar para incluir en la simulación",
-                    default=True,
-                )
-            },
-            key="editor_select_standards_sim"
-        )
-        
-        col_a, col_b, col_c, col_d = st.columns([1, 1, 1, 2])
-        btn_all = col_a.form_submit_button("✅ Todos", use_container_width=True)
-        btn_none = col_b.form_submit_button("❌ Ninguno", use_container_width=True)
-        btn_invert = col_c.form_submit_button("🔄 Invertir", use_container_width=True)
-        btn_confirm = col_d.form_submit_button("🚀 Confirmar Selección", type="primary", use_container_width=True)
-    
-    if btn_all:
-        st.session_state.sim_pending_selection = common_ids.copy()
-        st.rerun()
-    
-    if btn_none:
-        st.session_state.sim_pending_selection = []
-        st.rerun()
-    
-    if btn_invert:
-        inverted = [id_ for id_ in common_ids if id_ not in st.session_state.sim_pending_selection]
-        st.session_state.sim_pending_selection = inverted
-        st.rerun()
-    
-    if btn_confirm:
-        try:
-            pending = edited.loc[edited['Usar en simulación'], 'ID'].tolist()
-            st.session_state.sim_pending_selection = pending
-            st.session_state.sim_selected_ids = pending
-            st.session_state.sim_selection_confirmed = True
-            st.success(f"✅ Selección confirmada: {len(st.session_state.sim_selected_ids)} estándar(es)")
-        except Exception as e:
-            st.error(f"Error al confirmar selección: {str(e)}")
-    else:
-        # Actualizar pending mientras se edita
-        if isinstance(edited, pd.DataFrame):
-            try:
-                pending = edited.loc[edited['Usar en simulación'], 'ID'].tolist()
-                st.session_state.sim_pending_selection = pending
-            except Exception:
-                pass
-    
-    st.caption(
-        f"Pendientes: {len(st.session_state.sim_pending_selection)} - "
-        f"Confirmados: {len(st.session_state.get('sim_selected_ids', []))}"
-    )
-    
-    return st.session_state.sim_selected_ids
 
 def create_simulation_comparison_plot(original_metrics: Dict, simulated_metrics: Dict, 
                                       offset_value: float) -> go.Figure:
@@ -670,426 +1172,6 @@ def create_simulation_comparison_plot(original_metrics: Dict, simulated_metrics:
     return fig
 
 
-def render_standards_simulation_section():
-    """
-    Sección opcional: Simular impacto del offset en estándares ópticos.
-    """
-    
-    st.info("""
-    Carga dos archivos TSV con mediciones de estándares ópticos para simular 
-    cómo el offset afecta las métricas de validación.
-    
-    **Uso típico:**
-    - Referencia: Mediciones con baseline antigua (antes de mantenimiento)
-    - Actual: Mediciones con baseline nueva (después de mantenimiento)
-    - Simula: ¿Qué métricas obtendría si aplico este offset a la baseline nueva?
-    """)
-        
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        ref_tsv = st.file_uploader(
-            "TSV Referencia:",
-            type=['tsv'],
-            key="ref_tsv_simulation",
-            help="Mediciones de referencia (baseline antigua)"
-        )
-    
-    with col2:
-        curr_tsv = st.file_uploader(
-            "TSV Actual:",
-            type=['tsv'],
-            key="curr_tsv_simulation",
-            help="Mediciones actuales (baseline nueva)"
-        )
-    
-    if not ref_tsv or not curr_tsv:
-        st.info("👆 Carga ambos archivos TSV para comenzar la simulación")
-        return
-    
-    # Cargar archivos
-    try:
-        with st.spinner("⏳ Cargando archivos TSV..."):
-            df_ref = load_tsv_file(ref_tsv)
-            df_curr = load_tsv_file(curr_tsv)
-            
-            spectral_cols_ref = get_spectral_columns(df_ref)
-            spectral_cols_curr = get_spectral_columns(df_curr)
-            
-            if len(spectral_cols_ref) != len(spectral_cols_curr):
-                st.error("❌ Los archivos tienen diferente número de canales espectrales")
-                return
-            
-            # Encontrar IDs comunes
-            matches = find_common_ids_simple(df_ref, df_curr)
-            
-            if len(matches) == 0:
-                st.error("❌ No se encontraron IDs comunes entre los archivos")
-                return
-            
-        st.success(f"✅ {len(matches)} estándar(es) común(es) detectado(s)")
-        
-        st.markdown("---")
-        
-        # ==========================================
-        # SECCIÓN: SELECCIÓN DE ESTÁNDARES
-        # ==========================================
-        st.markdown("#### 📋 Selección de Estándares")
-        
-        selected_ids = render_standards_selection_interface(matches)
-        
-        # Verificar si se confirmó la selección
-        if not st.session_state.get('sim_selection_confirmed', False):
-            st.info("👆 Ajusta la selección y presiona **'Confirmar Selección'** para continuar")
-            return
-        
-        # Filtrar matches según selección
-        matches_filtered = matches[matches['ID'].isin(selected_ids)].copy()
-        
-        if len(matches_filtered) == 0:
-            st.warning("⚠️ No hay estándares seleccionados")
-            return
-        
-        st.markdown("---")
-        
-        # Botón para cambiar selección
-        if st.button("🔄 Cambiar Selección de Estándares", use_container_width=False):
-            st.session_state.sim_selection_confirmed = False
-            st.rerun()
-        
-        # Obtener offset configurado
-        offset_value = st.session_state.get('offset_value', 0.0)
-        
-        # ==========================================
-        # VALIDAR TODOS LOS ESTÁNDARES
-        # ==========================================
-        
-        all_validation_original = []
-        all_validation_simulated = []
-        
-        with st.spinner(f"⏳ Calculando métricas para {len(matches)} estándar(es)..."):
-            for idx, row in matches_filtered.iterrows():
-                sample_id = row['ID']
-                ref_note = row['ref_note']
-                curr_note = row['curr_note']
-                ref_idx = row['ref_idx']
-                curr_idx = row['curr_idx']
-                
-                # Extraer espectros
-                reference = df_ref.loc[ref_idx, spectral_cols_ref].astype(float).values
-                current_original = df_curr.loc[curr_idx, spectral_cols_curr].astype(float).values
-                
-                # Simular espectro con offset aplicado
-                # Como baseline se RESTA, el efecto en el espectro es OPUESTO
-                current_simulated = current_original + offset_value
-                
-                # Calcular métricas sin offset
-                metrics_original = validate_standard_simple(reference, current_original)
-                
-                # Calcular métricas con offset
-                metrics_simulated = validate_standard_simple(reference, current_simulated)
-                
-                # Guardar datos completos
-                all_validation_original.append({
-                    'id': sample_id,
-                    'ref_note': ref_note,
-                    'curr_note': curr_note,
-                    'reference': reference,
-                    'current': current_original,
-                    'diff': metrics_original['diff'],
-                    'validation_results': metrics_original
-                })
-                
-                all_validation_simulated.append({
-                    'id': sample_id,
-                    'ref_note': ref_note,
-                    'curr_note': curr_note,
-                    'reference': reference,
-                    'current': current_simulated,
-                    'diff': metrics_simulated['diff'],
-                    'validation_results': metrics_simulated
-                })
-        
-        st.markdown("---")
-        
-        # ==========================================
-        # SECCIÓN: ANÁLISIS GLOBAL
-        # ==========================================
-        st.markdown("#### 📊 Análisis Global del Kit")
-        
-        # Gráfico overlay de todos los estándares
-        with st.expander("📈 Vista Global de Todos los Estándares", expanded=True):
-            st.info("""
-            Comparación simultánea de todos los espectros. Las líneas sólidas azules 
-            son la referencia, las líneas rojas son mediciones sin offset, y las líneas 
-            verdes son la simulación con offset aplicado.
-            """)
-            
-            # Crear gráfico overlay
-            fig_overlay = create_overlay_simulation_plot(
-                all_validation_original,
-                all_validation_simulated,
-                offset_value
-            )
-            st.plotly_chart(fig_overlay, use_container_width=True)
-        
-        # Estadísticas globales
-        st.markdown("#### 📈 Estadísticas Globales del Kit")
-        st.caption(f"Análisis agregado de {len(selected_ids)} estándar(es) seleccionado(s)")
-        
-        # Crear tabla de estadísticas comparativas
-        stats_comparison = create_global_statistics_comparison(
-            all_validation_original,
-            all_validation_simulated
-        )
-        st.dataframe(stats_comparison, use_container_width=True, hide_index=True)
-        
-        # Métricas destacadas
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            avg_corr_orig = np.mean([d['validation_results']['correlation'] for d in all_validation_original])
-            avg_corr_sim = np.mean([d['validation_results']['correlation'] for d in all_validation_simulated])
-            delta_corr = avg_corr_sim - avg_corr_orig
-            
-            st.metric(
-                "Correlación Media", 
-                f"{avg_corr_sim:.6f}",
-                delta=f"{delta_corr:+.6f}",
-                help=f"Original: {avg_corr_orig:.6f} | Simulado: {avg_corr_sim:.6f}"
-            )
-        
-        with col2:
-            avg_max_orig = np.mean([d['validation_results']['max_diff'] for d in all_validation_original])
-            avg_max_sim = np.mean([d['validation_results']['max_diff'] for d in all_validation_simulated])
-            delta_max = avg_max_sim - avg_max_orig
-            
-            st.metric(
-                "Max Δ Media", 
-                f"{avg_max_sim:.6f} AU",
-                delta=f"{delta_max:+.6f} AU",
-                delta_color="inverse" if delta_max < 0 else "normal",
-                help=f"Original: {avg_max_orig:.6f} | Simulado: {avg_max_sim:.6f}"
-            )
-        
-        with col3:
-            avg_rms_orig = np.mean([d['validation_results']['rms'] for d in all_validation_original])
-            avg_rms_sim = np.mean([d['validation_results']['rms'] for d in all_validation_simulated])
-            delta_rms = avg_rms_sim - avg_rms_orig
-            
-            st.metric(
-                "RMS Media", 
-                f"{avg_rms_sim:.6f}",
-                delta=f"{delta_rms:+.6f}",
-                delta_color="inverse" if delta_rms < 0 else "normal",
-                help=f"Original: {avg_rms_orig:.6f} | Simulado: {avg_rms_sim:.6f}"
-            )
-        
-        st.markdown("---")
-        
-        # Offset global del kit
-        global_offset_orig = np.mean([d['validation_results']['mean_diff'] for d in all_validation_original])
-        global_offset_sim = np.mean([d['validation_results']['mean_diff'] for d in all_validation_simulated])
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.metric(
-                "🎯 Offset Global (Original)", 
-                f"{global_offset_orig:.6f} AU",
-                help="Offset medio sin corrección aplicada"
-            )
-        
-        with col2:
-            st.metric(
-                "🎯 Offset Global (Simulado)", 
-                f"{global_offset_sim:.6f} AU",
-                delta=f"{global_offset_sim - global_offset_orig:+.6f} AU",
-                delta_color="inverse" if abs(global_offset_sim) < abs(global_offset_orig) else "normal",
-                help="Offset medio con corrección aplicada"
-            )
-        
-        # Evaluación del offset simulado
-        if abs(global_offset_sim) < 0.003:
-            st.success(f"✅ **Excelente corrección**: El offset simulado ({offset_value:+.6f} AU) reduce el bias global a nivel despreciable ({global_offset_sim:+.6f} AU)")
-        elif abs(global_offset_sim) < abs(global_offset_orig):
-            reduction = (1 - abs(global_offset_sim)/abs(global_offset_orig)) * 100
-            st.info(f"ℹ️ **Mejora significativa**: El offset reduce el bias en {reduction:.1f}%. Bias residual: {global_offset_sim:+.6f} AU")
-        else:
-            st.warning(f"⚠️ **Empeoramiento**: El offset aplicado ({offset_value:+.6f} AU) aumenta el bias global. Considera ajustar el valor.")
-        
-        st.divider()
-        
-        # ==========================================
-        # SECCIÓN: ANÁLISIS INDIVIDUAL
-        # ==========================================
-        st.markdown("#### 🔍 Análisis Individual por Estándar")
-        
-        # Selector de estándar
-        selected_idx = st.selectbox(
-            "Selecciona estándar para ver detalles:",
-            range(len(matches_filtered)),
-            format_func=lambda x: f"{matches_filtered.iloc[x]['ID']} - {matches_filtered.iloc[x]['ref_note']}",
-            key="standard_selector_sim"
-        )
-        
-        row = matches_filtered.iloc[selected_idx]
-        sample_id = row['ID']
-        
-        # Obtener datos del estándar seleccionado
-        data_orig = all_validation_original[selected_idx]
-        data_sim = all_validation_simulated[selected_idx]
-        
-        reference = data_orig['reference']
-        current_original = data_orig['current']
-        current_simulated = data_sim['current']
-        
-        metrics_original = data_orig['validation_results']
-        metrics_simulated = data_sim['validation_results']
-        
-        # Tabs de análisis detallado
-        tab1, tab2 = st.tabs([
-            "📈 Gráficos Comparativos",
-            "📊 Métricas Detalladas"
-        ])
-        
-        with tab1:
-            # Gráfico espectral
-            channels = list(range(1, len(reference) + 1))
-            
-            fig_spectra = make_subplots(
-                rows=2, cols=1,
-                subplot_titles=(
-                    f'Espectros: Referencia vs Actual (Original y Simulado) - {sample_id}',
-                    'Diferencias vs Referencia'
-                ),
-                vertical_spacing=0.15,
-                row_heights=[0.6, 0.4]
-            )
-            
-            # Panel 1: Overlay de espectros
-            fig_spectra.add_trace(
-                go.Scatter(x=channels, y=reference, name='Referencia',
-                          line=dict(color='blue', width=2)),
-                row=1, col=1
-            )
-            fig_spectra.add_trace(
-                go.Scatter(x=channels, y=current_original, name='Actual (Original)',
-                          line=dict(color='red', width=2, dash='dash')),
-                row=1, col=1
-            )
-            fig_spectra.add_trace(
-                go.Scatter(x=channels, y=current_simulated, name=f'Actual + Offset ({offset_value:+.6f})',
-                          line=dict(color='green', width=2, dash='dot')),
-                row=1, col=1
-            )
-            
-            # Panel 2: Diferencias
-            diff_original = current_original - reference
-            diff_simulated = current_simulated - reference
-            
-            fig_spectra.add_trace(
-                go.Scatter(x=channels, y=diff_original, name='Δ Original',
-                          line=dict(color='red', width=2),
-                          fill='tozeroy', fillcolor='rgba(255,0,0,0.1)'),
-                row=2, col=1
-            )
-            fig_spectra.add_trace(
-                go.Scatter(x=channels, y=diff_simulated, name='Δ Simulado',
-                          line=dict(color='green', width=2),
-                          fill='tozeroy', fillcolor='rgba(0,255,0,0.1)'),
-                row=2, col=1
-            )
-            
-            fig_spectra.add_hline(y=0, line_dash="dash", line_color="gray", 
-                                 opacity=0.5, row=2, col=1)
-            
-            fig_spectra.update_xaxes(title_text="Canal espectral", row=2, col=1)
-            fig_spectra.update_yaxes(title_text="Absorbancia", row=1, col=1)
-            fig_spectra.update_yaxes(title_text="Δ Absorbancia", row=2, col=1)
-            
-            fig_spectra.update_layout(
-                height=700,
-                showlegend=True,
-                template='plotly_white',
-                hovermode='x unified'
-            )
-            
-            st.plotly_chart(fig_spectra, use_container_width=True)
-        
-        with tab2:
-            # Mostrar comparación en columnas
-            col1, col2, col3 = st.columns(3)
-            
-            with col1:
-                st.markdown("##### Sin Offset")
-                st.metric("Correlación", f"{metrics_original['correlation']:.6f}")
-                st.metric("Max Δ", f"{metrics_original['max_diff']:.6f} AU")
-                st.metric("RMS", f"{metrics_original['rms']:.6f}")
-                st.metric("Offset Medio", f"{metrics_original['mean_diff']:+.6f} AU")
-            
-            with col2:
-                st.markdown(f"##### Con Offset ({offset_value:+.6f} AU)")
-                st.metric("Correlación", f"{metrics_simulated['correlation']:.6f}")
-                st.metric("Max Δ", f"{metrics_simulated['max_diff']:.6f} AU")
-                st.metric("RMS", f"{metrics_simulated['rms']:.6f}")
-                st.metric("Offset Medio", f"{metrics_simulated['mean_diff']:+.6f} AU")
-            
-            with col3:
-                st.markdown("##### Δ Cambio")
-                delta_corr = metrics_simulated['correlation'] - metrics_original['correlation']
-                delta_max = metrics_simulated['max_diff'] - metrics_original['max_diff']
-                delta_rms = metrics_simulated['rms'] - metrics_original['rms']
-                delta_offset = metrics_simulated['mean_diff'] - metrics_original['mean_diff']
-                
-                st.metric("Correlación", f"{delta_corr:+.6f}")
-                st.metric("Max Δ", f"{delta_max:+.6f} AU")
-                st.metric("RMS", f"{delta_rms:+.6f}")
-                st.metric("Offset Medio", f"{delta_offset:+.6f} AU")
-            
-            # Gráfico comparativo de barras
-            fig_comparison = create_simulation_comparison_plot(
-                metrics_original, 
-                metrics_simulated, 
-                offset_value
-            )
-            st.plotly_chart(fig_comparison, use_container_width=True)
-        
-        # Exportar datos de simulación completa
-        st.markdown("---")
-        
-        export_data = []
-        for i, (orig, sim) in enumerate(zip(all_validation_original, all_validation_simulated)):
-            export_data.append({
-                'ID': orig['id'],
-                'Note': orig['ref_note'],
-                'Corr_Original': orig['validation_results']['correlation'],
-                'Corr_Simulado': sim['validation_results']['correlation'],
-                'MaxDiff_Original': orig['validation_results']['max_diff'],
-                'MaxDiff_Simulado': sim['validation_results']['max_diff'],
-                'RMS_Original': orig['validation_results']['rms'],
-                'RMS_Simulado': sim['validation_results']['rms'],
-                'Offset_Original': orig['validation_results']['mean_diff'],
-                'Offset_Simulado': sim['validation_results']['mean_diff']
-            })
-        
-        df_export = pd.DataFrame(export_data)
-        csv_export = df_export.to_csv(index=False)
-        
-        st.download_button(
-            "📥 Descargar Resumen Completo de Simulación (CSV)",
-            data=csv_export,
-            file_name=f"simulation_summary_offset_{offset_value:+.6f}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-            mime="text/csv",
-            use_container_width=True
-        )
-        
-    except Exception as e:
-        st.error(f"❌ Error en simulación: {str(e)}")
-        import traceback
-        st.code(traceback.format_exc())
-
-
 def create_overlay_simulation_plot(validation_original: List[Dict], 
                                    validation_simulated: List[Dict],
                                    offset_value: float) -> go.Figure:
@@ -1119,7 +1201,7 @@ def create_overlay_simulation_plot(validation_original: List[Dict],
             name=sample_label,
             line=dict(color=color, width=2),
             legendgroup='reference',
-            hovertemplate=f'<b>{sample_label}</b><br>Canal: %{{x}}<br>Abs: %{{y:.6f}}<extra></extra>'  # ✅ CORREGIDO
+            hovertemplate=f'<b>{sample_label}</b><br>Canal: %{{x}}<br>Abs: %{{y:.6f}}<extra></extra>'
         ))
     
     # Añadir espectros originales
@@ -1134,7 +1216,7 @@ def create_overlay_simulation_plot(validation_original: List[Dict],
             name=sample_label,
             line=dict(color=color, width=2, dash='dash'),
             legendgroup='original',
-            hovertemplate=f'<b>{sample_label}</b><br>Canal: %{{x}}<br>Abs: %{{y:.6f}}<extra></extra>'  # ✅ CORREGIDO
+            hovertemplate=f'<b>{sample_label}</b><br>Canal: %{{x}}<br>Abs: %{{y:.6f}}<extra></extra>'
         ))
     
     # Añadir espectros simulados
@@ -1149,7 +1231,7 @@ def create_overlay_simulation_plot(validation_original: List[Dict],
             name=sample_label,
             line=dict(color=color, width=2, dash='dot'),
             legendgroup='simulated',
-            hovertemplate=f'<b>{sample_label}</b><br>Canal: %{{x}}<br>Abs: %{{y:.6f}}<extra></extra>'  # ✅ CORREGIDO
+            hovertemplate=f'<b>{sample_label}</b><br>Canal: %{{x}}<br>Abs: %{{y:.6f}}<extra></extra>'
         ))
     
     fig.update_layout(
@@ -1176,6 +1258,7 @@ def create_overlay_simulation_plot(validation_original: List[Dict],
     )
     
     return fig
+
 
 def create_global_statistics_comparison(validation_original: List[Dict],
                                         validation_simulated: List[Dict]) -> pd.DataFrame:
@@ -1223,6 +1306,7 @@ def create_global_statistics_comparison(validation_original: List[Dict],
     }
     
     return pd.DataFrame(stats)
-    
+
+
 if __name__ == "__main__":
     main()
