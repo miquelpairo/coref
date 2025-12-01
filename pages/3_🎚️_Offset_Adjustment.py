@@ -126,7 +126,17 @@ def main():
     st.divider()
     
     # ==========================================
-    # SECCIÓN 7: NOTAS IMPORTANTES
+    # SECCIÓN 7: GENERAR INFORME  ← NUEVA SECCIÓN AQUÍ
+    # ==========================================
+    st.markdown("### 7️⃣ Generar Informe de Ajuste de Offset")
+
+    render_report_generation_section()
+
+    st.divider()
+    
+    
+    # ==========================================
+    # SECCIÓN 8: NOTAS IMPORTANTES
     # ==========================================
     render_important_notes_section()
 
@@ -997,12 +1007,12 @@ def render_export_section():
 
 
 # ============================================================================
-# SECCIÓN 7: NOTAS IMPORTANTES
+# SECCIÓN 8: NOTAS IMPORTANTES
 # ============================================================================
 
 def render_important_notes_section():
     """
-    Sección 7: Notas importantes y recomendaciones.
+    Sección 8: Notas importantes y recomendaciones.
     """
     with st.expander("ℹ️ Notas Importantes", expanded=True):
         st.markdown("""
@@ -1311,6 +1321,136 @@ def create_global_statistics_comparison(validation_original: List[Dict],
     
     return pd.DataFrame(stats)
 
+def render_report_generation_section():
+    """
+    Sección 7: Generación de informe HTML.
+    """
+    # Verificar que hay datos necesarios
+    if 'standards_data' not in st.session_state:
+        st.warning("⚠️ Necesitas cargar los archivos TSV primero")
+        return
+    
+    if 'baseline_offset_tool' not in st.session_state:
+        st.warning("⚠️ Necesitas cargar el baseline primero")
+        return
+    
+    if 'validation_results' not in st.session_state:
+        st.warning("⚠️ Necesitas calcular las métricas primero (ve a la sección de Análisis Global)")
+        return
+    
+    st.info("""
+    Completa la información del servicio para generar un informe HTML profesional 
+    con todos los resultados del ajuste de offset.
+    """)
+    
+    st.markdown("#### 📋 Información del Servicio")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        sensor_serial = st.text_input(
+            "Número de Serie del Sensor:",
+            placeholder="Ej: NIR-2024-001",
+            help="Número de serie único del equipo NIR",
+            key="report_sensor_serial"
+        )
+        
+        customer_name = st.text_input(
+            "Cliente:",
+            placeholder="Ej: Universidad de Barcelona",
+            help="Nombre del cliente o institución",
+            key="report_customer"
+        )
+    
+    with col2:
+        technician_name = st.text_input(
+            "Técnico Responsable:",
+            placeholder="Ej: Juan Pérez",
+            help="Nombre del técnico que realizó el servicio de mantenimiento",
+            key="report_technician"
+        )
+        
+        service_notes = st.text_area(
+            "Notas del Servicio:",
+            placeholder="Ej: Cambio de lámpara halógena, ajuste de offset por bias sistemático detectado...",
+            help="Observaciones relevantes del mantenimiento y razón del ajuste",
+            height=100,
+            key="report_notes"
+        )
+    
+    st.markdown("---")
+    
+    # Botón de generación centrado
+    col1, col2, col3 = st.columns([1, 2, 1])
+    
+    with col2:
+        if st.button("📥 Generar Informe HTML", type="primary", use_container_width=True):
+            if not sensor_serial or not customer_name or not technician_name:
+                st.error("❌ Por favor completa los campos obligatorios: Número de Serie, Cliente y Técnico")
+            else:
+                with st.spinner("⏳ Generando informe completo..."):
+                    try:
+                        from core.offset_adjustment_report_generator import generate_offset_adjustment_report
+                        
+                        # Obtener datos necesarios
+                        standards_data = st.session_state.standards_data
+                        baseline_data = st.session_state.baseline_offset_tool
+                        validation_results = st.session_state.validation_results
+                        offset_value = st.session_state.get('offset_value', 0.0)
+                        
+                        # Calcular offsets globales
+                        global_offset_orig = np.mean([
+                            d['validation_results']['mean_diff'] 
+                            for d in validation_results['original']
+                        ])
+                        global_offset_sim = np.mean([
+                            d['validation_results']['mean_diff'] 
+                            for d in validation_results['simulated']
+                        ])
+                        
+                        # Aplicar offset al baseline
+                        baseline_adjusted = baseline_data['spectrum'] - offset_value
+                        
+                        # Preparar datos para el reporte
+                        report_data = {
+                            'sensor_serial': sensor_serial,
+                            'customer_name': customer_name,
+                            'technician_name': technician_name,
+                            'service_notes': service_notes,
+                            'offset_value': offset_value,
+                            'validation_data_original': validation_results['original'],
+                            'validation_data_simulated': validation_results['simulated'],
+                            'global_offset_original': global_offset_orig,
+                            'global_offset_simulated': global_offset_sim,
+                            'baseline_original': baseline_data['spectrum'],
+                            'baseline_adjusted': baseline_adjusted,
+                            'ref_filename': standards_data['df_ref'].iloc[0].get('File', 'referencia.tsv'),
+                            'curr_filename': standards_data['df_curr'].iloc[0].get('File', 'actual.tsv'),
+                            'baseline_filename': baseline_data['filename']
+                        }
+                        
+                        html_content = generate_offset_adjustment_report(report_data)
+                        
+                        # Descargar
+                        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                        filename = f"Offset_Adjustment_Report_{sensor_serial.replace(' ', '_')}_{timestamp}.html"
+                        
+                        st.success("✅ Informe generado correctamente")
+                        
+                        st.download_button(
+                            label="💾 Descargar Informe HTML",
+                            data=html_content,
+                            file_name=filename,
+                            mime="text/html",
+                            use_container_width=True,
+                            key="download_report"
+                        )
+                        
+                    except Exception as e:
+                        st.error(f"❌ Error al generar informe: {str(e)}")
+                        with st.expander("🔍 Ver detalles del error"):
+                            import traceback
+                            st.code(traceback.format_exc())
 
 if __name__ == "__main__":
     main()
