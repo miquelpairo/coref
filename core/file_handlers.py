@@ -62,20 +62,22 @@ def load_ref_file(file):
 def load_csv_baseline(file):
     """
     Carga un archivo CSV de baseline (formato nuevo).
+    Lee la última línea del CSV (baseline más reciente).
     
     Args:
         file: Archivo subido por Streamlit
         
     Returns:
         tuple: (df, spectrum) donde df es el DataFrame completo
-               y spectrum es el array de datos espectrales
+               y spectrum es el array de datos espectrales de la última línea
     """
     df = pd.read_csv(file)
     
     if 'data' not in df.columns:
         raise ValueError("El archivo CSV no tiene la columna 'data'")
     
-    data_string = df['data'].iloc[0]
+    # Leer la ÚLTIMA línea (baseline más reciente)
+    data_string = df['data'].iloc[-1]  # Cambio: iloc[0] → iloc[-1]
     spectrum = np.array(json.loads(data_string))
     
     return df, spectrum
@@ -102,6 +104,8 @@ def export_ref_file(spectrum, header):
 def export_csv_file(spectrum, df_baseline=None):
     """
     Exporta un espectro como archivo CSV.
+    Si existe un baseline previo, AÑADE la nueva línea al final.
+    Si no existe, crea un CSV nuevo con una sola línea.
     
     Args:
         spectrum (np.array): Espectro a exportar
@@ -111,12 +115,19 @@ def export_csv_file(spectrum, df_baseline=None):
     Returns:
         str: Contenido del archivo CSV
     """
+    # Crear nueva fila con el espectro ajustado
     if df_baseline is not None:
-        # Preservar metadatos originales
-        df_export = df_baseline.copy()
-        df_export['data'] = json.dumps(spectrum.tolist())
+        # Tomar la última fila como template para metadatos
+        new_row = df_baseline.iloc[-1].copy()
+        
+        # Actualizar timestamp y data
+        new_row['time_stamp'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        new_row['data'] = json.dumps(spectrum.tolist())
+        
+        # AÑADIR la nueva fila al final del DataFrame existente
+        df_export = pd.concat([df_baseline, pd.DataFrame([new_row])], ignore_index=True)
     else:
-        # Usar metadatos por defecto
+        # Usar metadatos por defecto (CSV nuevo)
         metadata = DEFAULT_CSV_METADATA.copy()
         metadata['time_stamp'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         metadata['nir_pixels'] = len(spectrum)
