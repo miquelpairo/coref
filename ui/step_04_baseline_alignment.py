@@ -164,7 +164,8 @@ def render_baseline_upload_section():
                     'spectrum': ref_spectrum,
                     'header': header,
                     'df_baseline': None,
-                    'origin': 'ref'
+                    'origin': 'ref',
+                    'filename': baseline_file.name
                 }
                 
                 # ⭐ NUEVO: Guardar también en baseline_data para compatibilidad con validación
@@ -201,7 +202,8 @@ def render_baseline_upload_section():
                     'spectrum': ref_spectrum,
                     'header': None,
                     'df_baseline': df_baseline,
-                    'origin': 'csv'
+                    'origin': 'csv',
+                    'filename': baseline_file.name
                 }
                 
                 # ⭐ NUEVO: Guardar también en baseline_data para compatibilidad con validación
@@ -210,7 +212,7 @@ def render_baseline_upload_section():
                     ref_spectrum=ref_spectrum,
                     header=None,
                     df_baseline=df_baseline,
-                    origin='csv'
+                    origin='csv',
                 )
                                 
                 with st.expander("📊 Ver espectro del baseline", expanded=False):
@@ -640,12 +642,21 @@ def render_corrected_baseline_section():
         if baseline_data['origin'] == 'ref' and baseline_data['header'] is not None:
             st.info("✅ Cabecera original preservada")
             ref_bytes = export_ref_file(ref_corrected, baseline_data['header'])
+            # Generar nombre conservando el original con NEW_timestamp
+            original_name = baseline_data['filename']
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            name_parts = original_name.rsplit('.', 1)  # Separar nombre y extensión
+            if len(name_parts) == 2:
+                new_filename = f"{name_parts[0]}_BLAD_{timestamp}.{name_parts[1]}"
+            else:
+                new_filename = f"{original_name}_BLAD_{timestamp}"
+
             st.download_button(
-                "📥 Descargar .ref corregido",
+                "📥 Descargar .ref ajustado",
                 data=ref_bytes,
-                file_name=f"baseline_corregido_{datetime.now().strftime('%Y%m%d_%H%M%S')}.ref",
+                file_name=new_filename,
                 mime="application/octet-stream",
-                key="download_ref_alignment",
+                key="download_ref_offset",
                 use_container_width=True
             )
         else:
@@ -661,12 +672,21 @@ def render_corrected_baseline_section():
             st.warning("ℹ️ Usando metadatos por defecto")
             csv_bytes = export_csv_file(ref_corrected)
         
+        # Generar nombre conservando el original con NEW_timestamp
+        original_name = baseline_data['filename']
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        name_parts = original_name.rsplit('.', 1)  # Separar nombre y extensión
+        if len(name_parts) == 2:
+            new_filename_csv = f"{name_parts[0]}_BLAD_{timestamp}.{name_parts[1]}"
+        else:
+            new_filename_csv = f"{original_name}_BLAD_{timestamp}"
+
         st.download_button(
-            "📥 Descargar .csv corregido",
+            "📥 Descargar .csv ajustado",
             data=csv_bytes,
-            file_name=f"baseline_corregido_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+            file_name=new_filename_csv,
             mime="text/csv",
-            key="download_csv_alignment",
+            key="download_csv_offset",
             use_container_width=True
         )
     

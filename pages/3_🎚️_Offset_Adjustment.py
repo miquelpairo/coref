@@ -975,10 +975,19 @@ def render_export_section():
         if baseline_data['origin'] == 'ref' and baseline_data['header'] is not None:
             st.success("✅ Cabecera original preservada")
             ref_bytes = export_ref_file(adjusted_spectrum, baseline_data['header'])
+            # Generar nombre conservando el original con NEW_timestamp
+            original_name = baseline_data['filename']
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            name_parts = original_name.rsplit('.', 1)  # Separar nombre y extensión
+            if len(name_parts) == 2:
+                new_filename = f"{name_parts[0]}_OFFSAD_{timestamp}.{name_parts[1]}"
+            else:
+                new_filename = f"{original_name}_OFFSAD_{timestamp}"
+
             st.download_button(
                 "📥 Descargar .ref ajustado",
                 data=ref_bytes,
-                file_name=f"baseline_offset_{offset_value:+.6f}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.ref",
+                file_name=new_filename,
                 mime="application/octet-stream",
                 key="download_ref_offset",
                 use_container_width=True
@@ -996,10 +1005,19 @@ def render_export_section():
             st.info("ℹ️ Usando metadatos por defecto")
             csv_bytes = export_csv_file(adjusted_spectrum)
         
+        # Generar nombre conservando el original con NEW_timestamp
+        original_name = baseline_data['filename']
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        name_parts = original_name.rsplit('.', 1)  # Separar nombre y extensión
+        if len(name_parts) == 2:
+            new_filename_csv = f"{name_parts[0]}_OFFSAD_{timestamp}.{name_parts[1]}"
+        else:
+            new_filename_csv = f"{original_name}_OFFSAD_{timestamp}"
+
         st.download_button(
             "📥 Descargar .csv ajustado",
             data=csv_bytes,
-            file_name=f"baseline_offset_{offset_value:+.6f}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+            file_name=new_filename_csv,
             mime="text/csv",
             key="download_csv_offset",
             use_container_width=True
