@@ -3,8 +3,6 @@ Standard Validation Tool
 ========================
 Herramienta dedicada para validación de estándares ópticos NIR.
 Verifica alineamiento espectral post-mantenimiento.
-
-
 """
 
 import streamlit as st
@@ -59,86 +57,6 @@ st.markdown("""
         box-shadow: none !important;
     }
     
-    /* CRÍTICO: Eliminar borde verde de label de file uploader */
-    [data-testid="stSidebar"] [data-testid="stFileUploader"] > label,
-    [data-testid="stSidebar"] [data-testid="stFileUploader"] label {
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        outline: none !important;
-    }
-    
-    /* File uploader - contenedor principal */
-    [data-testid="stSidebar"] [data-testid="stFileUploader"] {
-        width: 100% !important;
-        margin-bottom: 20px !important;
-    }
-    
-    /* Área de drop - diseño limpio y compacto */
-    [data-testid="stSidebar"] [data-testid="stFileUploader"] section {
-        background-color: rgba(255, 255, 255, 0.1) !important;
-        border: 2px dashed rgba(255, 255, 255, 0.3) !important;
-        border-radius: 8px !important;
-        padding: 20px !important;
-        text-align: center !important;
-        width: 100% !important;
-        box-sizing: border-box !important;
-    }
-    
-    [data-testid="stSidebar"] [data-testid="stFileUploader"] section:hover {
-        border-color: rgba(255, 255, 255, 0.5) !important;
-        background-color: rgba(255, 255, 255, 0.15) !important;
-    }
-    
-    /* Texto "Drag and drop" */
-    [data-testid="stSidebar"] [data-testid="stFileUploader"] small {
-        color: rgba(255, 255, 255, 0.8) !important;
-        font-size: 13px !important;
-    }
-    
-    /* Botón "Browse files" - Verde Buchi */
-    [data-testid="stSidebar"] [data-testid="stFileUploader"] button[kind="secondary"] {
-        background-color: #7cb342 !important;
-        color: white !important;
-        border: none !important;
-        border-radius: 6px !important;
-        padding: 8px 20px !important;
-        font-weight: 600 !important;
-        font-size: 14px !important;
-        margin-top: 10px !important;
-        cursor: pointer !important;
-    }
-    
-    [data-testid="stSidebar"] [data-testid="stFileUploader"] button[kind="secondary"]:hover {
-        background-color: #689f38 !important;
-        transform: translateY(-1px);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
-    }
-    
-    /* Archivo cargado - estilo badge */
-    [data-testid="stSidebar"] [data-testid="stFileUploader"] [data-testid="stMarkdownContainer"] {
-        background-color: rgba(124, 179, 66, 0.2) !important;
-        border: 1px solid #7cb342 !important;
-        border-radius: 6px !important;
-        padding: 10px 12px !important;
-        margin-top: 10px !important;
-        color: white !important;
-        font-size: 13px !important;
-    }
-    
-    /* Botón X para eliminar - más visible */
-    [data-testid="stSidebar"] [data-testid="stFileUploader"] button[kind="icon"] {
-        color: #ff5252 !important;
-        background-color: rgba(255, 82, 82, 0.1) !important;
-        border-radius: 4px !important;
-        padding: 4px !important;
-    }
-    
-    [data-testid="stSidebar"] [data-testid="stFileUploader"] button[kind="icon"]:hover {
-        background-color: rgba(255, 82, 82, 0.2) !important;
-        color: #ff1744 !important;
-    }
-    
     /* Dividers */
     [data-testid="stSidebar"] hr {
         border-color: rgba(255, 255, 255, 0.2) !important;
@@ -153,14 +71,6 @@ st.markdown("""
     }
     
     [data-testid="stSidebar"] [data-testid="stExpander"] summary {
-        color: white !important;
-    }
-    
-    /* Info boxes */
-    [data-testid="stSidebar"] .stAlert {
-        background-color: rgba(124, 179, 66, 0.15) !important;
-        border: 1px solid rgba(124, 179, 66, 0.3) !important;
-        border-radius: 8px !important;
         color: white !important;
     }
     
@@ -180,20 +90,7 @@ st.markdown("""
         box-shadow: 0 0 0 1px #7cb342 !important;
     }
     
-    /* Selects */
-    [data-testid="stSidebar"] select {
-        background-color: white !important;
-        color: #333333 !important;
-        border: 1px solid rgba(255, 255, 255, 0.3) !important;
-        border-radius: 6px !important;
-    }
-    
     /* Number input - botones +/- GRISES OSCUROS sobre blanco */
-    [data-testid="stSidebar"] button[kind="icon"] svg {
-        color: #333333 !important;
-        fill: #333333 !important;
-    }
-    
     [data-testid="stSidebar"] [data-testid="stNumberInput"] button {
         background-color: #f0f0f0 !important;
         color: #333333 !important;
@@ -212,12 +109,6 @@ st.markdown("""
 
 if not check_password():
     st.stop()
-
-# ============================================================================
-# CONFIGURACIÓN DE UMBRALES
-# ============================================================================
-
-
 
 # ============================================================================
 # FUNCIONES DE VALIDACIÓN
@@ -348,6 +239,7 @@ def find_common_ids(df_ref: pd.DataFrame, df_curr: pd.DataFrame) -> pd.DataFrame
     matches = df_ref_ids.merge(df_curr_ids, on='ID', how='inner')
     
     return matches[['ID', 'ref_note', 'curr_note', 'ref_idx', 'curr_idx']]
+
 
 def analyze_critical_regions(reference: np.ndarray, current: np.ndarray,
                             regions: List[Tuple[int, int]], 
@@ -485,6 +377,7 @@ def create_validation_plot(reference: np.ndarray, current: np.ndarray,
     
     return fig
 
+
 def create_overlay_plot(validation_data: List[Dict], show_reference: bool = True,
                        show_current: bool = True) -> go.Figure:
     """
@@ -570,6 +463,7 @@ def create_overlay_plot(validation_data: List[Dict], show_reference: bool = True
     
     return fig
 
+
 def create_global_statistics_table(validation_data: List[Dict]) -> pd.DataFrame:
     """
     Crea tabla con estadísticas globales de todos los estándares.
@@ -581,18 +475,18 @@ def create_global_statistics_table(validation_data: List[Dict]) -> pd.DataFrame:
     all_correlations = []
     all_max_diffs = []
     all_rms = []
-    all_mean_diffs = []  # ESTE es el offset por estándar
+    all_mean_diffs = []
     
     for data in validation_data:
         val_res = data['validation_results']
         all_correlations.append(val_res['correlation'])
         all_max_diffs.append(val_res['max_diff'])
         all_rms.append(val_res['rms'])
-        all_mean_diffs.append(val_res['mean_diff'])  # Sin abs() para ver la dirección
+        all_mean_diffs.append(val_res['mean_diff'])
     
     # Calcular estadísticas
     stats = {
-        'Métrica': ['Correlación', 'Max Diferencia (AU)', 'RMS', 'Offset Medio (AU)'],  # Cambiado nombre
+        'Métrica': ['Correlación', 'Max Diferencia (AU)', 'RMS', 'Offset Medio (AU)'],
         'Mínimo': [
             f"{min(all_correlations):.6f}",
             f"{min(all_max_diffs):.6f}",
@@ -609,7 +503,7 @@ def create_global_statistics_table(validation_data: List[Dict]) -> pd.DataFrame:
             f"{np.mean(all_correlations):.6f}",
             f"{np.mean(all_max_diffs):.6f}",
             f"{np.mean(all_rms):.6f}",
-            f"{np.mean(all_mean_diffs):.6f}"  # ESTE es el offset global del kit
+            f"{np.mean(all_mean_diffs):.6f}"
         ],
         'Desv. Est.': [
             f"{np.std(all_correlations):.6f}",
@@ -620,6 +514,8 @@ def create_global_statistics_table(validation_data: List[Dict]) -> pd.DataFrame:
     }
     
     return pd.DataFrame(stats)
+
+
 # ============================================================================
 # INTERFAZ PRINCIPAL
 # ============================================================================
@@ -627,36 +523,38 @@ def create_global_statistics_table(validation_data: List[Dict]) -> pd.DataFrame:
 def main():
     st.title("🎯 Standard Validation Tool")
     st.markdown("**Validación automática de estándares ópticos post-mantenimiento**")
+    
+    # Info inicial
+    st.info("""
+    Esta herramienta valida que el alineamiento espectral del equipo se mantiene 
+    correcto después de realizar mantenimiento (ej: cambio de lámpara).
+    
+    **Proceso:**
+    1. Carga archivos TSV con mediciones antes y después del mantenimiento
+    2. Selecciona los estándares a validar
+    3. Analiza automáticamente la correlación y diferencias espectrales
+    4. Genera informe detallado con resultados
+    """)
+    
     st.divider()
     
     # Sidebar
     with st.sidebar:
-        st.header("⚙️ Configuración")
-        
-        # Upload de archivos
-        ref_file = st.file_uploader(
-            "📁 Referencia pre-mantenimiento (TSV)",
-            type=['tsv'],
-            help="Mediciones de estándares antes del mantenimiento"
-        )
-        
-        curr_file = st.file_uploader(
-            "📁 Medición post-mantenimiento (TSV)",
-            type=['tsv'],
-            help="Mediciones de estándares después del mantenimiento"
-        )
-        
-        st.divider()
+        st.markdown("### ⚙️ Configuración")
+        st.markdown("---")
         
         # Ajuste de umbrales
-        with st.expander("🎚️ Ajustar Umbrales"):
+        with st.expander("🎚️ Ajustar Umbrales de Validación"):
+            st.caption("Modifica los criterios de aceptación según tus necesidades")
+            
             corr_threshold = st.number_input(
                 "Correlación mínima:",
                 min_value=0.990,
                 max_value=1.000,
                 value=DEFAULT_VALIDATION_THRESHOLDS['correlation'],
                 step=0.001,
-                format="%.3f"
+                format="%.3f",
+                help="Similitud espectral mínima aceptable (valores cercanos a 1.0 = alta similitud)"
             )
             
             max_diff_threshold = st.number_input(
@@ -665,7 +563,8 @@ def main():
                 max_value=0.100,
                 value=DEFAULT_VALIDATION_THRESHOLDS['max_diff'],
                 step=0.001,
-                format="%.3f"
+                format="%.3f",
+                help="Máxima desviación puntual permitida en absorbancia"
             )
             
             rms_threshold = st.number_input(
@@ -674,7 +573,8 @@ def main():
                 max_value=0.100,
                 value=DEFAULT_VALIDATION_THRESHOLDS['rms'],
                 step=0.001,
-                format="%.3f"
+                format="%.3f",
+                help="Error cuadrático medio máximo aceptable"
             )
             
             thresholds = {
@@ -687,36 +587,91 @@ def main():
             thresholds = DEFAULT_VALIDATION_THRESHOLDS
         
         st.divider()
-        st.markdown("""
-        **Regiones críticas:**
-        - 1100-1200 nm (O-H)
-        - 1400-1500 nm (Humedad)
-        - 1600-1700 nm (C-H)
-        """)
+        
+        # Info de regiones críticas
+        with st.expander("ℹ️ Regiones Espectrales Críticas"):
+            st.markdown("""
+            **Regiones analizadas:**
+            - **1100-1200 nm**: Enlaces O-H (hidroxilos)
+            - **1400-1500 nm**: Agua / Humedad
+            - **1600-1700 nm**: Enlaces C-H (grupos metilo)
+            
+            Estas regiones son especialmente sensibles a desalineamientos ópticos.
+            """)
+    
+    # ==========================================
+    # SECCIÓN: CARGA DE ARCHIVOS TSV
+    # ==========================================
+    st.markdown("### 📁 Carga de Archivos de Medición")
+
+    st.info("""
+    Carga dos archivos TSV con mediciones de estándares ópticos:
+
+    **Uso típico:**
+    - **Referencia**: Mediciones con baseline antigua (antes de mantenimiento)
+    - **Actual**: Mediciones con baseline nueva (después de mantenimiento)
+    """)
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        ref_file = st.file_uploader(
+            "Referencia pre-mantenimiento:",
+            type=['tsv'],
+            key="ref_tsv_validation",
+            help="Archivo TSV con mediciones de estándares ANTES del mantenimiento (con baseline antigua)"
+        )
+
+    with col2:
+        curr_file = st.file_uploader(
+            "Medición post-mantenimiento:",
+            type=['tsv'],
+            key="curr_tsv_validation",
+            help="Archivo TSV con mediciones de estándares DESPUÉS del mantenimiento (con baseline nueva)"
+        )
+
+    st.divider()
     
     # Área principal
     if not ref_file or not curr_file:
-        st.info("👈 Carga ambos archivos para comenzar la validación automática")
+        st.info("👆 Carga ambos archivos para comenzar")
         
-        st.markdown("""
-        ### Funcionamiento:
-        
-        1. **Carga archivos TSV** con mediciones de estándares ópticos
-        2. **Detección automática** de IDs comunes entre ambos archivos
-        3. **Validación de todos los estándares** encontrados
-        4. **Tabla resumen** con resultados y análisis detallado
-        
-        **Umbrales por defecto:**
-        - Correlación espectral: ≥ 0.999
-        - Diferencia máxima: ≤ 0.02 AU
-        - RMS: ≤ 0.015
-        """)
+        with st.expander("📖 Guía de Uso", expanded=True):
+            st.markdown("""
+            ### ¿Cómo funciona esta herramienta?
+            
+            **1. Preparación**
+            - Realiza mediciones de estándares ópticos ANTES del mantenimiento
+            - Exporta las mediciones como archivo TSV (Referencia)
+            
+            **2. Mantenimiento**
+            - Realiza el cambio de lámpara u otro mantenimiento
+            - Instala el nuevo baseline corregido
+            
+            **3. Verificación**
+            - Mide los mismos estándares con el nuevo baseline
+            - Exporta las mediciones como archivo TSV (Post-mantenimiento)
+            
+            **4. Validación Automática**
+            - Esta herramienta compara ambos conjuntos de mediciones
+            - Detecta desviaciones, correlaciones y shifts espectrales
+            - Genera un informe detallado
+            
+            ---
+            
+            **Umbrales por defecto:**
+            - Correlación espectral: ≥ 0.999
+            - Diferencia máxima: ≤ 0.02 AU
+            - RMS: ≤ 0.015
+            
+            Estos valores se pueden ajustar en el panel lateral según tus requisitos.
+            """)
         
         return
     
     # Cargar archivos
     try:
-        with st.spinner("Cargando archivos y detectando estándares comunes..."):
+        with st.spinner("⏳ Cargando archivos y detectando estándares comunes..."):
             df_ref = load_tsv_file(ref_file)
             df_curr = load_tsv_file(curr_file)
             
@@ -725,6 +680,12 @@ def main():
             
             if len(spectral_cols_ref) != len(spectral_cols_curr):
                 st.error("❌ Los archivos tienen diferente número de canales espectrales")
+                st.info(f"""
+                - Archivo referencia: {len(spectral_cols_ref)} canales
+                - Archivo actual: {len(spectral_cols_curr)} canales
+                
+                Ambos archivos deben tener el mismo número de canales espectrales.
+                """)
                 return
             
             num_channels = len(spectral_cols_ref)
@@ -734,15 +695,27 @@ def main():
             
             if len(matches) == 0:
                 st.error("❌ No se encontraron IDs comunes entre los archivos")
-                st.info("💡 Asegúrate de que los campos ID y Note coinciden en ambos archivos")
+                st.info("💡 Verifica que:")
+                st.markdown("""
+                - Los campos **ID** y **Note** existen en ambos archivos
+                - Los IDs utilizados son consistentes entre mediciones
+                - Ambas mediciones incluyen los mismos estándares
+                """)
                 
                 col1, col2 = st.columns(2)
                 with col1:
-                    st.subheader("IDs en Referencia")
-                    st.dataframe(df_ref[['ID', 'Note']], use_container_width=True)
+                    st.markdown("#### IDs en Referencia")
+                    if 'ID' in df_ref.columns and 'Note' in df_ref.columns:
+                        st.dataframe(df_ref[['ID', 'Note']], use_container_width=True)
+                    else:
+                        st.warning("Columnas ID o Note no encontradas")
+                        
                 with col2:
-                    st.subheader("IDs en Actual")
-                    st.dataframe(df_curr[['ID', 'Note']], use_container_width=True)
+                    st.markdown("#### IDs en Actual")
+                    if 'ID' in df_curr.columns and 'Note' in df_curr.columns:
+                        st.dataframe(df_curr[['ID', 'Note']], use_container_width=True)
+                    else:
+                        st.warning("Columnas ID o Note no encontradas")
                 
                 return
             
@@ -750,107 +723,130 @@ def main():
             
     except Exception as e:
         st.error(f"❌ Error al cargar archivos: {str(e)}")
+        with st.expander("🔍 Ver detalles del error"):
+            import traceback
+            st.code(traceback.format_exc())
         return
     
     st.divider()
     
-    # SELECCIÓN DE MUESTRAS A VALIDAR
-    st.subheader("🎯 Selección de Estándares a Validar")
+    # ==========================================
+    # SECCIÓN 1: SELECCIÓN DE ESTÁNDARES
+    # ==========================================
+    st.markdown("### 1️⃣ Selección de Estándares a Validar")
     
-    # Crear DataFrame para mostrar con checkbox
-    selection_data = []
-    for idx, row in matches.iterrows():
-        selection_data.append({
-            'Seleccionar': True,  # Por defecto todos seleccionados
-            'ID': row['ID'],
-            'Note (Ref)': row['ref_note'],
-            'Note (Actual)': row['curr_note']
-        })
-    
-    selection_df = pd.DataFrame(selection_data)
-    
-    # Usar data_editor para permitir edición de checkboxes
-    edited_df = st.data_editor(
-        selection_df,
-        hide_index=True,
-        use_container_width=True,
-        column_config={
-            "Seleccionar": st.column_config.CheckboxColumn(
-                "✓ Validar",
-                help="Marcar para incluir en la validación",
-                default=True,
-            )
-        },
-        disabled=["ID", "Note (Ref)", "Note (Actual)"]  # Solo checkbox editable
-    )
-    
-    # Botones de selección rápida
-    col1, col2, col3, col4 = st.columns([1, 1, 1, 3])
-    with col1:
-        if st.button("✅ Seleccionar Todos", use_container_width=True):
-            st.session_state['select_all'] = True
-            st.rerun()
-    with col2:
-        if st.button("❌ Deseleccionar Todos", use_container_width=True):
-            st.session_state['deselect_all'] = True
-            st.rerun()
-    
-    # Aplicar selección/deselección masiva si se presionó el botón
-    if 'select_all' in st.session_state and st.session_state['select_all']:
-        edited_df['Seleccionar'] = True
-        st.session_state['select_all'] = False
-    
-    if 'deselect_all' in st.session_state and st.session_state['deselect_all']:
-        edited_df['Seleccionar'] = False
-        st.session_state['deselect_all'] = False
-    
-    # Contar seleccionados
-    n_selected = edited_df['Seleccionar'].sum()
-    
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        if n_selected == 0:
-            st.warning("⚠️ No hay estándares seleccionados para validar")
-        else:
-            st.info(f"📊 {n_selected} de {len(edited_df)} estándares seleccionados")
-    
-    with col2:
-        confirm_button = st.button(
-            "🚀 Validar Selección",
-            type="primary",
+    # Inicializar estado de selección
+    common_ids = matches['ID'].tolist()
+
+    if 'standards_selected_ids' not in st.session_state:
+        st.session_state.standards_selected_ids = common_ids.copy()
+
+    if 'standards_pending_selection' not in st.session_state:
+        st.session_state.standards_pending_selection = common_ids.copy()
+
+    # Crear DataFrame para mostrar
+    df_samples = pd.DataFrame({
+        'ID': common_ids,
+        'Note (Ref)': matches['ref_note'].tolist(),
+        'Note (Actual)': matches['curr_note'].tolist(),
+        'Usar para validación': [
+            id_ in st.session_state.standards_pending_selection 
+            for id_ in common_ids
+        ]
+    })
+
+    st.info("""
+    Selecciona los estándares que deseas incluir en la validación. 
+    Por defecto, todos los estándares comunes están seleccionados.
+    """)
+
+    # Usar formulario
+    with st.form("form_select_standards_validation", clear_on_submit=False):
+        edited = st.data_editor(
+            df_samples,
             use_container_width=True,
-            disabled=(n_selected == 0)
+            hide_index=True,
+            disabled=['ID', 'Note (Ref)', 'Note (Actual)'],
+            column_config={
+                "Usar para validación": st.column_config.CheckboxColumn(
+                    "✓ Incluir",
+                    help="Marcar para incluir en la validación",
+                    default=True,
+                )
+            },
+            key="editor_select_standards_validation"
         )
-    
-    # Guardar selección en session_state al confirmar
-    if confirm_button:
-        st.session_state['validated'] = True
-        st.session_state['selected_ids'] = edited_df[edited_df['Seleccionar']]['ID'].tolist()
+        
+        # Botones dentro del formulario
+        col_a, col_b, col_c, col_d = st.columns(4)
+        btn_all = col_a.form_submit_button("✅ Todos", use_container_width=True)
+        btn_none = col_b.form_submit_button("❌ Ninguno", use_container_width=True)
+        btn_invert = col_c.form_submit_button("🔄 Invertir", use_container_width=True)
+        btn_confirm = col_d.form_submit_button("🚀 Confirmar Selección", type="primary", use_container_width=True)
+
+    # Manejar acciones de botones
+    if btn_all:
+        st.session_state.standards_pending_selection = common_ids.copy()
         st.rerun()
-    
+
+    if btn_none:
+        st.session_state.standards_pending_selection = []
+        st.rerun()
+
+    if btn_invert:
+        inverted = [id_ for id_ in common_ids if id_ not in st.session_state.standards_pending_selection]
+        st.session_state.standards_pending_selection = inverted
+        st.rerun()
+
+    if btn_confirm:
+        try:
+            pending = edited.loc[edited['Usar para validación'], 'ID'].tolist()
+            st.session_state.standards_pending_selection = pending
+            st.session_state.standards_selected_ids = pending
+            st.session_state['validated'] = True
+            st.rerun()
+        except Exception as e:
+            st.error(f"Error al confirmar selección: {str(e)}")
+    else:
+        # Actualizar pending mientras se edita
+        if isinstance(edited, pd.DataFrame):
+            try:
+                pending = edited.loc[edited['Usar para validación'], 'ID'].tolist()
+                st.session_state.standards_pending_selection = pending
+            except Exception:
+                pass
+
+    # Mostrar contador
+    st.caption(
+        f"Pendientes: {len(st.session_state.standards_pending_selection)} - "
+        f"Confirmados: {len(st.session_state.get('standards_selected_ids', []))}"
+    )
+
     # Solo proceder si ya se validó
     if 'validated' not in st.session_state or not st.session_state['validated']:
-        st.info("👆 Ajusta la selección y presiona 'Validar Selección' para continuar")
+        st.info("👆 Ajusta la selección y presiona **'Confirmar Selección'** para continuar")
         return
-    
+
     # Recuperar selección guardada
-    selected_ids = st.session_state['selected_ids']
+    selected_ids = st.session_state.standards_selected_ids
     matches_filtered = matches[matches['ID'].isin(selected_ids)].copy()
-    
+
     st.divider()
-    
+
     # Botón para volver a la selección
-    if st.button("🔄 Cambiar Selección de Estándares"):
+    if st.button("🔄 Cambiar Selección de Estándares", use_container_width=False):
         st.session_state['validated'] = False
         st.rerun()
     
-    # VALIDACIÓN AUTOMÁTICA DE ESTÁNDARES SELECCIONADOS
-    st.header("📊 Resultados de Validación")
+    # ==========================================
+    # SECCIÓN 2: VALIDACIÓN AUTOMÁTICA
+    # ==========================================
+    st.markdown("### 2️⃣ Resultados de Validación")
     
     all_results = []
-    all_validation_data = []  # Para guardar datos completos para análisis detallado
+    all_validation_data = []
     
-    with st.spinner(f"Validando {len(matches)} estándar(es)..."):
+    with st.spinner(f"⏳ Validando {len(matches_filtered)} estándar(es)..."):
         for idx, row in matches_filtered.iterrows():
             sample_id = row['ID']
             ref_note = row['ref_note']
@@ -889,7 +885,7 @@ def main():
                 'Shift (px)': f"{shift_magnitude:.1f}" if has_shift else "0.0"
             })
             
-            # Guardar datos completos para análisis detallado
+            # Guardar datos completos
             all_validation_data.append({
                 'id': sample_id,
                 'ref_note': ref_note,
@@ -922,10 +918,10 @@ def main():
     with col4:
         st.metric("❌ Fallidos", n_fail)
     
-    st.divider()
+    st.markdown("---")
     
     # Tabla resumen
-    st.subheader("Resumen de Validaciones")
+    st.markdown("#### 📋 Tabla Resumen")
     st.dataframe(results_df, use_container_width=True, hide_index=True)
     
     # Exportar resumen
@@ -934,14 +930,24 @@ def main():
         label="📥 Descargar Resumen (CSV)",
         data=csv,
         file_name=f"validation_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-        mime="text/csv"
+        mime="text/csv",
+        use_container_width=True
     )
     
     st.divider()
     
-    # NUEVO: Gráfico de overlay global en expandable
+    # ==========================================
+    # SECCIÓN 3: ANÁLISIS GLOBAL
+    # ==========================================
+    st.markdown("### 3️⃣ Análisis Global")
+    
+    # Expandable para gráfico overlay
     with st.expander("📊 Vista Global de Todos los Estándares", expanded=False):
-        st.caption("Comparación simultánea de todos los espectros validados")
+        st.info("""
+        Comparación simultánea de todos los espectros validados. 
+        Las líneas sólidas representan las mediciones de referencia (pre-mantenimiento) 
+        y las líneas punteadas las mediciones actuales (post-mantenimiento).
+        """)
         
         col1, col2 = st.columns([3, 1])
         
@@ -952,34 +958,42 @@ def main():
         overlay_fig = create_overlay_plot(all_validation_data, show_ref, show_curr)
         st.plotly_chart(overlay_fig, use_container_width=True)
     
-    # NUEVO: Tabla de estadísticas globales
-    st.markdown("### 📈 Estadísticas Globales")
+    # Estadísticas globales
+    st.markdown("#### 📈 Estadísticas Globales del Kit")
     st.caption(f"Análisis agregado de {len(all_validation_data)} estándar(es)")
     
     stats_df = create_global_statistics_table(all_validation_data)
     st.dataframe(stats_df, use_container_width=True, hide_index=True)
     
-    # Opcional: destacar valores según umbrales
+    # Métricas destacadas
     col1, col2, col3 = st.columns(3)
     with col1:
         avg_corr = np.mean([d['validation_results']['correlation'] for d in all_validation_data])
-        st.metric("Correlación Media", f"{avg_corr:.6f}", 
-                 delta="OK" if avg_corr >= thresholds['correlation'] else "Revisar",
-                 delta_color="normal" if avg_corr >= thresholds['correlation'] else "inverse")
+        st.metric(
+            "Correlación Media", 
+            f"{avg_corr:.6f}", 
+            delta="OK" if avg_corr >= thresholds['correlation'] else "Revisar",
+            delta_color="normal" if avg_corr >= thresholds['correlation'] else "inverse"
+        )
     with col2:
         avg_max_diff = np.mean([d['validation_results']['max_diff'] for d in all_validation_data])
-        st.metric("Max Δ Media", f"{avg_max_diff:.6f} AU",
-                 delta="OK" if avg_max_diff <= thresholds['max_diff'] else "Revisar",
-                 delta_color="normal" if avg_max_diff <= thresholds['max_diff'] else "inverse")
+        st.metric(
+            "Max Δ Media", 
+            f"{avg_max_diff:.6f} AU",
+            delta="OK" if avg_max_diff <= thresholds['max_diff'] else "Revisar",
+            delta_color="normal" if avg_max_diff <= thresholds['max_diff'] else "inverse"
+        )
     with col3:
         avg_rms = np.mean([d['validation_results']['rms'] for d in all_validation_data])
-        st.metric("RMS Media", f"{avg_rms:.6f}",
-                 delta="OK" if avg_rms <= thresholds['rms'] else "Revisar",
-                 delta_color="normal" if avg_rms <= thresholds['rms'] else "inverse")
+        st.metric(
+            "RMS Media", 
+            f"{avg_rms:.6f}",
+            delta="OK" if avg_rms <= thresholds['rms'] else "Revisar",
+            delta_color="normal" if avg_rms <= thresholds['rms'] else "inverse"
+        )
     
-    st.divider()
+    st.markdown("---")
     
-   
     # Offset global del kit
     global_offset = np.mean([d['validation_results']['mean_diff'] for d in all_validation_data])
     
@@ -998,8 +1012,11 @@ def main():
     
     st.divider()
     
-    # Análisis detallado por estándar
-    st.subheader("Análisis Detallado por Estándar")
+    # ==========================================
+    # SECCIÓN 4: ANÁLISIS INDIVIDUAL
+    # ==========================================
+    st.markdown("### 4️⃣ Análisis Detallado por Estándar")
+    st.info("Análisis individual de cada estándar con gráficos comparativos, diferencias espectrales y regiones críticas.")
 
     # Filtro de búsqueda
     search_filter = st.text_input(
@@ -1068,7 +1085,7 @@ def main():
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown("### Métricas Calculadas")
+            st.markdown("#### Métricas Calculadas")
             metrics_data = {
                 'Métrica': ['Correlación', 'Max Diferencia', 'RMS', 'Media Δ', 'Shift Espectral'],
                 'Valor': [
@@ -1082,7 +1099,7 @@ def main():
             st.dataframe(pd.DataFrame(metrics_data), use_container_width=True, hide_index=True)
         
         with col2:
-            st.markdown("### Evaluación")
+            st.markdown("#### Evaluación")
             checks_data = {
                 'Criterio': ['Correlación', 'Diferencia Máxima', 'RMS'],
                 'Umbral': [
@@ -1100,10 +1117,16 @@ def main():
     
     st.divider()
     
-    # GENERACIÓN DE INFORME
-    st.subheader("📄 Generar Informe de Validación")
+    # ==========================================
+    # SECCIÓN 5: GENERACIÓN DE INFORME
+    # ==========================================
+    st.markdown("### 5️⃣ Generar Informe de Validación")
+    st.info("""
+    Completa la información del servicio para generar un informe HTML profesional 
+    con todos los resultados de la validación.
+    """)
     
-    st.markdown("**Información del Servicio:**")
+    st.markdown("#### 📋 Información del Servicio")
     
     col1, col2 = st.columns(2)
     
@@ -1111,7 +1134,7 @@ def main():
         sensor_serial = st.text_input(
             "Número de Serie del Sensor:",
             placeholder="Ej: NIR-2024-001",
-            help="Número de serie del equipo NIR"
+            help="Número de serie único del equipo NIR"
         )
         
         customer_name = st.text_input(
@@ -1122,27 +1145,29 @@ def main():
     
     with col2:
         technician_name = st.text_input(
-            "Técnico:",
+            "Técnico Responsable:",
             placeholder="Ej: Juan Pérez",
-            help="Nombre del técnico que realizó el servicio"
+            help="Nombre del técnico que realizó el servicio de mantenimiento"
         )
         
         service_notes = st.text_area(
             "Notas del Servicio:",
-            placeholder="Cambio de lámpara, ajuste óptico, etc.",
+            placeholder="Ej: Cambio de lámpara halógena, ajuste óptico, limpieza de ventana...",
             help="Observaciones relevantes del mantenimiento realizado",
             height=100
         )
     
-    # Botón de generación
-    col1, col2, col3 = st.columns([2, 1, 2])
+    st.markdown("---")
+    
+    # Botón de generación centrado
+    col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
         if st.button("📥 Generar Informe HTML", type="primary", use_container_width=True):
             if not sensor_serial or not customer_name or not technician_name:
-                st.error("❌ Por favor completa al menos: Número de Serie, Cliente y Técnico")
+                st.error("❌ Por favor completa los campos obligatorios: Número de Serie, Cliente y Técnico")
             else:
-                with st.spinner("Generando informe..."):
+                with st.spinner("⏳ Generando informe completo..."):
                     try:
                         from core.validation_kit_report_generator import generate_validation_report
                         
@@ -1169,17 +1194,21 @@ def main():
                         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                         filename = f"Validation_Report_{sensor_serial.replace(' ', '_')}_{timestamp}.html"
                         
+                        st.success("✅ Informe generado correctamente")
+                        
                         st.download_button(
                             label="💾 Descargar Informe HTML",
                             data=html_content,
                             file_name=filename,
-                            mime="text/html"
+                            mime="text/html",
+                            use_container_width=True
                         )
-                        
-                        st.success("✅ Informe generado correctamente")
                         
                     except Exception as e:
                         st.error(f"❌ Error al generar informe: {str(e)}")
+                        with st.expander("🔍 Ver detalles del error"):
+                            import traceback
+                            st.code(traceback.format_exc())
 
 
 if __name__ == "__main__":
