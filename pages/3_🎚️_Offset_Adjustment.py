@@ -1127,15 +1127,13 @@ def create_simulation_comparison_plot(original_metrics: Dict, simulated_metrics:
     """
     Crea gráfico comparativo de métricas antes y después del offset.
     """
-    metrics = ['Correlación', 'Max Δ (AU)', 'RMS', 'Offset Medio']
+    metrics = ['Max Δ (AU)', 'RMS', 'Offset Medio']
     original_values = [
-        original_metrics['correlation'],
         original_metrics['max_diff'],
         original_metrics['rms'],
         abs(original_metrics['mean_diff'])
     ]
     simulated_values = [
-        simulated_metrics['correlation'],
         simulated_metrics['max_diff'],
         simulated_metrics['rms'],
         abs(simulated_metrics['mean_diff'])
@@ -1166,7 +1164,10 @@ def create_simulation_comparison_plot(original_metrics: Dict, simulated_metrics:
         barmode='group',
         yaxis_title="Valor",
         template='plotly_white',
-        height=400
+        height=400,
+        yaxis=dict(
+            range=[0, max(max(original_values), max(simulated_values)) * 1.15]
+        )
     )
     
     return fig
@@ -1281,23 +1282,26 @@ def create_global_statistics_comparison(validation_original: List[Dict],
     off_sim = [d['validation_results']['mean_diff'] for d in validation_simulated]
     
     stats = {
-        'Métrica': ['Correlación', 'Max Δ (AU)', 'RMS', 'Offset Medio (AU)'] * 2,
-        'Estado': ['Original']*4 + ['Simulado']*4,
-        'Media': [
+        'Métrica': ['Correlación', 'Max Δ (AU)', 'RMS', 'Offset Medio (AU)'],
+        'Media Original': [
             f"{np.mean(corr_orig):.6f}",
             f"{np.mean(max_orig):.6f}",
             f"{np.mean(rms_orig):.6f}",
-            f"{np.mean(off_orig):.6f}",
+            f"{np.mean(off_orig):.6f}"
+        ],
+        'Media Simulado': [
             f"{np.mean(corr_sim):.6f}",
             f"{np.mean(max_sim):.6f}",
             f"{np.mean(rms_sim):.6f}",
             f"{np.mean(off_sim):.6f}"
         ],
-        'Desv. Est.': [
+        'Desv. Est. Original': [
             f"{np.std(corr_orig):.6f}",
             f"{np.std(max_orig):.6f}",
             f"{np.std(rms_orig):.6f}",
-            f"{np.std(off_orig):.6f}",
+            f"{np.std(off_orig):.6f}"
+        ],
+        'Desv. Est. Simulado': [
             f"{np.std(corr_sim):.6f}",
             f"{np.std(max_sim):.6f}",
             f"{np.std(rms_sim):.6f}",
