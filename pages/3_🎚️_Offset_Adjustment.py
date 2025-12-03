@@ -373,8 +373,8 @@ def render_offset_configuration_section():
         
         offset_value = st.number_input(
             "Offset a aplicar (AU):",
-            min_value=-0.100,
-            max_value=0.100,
+            min_value=-0.500,
+            max_value=0.500,
             value=st.session_state.offset_value,
             step=0.001,
             format="%.6f",
