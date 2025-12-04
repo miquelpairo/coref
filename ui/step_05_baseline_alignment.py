@@ -457,18 +457,11 @@ def render_sample_selection_section():
     
     df_new = st.session_state.new_tsv['df']
     
-    # ⭐CRÍTICO: Filtrar WSTD ANTES de agrupar
-    df_ref_kit = df_ref[df_ref["ID"].str.upper() != "WSTD"].copy()
-    df_new_kit = df_new[df_new["ID"].str.upper() != "WSTD"].copy()
+    # Usar todos los datos (sin filtrar WSTD)
+    df_ref_kit = df_ref.copy()
+    df_new_kit = df_new.copy()
     
-    # Verificar que haya muestras después del filtrado
-    if len(df_ref_kit) == 0:
-        st.error("❌ No hay muestras en el archivo de referencia (todas son WSTD)")
-        return
     
-    if len(df_new_kit) == 0:
-        st.error("❌ No hay muestras en el archivo nuevo (todas son WSTD)")
-        return
     
     # Convertir a numérico
     df_ref_kit[spectral_cols] = df_ref_kit[spectral_cols].apply(pd.to_numeric, errors="coerce")
