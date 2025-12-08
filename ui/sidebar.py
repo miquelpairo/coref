@@ -120,7 +120,7 @@ def render_sidebar():
         st.markdown("---")
         
         # Información adicional (⭐ ACTUALIZADO: total_steps ya no es len(STEPS) sino 5)
-        total_steps = 5  # ⭐ CAMBIADO de len(STEPS) a valor fijo
+        total_steps = len(STEPS)  
         completed = current_step
         progress = min(completed / total_steps, 1.0)
         
@@ -132,6 +132,8 @@ def render_sidebar():
         # Leyenda
         st.caption("✓ Completado | → Actual | ○ Pendiente")
         st.caption("Haz clic en los pasos completados ✓ para revisarlos")
+        
+        
     
     # CRÍTICO: Mostrar diálogo FUERA del sidebar
     if st.session_state.get('pending_navigation') is not None:

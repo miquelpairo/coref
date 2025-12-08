@@ -6,8 +6,8 @@ from ui.sidebar import render_sidebar
 from ui.step_00_client_info import render_client_info_step
 from ui.step_01_backup import render_backup_step
 from ui.step_02_wstd import render_wstd_step
-from ui.step_04_baseline_alignment import render_baseline_alignment_step  # ⭐ NUEVO
-from ui.step_06_validation import render_validation_step
+from ui.step_05_baseline_alignment import render_baseline_alignment_step  # ⭐ NUEVO
+from ui.step_04_validation import render_validation_step
 from ui.utilities import render_utilities_section
 from auth import check_password, logout
 from buchi_streamlit_theme import apply_buchi_styles
@@ -72,15 +72,15 @@ def main():
     # Router de pasos (⭐ ACTUALIZADO A 5 PASOS)
     current_step = st.session_state.step
     if current_step == 1:
-        render_client_info_step()              # 1: Info Cliente
+        render_client_info_step()
     elif current_step == 2:
-        render_backup_step()                   # 2: Backup
+        render_backup_step()
     elif current_step == 3:
-        render_wstd_step()                     # 3: Diagnostico WSTD
+        render_wstd_step()
     elif current_step == 4:
-        render_baseline_alignment_step()       # 4: Alineamiento de Baseline (NUEVO - fusiona antiguos 4+5+6)
+        render_validation_step()           # ← NUEVO: Validación primero
     elif current_step == 5:
-        render_validation_step()               # 5: Validacion (antes paso 7)
+        render_baseline_alignment_step()   # ← NUEVO: Alineamiento después
     
     # Seccion de utilidades (siempre visible)
     st.markdown("---")

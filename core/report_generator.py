@@ -786,107 +786,80 @@ def generate_footer():
 
 def generate_validation_report(kit_data, baseline_data, ref_corrected, origin, 
                                validation_data, mean_diff_before, mean_diff_after):
-    """
-    Genera un informe HTML completo incluyendo verificación post-ajuste.
-    
-    Args:
-        kit_data (dict): Datos del proceso original
-        baseline_data (dict): Datos del baseline
-        ref_corrected (np.array): Baseline corregido
-        origin (str): Tipo de archivo ('ref' o 'csv')
-        validation_data (dict): Datos de verificación
-        mean_diff_before (np.array): Diferencia antes de corrección
-        mean_diff_after (np.array): Diferencia después de corrección
-        
-    Returns:
-        str: Contenido HTML del informe completo
-    """
+    """..."""
     import streamlit as st
     
-    # Contexto de sesión
     client_data = st.session_state.get('client_data', {}) or {}
     wstd_data   = st.session_state.get('wstd_data', {}) or {}
 
-    # Extraer datos necesarios
-    try:
-        df               = kit_data["df"]
-        df_ref_grouped   = kit_data["df_ref_grouped"]
-        df_new_grouped   = kit_data["df_new_grouped"]
-        spectral_cols    = kit_data["spectral_cols"]
-        lamp_ref         = kit_data["lamp_ref"]
-        lamp_new         = kit_data["lamp_new"]
-        common_ids       = kit_data["common_ids"]
-        mean_diff        = kit_data["mean_diff"]
-    except Exception as e:
-        raise ValueError(f"[generate_validation_report] kit_data incompleto: {e}")
-
-    try:
-        ref_spectrum = baseline_data["ref_spectrum"]
-        header       = baseline_data.get("header")
-    except Exception as e:
-        raise ValueError(f"[generate_validation_report] baseline_data incompleto: {e}")
-
-    selected_ids = st.session_state.get("selected_ids", list(common_ids))
-
-    # Construir índice lateral dinámico CON verificación
-    sections = [
-        "info-cliente",
-        "process-details",
-        "white-correction",
-        "correction-stats",
-        "correction-vector",
-        "baseline-info",
-        "verification-section",  # ⭐ AÑADIDO
-    ]
-    if isinstance(wstd_data, dict) and wstd_data.get("df") is not None:
-        sections.insert(1, "wstd-section")
-
-    # HTML inicial con sidebar (YA incluye link a verificación)
+    # ✅ BIEN - kit_data puede ser None en nuevo flujo
+    # Construir secciones dinámicas
+    sections = ["info-cliente"]
+    
+    if isinstance(wstd_data, dict) and wstd_data.get('df') is not None:
+        sections.append("wstd-section")
+    
+    # Solo añadir secciones de corrección si hay kit_data
+    if kit_data is not None:
+        sections.extend([
+            "process-details",
+            "white-correction",
+            "correction-stats",
+            "correction-vector",
+            "baseline-info"
+        ])
+    
+    sections.append("verification-section")
+    
+    # HTML inicial
     html = start_html_document(client_data, sections=sections)
-
-    # Secciones del informe base
     
     # WSTD inicial (si existe)
-    if isinstance(wstd_data, dict) and wstd_data.get("df") is not None:
+    if isinstance(wstd_data, dict) and wstd_data.get('df') is not None:
         html += generate_wstd_section(wstd_data)
-
-    # Detalles del proceso
-    html += generate_process_details(
-        lamp_ref, lamp_new, len(spectral_cols),
-        len(common_ids), origin
-    )
-
-    # Mediciones white standard usadas en la corrección
-    html += generate_white_correction_chart(
-        df_ref_grouped, df_new_grouped, spectral_cols,
-        lamp_ref, lamp_new, selected_ids
-    )
-
-    # Estadísticas de corrección
-    html += generate_correction_statistics(mean_diff)
-
-    # Vector de corrección
-    html += generate_correction_vector_section(
-        df_ref_grouped, df_new_grouped, mean_diff,
-        common_ids, selected_ids, lamp_ref, lamp_new
-    )
-
-    # Baseline: info + gráfico Original vs Corregido
-    html += generate_baseline_info(
-        ref_corrected, header, origin,
-        ref_spectrum, spectral_cols
-    )
-
-    # Notas adicionales (si el usuario las guardó)
+    
+    # Secciones de corrección - SOLO si hay kit_data
+    if kit_data is not None:
+        try:
+            df = kit_data["df"]
+            df_ref_grouped = kit_data["df_ref_grouped"]
+            df_new_grouped = kit_data["df_new_grouped"]
+            spectral_cols = kit_data["spectral_cols"]
+            lamp_ref = kit_data["lamp_ref"]
+            lamp_new = kit_data["lamp_new"]
+            common_ids = kit_data["common_ids"]
+            mean_diff = kit_data["mean_diff"]
+            
+            ref_spectrum = baseline_data["ref_spectrum"]
+            header = baseline_data.get("header")
+            
+            selected_ids = st.session_state.get("selected_ids", list(common_ids))
+            
+            # Generar secciones de corrección
+            html += generate_process_details(lamp_ref, lamp_new, len(spectral_cols), len(common_ids), origin)
+            html += generate_white_correction_chart(df_ref_grouped, df_new_grouped, spectral_cols, lamp_ref, lamp_new, selected_ids)
+            html += generate_correction_statistics(mean_diff)
+            html += generate_correction_vector_section(df_ref_grouped, df_new_grouped, mean_diff, common_ids, selected_ids, lamp_ref, lamp_new)
+            html += generate_baseline_info(ref_corrected, header, origin, ref_spectrum, spectral_cols)
+            
+        except Exception as e:
+            html += f"""
+                <div class="warning-box">
+                    <h2>Datos de Corrección</h2>
+                    <p><em>Error al renderizar datos de corrección: {e}</em></p>
+                </div>
+            """
+    
+    # Notas (si existen)
     if client_data.get("notes"):
         html += generate_notes_section(client_data["notes"])
     
-    # ⭐ SECCIÓN DE VERIFICACIÓN
+    # ⭐ SECCIÓN DE VERIFICACIÓN (siempre)
     html += generate_validation_section(validation_data, mean_diff_before, mean_diff_after)
-
+    
     # Footer
     html += generate_footer()
-
+    
     return html
 
 def generate_validation_section(validation_data, mean_diff_before, mean_diff_after):
@@ -912,6 +885,84 @@ def generate_validation_section(validation_data, mean_diff_before, mean_diff_aft
     max_diff = np.max(np.abs(mean_diff_after))
     mean_diff = np.mean(np.abs(mean_diff_after))
     rms = np.sqrt(np.mean(mean_diff_after**2))
+    
+        # ============================================
+        # Detectar si se forzó el informe sin cumplir umbral
+        # ============================================
+        final_status = validation_data.get('final_status', 'SUCCESS')
+        
+        if final_status == 'FAILED_THRESHOLD':
+            html = f"""
+                <div class="warning-box" id="verification-section" style="margin-top: 30px;">
+                    <h2>Verificación Post-Ajuste</h2>
+                    <p><strong>Comprobación del ajuste de baseline con mediciones independientes:</strong></p>
+                </div>
+                
+                <div class="info-box">
+                    <h2>Métricas de Verificación</h2>
+                    <table>
+                        <tr>
+                            <th>Métrica</th>
+                            <th>Valor</th>
+                            <th>Umbral</th>
+                        </tr>
+                        <tr>
+                            <td><strong>RMS</strong></td>
+                            <td>{rms:.6f}</td>
+                            <td>⚠️ ≥ 0.002 (no cumple)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Diferencia Máxima</strong></td>
+                            <td>{max_diff:.6f}</td>
+                            <td>{'⚠️ ≥ 0.01' if max_diff >= 0.01 else '✓ < 0.01'}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Diferencia Media</strong></td>
+                            <td>{mean_diff:.6f}</td>
+                            <td>Referencia</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="status-bad" style="padding: 20px; margin: 20px 0; border-radius: 5px; border: 3px solid #dc3545; background-color: #f8d7da;">
+                    <h2>❌ ADVERTENCIA: Informe Generado sin Cumplir Umbral</h2>
+                    <p style="font-size: 1.1em; margin: 10px 0;">
+                        <strong>RMS:</strong> {rms:.6f} AU (Umbral recomendado: < 0.002 AU)
+                    </p>
+                    <p style="margin-top: 15px; font-weight: bold;">
+                        Este informe se generó a petición del usuario aunque el alineamiento 
+                        no cumple los criterios de calidad establecidos.
+                    </p>
+                    <p style="margin-top: 15px;">
+                        <strong>Razones posibles:</strong>
+                    </p>
+                    <ul>
+                        <li>Limitaciones del equipo que impiden alcanzar el umbral ideal</li>
+                        <li>Necesidad de documentar el estado actual para trazabilidad</li>
+                        <li>Decisión operativa de continuar con el alineamiento actual</li>
+                    </ul>
+                    <p style="margin-top: 15px; color: #721c24; font-weight: bold;">
+                        ⚠️ RECOMENDACIÓN: Se recomienda revisar el proceso de alineamiento 
+                        y considerar repetir el procedimiento en condiciones más estables.
+                    </p>
+                </div>
+            """
+            
+            # Gráficos de verificación (si hay datos)
+            if df_ref_val is not None and df_new_val is not None and len(spectral_cols) > 0:
+                html += generate_verification_charts(
+                    df_ref_val, df_new_val, spectral_cols,
+                    lamp_ref, lamp_new, selected_ids,
+                    mean_diff_before, mean_diff_after
+                )
+            
+            return html  # Terminar aquí, no evaluar con criterios normales
+        
+        # ============================================
+        # CONTINÚA CON EVALUACIÓN NORMAL
+        # ============================================
+        html = f"""
+            <div class="warning-box" id="verification-section" style="margin-top: 30px;">
     
     # Determinar estado según criterios de White Reference
     if rms < 0.002 and max_diff < 0.005:

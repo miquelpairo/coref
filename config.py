@@ -14,8 +14,8 @@ STEPS = {
     1: "Datos del cliente",
     2: "Backup de archivos",
     3: "Diagnóstico Inicial",
-    4: "Alineamiento de Baseline",  # ⭐ NUEVO - Fusiona antiguos pasos 4, 5 y 6
-    5: "Validación"  # ⭐ Antes era paso 7
+    4: "Validación",              # ⭐ NUEVO - Validación primero
+    5: "Alineamiento de Baseline"  # ⭐ NUEVO - Alineamiento solo si falla validación
 }
 
 # Rutas de archivos baseline
@@ -547,11 +547,12 @@ VERSION = "3.0.0"  # ⭐ ACTUALIZADO
 VERSION_DATE = "2025-01-16"  # ⭐ ACTUALIZADO
 VERSION_NOTES = """
 Versión 3.0.0 - Refactorización Mayor:
-- ⭐ NUEVO: Proceso simplificado de 7 a 5 pasos
-- ⭐ NUEVO: Paso 4 "Alineamiento de Baseline" - integra carga de baseline, TSV, corrección y exportación
-- ⭐ NUEVO: TSV de referencia se arrastra automáticamente desde Paso 3
-- Paso 3 (WSTD): Ahora obligatorio y genera TSV de referencia
+- ⭐ NUEVO: Proceso simplificado con validación primero (Paso 4)
+- ⭐ NUEVO: Alineamiento iterativo solo si RMS ≥ 0.002 (Paso 5)
+- ⭐ NUEVO: Flujo iterativo: Validación → Alineamiento → Validación
+- TSV de referencia se arrastra automáticamente desde Paso 3
+- Selección de filas en TSVs para mayor control
+- Threshold automático decide flujo (RMS < 0.002 = éxito)
 - Arquitectura modular mejorada
 - Flujo de trabajo más intuitivo y eficiente
-- Mantenimiento de todas las funcionalidades previas
 """
