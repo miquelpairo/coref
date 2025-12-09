@@ -886,78 +886,78 @@ def generate_validation_section(validation_data, mean_diff_before, mean_diff_aft
     mean_diff = np.mean(np.abs(mean_diff_after))
     rms = np.sqrt(np.mean(mean_diff_after**2))
     
-        # ============================================
-        # Detectar si se forzó el informe sin cumplir umbral
-        # ============================================
-        final_status = validation_data.get('final_status', 'SUCCESS')
-        
-        if final_status == 'FAILED_THRESHOLD':
-            html = f"""
-                <div class="warning-box" id="verification-section" style="margin-top: 30px;">
-                    <h2>Verificación Post-Ajuste</h2>
-                    <p><strong>Comprobación del ajuste de baseline con mediciones independientes:</strong></p>
-                </div>
-                
-                <div class="info-box">
-                    <h2>Métricas de Verificación</h2>
-                    <table>
-                        <tr>
-                            <th>Métrica</th>
-                            <th>Valor</th>
-                            <th>Umbral</th>
-                        </tr>
-                        <tr>
-                            <td><strong>RMS</strong></td>
-                            <td>{rms:.6f}</td>
-                            <td>⚠️ ≥ 0.002 (no cumple)</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Diferencia Máxima</strong></td>
-                            <td>{max_diff:.6f}</td>
-                            <td>{'⚠️ ≥ 0.01' if max_diff >= 0.01 else '✓ < 0.01'}</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Diferencia Media</strong></td>
-                            <td>{mean_diff:.6f}</td>
-                            <td>Referencia</td>
-                        </tr>
-                    </table>
-                </div>
-                
-                <div class="status-bad" style="padding: 20px; margin: 20px 0; border-radius: 5px; border: 3px solid #dc3545; background-color: #f8d7da;">
-                    <h2>❌ ADVERTENCIA: Informe Generado sin Cumplir Umbral</h2>
-                    <p style="font-size: 1.1em; margin: 10px 0;">
-                        <strong>RMS:</strong> {rms:.6f} AU (Umbral recomendado: < 0.002 AU)
-                    </p>
-                    <p style="margin-top: 15px; font-weight: bold;">
-                        Este informe se generó a petición del usuario aunque el alineamiento 
-                        no cumple los criterios de calidad establecidos.
-                    </p>
-                    <p style="margin-top: 15px;">
-                        <strong>Razones posibles:</strong>
-                    </p>
-                    <ul>
-                        <li>Limitaciones del equipo que impiden alcanzar el umbral ideal</li>
-                        <li>Necesidad de documentar el estado actual para trazabilidad</li>
-                        <li>Decisión operativa de continuar con el alineamiento actual</li>
-                    </ul>
-                    <p style="margin-top: 15px; color: #721c24; font-weight: bold;">
-                        ⚠️ RECOMENDACIÓN: Se recomienda revisar el proceso de alineamiento 
-                        y considerar repetir el procedimiento en condiciones más estables.
-                    </p>
-                </div>
-            """
+    # ============================================
+    # Detectar si se forzó el informe sin cumplir umbral
+    # ============================================
+    final_status = validation_data.get('final_status', 'SUCCESS')
+    
+    if final_status == 'FAILED_THRESHOLD':
+        html = f"""
+            <div class="warning-box" id="verification-section" style="margin-top: 30px;">
+                <h2>Verificación Post-Ajuste</h2>
+                <p><strong>Comprobación del ajuste de baseline con mediciones independientes:</strong></p>
+            </div>
             
-            # Gráficos de verificación (si hay datos)
-            if df_ref_val is not None and df_new_val is not None and len(spectral_cols) > 0:
-                html += generate_verification_charts(
-                    df_ref_val, df_new_val, spectral_cols,
-                    lamp_ref, lamp_new, selected_ids,
-                    mean_diff_before, mean_diff_after
-                )
+            <div class="info-box">
+                <h2>Métricas de Verificación</h2>
+                <table>
+                    <tr>
+                        <th>Métrica</th>
+                        <th>Valor</th>
+                        <th>Umbral</th>
+                    </tr>
+                    <tr>
+                        <td><strong>RMS</strong></td>
+                        <td>{rms:.6f}</td>
+                        <td>⚠️ ≥ 0.002 (no cumple)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Diferencia Máxima</strong></td>
+                        <td>{max_diff:.6f}</td>
+                        <td>{'⚠️ ≥ 0.01' if max_diff >= 0.01 else '✓ < 0.01'}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Diferencia Media</strong></td>
+                        <td>{mean_diff:.6f}</td>
+                        <td>Referencia</td>
+                    </tr>
+                </table>
+            </div>
             
-            return html  # Terminar aquí, no evaluar con criterios normales
+            <div class="status-bad" style="padding: 20px; margin: 20px 0; border-radius: 5px; border: 3px solid #dc3545; background-color: #f8d7da;">
+                <h2>❌ ADVERTENCIA: Informe Generado sin Cumplir Umbral</h2>
+                <p style="font-size: 1.1em; margin: 10px 0;">
+                    <strong>RMS:</strong> {rms:.6f} AU (Umbral recomendado: < 0.002 AU)
+                </p>
+                <p style="margin-top: 15px; font-weight: bold;">
+                    Este informe se generó a petición del usuario aunque el alineamiento 
+                    no cumple los criterios de calidad establecidos.
+                </p>
+                <p style="margin-top: 15px;">
+                    <strong>Razones posibles:</strong>
+                </p>
+                <ul>
+                    <li>Limitaciones del equipo que impiden alcanzar el umbral ideal</li>
+                    <li>Necesidad de documentar el estado actual para trazabilidad</li>
+                    <li>Decisión operativa de continuar con el alineamiento actual</li>
+                </ul>
+                <p style="margin-top: 15px; color: #721c24; font-weight: bold;">
+                    ⚠️ RECOMENDACIÓN: Se recomienda revisar el proceso de alineamiento 
+                    y considerar repetir el procedimiento en condiciones más estables.
+                </p>
+            </div>
+        """
         
+        # Gráficos de verificación (si hay datos)
+        if df_ref_val is not None and df_new_val is not None and len(spectral_cols) > 0:
+            html += generate_verification_charts(
+                df_ref_val, df_new_val, spectral_cols,
+                lamp_ref, lamp_new, selected_ids,
+                mean_diff_before, mean_diff_after
+            )
+        
+        return html  # Terminar aquí, no evaluar con criterios normales
+    
         # ============================================
         # CONTINÚA CON EVALUACIÓN NORMAL
         # ============================================
