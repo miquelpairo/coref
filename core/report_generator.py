@@ -767,6 +767,8 @@ def _df_to_html_table(df: pd.DataFrame, float_fmt="{:.2f}", index=False) -> str:
     return df_fmt.to_html(index=index, classes="table", border=0)
 
 
+
+
 def generate_footer():
     """
     Genera el footer del informe.
@@ -870,15 +872,18 @@ def generate_validation_section(validation_data, mean_diff_before, mean_diff_aft
             </div>
         """
         
-        # Gráficos de verificación (si hay datos)
-        if df_ref_val is not None and df_new_val is not None and len(spectral_cols) > 0:
-            html += generate_verification_charts(
-                df_ref_val, df_new_val, spectral_cols,
-                lamp_ref, lamp_new, selected_ids,
-                mean_diff_before, mean_diff_after
-            )
+        # Asegurar que spectral_cols tenga contenido
+        if not spectral_cols or len(spectral_cols) == 0:
+            spectral_cols = df_ref_val.columns.tolist()
         
-        return html  # Terminar aquí, no evaluar con criterios normales
+        # Añadir gráficos de verificación
+        html += generate_verification_charts(
+            df_ref_val, df_new_val, spectral_cols,
+            lamp_ref, lamp_new, selected_ids,
+            mean_diff_before, mean_diff_after
+        )
+        
+        return html
     
     # ============================================
     # CONTINÚA CON EVALUACIÓN NORMAL
@@ -989,4 +994,354 @@ def generate_validation_section(validation_data, mean_diff_before, mean_diff_aft
         </div>
     """
     
+    return html   
+
+def generate_verification_charts(df_ref_val, df_new_val, spectral_cols,
+                                 lamp_ref, lamp_new, selected_ids,
+                                 mean_diff_before, mean_diff_after):
+    """
+    Genera los gráficos de verificación post-ajuste (completo: Overlay, Residuales, Estadísticas, RMS).
+    
+    Args:
+        df_ref_val (pd.DataFrame): Espectros de referencia en verificación
+        df_new_val (pd.DataFrame): Espectros nuevos en verificación
+        spectral_cols (list): Columnas espectrales
+        lamp_ref (str): Lámpara de referencia
+        lamp_new (str): Lámpara nueva
+        selected_ids (list): IDs seleccionados
+        mean_diff_before (np.array): Diferencia antes (no usado)
+        mean_diff_after (np.array): Diferencia después
+        
+    Returns:
+        str: HTML con los gráficos embebidos
+    """
+    import plotly.graph_objects as go
+    from utils.plotting import plot_kit_spectra
+    
+    html = "<h2>Análisis de Verificación</h2>"
+    
+    # Preparar datos
+    spectra_ref = []
+    spectra_new = []
+    labels = []
+    
+    for sid in selected_ids:
+        if sid in df_ref_val.index and sid in df_new_val.index:
+            spectra_ref.append(df_ref_val.loc[sid, spectral_cols].values)
+            spectra_new.append(df_new_val.loc[sid, spectral_cols].values)
+            labels.append(f"{sid}")
+    
+    channels = list(range(1, len(spectral_cols) + 1))
+    
+    # ============================================================================
+    # TAB 1: OVERLAY
+    # ============================================================================
+    html += "<h3>1) Overlay de Espectros</h3>"
+    html += "<p style='color: #6c757d; font-size: 0.95em;'><em>Comparación visual de todas las mediciones de verificación.</em></p>"
+    
+    fig_overlay = go.Figure()
+    
+    colors_ref = ['#1f77b4', '#2ca02c', '#9467bd', '#8c564b', '#e377c2']
+    colors_new = ['#ff7f0e', '#d62728', '#bcbd22', '#7f7f7f', '#17becf']
+    
+    for i, (spec_ref, spec_new, label) in enumerate(zip(spectra_ref, spectra_new, labels)):
+        # Referencia
+        fig_overlay.add_trace(go.Scatter(
+            x=channels,
+            y=spec_ref,
+            mode='lines',
+            name=f"{lamp_ref} - {label}",
+            line=dict(color=colors_ref[i % len(colors_ref)], width=2),
+            hovertemplate=f'<b>{lamp_ref} - {label}</b><br>Canal: %{{x}}<br>Valor: %{{y:.6f}}<extra></extra>'
+        ))
+        
+        # Nueva
+        fig_overlay.add_trace(go.Scatter(
+            x=channels,
+            y=spec_new,
+            mode='lines',
+            name=f"{lamp_new} - {label}",
+            line=dict(color=colors_new[i % len(colors_new)], width=2, dash='dash'),
+            hovertemplate=f'<b>{lamp_new} - {label}</b><br>Canal: %{{x}}<br>Valor: %{{y:.6f}}<extra></extra>'
+        ))
+    
+    fig_overlay.update_layout(
+        title='Mediciones White Standard Post-Ajuste',
+        xaxis_title='Canal espectral',
+        yaxis_title='Absorbancia',
+        height=600,
+        hovermode='closest',
+        template='plotly_white',
+        legend=dict(orientation="h", yanchor="top", y=-0.15, xanchor="center", x=0.5)
+    )
+    
+    chart_html_overlay = fig_overlay.to_html(
+        include_plotlyjs='cdn',
+        div_id='verification_overlay',
+        config={'displayModeBar': True, 'responsive': True}
+    )
+    
+    html += wrap_chart_in_expandable(
+        chart_html_overlay,
+        "Ver overlay de espectros",
+        "verification_overlay_expandable",
+        default_open=False
+    )
+    
+    # ============================================================================
+    # TAB 2: RESIDUALES
+    # ============================================================================
+    html += "<h3>2) Análisis de Residuales</h3>"
+    html += "<p style='color: #6c757d; font-size: 0.95em;'><em>Diferencias punto a punto entre lámparas.</em></p>"
+    
+    fig_residuals = go.Figure()
+    
+    for i, (spec_ref, spec_new, label) in enumerate(zip(spectra_ref, spectra_new, labels)):
+        residual = spec_new - spec_ref
+        
+        fig_residuals.add_trace(go.Scatter(
+            x=channels,
+            y=residual,
+            mode='lines',
+            name=label,
+            line=dict(width=2),
+            hovertemplate=f'<b>{label}</b><br>Canal: %{{x}}<br>Δ: %{{y:.6f}}<extra></extra>'
+        ))
+    
+    fig_residuals.add_hline(y=0, line_dash="dash", line_color="gray", opacity=0.5)
+    
+    fig_residuals.update_layout(
+        title='Residuales (Nueva - Referencia)',
+        xaxis_title='Canal espectral',
+        yaxis_title='Residual (AU)',
+        height=600,
+        hovermode='closest',
+        template='plotly_white',
+        legend=dict(orientation="h", yanchor="top", y=-0.15, xanchor="center", x=0.5)
+    )
+    
+    chart_html_residuals = fig_residuals.to_html(
+        include_plotlyjs='cdn',
+        div_id='verification_residuals',
+        config={'displayModeBar': True, 'responsive': True}
+    )
+    
+    html += wrap_chart_in_expandable(
+        chart_html_residuals,
+        "Ver análisis de residuales",
+        "verification_residuals_expandable",
+        default_open=False
+    )
+    
+    # Tabla de estadísticas de residuales
+    html += "<h4>Estadísticas de Residuales</h4>"
+    residual_stats = []
+    
+    for spec_ref, spec_new, label in zip(spectra_ref, spectra_new, labels):
+        residual = spec_new - spec_ref
+        rms = np.sqrt(np.mean(residual**2))
+        max_diff = np.abs(residual).max()
+        
+        # Evaluar según umbrales
+        if rms < 0.002 and max_diff < 0.005:
+            evaluacion = "✅ Excelente"
+        elif rms < 0.005 and max_diff < 0.01:
+            evaluacion = "✓ Bueno"
+        elif rms < 0.01 and max_diff < 0.02:
+            evaluacion = "⚠️ Aceptable"
+        else:
+            evaluacion = "❌ Revisar"
+        
+        residual_stats.append({
+            'Muestra': label,
+            'RMS': f"{rms:.6f}",
+            'Max |Δ|': f"{max_diff:.6f}",
+            'Media Δ': f"{np.mean(residual):.6f}",
+            'Desv. Est.': f"{np.std(residual):.6f}",
+            'Evaluación': evaluacion
+        })
+    
+    residual_df = pd.DataFrame(residual_stats)
+    table_html = residual_df.to_html(index=False, classes="table", border=0)
+    html += f"<div style='overflow-x:auto'>{table_html}</div>"
+    
+    # ============================================================================
+    # TAB 3: ESTADÍSTICAS
+    # ============================================================================
+    html += "<h3>3) Estadísticas Espectrales</h3>"
+    
+    stats = []
+    for spec_ref, spec_new, label in zip(spectra_ref, spectra_new, labels):
+        stats.append({
+            'Muestra': f"{label} - {lamp_ref}",
+            'Min': f"{spec_ref.min():.6f}",
+            'Max': f"{spec_ref.max():.6f}",
+            'Media': f"{spec_ref.mean():.6f}",
+            'Desv. Est.': f"{spec_ref.std():.6f}",
+            'Rango': f"{spec_ref.max() - spec_ref.min():.6f}"
+        })
+        stats.append({
+            'Muestra': f"{label} - {lamp_new}",
+            'Min': f"{spec_new.min():.6f}",
+            'Max': f"{spec_new.max():.6f}",
+            'Media': f"{spec_new.mean():.6f}",
+            'Desv. Est.': f"{spec_new.std():.6f}",
+            'Rango': f"{spec_new.max() - spec_new.min():.6f}"
+        })
+    
+    stats_df = pd.DataFrame(stats)
+    stats_table_html = stats_df.to_html(index=False, classes="table", border=0)
+    
+    html += wrap_chart_in_expandable(
+        f"<div style='overflow-x:auto'>{stats_table_html}</div>",
+        "Ver estadísticas espectrales completas",
+        "verification_stats_expandable",
+        default_open=False
+    )
+    
+    # ============================================================================
+    # TAB 4: MATRIZ RMS
+    # ============================================================================
+    html += "<h3>4) Matriz de Diferencias RMS</h3>"
+    html += "<p style='color: #6c757d; font-size: 0.95em;'><em>Escala absoluta basada en umbrales de white standards.</em></p>"
+    
+    # Combinar todos los espectros
+    all_spectra = []
+    all_labels = []
+    for spec_ref, spec_new, label in zip(spectra_ref, spectra_new, labels):
+        all_spectra.append(spec_ref)
+        all_labels.append(f"{label} - {lamp_ref}")
+        all_spectra.append(spec_new)
+        all_labels.append(f"{label} - {lamp_new}")
+    
+    # Calcular matriz RMS
+    n_spectra = len(all_spectra)
+    rms_matrix = np.zeros((n_spectra, n_spectra))
+    
+    for i in range(n_spectra):
+        for j in range(n_spectra):
+            if i == j:
+                rms_matrix[i, j] = 0
+            else:
+                diff = all_spectra[i] - all_spectra[j]
+                rms_matrix[i, j] = np.sqrt(np.mean(diff**2))
+    
+    # Escala de colores absoluta
+    colorscale = [
+        [0.0, '#4caf50'],      # Verde (excelente) 0-0.005
+        [0.333, '#8bc34a'],    # Verde claro
+        [0.667, '#ffc107'],    # Amarillo (aceptable) 0.005-0.01
+        [1.0, '#f44336']       # Rojo (revisar) >0.01
+    ]
+    
+    fig_heatmap = go.Figure(data=go.Heatmap(
+        z=rms_matrix,
+        x=all_labels,
+        y=all_labels,
+        colorscale=colorscale,
+        zmin=0,
+        zmax=0.015,  # Escala fija
+        text=np.round(rms_matrix, 6),
+        texttemplate='%{text}',
+        textfont={"size": 10},
+        colorbar=dict(
+            title="RMS (AU)",
+            tickvals=[0, 0.002, 0.005, 0.01, 0.015],
+            ticktext=['0.000', '0.002<br>(Exc)', '0.005<br>(Bueno)', '0.010<br>(Acept)', '0.015']
+        )
+    ))
+    
+    fig_heatmap.update_layout(
+        title='Matriz de Diferencias RMS - Escala Absoluta',
+        height=max(400, 50 * n_spectra),
+        template='plotly_white'
+    )
+    
+    chart_html_heatmap = fig_heatmap.to_html(
+        include_plotlyjs='cdn',
+        div_id='verification_heatmap',
+        config={'displayModeBar': True, 'responsive': True}
+    )
+    
+    html += wrap_chart_in_expandable(
+        chart_html_heatmap,
+        "Ver matriz RMS",
+        "verification_heatmap_expandable",
+        default_open=False
+    )
+    
+    return html
+
+
+def generate_partial_report(
+    kit_data=None,
+    baseline_data=None,
+    ref_corrected=None,
+    origin=None,
+    validation_data=None,
+    mean_diff_before=None,
+    mean_diff_after=None
+):
+    """
+    Genera informe parcial con las secciones disponibles.
+    
+    Returns:
+        str: HTML del informe parcial
+    """
+    import streamlit as st
+
+    client_data = st.session_state.get('client_data', {})
+    wstd_data   = st.session_state.get('wstd_data')
+
+    # Construye el índice dinámico
+    sections = ["info-cliente"]
+    if isinstance(wstd_data, dict) and wstd_data.get('df') is not None:
+        sections.append("wstd-section")
+    
+    # Si habrá verificación, añade la entrada al índice
+    has_verification = (
+        validation_data is not None
+        and mean_diff_before is not None
+        and mean_diff_after is not None
+    )
+    if has_verification:
+        sections.append("verification-section")
+
+    html = start_html_document(client_data, sections=sections)
+
+    # WSTD inicial (si existe)
+    if isinstance(wstd_data, dict) and wstd_data.get('df') is not None:
+        try:
+            html += generate_wstd_section(wstd_data)
+        except Exception as e:
+            html += f"""
+                <div class="warning-box" id="wstd-section">
+                    <h2>Diagnóstico WSTD Inicial</h2>
+                    <p><em>No se pudo renderizar la sección WSTD: {e}</em></p>
+                </div>
+            """
+
+    # Si NO hay baseline/kit completos, avisa
+    if not (kit_data and baseline_data and ref_corrected and origin):
+        html += """
+            <div class="warning-box" style="margin-top: 20px;">
+                <h2>Proceso Incompleto</h2>
+                <p><em>No hay datos suficientes para generar el informe completo. 
+                Complete el proceso de ajuste de baseline.</em></p>
+            </div>
+        """
+
+    # Verificación (si hay datos)
+    if has_verification:
+        try:
+            html += generate_validation_section(validation_data, mean_diff_before, mean_diff_after)
+        except Exception as e:
+            html += f"""
+                <div class="warning-box" id="verification-section" style="margin-top: 20px;">
+                    <h2>Verificación Post-Ajuste</h2>
+                    <p><em>No se pudo renderizar la verificación: {e}</em></p>
+                </div>
+            """
+
+    html += generate_footer()
     return html

@@ -479,13 +479,17 @@ def render_report_generation():
             else:
                 # Caso 1: Sin alineamiento o datos incompletos
                 from core.report_generator import generate_partial_report
+                
+                # Sin alineamiento previo, la diferencia "antes" es cero (no hubo corrección)
+                mean_diff_before = np.zeros_like(val_data['diff'])
+                
                 html_content = generate_partial_report(
                     kit_data=None,
                     baseline_data=None,
                     ref_corrected=None,
                     origin=None,
                     validation_data=val_data,
-                    mean_diff_before=None,
+                    mean_diff_before=mean_diff_before,
                     mean_diff_after=val_data['diff']
                 )
             
