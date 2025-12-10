@@ -1,0 +1,301 @@
+
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Reporte de Predicciones NIR - 316FG103</title>
+        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+        <style>
+            body {
+                font-family: 'Arial', sans-serif;
+                margin: 20px;
+                background-color: #f5f5f5;
+            }
+            .header {
+                background-color: #2c3e50;
+                color: white;
+                padding: 30px;
+                text-align: center;
+                border-radius: 10px;
+                margin-bottom: 30px;
+            }
+            .info-box {
+                background-color: white;
+                padding: 20px;
+                margin: 20px 0;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .section {
+                background-color: white;
+                padding: 25px;
+                margin: 25px 0;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            h1 {
+                margin: 0;
+                font-size: 2.5em;
+            }
+            h2 {
+                color: #2c3e50;
+                border-bottom: 3px solid #3498db;
+                padding-bottom: 10px;
+            }
+            .info-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 15px;
+                margin: 20px 0;
+            }
+            .info-item {
+                background-color: #ecf0f1;
+                padding: 15px;
+                border-radius: 5px;
+            }
+            .info-label {
+                font-weight: bold;
+                color: #2c3e50;
+                display: block;
+                margin-bottom: 5px;
+            }
+            .info-value {
+                color: #34495e;
+                font-size: 1.1em;
+            }
+            .plot-container {
+                margin: 30px 0;
+            }
+            .footer {
+                text-align: center;
+                color: #7f8c8d;
+                margin-top: 50px;
+                padding: 20px;
+                border-top: 2px solid #ecf0f1;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 20px 0;
+                font-size: 0.9em;
+            }
+            th {
+                padding: 12px 8px;
+                text-align: center;
+                border: 1px solid #ddd;
+                background-color: #34495e;
+                color: white;
+                font-weight: bold;
+            }
+            td {
+                padding: 10px 8px;
+                text-align: center;
+                border: 1px solid #ddd;
+            }
+            tr:nth-child(even) {
+                background-color: #f8f9fa;
+            }
+            tr:hover {
+                background-color: #e8f4f8;
+            }
+            .lamp-name {
+                font-weight: bold;
+                text-align: left !important;
+                background-color: #ecf0f1;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>🔬 Reporte de Predicciones NIR</h1>
+            <p style="font-size: 1.2em; margin-top: 10px;">Análisis Comparativo de Lámparas</p>
+        </div>
+        
+        <div class="info-box">
+            <h2>📋 Información General</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">🔬 Sensor NIR:</span>
+                    <span class="info-value">316FG103</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">📅 Fecha del Reporte:</span>
+                    <span class="info-value">08/12/2025 18:55:29</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">📦 Productos Analizados:</span>
+                    <span class="info-value">5</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">💡 Lámparas Comparadas:</span>
+                    <span class="info-value">2</span>
+                </div>
+            </div>
+            <div style="margin-top: 20px;">
+                <span class="info-label">Productos:</span>
+                <span class="info-value">Colza, TrigoTriti, Maiz, Soja, Cerdos</span>
+            </div>
+            <div style="margin-top: 10px;">
+                <span class="info-label">Lámparas:</span>
+                <span class="info-value">L1.2 LB, L2.2 LB</span>
+            </div>
+        </div>
+    
+        <div class="section">
+            <h2>📊 Estadísticas por Producto y Lámpara</h2>
+    
+            <h3 style="color: #3498db; margin-top: 30px;">Colza</h3>
+        
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="text-align: left;">Lámpara</th>
+                            <th>N</th>
+        <th>H<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>PB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>GB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>Grasa total<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>FB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>Cz<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>Speed<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisH<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisPB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisGB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisGT<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisFB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisCz<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        
+                        <tr>
+                            <td class="lamp-name">L2.2 LB</td>
+                            <td>3</td>
+            <td>7.967 ± 0.058</td><td>36.167 ± 0.153</td><td>2.167 ± 0.058</td><td>5.333 ± 0.058</td><td>12.633 ± 0.058</td><td>6.233 ± 0.058</td><td>25.000 ± 0.000</td><td>5.100 ± 0.200</td><td>8.833 ± 0.058</td><td>13.933 ± 0.764</td><td>17.500 ± 1.114</td><td>12.400 ± 0.624</td><td>6.333 ± 0.252</td>
+                        </tr>
+            
+                        <tr>
+                            <td class="lamp-name">L1.2 LB</td>
+                            <td>3</td>
+            <td>8.100 ± 0.000</td><td>36.167 ± 0.153</td><td>2.300 ± 0.000</td><td>5.433 ± 0.058</td><td>12.300 ± 0.100</td><td>6.300 ± 0.000</td><td>25.000 ± 0.000</td><td>5.733 ± 0.208</td><td>10.333 ± 0.153</td><td>16.800 ± 0.693</td><td>19.133 ± 0.777</td><td>16.500 ± 0.721</td><td>7.567 ± 0.231</td>
+                        </tr>
+            
+                    </tbody>
+                </table>
+            </div>
+        
+            <h3 style="color: #3498db; margin-top: 30px;">TrigoTriti</h3>
+        
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="text-align: left;">Lámpara</th>
+                            <th>N</th>
+        <th>H<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>PB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>GB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>FB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>Cz<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>ALM<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>Speed<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisH<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisPB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisGrasa<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisFB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisCz<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisALM<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        
+                        <tr>
+                            <td class="lamp-name">L2.2 LB</td>
+                            <td>3</td>
+            <td>11.500 ± 0.000</td><td>7.767 ± 0.115</td><td>1.700 ± 0.000</td><td>3.467 ± 0.058</td><td>1.300 ± 0.000</td><td>60.000 ± 0.458</td><td>25.000 ± 0.000</td><td>8.733 ± 0.351</td><td>9.067 ± 0.513</td><td>6.567 ± 1.050</td><td>5.800 ± 0.173</td><td>11.100 ± nan</td><td>3.233 ± 0.252</td>
+                        </tr>
+            
+                        <tr>
+                            <td class="lamp-name">L1.2 LB</td>
+                            <td>3</td>
+            <td>11.500 ± 0.000</td><td>8.000 ± 0.100</td><td>1.700 ± 0.100</td><td>3.433 ± 0.115</td><td>1.367 ± 0.058</td><td>59.300 ± 0.520</td><td>25.000 ± 0.000</td><td>9.533 ± 0.814</td><td>9.867 ± 1.258</td><td>7.133 ± 1.405</td><td>5.767 ± 0.839</td><td>-</td><td>3.500 ± 0.265</td>
+                        </tr>
+            
+                    </tbody>
+                </table>
+            </div>
+        
+            <h3 style="color: #3498db; margin-top: 30px;">Maiz</h3>
+        
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="text-align: left;">Lámpara</th>
+                            <th>N</th>
+        <th>H<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>PB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>GB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>FB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>Cz<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>ALM<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>Aw<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>Speed<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisH<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisPB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisGB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisFB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisCz<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisALM<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisAw<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        
+                        <tr>
+                            <td class="lamp-name">L2.2 LB</td>
+                            <td>3</td>
+            <td>12.567 ± 0.115</td><td>6.667 ± 0.153</td><td>3.833 ± 0.058</td><td>2.800 ± 0.000</td><td>0.880 ± 0.010</td><td>68.967 ± 0.153</td><td>0.531 ± 0.011</td><td>25.000 ± 0.000</td><td>20.133 ± 1.201</td><td>11.400 ± 0.346</td><td>9.733 ± 0.833</td><td>5.867 ± 0.153</td><td>14.533 ± 0.681</td><td>9.667 ± 0.289</td><td>3.167 ± 0.404</td>
+                        </tr>
+            
+                        <tr>
+                            <td class="lamp-name">L1.2 LB</td>
+                            <td>3</td>
+            <td>12.800 ± 0.100</td><td>6.467 ± 0.153</td><td>3.767 ± 0.231</td><td>2.800 ± 0.000</td><td>0.890 ± 0.026</td><td>69.300 ± 0.700</td><td>0.546 ± 0.006</td><td>25.000 ± 0.000</td><td>21.333 ± 1.563</td><td>12.633 ± 1.514</td><td>10.733 ± 1.850</td><td>6.267 ± 0.231</td><td>14.900 ± 1.562</td><td>10.767 ± 2.857</td><td>2.967 ± 0.493</td>
+                        </tr>
+            
+                    </tbody>
+                </table>
+            </div>
+        
+            <h3 style="color: #3498db; margin-top: 30px;">Soja</h3>
+        
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="text-align: left;">Lámpara</th>
+                            <th>N</th>
+        <th>H<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>PB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>Grasa bruta<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>FB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>Cz<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>Speed<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisH<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisPB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisGrasa<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisFB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisCz<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        
+                        <tr>
+                            <td class="lamp-name">L2.2 LB</td>
+                            <td>4</td>
+            <td>9.825 ± 0.050</td><td>47.075 ± 0.126</td><td>1.350 ± 0.058</td><td>5.450 ± 0.058</td><td>5.305 ± 0.026</td><td>25.000 ± 0.000</td><td>34.175 ± 1.443</td><td>18.625 ± 1.305</td><td>75.650 ± 3.222</td><td>12.625 ± 0.822</td><td>16.475 ± 0.670</td>
+                        </tr>
+            
+                        <tr>
+                            <td class="lamp-name">L1.2 LB</td>
+                            <td>3</td>
+            <td>9.700 ± 0.000</td><td>47.100 ± 0.000</td><td>1.400 ± 0.000</td><td>5.333 ± 0.058</td><td>5.457 ± 0.025</td><td>25.000 ± 0.000</td><td>32.267 ± 0.862</td><td>17.233 ± 0.751</td><td>79.733 ± 1.415</td><td>10.233 ± 0.681</td><td>14.867 ± 0.577</td>
+                        </tr>
+            
+                    </tbody>
+                </table>
+            </div>
+        
+            <h3 style="color: #3498db; margin-top: 30px;">Cerdos</h3>
+        
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="text-align: left;">Lámpara</th>
+                            <th>N</th>
+        <th>H<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>PB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>GB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>FB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>Cz<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>ALM<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>Fosforo<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>Calcio<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>Speed<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisH<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisPB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisGrasa<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisFB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisCz<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisALM<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisP<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisCa<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        
+                        <tr>
+                            <td class="lamp-name">L2.2 LB</td>
+                            <td>3</td>
+            <td>9.533 ± 0.058</td><td>15.033 ± 0.058</td><td>5.200 ± 0.000</td><td>3.767 ± 0.058</td><td>4.267 ± 0.023</td><td>46.567 ± 0.058</td><td>0.307 ± 0.015</td><td>0.420 ± 0.010</td><td>25.000 ± 0.000</td><td>1.067 ± 0.115</td><td>2.200 ± 0.265</td><td>1.267 ± 0.115</td><td>1.400 ± 0.265</td><td>1.367 ± 0.208</td><td>2.967 ± 0.115</td><td>2.933 ± 0.231</td><td>1.700 ± 0.200</td>
+                        </tr>
+            
+                        <tr>
+                            <td class="lamp-name">L1.2 LB</td>
+                            <td>3</td>
+            <td>9.533 ± 0.058</td><td>15.033 ± 0.058</td><td>5.233 ± 0.058</td><td>3.700 ± 0.000</td><td>4.250 ± 0.026</td><td>46.133 ± 0.208</td><td>0.280 ± 0.026</td><td>0.473 ± 0.025</td><td>25.000 ± 0.000</td><td>1.267 ± 0.115</td><td>2.033 ± 0.115</td><td>1.233 ± 0.153</td><td>1.367 ± 0.306</td><td>1.333 ± 0.252</td><td>2.667 ± 0.208</td><td>3.067 ± 0.404</td><td>1.633 ± 0.252</td>
+                        </tr>
+            
+                    </tbody>
+                </table>
+            </div>
+        
+        </div>
+    
+        <div class="footer">
+            <p><strong>NIR Analyzer</strong> - Desarrollado para BUCHI</p>
+            <p>Reporte generado automáticamente</p>
+        </div>
+    </body>
+    </html>
+    

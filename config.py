@@ -33,7 +33,7 @@ SUPPORTED_EXTENSIONS = {
 
 # Umbrales de diagnóstico para External White
 WSTD_THRESHOLDS = {
-    'good': 0.01,           # Bien ajustado
+    'good': 0.015,           # Bien ajustado
     'warning': 0.05,        # Desviación moderada
     'bad': float('inf')     # Requiere ajuste
 }
@@ -52,7 +52,7 @@ DIAGNOSTIC_STATUS = {
     },
     'bad': {
         'icon': '🔴',
-        'label': 'Requiere ajuste',
+        'label': 'Offset, ajustar a offset inicial',
         'color': 'red'
     }
 }
