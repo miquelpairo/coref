@@ -510,7 +510,8 @@ VALIDATION_STATUS = {
 }
 
 
-
+# Umbral crítico para decidir si necesita alineamiento en Paso 4
+VALIDATION_RMS_THRESHOLD = 0.005  # RMS < 0.005 = Validación exitosa, no necesita Paso 5
 
 # Umbrales para White Reference Comparison
 WHITE_REFERENCE_THRESHOLDS = {
@@ -525,10 +526,12 @@ WHITE_REFERENCE_THRESHOLDS = {
 # UMBRALES DE VALIDACIÓN - STANDARD VALIDATION TOOL
 # ============================================================================
 
+
+
 DEFAULT_VALIDATION_THRESHOLDS = {
-    'correlation': 0.999,
-    'max_diff': 0.02,
-    'rms': 0.015
+    'correlation': 0.9995,
+    'max_diff': 0.015,
+    'rms': 0.010
 }
 
 # Regiones espectrales críticas para análisis (nm)

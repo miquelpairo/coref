@@ -1,0 +1,1163 @@
+
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Reporte de Predicciones NIR - BUCHI</title>
+        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+        <style>
+            /* Estilos corporativos BUCHI para reportes HTML */
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f5f5f5;
+    color: #333;
+}
+
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 250px;
+    height: 100%;
+    background-color: #093A34;
+    padding: 20px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar ul li {
+    margin-bottom: 10px;
+}
+
+.sidebar ul li a {
+    color: white;
+    text-decoration: none;
+    display: block;
+    padding: 10px;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+    font-weight: bold;
+}
+
+.sidebar ul li a:hover {
+    background-color: #289A93;
+}
+
+.main-content {
+    margin-left: 270px;
+    padding: 40px;
+    max-width: 1400px;
+}
+
+h1 {
+    color: #093A34;
+    border-bottom: 4px solid #289A93;
+    padding-bottom: 15px;
+    margin-bottom: 30px;
+    font-size: 2.5em;
+}
+
+h2 {
+    color: #093A34;
+    margin-top: 30px;
+    margin-bottom: 15px;
+    font-size: 1.8em;
+    border-left: 5px solid #289A93;
+    padding-left: 15px;
+}
+
+h3 {
+    color: #289A93;
+    margin-top: 25px;
+    margin-bottom: 12px;
+    font-size: 1.4em;
+}
+
+.info-box {
+    background-color: white;
+    border-radius: 8px;
+    padding: 25px;
+    margin: 20px 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.warning-box {
+    background-color: #fff3cd;
+    border-left: 5px solid #ffc107;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.status-good {
+    background-color: #d4edda;
+    border-left: 5px solid #28a745;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.status-warning {
+    background-color: #fff3cd;
+    border-left: 5px solid #ffc107;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.status-bad {
+    background-color: #f8d7da;
+    border-left: 5px solid #dc3545;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+th {
+    background-color: #093A34;
+    color: white;
+    padding: 12px;
+    text-align: left;
+    font-weight: bold;
+    border: 1px solid #ddd;
+}
+
+td {
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+}
+
+tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+tr:hover {
+    background-color: #e9ecef;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.info-item {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    border-left: 3px solid #289A93;
+}
+
+.info-label {
+    font-weight: bold;
+    color: #093A34;
+    display: block;
+    margin-bottom: 5px;
+    font-size: 0.9em;
+}
+
+.info-value {
+    color: #333;
+    font-size: 1.1em;
+}
+
+.footer {
+    text-align: center;
+    padding: 30px;
+    margin-top: 50px;
+    border-top: 3px solid #289A93;
+    color: #6c757d;
+    background-color: white;
+}
+
+details {
+    margin: 20px 0;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    background-color: white;
+}
+
+summary {
+    cursor: pointer;
+    font-weight: bold;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    user-select: none;
+    color: #093A34;
+}
+
+summary:hover {
+    background-color: #e9ecef;
+}
+
+.plot-container {
+    margin: 30px 0;
+    padding: 20px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+pre {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    overflow-x: auto;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85em;
+    line-height: 1.5;
+    white-space: pre-wrap;
+}
+        </style>
+    </head>
+    <body>
+        <div class="sidebar">
+            <ul>
+                <li><a href="#info-general">Información General</a></li>
+<li><a href="#statistics">Estadísticas Detalladas</a></li>
+<li><a href="#comparison-charts">Gráficos Comparativos</a></li>
+<li><a href="#text-report">Reporte en Texto</a></li>
+            </ul>
+        </div>
+        
+        <div class="main-content">
+    
+        <h1>Reporte de Predicciones NIR</h1>
+        
+        <div class="info-box" id="info-general">
+            <h2>Información General del Análisis</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">🔬 Sensor NIR</span>
+                    <span class="info-value">316FG103</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">📅 Fecha del Reporte</span>
+                    <span class="info-value">14/12/2025 17:09:18</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">📦 Productos Analizados</span>
+                    <span class="info-value">5</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">💡 Lámparas Comparadas</span>
+                    <span class="info-value">2</span>
+                </div>
+            </div>
+            
+            <table style="margin-top: 20px;">
+                <tr>
+                    <th>Productos</th>
+                    <td>Soja, Maiz, TrigoTriti, Colza, Cerdos</td>
+                </tr>
+                <tr>
+                    <th>Lámparas</th>
+                    <td>L1.2 BL, L1.3 BL</td>
+                </tr>
+            </table>
+        </div>
+    
+        <div class="info-box" id="statistics">
+            <h2>Estadísticas por Producto y Lámpara</h2>
+    
+            <h3>Soja</h3>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="text-align: left;">Lámpara</th>
+                            <th>N</th>
+        <th>H<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>PB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>Grasa bruta<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>FB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>Cz<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>Speed<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisH<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisPB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisGrasa<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisFB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisCz<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        
+                        <tr>
+                            <td style="font-weight: bold; background-color: #f8f9fa;">L1.2 BL</td>
+                            <td>3</td>
+            <td>10.000 ± 0.000</td><td>46.967 ± 0.058</td><td>1.333 ± 0.058</td><td>5.167 ± 0.058</td><td>5.377 ± 0.006</td><td>25.000 ± 0.000</td><td>32.067 ± 0.493</td><td>15.600 ± 0.265</td><td>79.967 ± 1.986</td><td>8.567 ± 0.611</td><td>14.300 ± 0.346</td>
+                        </tr>
+            
+                        <tr>
+                            <td style="font-weight: bold; background-color: #f8f9fa;">L1.3 BL</td>
+                            <td>3</td>
+            <td>10.100 ± 0.100</td><td>47.133 ± 0.058</td><td>1.300 ± 0.100</td><td>5.300 ± 0.000</td><td>5.380 ± 0.026</td><td>25.000 ± 0.000</td><td>33.333 ± 0.153</td><td>16.600 ± 0.656</td><td>80.100 ± 2.787</td><td>9.800 ± 0.458</td><td>14.800 ± 0.346</td>
+                        </tr>
+            
+                    </tbody>
+                </table>
+            </div>
+        
+            <h3>Maiz</h3>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="text-align: left;">Lámpara</th>
+                            <th>N</th>
+        <th>H<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>PB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>GB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>FB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>Cz<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>ALM<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>Aw<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>Speed<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisH<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisPB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisGB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisFB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisCz<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisALM<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisAw<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        
+                        <tr>
+                            <td style="font-weight: bold; background-color: #f8f9fa;">L1.2 BL</td>
+                            <td>3</td>
+            <td>12.867 ± 0.153</td><td>6.733 ± 0.058</td><td>3.800 ± 0.100</td><td>2.833 ± 0.058</td><td>0.837 ± 0.047</td><td>69.267 ± 0.321</td><td>0.525 ± 0.003</td><td>25.000 ± 0.000</td><td>24.933 ± 1.677</td><td>14.233 ± 1.890</td><td>9.933 ± 1.626</td><td>6.633 ± 1.150</td><td>17.600 ± 2.381</td><td>11.533 ± 1.193</td><td>3.533 ± 0.252</td>
+                        </tr>
+            
+                        <tr>
+                            <td style="font-weight: bold; background-color: #f8f9fa;">L1.3 BL</td>
+                            <td>3</td>
+            <td>12.967 ± 0.058</td><td>6.733 ± 0.058</td><td>3.767 ± 0.058</td><td>2.833 ± 0.058</td><td>0.820 ± 0.020</td><td>69.033 ± 0.569</td><td>0.533 ± 0.011</td><td>25.000 ± 0.000</td><td>26.100 ± 1.058</td><td>14.067 ± 0.987</td><td>10.167 ± 0.924</td><td>7.133 ± 1.721</td><td>17.200 ± 0.566</td><td>10.133 ± 2.113</td><td>3.167 ± 0.586</td>
+                        </tr>
+            
+                    </tbody>
+                </table>
+            </div>
+        
+            <h3>TrigoTriti</h3>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="text-align: left;">Lámpara</th>
+                            <th>N</th>
+        <th>H<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>PB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>GB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>FB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>Cz<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>ALM<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>Speed<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisH<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisPB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisGrasa<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisFB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisCz<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisALM<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        
+                        <tr>
+                            <td style="font-weight: bold; background-color: #f8f9fa;">L1.2 BL</td>
+                            <td>3</td>
+            <td>11.600 ± 0.100</td><td>7.867 ± 0.153</td><td>1.733 ± 0.058</td><td>3.467 ± 0.058</td><td>1.333 ± 0.058</td><td>59.533 ± 0.306</td><td>25.000 ± 0.000</td><td>11.000 ± 1.300</td><td>9.767 ± 1.518</td><td>5.633 ± 1.457</td><td>4.667 ± 0.666</td><td>10.900 ± nan</td><td>3.267 ± 0.231</td>
+                        </tr>
+            
+                        <tr>
+                            <td style="font-weight: bold; background-color: #f8f9fa;">L1.3 BL</td>
+                            <td>3</td>
+            <td>11.500 ± 0.000</td><td>7.967 ± 0.153</td><td>1.767 ± 0.058</td><td>3.500 ± 0.200</td><td>1.367 ± 0.058</td><td>59.467 ± 1.266</td><td>25.000 ± 0.000</td><td>8.600 ± 0.346</td><td>9.333 ± 0.611</td><td>9.233 ± 2.739</td><td>6.133 ± 0.289</td><td>-</td><td>3.167 ± 0.351</td>
+                        </tr>
+            
+                    </tbody>
+                </table>
+            </div>
+        
+            <h3>Colza</h3>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="text-align: left;">Lámpara</th>
+                            <th>N</th>
+        <th>H<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>PB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>GB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>Grasa total<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>FB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>Cz<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>Speed<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisH<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisPB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisGB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisGT<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisFB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisCz<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        
+                        <tr>
+                            <td style="font-weight: bold; background-color: #f8f9fa;">L1.2 BL</td>
+                            <td>3</td>
+            <td>8.600 ± 0.000</td><td>35.967 ± 0.058</td><td>2.133 ± 0.058</td><td>5.267 ± 0.058</td><td>12.167 ± 0.153</td><td>6.333 ± 0.058</td><td>25.000 ± 0.000</td><td>4.333 ± 0.306</td><td>8.467 ± 0.351</td><td>16.567 ± 0.208</td><td>16.533 ± 0.833</td><td>14.833 ± 0.723</td><td>6.267 ± 0.404</td>
+                        </tr>
+            
+                        <tr>
+                            <td style="font-weight: bold; background-color: #f8f9fa;">L1.3 BL</td>
+                            <td>3</td>
+            <td>8.533 ± 0.058</td><td>36.433 ± 0.493</td><td>2.267 ± 0.115</td><td>5.400 ± 0.100</td><td>12.200 ± 0.300</td><td>6.233 ± 0.058</td><td>25.000 ± 0.000</td><td>5.200 ± 0.265</td><td>8.900 ± 0.265</td><td>15.133 ± 0.493</td><td>18.667 ± 1.514</td><td>14.767 ± 1.361</td><td>6.633 ± 0.231</td>
+                        </tr>
+            
+                    </tbody>
+                </table>
+            </div>
+        
+            <h3>Cerdos</h3>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="text-align: left;">Lámpara</th>
+                            <th>N</th>
+        <th>H<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>PB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>GB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>FB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>Cz<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>ALM<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>Fosforo<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>Calcio<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>Speed<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisH<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisPB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisGrasa<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisFB<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisCz<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisALM<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisP<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th><th>MahalanobisCa<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        
+                        <tr>
+                            <td style="font-weight: bold; background-color: #f8f9fa;">L1.2 BL</td>
+                            <td>3</td>
+            <td>9.067 ± 0.058</td><td>15.433 ± 0.115</td><td>5.400 ± 0.000</td><td>3.633 ± 0.058</td><td>4.293 ± 0.021</td><td>45.800 ± 0.173</td><td>0.297 ± 0.015</td><td>0.463 ± 0.006</td><td>25.000 ± 0.000</td><td>1.700 ± 0.100</td><td>2.500 ± 0.265</td><td>1.567 ± 0.115</td><td>1.900 ± 0.265</td><td>1.967 ± 0.208</td><td>3.300 ± 0.100</td><td>3.333 ± 0.208</td><td>2.167 ± 0.208</td>
+                        </tr>
+            
+                        <tr>
+                            <td style="font-weight: bold; background-color: #f8f9fa;">L1.3 BL</td>
+                            <td>3</td>
+            <td>9.100 ± 0.000</td><td>15.200 ± 0.265</td><td>5.233 ± 0.115</td><td>3.667 ± 0.115</td><td>4.293 ± 0.080</td><td>46.767 ± 0.907</td><td>0.307 ± 0.025</td><td>0.473 ± 0.006</td><td>25.000 ± 0.000</td><td>1.533 ± 0.058</td><td>2.267 ± 0.058</td><td>1.433 ± 0.058</td><td>1.500 ± 0.100</td><td>1.600 ± 0.100</td><td>3.600 ± 0.173</td><td>2.967 ± 0.153</td><td>1.900 ± 0.100</td>
+                        </tr>
+            
+                    </tbody>
+                </table>
+            </div>
+        
+        </div>
+    
+        <div class="info-box" id="comparison-charts">
+            <h2>Gráficos Comparativos</h2>
+            <p style='color: #6c757d; font-size: 0.95em;'>
+                <em>Análisis visual de las predicciones NIR entre diferentes lámparas.</em>
+            </p>
+    
+    <details open style="margin: 20px 0; border: 1px solid #ddd; border-radius: 5px; padding: 10px; background-color: white;">
+        <summary style="cursor: pointer; font-weight: bold; padding: 10px; background-color: #f8f9fa; border-radius: 5px; user-select: none; color: #093A34;">
+            📊 Comparación detallada: H
+        </summary>
+        <div style="padding: 15px; margin-top: 10px;">
+            <html>
+<head><meta charset="utf-8" /></head>
+<body>
+    <div>                            <div id="graph_H" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("graph_H")) {                    Plotly.newPlot(                        "graph_H",                        [{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":true,"text":["10.00"],"textposition":"inside","x":["L1.2 BL"],"y":[10.0],"type":"bar","xaxis":"x","yaxis":"y"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":true,"text":["10.10"],"textposition":"inside","x":["L1.3 BL"],"y":[10.1],"type":"bar","xaxis":"x","yaxis":"y"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["12.87"],"textposition":"inside","x":["L1.2 BL"],"y":[12.866666666666665],"type":"bar","xaxis":"x2","yaxis":"y2"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["12.97"],"textposition":"inside","x":["L1.3 BL"],"y":[12.966666666666667],"type":"bar","xaxis":"x2","yaxis":"y2"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["11.60"],"textposition":"inside","x":["L1.2 BL"],"y":[11.6],"type":"bar","xaxis":"x3","yaxis":"y3"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["11.50"],"textposition":"inside","x":["L1.3 BL"],"y":[11.5],"type":"bar","xaxis":"x3","yaxis":"y3"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["8.60"],"textposition":"inside","x":["L1.2 BL"],"y":[8.6],"type":"bar","xaxis":"x4","yaxis":"y4"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["8.53"],"textposition":"inside","x":["L1.3 BL"],"y":[8.533333333333333],"type":"bar","xaxis":"x4","yaxis":"y4"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["9.07"],"textposition":"inside","x":["L1.2 BL"],"y":[9.066666666666666],"type":"bar","xaxis":"x5","yaxis":"y5"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["9.10"],"textposition":"inside","x":["L1.3 BL"],"y":[9.1],"type":"bar","xaxis":"x5","yaxis":"y5"}],                        {"template":{"data":{"candlestick":[{"decreasing":{"line":{"color":"#000033"}},"increasing":{"line":{"color":"#000032"}},"type":"candlestick"}],"contourcarpet":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contourcarpet"}],"contour":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contour"}],"heatmap":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"heatmap"}],"histogram2d":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"histogram2d"}],"icicle":[{"textfont":{"color":"white"},"type":"icicle"}],"sankey":[{"textfont":{"color":"#000036"},"type":"sankey"}],"scatter":[{"marker":{"line":{"width":0}},"type":"scatter"}],"table":[{"cells":{"fill":{"color":"#000038"},"font":{"color":"#000037"},"line":{"color":"#000039"}},"header":{"fill":{"color":"#000040"},"font":{"color":"#000036"},"line":{"color":"#000039"}},"type":"table"}],"waterfall":[{"connector":{"line":{"color":"#000036","width":2}},"decreasing":{"marker":{"color":"#000033"}},"increasing":{"marker":{"color":"#000032"}},"totals":{"marker":{"color":"#000034"}},"type":"waterfall"}]},"layout":{"coloraxis":{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorscale":{"diverging":[[0.0,"#000021"],[0.1,"#000022"],[0.2,"#000023"],[0.3,"#000024"],[0.4,"#000025"],[0.5,"#000026"],[0.6,"#000027"],[0.7,"#000028"],[0.8,"#000029"],[0.9,"#000030"],[1.0,"#000031"]],"sequential":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"sequentialminus":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorway":["#000001","#000002","#000003","#000004","#000005","#000006","#000007","#000008","#000009","#000010"]}},"xaxis":{"anchor":"y","domain":[0.0,0.16799999999999998]},"yaxis":{"anchor":"x","domain":[0.0,1.0],"title":{"text":"H (%)"},"range":[0,14.911666666666665]},"xaxis2":{"anchor":"y2","domain":[0.208,0.376]},"yaxis2":{"anchor":"x2","domain":[0.0,1.0],"title":{"text":"H (%)"},"range":[0,14.911666666666665]},"xaxis3":{"anchor":"y3","domain":[0.416,0.584]},"yaxis3":{"anchor":"x3","domain":[0.0,1.0],"title":{"text":"H (%)"},"range":[0,14.911666666666665]},"xaxis4":{"anchor":"y4","domain":[0.624,0.792]},"yaxis4":{"anchor":"x4","domain":[0.0,1.0],"title":{"text":"H (%)"},"range":[0,14.911666666666665]},"xaxis5":{"anchor":"y5","domain":[0.832,1.0]},"yaxis5":{"anchor":"x5","domain":[0.0,1.0],"title":{"text":"H (%)"},"range":[0,14.911666666666665]},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Soja - H","x":0.08399999999999999,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Maiz - H","x":0.292,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"TrigoTriti - H","x":0.5,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Colza - H","x":0.708,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Cerdos - H","x":0.9159999999999999,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"}],"title":{"text":"Comparaci\u00f3n Detallada: Media y Variabilidad por L\u00e1mpara - H"},"height":400,"showlegend":true,"barmode":"group"},                        {"responsive": true}                    )                };            </script>        </div>
+</body>
+</html>
+        </div>
+    </details>
+    
+    <details open style="margin: 20px 0; border: 1px solid #ddd; border-radius: 5px; padding: 10px; background-color: white;">
+        <summary style="cursor: pointer; font-weight: bold; padding: 10px; background-color: #f8f9fa; border-radius: 5px; user-select: none; color: #093A34;">
+            📊 Comparación detallada: PB
+        </summary>
+        <div style="padding: 15px; margin-top: 10px;">
+            <html>
+<head><meta charset="utf-8" /></head>
+<body>
+    <div>                            <div id="graph_PB" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("graph_PB")) {                    Plotly.newPlot(                        "graph_PB",                        [{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":true,"text":["46.97"],"textposition":"inside","x":["L1.2 BL"],"y":[46.96666666666667],"type":"bar","xaxis":"x","yaxis":"y"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":true,"text":["47.13"],"textposition":"inside","x":["L1.3 BL"],"y":[47.13333333333333],"type":"bar","xaxis":"x","yaxis":"y"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["6.73"],"textposition":"inside","x":["L1.2 BL"],"y":[6.733333333333333],"type":"bar","xaxis":"x2","yaxis":"y2"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["6.73"],"textposition":"inside","x":["L1.3 BL"],"y":[6.733333333333333],"type":"bar","xaxis":"x2","yaxis":"y2"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["7.87"],"textposition":"inside","x":["L1.2 BL"],"y":[7.866666666666667],"type":"bar","xaxis":"x3","yaxis":"y3"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["7.97"],"textposition":"inside","x":["L1.3 BL"],"y":[7.966666666666666],"type":"bar","xaxis":"x3","yaxis":"y3"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["35.97"],"textposition":"inside","x":["L1.2 BL"],"y":[35.96666666666667],"type":"bar","xaxis":"x4","yaxis":"y4"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["36.43"],"textposition":"inside","x":["L1.3 BL"],"y":[36.43333333333334],"type":"bar","xaxis":"x4","yaxis":"y4"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["15.43"],"textposition":"inside","x":["L1.2 BL"],"y":[15.433333333333332],"type":"bar","xaxis":"x5","yaxis":"y5"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["15.20"],"textposition":"inside","x":["L1.3 BL"],"y":[15.200000000000001],"type":"bar","xaxis":"x5","yaxis":"y5"}],                        {"template":{"data":{"candlestick":[{"decreasing":{"line":{"color":"#000033"}},"increasing":{"line":{"color":"#000032"}},"type":"candlestick"}],"contourcarpet":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contourcarpet"}],"contour":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contour"}],"heatmap":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"heatmap"}],"histogram2d":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"histogram2d"}],"icicle":[{"textfont":{"color":"white"},"type":"icicle"}],"sankey":[{"textfont":{"color":"#000036"},"type":"sankey"}],"scatter":[{"marker":{"line":{"width":0}},"type":"scatter"}],"table":[{"cells":{"fill":{"color":"#000038"},"font":{"color":"#000037"},"line":{"color":"#000039"}},"header":{"fill":{"color":"#000040"},"font":{"color":"#000036"},"line":{"color":"#000039"}},"type":"table"}],"waterfall":[{"connector":{"line":{"color":"#000036","width":2}},"decreasing":{"marker":{"color":"#000033"}},"increasing":{"marker":{"color":"#000032"}},"totals":{"marker":{"color":"#000034"}},"type":"waterfall"}]},"layout":{"coloraxis":{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorscale":{"diverging":[[0.0,"#000021"],[0.1,"#000022"],[0.2,"#000023"],[0.3,"#000024"],[0.4,"#000025"],[0.5,"#000026"],[0.6,"#000027"],[0.7,"#000028"],[0.8,"#000029"],[0.9,"#000030"],[1.0,"#000031"]],"sequential":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"sequentialminus":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorway":["#000001","#000002","#000003","#000004","#000005","#000006","#000007","#000008","#000009","#000010"]}},"xaxis":{"anchor":"y","domain":[0.0,0.16799999999999998]},"yaxis":{"anchor":"x","domain":[0.0,1.0],"title":{"text":"PB (%)"},"range":[0,54.203333333333326]},"xaxis2":{"anchor":"y2","domain":[0.208,0.376]},"yaxis2":{"anchor":"x2","domain":[0.0,1.0],"title":{"text":"PB (%)"},"range":[0,54.203333333333326]},"xaxis3":{"anchor":"y3","domain":[0.416,0.584]},"yaxis3":{"anchor":"x3","domain":[0.0,1.0],"title":{"text":"PB (%)"},"range":[0,54.203333333333326]},"xaxis4":{"anchor":"y4","domain":[0.624,0.792]},"yaxis4":{"anchor":"x4","domain":[0.0,1.0],"title":{"text":"PB (%)"},"range":[0,54.203333333333326]},"xaxis5":{"anchor":"y5","domain":[0.832,1.0]},"yaxis5":{"anchor":"x5","domain":[0.0,1.0],"title":{"text":"PB (%)"},"range":[0,54.203333333333326]},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Soja - PB","x":0.08399999999999999,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Maiz - PB","x":0.292,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"TrigoTriti - PB","x":0.5,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Colza - PB","x":0.708,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Cerdos - PB","x":0.9159999999999999,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"}],"title":{"text":"Comparaci\u00f3n Detallada: Media y Variabilidad por L\u00e1mpara - PB"},"height":400,"showlegend":true,"barmode":"group"},                        {"responsive": true}                    )                };            </script>        </div>
+</body>
+</html>
+        </div>
+    </details>
+    
+    <details open style="margin: 20px 0; border: 1px solid #ddd; border-radius: 5px; padding: 10px; background-color: white;">
+        <summary style="cursor: pointer; font-weight: bold; padding: 10px; background-color: #f8f9fa; border-radius: 5px; user-select: none; color: #093A34;">
+            📊 Comparación detallada: Grasa bruta
+        </summary>
+        <div style="padding: 15px; margin-top: 10px;">
+            <html>
+<head><meta charset="utf-8" /></head>
+<body>
+    <div>                            <div id="graph_Grasa_bruta" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("graph_Grasa_bruta")) {                    Plotly.newPlot(                        "graph_Grasa_bruta",                        [{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":true,"text":["1.33"],"textposition":"inside","x":["L1.2 BL"],"y":[1.3333333333333333],"type":"bar","xaxis":"x","yaxis":"y"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":true,"text":["1.30"],"textposition":"inside","x":["L1.3 BL"],"y":[1.3],"type":"bar","xaxis":"x","yaxis":"y"}],                        {"template":{"data":{"candlestick":[{"decreasing":{"line":{"color":"#000033"}},"increasing":{"line":{"color":"#000032"}},"type":"candlestick"}],"contourcarpet":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contourcarpet"}],"contour":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contour"}],"heatmap":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"heatmap"}],"histogram2d":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"histogram2d"}],"icicle":[{"textfont":{"color":"white"},"type":"icicle"}],"sankey":[{"textfont":{"color":"#000036"},"type":"sankey"}],"scatter":[{"marker":{"line":{"width":0}},"type":"scatter"}],"table":[{"cells":{"fill":{"color":"#000038"},"font":{"color":"#000037"},"line":{"color":"#000039"}},"header":{"fill":{"color":"#000040"},"font":{"color":"#000036"},"line":{"color":"#000039"}},"type":"table"}],"waterfall":[{"connector":{"line":{"color":"#000036","width":2}},"decreasing":{"marker":{"color":"#000033"}},"increasing":{"marker":{"color":"#000032"}},"totals":{"marker":{"color":"#000034"}},"type":"waterfall"}]},"layout":{"coloraxis":{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorscale":{"diverging":[[0.0,"#000021"],[0.1,"#000022"],[0.2,"#000023"],[0.3,"#000024"],[0.4,"#000025"],[0.5,"#000026"],[0.6,"#000027"],[0.7,"#000028"],[0.8,"#000029"],[0.9,"#000030"],[1.0,"#000031"]],"sequential":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"sequentialminus":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorway":["#000001","#000002","#000003","#000004","#000005","#000006","#000007","#000008","#000009","#000010"]}},"xaxis":{"anchor":"y","domain":[0.0,1.0]},"yaxis":{"anchor":"x","domain":[0.0,1.0],"title":{"text":"Grasa bruta (%)"},"range":[0,1.5333333333333332]},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Soja - Grasa bruta","x":0.5,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"}],"title":{"text":"Comparaci\u00f3n Detallada: Media y Variabilidad por L\u00e1mpara - Grasa bruta"},"height":400,"showlegend":true,"barmode":"group"},                        {"responsive": true}                    )                };            </script>        </div>
+</body>
+</html>
+        </div>
+    </details>
+    
+    <details open style="margin: 20px 0; border: 1px solid #ddd; border-radius: 5px; padding: 10px; background-color: white;">
+        <summary style="cursor: pointer; font-weight: bold; padding: 10px; background-color: #f8f9fa; border-radius: 5px; user-select: none; color: #093A34;">
+            📊 Comparación detallada: FB
+        </summary>
+        <div style="padding: 15px; margin-top: 10px;">
+            <html>
+<head><meta charset="utf-8" /></head>
+<body>
+    <div>                            <div id="graph_FB" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("graph_FB")) {                    Plotly.newPlot(                        "graph_FB",                        [{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":true,"text":["5.17"],"textposition":"inside","x":["L1.2 BL"],"y":[5.166666666666667],"type":"bar","xaxis":"x","yaxis":"y"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":true,"text":["5.30"],"textposition":"inside","x":["L1.3 BL"],"y":[5.3],"type":"bar","xaxis":"x","yaxis":"y"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["2.83"],"textposition":"inside","x":["L1.2 BL"],"y":[2.8333333333333335],"type":"bar","xaxis":"x2","yaxis":"y2"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["2.83"],"textposition":"inside","x":["L1.3 BL"],"y":[2.8333333333333335],"type":"bar","xaxis":"x2","yaxis":"y2"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["3.47"],"textposition":"inside","x":["L1.2 BL"],"y":[3.466666666666667],"type":"bar","xaxis":"x3","yaxis":"y3"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["3.50"],"textposition":"inside","x":["L1.3 BL"],"y":[3.5],"type":"bar","xaxis":"x3","yaxis":"y3"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["12.17"],"textposition":"inside","x":["L1.2 BL"],"y":[12.166666666666666],"type":"bar","xaxis":"x4","yaxis":"y4"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["12.20"],"textposition":"inside","x":["L1.3 BL"],"y":[12.200000000000001],"type":"bar","xaxis":"x4","yaxis":"y4"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["3.63"],"textposition":"inside","x":["L1.2 BL"],"y":[3.6333333333333333],"type":"bar","xaxis":"x5","yaxis":"y5"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["3.67"],"textposition":"inside","x":["L1.3 BL"],"y":[3.6666666666666665],"type":"bar","xaxis":"x5","yaxis":"y5"}],                        {"template":{"data":{"candlestick":[{"decreasing":{"line":{"color":"#000033"}},"increasing":{"line":{"color":"#000032"}},"type":"candlestick"}],"contourcarpet":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contourcarpet"}],"contour":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contour"}],"heatmap":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"heatmap"}],"histogram2d":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"histogram2d"}],"icicle":[{"textfont":{"color":"white"},"type":"icicle"}],"sankey":[{"textfont":{"color":"#000036"},"type":"sankey"}],"scatter":[{"marker":{"line":{"width":0}},"type":"scatter"}],"table":[{"cells":{"fill":{"color":"#000038"},"font":{"color":"#000037"},"line":{"color":"#000039"}},"header":{"fill":{"color":"#000040"},"font":{"color":"#000036"},"line":{"color":"#000039"}},"type":"table"}],"waterfall":[{"connector":{"line":{"color":"#000036","width":2}},"decreasing":{"marker":{"color":"#000033"}},"increasing":{"marker":{"color":"#000032"}},"totals":{"marker":{"color":"#000034"}},"type":"waterfall"}]},"layout":{"coloraxis":{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorscale":{"diverging":[[0.0,"#000021"],[0.1,"#000022"],[0.2,"#000023"],[0.3,"#000024"],[0.4,"#000025"],[0.5,"#000026"],[0.6,"#000027"],[0.7,"#000028"],[0.8,"#000029"],[0.9,"#000030"],[1.0,"#000031"]],"sequential":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"sequentialminus":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorway":["#000001","#000002","#000003","#000004","#000005","#000006","#000007","#000008","#000009","#000010"]}},"xaxis":{"anchor":"y","domain":[0.0,0.16799999999999998]},"yaxis":{"anchor":"x","domain":[0.0,1.0],"title":{"text":"FB (%)"},"range":[0,14.03]},"xaxis2":{"anchor":"y2","domain":[0.208,0.376]},"yaxis2":{"anchor":"x2","domain":[0.0,1.0],"title":{"text":"FB (%)"},"range":[0,14.03]},"xaxis3":{"anchor":"y3","domain":[0.416,0.584]},"yaxis3":{"anchor":"x3","domain":[0.0,1.0],"title":{"text":"FB (%)"},"range":[0,14.03]},"xaxis4":{"anchor":"y4","domain":[0.624,0.792]},"yaxis4":{"anchor":"x4","domain":[0.0,1.0],"title":{"text":"FB (%)"},"range":[0,14.03]},"xaxis5":{"anchor":"y5","domain":[0.832,1.0]},"yaxis5":{"anchor":"x5","domain":[0.0,1.0],"title":{"text":"FB (%)"},"range":[0,14.03]},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Soja - FB","x":0.08399999999999999,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Maiz - FB","x":0.292,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"TrigoTriti - FB","x":0.5,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Colza - FB","x":0.708,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Cerdos - FB","x":0.9159999999999999,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"}],"title":{"text":"Comparaci\u00f3n Detallada: Media y Variabilidad por L\u00e1mpara - FB"},"height":400,"showlegend":true,"barmode":"group"},                        {"responsive": true}                    )                };            </script>        </div>
+</body>
+</html>
+        </div>
+    </details>
+    
+    <details open style="margin: 20px 0; border: 1px solid #ddd; border-radius: 5px; padding: 10px; background-color: white;">
+        <summary style="cursor: pointer; font-weight: bold; padding: 10px; background-color: #f8f9fa; border-radius: 5px; user-select: none; color: #093A34;">
+            📊 Comparación detallada: Cz
+        </summary>
+        <div style="padding: 15px; margin-top: 10px;">
+            <html>
+<head><meta charset="utf-8" /></head>
+<body>
+    <div>                            <div id="graph_Cz" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("graph_Cz")) {                    Plotly.newPlot(                        "graph_Cz",                        [{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":true,"text":["5.38"],"textposition":"inside","x":["L1.2 BL"],"y":[5.376666666666666],"type":"bar","xaxis":"x","yaxis":"y"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":true,"text":["5.38"],"textposition":"inside","x":["L1.3 BL"],"y":[5.38],"type":"bar","xaxis":"x","yaxis":"y"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["0.84"],"textposition":"inside","x":["L1.2 BL"],"y":[0.8366666666666668],"type":"bar","xaxis":"x2","yaxis":"y2"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["0.82"],"textposition":"inside","x":["L1.3 BL"],"y":[0.82],"type":"bar","xaxis":"x2","yaxis":"y2"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["1.33"],"textposition":"inside","x":["L1.2 BL"],"y":[1.3333333333333333],"type":"bar","xaxis":"x3","yaxis":"y3"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["1.37"],"textposition":"inside","x":["L1.3 BL"],"y":[1.3666666666666665],"type":"bar","xaxis":"x3","yaxis":"y3"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["6.33"],"textposition":"inside","x":["L1.2 BL"],"y":[6.333333333333333],"type":"bar","xaxis":"x4","yaxis":"y4"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["6.23"],"textposition":"inside","x":["L1.3 BL"],"y":[6.233333333333333],"type":"bar","xaxis":"x4","yaxis":"y4"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["4.29"],"textposition":"inside","x":["L1.2 BL"],"y":[4.293333333333333],"type":"bar","xaxis":"x5","yaxis":"y5"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["4.29"],"textposition":"inside","x":["L1.3 BL"],"y":[4.293333333333333],"type":"bar","xaxis":"x5","yaxis":"y5"}],                        {"template":{"data":{"candlestick":[{"decreasing":{"line":{"color":"#000033"}},"increasing":{"line":{"color":"#000032"}},"type":"candlestick"}],"contourcarpet":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contourcarpet"}],"contour":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contour"}],"heatmap":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"heatmap"}],"histogram2d":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"histogram2d"}],"icicle":[{"textfont":{"color":"white"},"type":"icicle"}],"sankey":[{"textfont":{"color":"#000036"},"type":"sankey"}],"scatter":[{"marker":{"line":{"width":0}},"type":"scatter"}],"table":[{"cells":{"fill":{"color":"#000038"},"font":{"color":"#000037"},"line":{"color":"#000039"}},"header":{"fill":{"color":"#000040"},"font":{"color":"#000036"},"line":{"color":"#000039"}},"type":"table"}],"waterfall":[{"connector":{"line":{"color":"#000036","width":2}},"decreasing":{"marker":{"color":"#000033"}},"increasing":{"marker":{"color":"#000032"}},"totals":{"marker":{"color":"#000034"}},"type":"waterfall"}]},"layout":{"coloraxis":{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorscale":{"diverging":[[0.0,"#000021"],[0.1,"#000022"],[0.2,"#000023"],[0.3,"#000024"],[0.4,"#000025"],[0.5,"#000026"],[0.6,"#000027"],[0.7,"#000028"],[0.8,"#000029"],[0.9,"#000030"],[1.0,"#000031"]],"sequential":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"sequentialminus":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorway":["#000001","#000002","#000003","#000004","#000005","#000006","#000007","#000008","#000009","#000010"]}},"xaxis":{"anchor":"y","domain":[0.0,0.16799999999999998]},"yaxis":{"anchor":"x","domain":[0.0,1.0],"title":{"text":"Cz (%)"},"range":[0,7.283333333333332]},"xaxis2":{"anchor":"y2","domain":[0.208,0.376]},"yaxis2":{"anchor":"x2","domain":[0.0,1.0],"title":{"text":"Cz (%)"},"range":[0,7.283333333333332]},"xaxis3":{"anchor":"y3","domain":[0.416,0.584]},"yaxis3":{"anchor":"x3","domain":[0.0,1.0],"title":{"text":"Cz (%)"},"range":[0,7.283333333333332]},"xaxis4":{"anchor":"y4","domain":[0.624,0.792]},"yaxis4":{"anchor":"x4","domain":[0.0,1.0],"title":{"text":"Cz (%)"},"range":[0,7.283333333333332]},"xaxis5":{"anchor":"y5","domain":[0.832,1.0]},"yaxis5":{"anchor":"x5","domain":[0.0,1.0],"title":{"text":"Cz (%)"},"range":[0,7.283333333333332]},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Soja - Cz","x":0.08399999999999999,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Maiz - Cz","x":0.292,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"TrigoTriti - Cz","x":0.5,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Colza - Cz","x":0.708,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Cerdos - Cz","x":0.9159999999999999,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"}],"title":{"text":"Comparaci\u00f3n Detallada: Media y Variabilidad por L\u00e1mpara - Cz"},"height":400,"showlegend":true,"barmode":"group"},                        {"responsive": true}                    )                };            </script>        </div>
+</body>
+</html>
+        </div>
+    </details>
+    
+    <details open style="margin: 20px 0; border: 1px solid #ddd; border-radius: 5px; padding: 10px; background-color: white;">
+        <summary style="cursor: pointer; font-weight: bold; padding: 10px; background-color: #f8f9fa; border-radius: 5px; user-select: none; color: #093A34;">
+            📊 Comparación detallada: Speed
+        </summary>
+        <div style="padding: 15px; margin-top: 10px;">
+            <html>
+<head><meta charset="utf-8" /></head>
+<body>
+    <div>                            <div id="graph_Speed" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("graph_Speed")) {                    Plotly.newPlot(                        "graph_Speed",                        [{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":true,"text":["25.00"],"textposition":"inside","x":["L1.2 BL"],"y":[25.0],"type":"bar","xaxis":"x","yaxis":"y"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":true,"text":["25.00"],"textposition":"inside","x":["L1.3 BL"],"y":[25.0],"type":"bar","xaxis":"x","yaxis":"y"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["25.00"],"textposition":"inside","x":["L1.2 BL"],"y":[25.0],"type":"bar","xaxis":"x2","yaxis":"y2"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["25.00"],"textposition":"inside","x":["L1.3 BL"],"y":[25.0],"type":"bar","xaxis":"x2","yaxis":"y2"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["25.00"],"textposition":"inside","x":["L1.2 BL"],"y":[25.0],"type":"bar","xaxis":"x3","yaxis":"y3"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["25.00"],"textposition":"inside","x":["L1.3 BL"],"y":[25.0],"type":"bar","xaxis":"x3","yaxis":"y3"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["25.00"],"textposition":"inside","x":["L1.2 BL"],"y":[25.0],"type":"bar","xaxis":"x4","yaxis":"y4"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["25.00"],"textposition":"inside","x":["L1.3 BL"],"y":[25.0],"type":"bar","xaxis":"x4","yaxis":"y4"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["25.00"],"textposition":"inside","x":["L1.2 BL"],"y":[25.0],"type":"bar","xaxis":"x5","yaxis":"y5"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["25.00"],"textposition":"inside","x":["L1.3 BL"],"y":[25.0],"type":"bar","xaxis":"x5","yaxis":"y5"}],                        {"template":{"data":{"candlestick":[{"decreasing":{"line":{"color":"#000033"}},"increasing":{"line":{"color":"#000032"}},"type":"candlestick"}],"contourcarpet":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contourcarpet"}],"contour":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contour"}],"heatmap":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"heatmap"}],"histogram2d":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"histogram2d"}],"icicle":[{"textfont":{"color":"white"},"type":"icicle"}],"sankey":[{"textfont":{"color":"#000036"},"type":"sankey"}],"scatter":[{"marker":{"line":{"width":0}},"type":"scatter"}],"table":[{"cells":{"fill":{"color":"#000038"},"font":{"color":"#000037"},"line":{"color":"#000039"}},"header":{"fill":{"color":"#000040"},"font":{"color":"#000036"},"line":{"color":"#000039"}},"type":"table"}],"waterfall":[{"connector":{"line":{"color":"#000036","width":2}},"decreasing":{"marker":{"color":"#000033"}},"increasing":{"marker":{"color":"#000032"}},"totals":{"marker":{"color":"#000034"}},"type":"waterfall"}]},"layout":{"coloraxis":{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorscale":{"diverging":[[0.0,"#000021"],[0.1,"#000022"],[0.2,"#000023"],[0.3,"#000024"],[0.4,"#000025"],[0.5,"#000026"],[0.6,"#000027"],[0.7,"#000028"],[0.8,"#000029"],[0.9,"#000030"],[1.0,"#000031"]],"sequential":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"sequentialminus":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorway":["#000001","#000002","#000003","#000004","#000005","#000006","#000007","#000008","#000009","#000010"]}},"xaxis":{"anchor":"y","domain":[0.0,0.16799999999999998]},"yaxis":{"anchor":"x","domain":[0.0,1.0],"title":{"text":"Speed (%)"},"range":[0,28.749999999999996]},"xaxis2":{"anchor":"y2","domain":[0.208,0.376]},"yaxis2":{"anchor":"x2","domain":[0.0,1.0],"title":{"text":"Speed (%)"},"range":[0,28.749999999999996]},"xaxis3":{"anchor":"y3","domain":[0.416,0.584]},"yaxis3":{"anchor":"x3","domain":[0.0,1.0],"title":{"text":"Speed (%)"},"range":[0,28.749999999999996]},"xaxis4":{"anchor":"y4","domain":[0.624,0.792]},"yaxis4":{"anchor":"x4","domain":[0.0,1.0],"title":{"text":"Speed (%)"},"range":[0,28.749999999999996]},"xaxis5":{"anchor":"y5","domain":[0.832,1.0]},"yaxis5":{"anchor":"x5","domain":[0.0,1.0],"title":{"text":"Speed (%)"},"range":[0,28.749999999999996]},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Soja - Speed","x":0.08399999999999999,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Maiz - Speed","x":0.292,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"TrigoTriti - Speed","x":0.5,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Colza - Speed","x":0.708,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Cerdos - Speed","x":0.9159999999999999,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"}],"title":{"text":"Comparaci\u00f3n Detallada: Media y Variabilidad por L\u00e1mpara - Speed"},"height":400,"showlegend":true,"barmode":"group"},                        {"responsive": true}                    )                };            </script>        </div>
+</body>
+</html>
+        </div>
+    </details>
+    
+    <details open style="margin: 20px 0; border: 1px solid #ddd; border-radius: 5px; padding: 10px; background-color: white;">
+        <summary style="cursor: pointer; font-weight: bold; padding: 10px; background-color: #f8f9fa; border-radius: 5px; user-select: none; color: #093A34;">
+            📊 Comparación detallada: MahalanobisH
+        </summary>
+        <div style="padding: 15px; margin-top: 10px;">
+            <html>
+<head><meta charset="utf-8" /></head>
+<body>
+    <div>                            <div id="graph_MahalanobisH" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("graph_MahalanobisH")) {                    Plotly.newPlot(                        "graph_MahalanobisH",                        [{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":true,"text":["32.07"],"textposition":"inside","x":["L1.2 BL"],"y":[32.06666666666666],"type":"bar","xaxis":"x","yaxis":"y"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":true,"text":["33.33"],"textposition":"inside","x":["L1.3 BL"],"y":[33.333333333333336],"type":"bar","xaxis":"x","yaxis":"y"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["24.93"],"textposition":"inside","x":["L1.2 BL"],"y":[24.933333333333334],"type":"bar","xaxis":"x2","yaxis":"y2"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["26.10"],"textposition":"inside","x":["L1.3 BL"],"y":[26.099999999999998],"type":"bar","xaxis":"x2","yaxis":"y2"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["11.00"],"textposition":"inside","x":["L1.2 BL"],"y":[11.0],"type":"bar","xaxis":"x3","yaxis":"y3"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["8.60"],"textposition":"inside","x":["L1.3 BL"],"y":[8.6],"type":"bar","xaxis":"x3","yaxis":"y3"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["4.33"],"textposition":"inside","x":["L1.2 BL"],"y":[4.333333333333333],"type":"bar","xaxis":"x4","yaxis":"y4"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["5.20"],"textposition":"inside","x":["L1.3 BL"],"y":[5.2],"type":"bar","xaxis":"x4","yaxis":"y4"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["1.70"],"textposition":"inside","x":["L1.2 BL"],"y":[1.7],"type":"bar","xaxis":"x5","yaxis":"y5"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["1.53"],"textposition":"inside","x":["L1.3 BL"],"y":[1.5333333333333332],"type":"bar","xaxis":"x5","yaxis":"y5"}],                        {"template":{"data":{"candlestick":[{"decreasing":{"line":{"color":"#000033"}},"increasing":{"line":{"color":"#000032"}},"type":"candlestick"}],"contourcarpet":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contourcarpet"}],"contour":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contour"}],"heatmap":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"heatmap"}],"histogram2d":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"histogram2d"}],"icicle":[{"textfont":{"color":"white"},"type":"icicle"}],"sankey":[{"textfont":{"color":"#000036"},"type":"sankey"}],"scatter":[{"marker":{"line":{"width":0}},"type":"scatter"}],"table":[{"cells":{"fill":{"color":"#000038"},"font":{"color":"#000037"},"line":{"color":"#000039"}},"header":{"fill":{"color":"#000040"},"font":{"color":"#000036"},"line":{"color":"#000039"}},"type":"table"}],"waterfall":[{"connector":{"line":{"color":"#000036","width":2}},"decreasing":{"marker":{"color":"#000033"}},"increasing":{"marker":{"color":"#000032"}},"totals":{"marker":{"color":"#000034"}},"type":"waterfall"}]},"layout":{"coloraxis":{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorscale":{"diverging":[[0.0,"#000021"],[0.1,"#000022"],[0.2,"#000023"],[0.3,"#000024"],[0.4,"#000025"],[0.5,"#000026"],[0.6,"#000027"],[0.7,"#000028"],[0.8,"#000029"],[0.9,"#000030"],[1.0,"#000031"]],"sequential":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"sequentialminus":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorway":["#000001","#000002","#000003","#000004","#000005","#000006","#000007","#000008","#000009","#000010"]}},"xaxis":{"anchor":"y","domain":[0.0,0.16799999999999998]},"yaxis":{"anchor":"x","domain":[0.0,1.0],"title":{"text":"MahalanobisH (%)"},"range":[0,38.333333333333336]},"xaxis2":{"anchor":"y2","domain":[0.208,0.376]},"yaxis2":{"anchor":"x2","domain":[0.0,1.0],"title":{"text":"MahalanobisH (%)"},"range":[0,38.333333333333336]},"xaxis3":{"anchor":"y3","domain":[0.416,0.584]},"yaxis3":{"anchor":"x3","domain":[0.0,1.0],"title":{"text":"MahalanobisH (%)"},"range":[0,38.333333333333336]},"xaxis4":{"anchor":"y4","domain":[0.624,0.792]},"yaxis4":{"anchor":"x4","domain":[0.0,1.0],"title":{"text":"MahalanobisH (%)"},"range":[0,38.333333333333336]},"xaxis5":{"anchor":"y5","domain":[0.832,1.0]},"yaxis5":{"anchor":"x5","domain":[0.0,1.0],"title":{"text":"MahalanobisH (%)"},"range":[0,38.333333333333336]},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Soja - MahalanobisH","x":0.08399999999999999,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Maiz - MahalanobisH","x":0.292,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"TrigoTriti - MahalanobisH","x":0.5,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Colza - MahalanobisH","x":0.708,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Cerdos - MahalanobisH","x":0.9159999999999999,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"}],"title":{"text":"Comparaci\u00f3n Detallada: Media y Variabilidad por L\u00e1mpara - MahalanobisH"},"height":400,"showlegend":true,"barmode":"group"},                        {"responsive": true}                    )                };            </script>        </div>
+</body>
+</html>
+        </div>
+    </details>
+    
+    <details open style="margin: 20px 0; border: 1px solid #ddd; border-radius: 5px; padding: 10px; background-color: white;">
+        <summary style="cursor: pointer; font-weight: bold; padding: 10px; background-color: #f8f9fa; border-radius: 5px; user-select: none; color: #093A34;">
+            📊 Comparación detallada: MahalanobisPB
+        </summary>
+        <div style="padding: 15px; margin-top: 10px;">
+            <html>
+<head><meta charset="utf-8" /></head>
+<body>
+    <div>                            <div id="graph_MahalanobisPB" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("graph_MahalanobisPB")) {                    Plotly.newPlot(                        "graph_MahalanobisPB",                        [{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":true,"text":["15.60"],"textposition":"inside","x":["L1.2 BL"],"y":[15.6],"type":"bar","xaxis":"x","yaxis":"y"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":true,"text":["16.60"],"textposition":"inside","x":["L1.3 BL"],"y":[16.599999999999998],"type":"bar","xaxis":"x","yaxis":"y"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["14.23"],"textposition":"inside","x":["L1.2 BL"],"y":[14.233333333333334],"type":"bar","xaxis":"x2","yaxis":"y2"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["14.07"],"textposition":"inside","x":["L1.3 BL"],"y":[14.066666666666665],"type":"bar","xaxis":"x2","yaxis":"y2"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["9.77"],"textposition":"inside","x":["L1.2 BL"],"y":[9.766666666666667],"type":"bar","xaxis":"x3","yaxis":"y3"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["9.33"],"textposition":"inside","x":["L1.3 BL"],"y":[9.333333333333334],"type":"bar","xaxis":"x3","yaxis":"y3"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["8.47"],"textposition":"inside","x":["L1.2 BL"],"y":[8.466666666666667],"type":"bar","xaxis":"x4","yaxis":"y4"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["8.90"],"textposition":"inside","x":["L1.3 BL"],"y":[8.9],"type":"bar","xaxis":"x4","yaxis":"y4"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["2.50"],"textposition":"inside","x":["L1.2 BL"],"y":[2.4999999999999996],"type":"bar","xaxis":"x5","yaxis":"y5"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["2.27"],"textposition":"inside","x":["L1.3 BL"],"y":[2.2666666666666666],"type":"bar","xaxis":"x5","yaxis":"y5"}],                        {"template":{"data":{"candlestick":[{"decreasing":{"line":{"color":"#000033"}},"increasing":{"line":{"color":"#000032"}},"type":"candlestick"}],"contourcarpet":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contourcarpet"}],"contour":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contour"}],"heatmap":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"heatmap"}],"histogram2d":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"histogram2d"}],"icicle":[{"textfont":{"color":"white"},"type":"icicle"}],"sankey":[{"textfont":{"color":"#000036"},"type":"sankey"}],"scatter":[{"marker":{"line":{"width":0}},"type":"scatter"}],"table":[{"cells":{"fill":{"color":"#000038"},"font":{"color":"#000037"},"line":{"color":"#000039"}},"header":{"fill":{"color":"#000040"},"font":{"color":"#000036"},"line":{"color":"#000039"}},"type":"table"}],"waterfall":[{"connector":{"line":{"color":"#000036","width":2}},"decreasing":{"marker":{"color":"#000033"}},"increasing":{"marker":{"color":"#000032"}},"totals":{"marker":{"color":"#000034"}},"type":"waterfall"}]},"layout":{"coloraxis":{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorscale":{"diverging":[[0.0,"#000021"],[0.1,"#000022"],[0.2,"#000023"],[0.3,"#000024"],[0.4,"#000025"],[0.5,"#000026"],[0.6,"#000027"],[0.7,"#000028"],[0.8,"#000029"],[0.9,"#000030"],[1.0,"#000031"]],"sequential":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"sequentialminus":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorway":["#000001","#000002","#000003","#000004","#000005","#000006","#000007","#000008","#000009","#000010"]}},"xaxis":{"anchor":"y","domain":[0.0,0.16799999999999998]},"yaxis":{"anchor":"x","domain":[0.0,1.0],"title":{"text":"MahalanobisPB (%)"},"range":[0,19.089999999999996]},"xaxis2":{"anchor":"y2","domain":[0.208,0.376]},"yaxis2":{"anchor":"x2","domain":[0.0,1.0],"title":{"text":"MahalanobisPB (%)"},"range":[0,19.089999999999996]},"xaxis3":{"anchor":"y3","domain":[0.416,0.584]},"yaxis3":{"anchor":"x3","domain":[0.0,1.0],"title":{"text":"MahalanobisPB (%)"},"range":[0,19.089999999999996]},"xaxis4":{"anchor":"y4","domain":[0.624,0.792]},"yaxis4":{"anchor":"x4","domain":[0.0,1.0],"title":{"text":"MahalanobisPB (%)"},"range":[0,19.089999999999996]},"xaxis5":{"anchor":"y5","domain":[0.832,1.0]},"yaxis5":{"anchor":"x5","domain":[0.0,1.0],"title":{"text":"MahalanobisPB (%)"},"range":[0,19.089999999999996]},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Soja - MahalanobisPB","x":0.08399999999999999,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Maiz - MahalanobisPB","x":0.292,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"TrigoTriti - MahalanobisPB","x":0.5,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Colza - MahalanobisPB","x":0.708,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Cerdos - MahalanobisPB","x":0.9159999999999999,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"}],"title":{"text":"Comparaci\u00f3n Detallada: Media y Variabilidad por L\u00e1mpara - MahalanobisPB"},"height":400,"showlegend":true,"barmode":"group"},                        {"responsive": true}                    )                };            </script>        </div>
+</body>
+</html>
+        </div>
+    </details>
+    
+    <details open style="margin: 20px 0; border: 1px solid #ddd; border-radius: 5px; padding: 10px; background-color: white;">
+        <summary style="cursor: pointer; font-weight: bold; padding: 10px; background-color: #f8f9fa; border-radius: 5px; user-select: none; color: #093A34;">
+            📊 Comparación detallada: MahalanobisGrasa
+        </summary>
+        <div style="padding: 15px; margin-top: 10px;">
+            <html>
+<head><meta charset="utf-8" /></head>
+<body>
+    <div>                            <div id="graph_MahalanobisGrasa" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("graph_MahalanobisGrasa")) {                    Plotly.newPlot(                        "graph_MahalanobisGrasa",                        [{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":true,"text":["79.97"],"textposition":"inside","x":["L1.2 BL"],"y":[79.96666666666667],"type":"bar","xaxis":"x","yaxis":"y"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":true,"text":["80.10"],"textposition":"inside","x":["L1.3 BL"],"y":[80.10000000000001],"type":"bar","xaxis":"x","yaxis":"y"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["5.63"],"textposition":"inside","x":["L1.2 BL"],"y":[5.633333333333333],"type":"bar","xaxis":"x2","yaxis":"y2"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["9.23"],"textposition":"inside","x":["L1.3 BL"],"y":[9.233333333333333],"type":"bar","xaxis":"x2","yaxis":"y2"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["1.57"],"textposition":"inside","x":["L1.2 BL"],"y":[1.5666666666666667],"type":"bar","xaxis":"x3","yaxis":"y3"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["1.43"],"textposition":"inside","x":["L1.3 BL"],"y":[1.4333333333333333],"type":"bar","xaxis":"x3","yaxis":"y3"}],                        {"template":{"data":{"candlestick":[{"decreasing":{"line":{"color":"#000033"}},"increasing":{"line":{"color":"#000032"}},"type":"candlestick"}],"contourcarpet":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contourcarpet"}],"contour":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contour"}],"heatmap":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"heatmap"}],"histogram2d":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"histogram2d"}],"icicle":[{"textfont":{"color":"white"},"type":"icicle"}],"sankey":[{"textfont":{"color":"#000036"},"type":"sankey"}],"scatter":[{"marker":{"line":{"width":0}},"type":"scatter"}],"table":[{"cells":{"fill":{"color":"#000038"},"font":{"color":"#000037"},"line":{"color":"#000039"}},"header":{"fill":{"color":"#000040"},"font":{"color":"#000036"},"line":{"color":"#000039"}},"type":"table"}],"waterfall":[{"connector":{"line":{"color":"#000036","width":2}},"decreasing":{"marker":{"color":"#000033"}},"increasing":{"marker":{"color":"#000032"}},"totals":{"marker":{"color":"#000034"}},"type":"waterfall"}]},"layout":{"coloraxis":{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorscale":{"diverging":[[0.0,"#000021"],[0.1,"#000022"],[0.2,"#000023"],[0.3,"#000024"],[0.4,"#000025"],[0.5,"#000026"],[0.6,"#000027"],[0.7,"#000028"],[0.8,"#000029"],[0.9,"#000030"],[1.0,"#000031"]],"sequential":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"sequentialminus":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorway":["#000001","#000002","#000003","#000004","#000005","#000006","#000007","#000008","#000009","#000010"]}},"xaxis":{"anchor":"y","domain":[0.0,0.2888888888888889]},"yaxis":{"anchor":"x","domain":[0.0,1.0],"title":{"text":"MahalanobisGrasa (%)"},"range":[0,92.11500000000001]},"xaxis2":{"anchor":"y2","domain":[0.35555555555555557,0.6444444444444445]},"yaxis2":{"anchor":"x2","domain":[0.0,1.0],"title":{"text":"MahalanobisGrasa (%)"},"range":[0,92.11500000000001]},"xaxis3":{"anchor":"y3","domain":[0.7111111111111111,1.0]},"yaxis3":{"anchor":"x3","domain":[0.0,1.0],"title":{"text":"MahalanobisGrasa (%)"},"range":[0,92.11500000000001]},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Soja - MahalanobisGrasa","x":0.14444444444444446,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"TrigoTriti - MahalanobisGrasa","x":0.5,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Cerdos - MahalanobisGrasa","x":0.8555555555555556,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"}],"title":{"text":"Comparaci\u00f3n Detallada: Media y Variabilidad por L\u00e1mpara - MahalanobisGrasa"},"height":400,"showlegend":true,"barmode":"group"},                        {"responsive": true}                    )                };            </script>        </div>
+</body>
+</html>
+        </div>
+    </details>
+    
+    <details open style="margin: 20px 0; border: 1px solid #ddd; border-radius: 5px; padding: 10px; background-color: white;">
+        <summary style="cursor: pointer; font-weight: bold; padding: 10px; background-color: #f8f9fa; border-radius: 5px; user-select: none; color: #093A34;">
+            📊 Comparación detallada: MahalanobisFB
+        </summary>
+        <div style="padding: 15px; margin-top: 10px;">
+            <html>
+<head><meta charset="utf-8" /></head>
+<body>
+    <div>                            <div id="graph_MahalanobisFB" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("graph_MahalanobisFB")) {                    Plotly.newPlot(                        "graph_MahalanobisFB",                        [{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":true,"text":["8.57"],"textposition":"inside","x":["L1.2 BL"],"y":[8.566666666666668],"type":"bar","xaxis":"x","yaxis":"y"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":true,"text":["9.80"],"textposition":"inside","x":["L1.3 BL"],"y":[9.8],"type":"bar","xaxis":"x","yaxis":"y"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["6.63"],"textposition":"inside","x":["L1.2 BL"],"y":[6.633333333333333],"type":"bar","xaxis":"x2","yaxis":"y2"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["7.13"],"textposition":"inside","x":["L1.3 BL"],"y":[7.133333333333333],"type":"bar","xaxis":"x2","yaxis":"y2"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["4.67"],"textposition":"inside","x":["L1.2 BL"],"y":[4.666666666666667],"type":"bar","xaxis":"x3","yaxis":"y3"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["6.13"],"textposition":"inside","x":["L1.3 BL"],"y":[6.133333333333333],"type":"bar","xaxis":"x3","yaxis":"y3"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["14.83"],"textposition":"inside","x":["L1.2 BL"],"y":[14.833333333333334],"type":"bar","xaxis":"x4","yaxis":"y4"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["14.77"],"textposition":"inside","x":["L1.3 BL"],"y":[14.766666666666666],"type":"bar","xaxis":"x4","yaxis":"y4"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["1.90"],"textposition":"inside","x":["L1.2 BL"],"y":[1.9000000000000001],"type":"bar","xaxis":"x5","yaxis":"y5"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["1.50"],"textposition":"inside","x":["L1.3 BL"],"y":[1.5],"type":"bar","xaxis":"x5","yaxis":"y5"}],                        {"template":{"data":{"candlestick":[{"decreasing":{"line":{"color":"#000033"}},"increasing":{"line":{"color":"#000032"}},"type":"candlestick"}],"contourcarpet":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contourcarpet"}],"contour":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contour"}],"heatmap":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"heatmap"}],"histogram2d":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"histogram2d"}],"icicle":[{"textfont":{"color":"white"},"type":"icicle"}],"sankey":[{"textfont":{"color":"#000036"},"type":"sankey"}],"scatter":[{"marker":{"line":{"width":0}},"type":"scatter"}],"table":[{"cells":{"fill":{"color":"#000038"},"font":{"color":"#000037"},"line":{"color":"#000039"}},"header":{"fill":{"color":"#000040"},"font":{"color":"#000036"},"line":{"color":"#000039"}},"type":"table"}],"waterfall":[{"connector":{"line":{"color":"#000036","width":2}},"decreasing":{"marker":{"color":"#000033"}},"increasing":{"marker":{"color":"#000032"}},"totals":{"marker":{"color":"#000034"}},"type":"waterfall"}]},"layout":{"coloraxis":{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorscale":{"diverging":[[0.0,"#000021"],[0.1,"#000022"],[0.2,"#000023"],[0.3,"#000024"],[0.4,"#000025"],[0.5,"#000026"],[0.6,"#000027"],[0.7,"#000028"],[0.8,"#000029"],[0.9,"#000030"],[1.0,"#000031"]],"sequential":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"sequentialminus":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorway":["#000001","#000002","#000003","#000004","#000005","#000006","#000007","#000008","#000009","#000010"]}},"xaxis":{"anchor":"y","domain":[0.0,0.16799999999999998]},"yaxis":{"anchor":"x","domain":[0.0,1.0],"title":{"text":"MahalanobisFB (%)"},"range":[0,17.058333333333334]},"xaxis2":{"anchor":"y2","domain":[0.208,0.376]},"yaxis2":{"anchor":"x2","domain":[0.0,1.0],"title":{"text":"MahalanobisFB (%)"},"range":[0,17.058333333333334]},"xaxis3":{"anchor":"y3","domain":[0.416,0.584]},"yaxis3":{"anchor":"x3","domain":[0.0,1.0],"title":{"text":"MahalanobisFB (%)"},"range":[0,17.058333333333334]},"xaxis4":{"anchor":"y4","domain":[0.624,0.792]},"yaxis4":{"anchor":"x4","domain":[0.0,1.0],"title":{"text":"MahalanobisFB (%)"},"range":[0,17.058333333333334]},"xaxis5":{"anchor":"y5","domain":[0.832,1.0]},"yaxis5":{"anchor":"x5","domain":[0.0,1.0],"title":{"text":"MahalanobisFB (%)"},"range":[0,17.058333333333334]},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Soja - MahalanobisFB","x":0.08399999999999999,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Maiz - MahalanobisFB","x":0.292,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"TrigoTriti - MahalanobisFB","x":0.5,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Colza - MahalanobisFB","x":0.708,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Cerdos - MahalanobisFB","x":0.9159999999999999,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"}],"title":{"text":"Comparaci\u00f3n Detallada: Media y Variabilidad por L\u00e1mpara - MahalanobisFB"},"height":400,"showlegend":true,"barmode":"group"},                        {"responsive": true}                    )                };            </script>        </div>
+</body>
+</html>
+        </div>
+    </details>
+    
+    <details open style="margin: 20px 0; border: 1px solid #ddd; border-radius: 5px; padding: 10px; background-color: white;">
+        <summary style="cursor: pointer; font-weight: bold; padding: 10px; background-color: #f8f9fa; border-radius: 5px; user-select: none; color: #093A34;">
+            📊 Comparación detallada: MahalanobisCz
+        </summary>
+        <div style="padding: 15px; margin-top: 10px;">
+            <html>
+<head><meta charset="utf-8" /></head>
+<body>
+    <div>                            <div id="graph_MahalanobisCz" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("graph_MahalanobisCz")) {                    Plotly.newPlot(                        "graph_MahalanobisCz",                        [{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":true,"text":["14.30"],"textposition":"inside","x":["L1.2 BL"],"y":[14.299999999999999],"type":"bar","xaxis":"x","yaxis":"y"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":true,"text":["14.80"],"textposition":"inside","x":["L1.3 BL"],"y":[14.799999999999999],"type":"bar","xaxis":"x","yaxis":"y"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["17.60"],"textposition":"inside","x":["L1.2 BL"],"y":[17.599999999999998],"type":"bar","xaxis":"x2","yaxis":"y2"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["17.20"],"textposition":"inside","x":["L1.3 BL"],"y":[17.200000000000003],"type":"bar","xaxis":"x2","yaxis":"y2"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["10.90"],"textposition":"inside","x":["L1.2 BL"],"y":[10.9],"type":"bar","xaxis":"x3","yaxis":"y3"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["6.27"],"textposition":"inside","x":["L1.2 BL"],"y":[6.266666666666667],"type":"bar","xaxis":"x4","yaxis":"y4"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["6.63"],"textposition":"inside","x":["L1.3 BL"],"y":[6.633333333333333],"type":"bar","xaxis":"x4","yaxis":"y4"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["1.97"],"textposition":"inside","x":["L1.2 BL"],"y":[1.9666666666666666],"type":"bar","xaxis":"x5","yaxis":"y5"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["1.60"],"textposition":"inside","x":["L1.3 BL"],"y":[1.6000000000000003],"type":"bar","xaxis":"x5","yaxis":"y5"}],                        {"template":{"data":{"candlestick":[{"decreasing":{"line":{"color":"#000033"}},"increasing":{"line":{"color":"#000032"}},"type":"candlestick"}],"contourcarpet":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contourcarpet"}],"contour":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contour"}],"heatmap":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"heatmap"}],"histogram2d":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"histogram2d"}],"icicle":[{"textfont":{"color":"white"},"type":"icicle"}],"sankey":[{"textfont":{"color":"#000036"},"type":"sankey"}],"scatter":[{"marker":{"line":{"width":0}},"type":"scatter"}],"table":[{"cells":{"fill":{"color":"#000038"},"font":{"color":"#000037"},"line":{"color":"#000039"}},"header":{"fill":{"color":"#000040"},"font":{"color":"#000036"},"line":{"color":"#000039"}},"type":"table"}],"waterfall":[{"connector":{"line":{"color":"#000036","width":2}},"decreasing":{"marker":{"color":"#000033"}},"increasing":{"marker":{"color":"#000032"}},"totals":{"marker":{"color":"#000034"}},"type":"waterfall"}]},"layout":{"coloraxis":{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorscale":{"diverging":[[0.0,"#000021"],[0.1,"#000022"],[0.2,"#000023"],[0.3,"#000024"],[0.4,"#000025"],[0.5,"#000026"],[0.6,"#000027"],[0.7,"#000028"],[0.8,"#000029"],[0.9,"#000030"],[1.0,"#000031"]],"sequential":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"sequentialminus":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorway":["#000001","#000002","#000003","#000004","#000005","#000006","#000007","#000008","#000009","#000010"]}},"xaxis":{"anchor":"y","domain":[0.0,0.16799999999999998]},"yaxis":{"anchor":"x","domain":[0.0,1.0],"title":{"text":"MahalanobisCz (%)"},"range":[0,20.239999999999995]},"xaxis2":{"anchor":"y2","domain":[0.208,0.376]},"yaxis2":{"anchor":"x2","domain":[0.0,1.0],"title":{"text":"MahalanobisCz (%)"},"range":[0,20.239999999999995]},"xaxis3":{"anchor":"y3","domain":[0.416,0.584]},"yaxis3":{"anchor":"x3","domain":[0.0,1.0],"title":{"text":"MahalanobisCz (%)"},"range":[0,20.239999999999995]},"xaxis4":{"anchor":"y4","domain":[0.624,0.792]},"yaxis4":{"anchor":"x4","domain":[0.0,1.0],"title":{"text":"MahalanobisCz (%)"},"range":[0,20.239999999999995]},"xaxis5":{"anchor":"y5","domain":[0.832,1.0]},"yaxis5":{"anchor":"x5","domain":[0.0,1.0],"title":{"text":"MahalanobisCz (%)"},"range":[0,20.239999999999995]},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Soja - MahalanobisCz","x":0.08399999999999999,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Maiz - MahalanobisCz","x":0.292,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"TrigoTriti - MahalanobisCz","x":0.5,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Colza - MahalanobisCz","x":0.708,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Cerdos - MahalanobisCz","x":0.9159999999999999,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"}],"title":{"text":"Comparaci\u00f3n Detallada: Media y Variabilidad por L\u00e1mpara - MahalanobisCz"},"height":400,"showlegend":true,"barmode":"group"},                        {"responsive": true}                    )                };            </script>        </div>
+</body>
+</html>
+        </div>
+    </details>
+    
+    <details open style="margin: 20px 0; border: 1px solid #ddd; border-radius: 5px; padding: 10px; background-color: white;">
+        <summary style="cursor: pointer; font-weight: bold; padding: 10px; background-color: #f8f9fa; border-radius: 5px; user-select: none; color: #093A34;">
+            📊 Comparación detallada: GB
+        </summary>
+        <div style="padding: 15px; margin-top: 10px;">
+            <html>
+<head><meta charset="utf-8" /></head>
+<body>
+    <div>                            <div id="graph_GB" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("graph_GB")) {                    Plotly.newPlot(                        "graph_GB",                        [{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":true,"text":["3.80"],"textposition":"inside","x":["L1.2 BL"],"y":[3.7999999999999994],"type":"bar","xaxis":"x","yaxis":"y"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":true,"text":["3.77"],"textposition":"inside","x":["L1.3 BL"],"y":[3.766666666666667],"type":"bar","xaxis":"x","yaxis":"y"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["1.73"],"textposition":"inside","x":["L1.2 BL"],"y":[1.7333333333333334],"type":"bar","xaxis":"x2","yaxis":"y2"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["1.77"],"textposition":"inside","x":["L1.3 BL"],"y":[1.7666666666666666],"type":"bar","xaxis":"x2","yaxis":"y2"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["2.13"],"textposition":"inside","x":["L1.2 BL"],"y":[2.1333333333333333],"type":"bar","xaxis":"x3","yaxis":"y3"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["2.27"],"textposition":"inside","x":["L1.3 BL"],"y":[2.266666666666667],"type":"bar","xaxis":"x3","yaxis":"y3"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["5.40"],"textposition":"inside","x":["L1.2 BL"],"y":[5.400000000000001],"type":"bar","xaxis":"x4","yaxis":"y4"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["5.23"],"textposition":"inside","x":["L1.3 BL"],"y":[5.233333333333333],"type":"bar","xaxis":"x4","yaxis":"y4"}],                        {"template":{"data":{"candlestick":[{"decreasing":{"line":{"color":"#000033"}},"increasing":{"line":{"color":"#000032"}},"type":"candlestick"}],"contourcarpet":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contourcarpet"}],"contour":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contour"}],"heatmap":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"heatmap"}],"histogram2d":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"histogram2d"}],"icicle":[{"textfont":{"color":"white"},"type":"icicle"}],"sankey":[{"textfont":{"color":"#000036"},"type":"sankey"}],"scatter":[{"marker":{"line":{"width":0}},"type":"scatter"}],"table":[{"cells":{"fill":{"color":"#000038"},"font":{"color":"#000037"},"line":{"color":"#000039"}},"header":{"fill":{"color":"#000040"},"font":{"color":"#000036"},"line":{"color":"#000039"}},"type":"table"}],"waterfall":[{"connector":{"line":{"color":"#000036","width":2}},"decreasing":{"marker":{"color":"#000033"}},"increasing":{"marker":{"color":"#000032"}},"totals":{"marker":{"color":"#000034"}},"type":"waterfall"}]},"layout":{"coloraxis":{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorscale":{"diverging":[[0.0,"#000021"],[0.1,"#000022"],[0.2,"#000023"],[0.3,"#000024"],[0.4,"#000025"],[0.5,"#000026"],[0.6,"#000027"],[0.7,"#000028"],[0.8,"#000029"],[0.9,"#000030"],[1.0,"#000031"]],"sequential":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"sequentialminus":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorway":["#000001","#000002","#000003","#000004","#000005","#000006","#000007","#000008","#000009","#000010"]}},"xaxis":{"anchor":"y","domain":[0.0,0.2125]},"yaxis":{"anchor":"x","domain":[0.0,1.0],"title":{"text":"GB (%)"},"range":[0,6.210000000000001]},"xaxis2":{"anchor":"y2","domain":[0.2625,0.475]},"yaxis2":{"anchor":"x2","domain":[0.0,1.0],"title":{"text":"GB (%)"},"range":[0,6.210000000000001]},"xaxis3":{"anchor":"y3","domain":[0.525,0.7375]},"yaxis3":{"anchor":"x3","domain":[0.0,1.0],"title":{"text":"GB (%)"},"range":[0,6.210000000000001]},"xaxis4":{"anchor":"y4","domain":[0.7875,1.0]},"yaxis4":{"anchor":"x4","domain":[0.0,1.0],"title":{"text":"GB (%)"},"range":[0,6.210000000000001]},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Maiz - GB","x":0.10625,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"TrigoTriti - GB","x":0.36875,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Colza - GB","x":0.6312500000000001,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Cerdos - GB","x":0.89375,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"}],"title":{"text":"Comparaci\u00f3n Detallada: Media y Variabilidad por L\u00e1mpara - GB"},"height":400,"showlegend":true,"barmode":"group"},                        {"responsive": true}                    )                };            </script>        </div>
+</body>
+</html>
+        </div>
+    </details>
+    
+    <details open style="margin: 20px 0; border: 1px solid #ddd; border-radius: 5px; padding: 10px; background-color: white;">
+        <summary style="cursor: pointer; font-weight: bold; padding: 10px; background-color: #f8f9fa; border-radius: 5px; user-select: none; color: #093A34;">
+            📊 Comparación detallada: ALM
+        </summary>
+        <div style="padding: 15px; margin-top: 10px;">
+            <html>
+<head><meta charset="utf-8" /></head>
+<body>
+    <div>                            <div id="graph_ALM" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("graph_ALM")) {                    Plotly.newPlot(                        "graph_ALM",                        [{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":true,"text":["69.27"],"textposition":"inside","x":["L1.2 BL"],"y":[69.26666666666667],"type":"bar","xaxis":"x","yaxis":"y"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":true,"text":["69.03"],"textposition":"inside","x":["L1.3 BL"],"y":[69.03333333333333],"type":"bar","xaxis":"x","yaxis":"y"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["59.53"],"textposition":"inside","x":["L1.2 BL"],"y":[59.53333333333333],"type":"bar","xaxis":"x2","yaxis":"y2"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["59.47"],"textposition":"inside","x":["L1.3 BL"],"y":[59.46666666666667],"type":"bar","xaxis":"x2","yaxis":"y2"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["45.80"],"textposition":"inside","x":["L1.2 BL"],"y":[45.800000000000004],"type":"bar","xaxis":"x3","yaxis":"y3"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["46.77"],"textposition":"inside","x":["L1.3 BL"],"y":[46.76666666666667],"type":"bar","xaxis":"x3","yaxis":"y3"}],                        {"template":{"data":{"candlestick":[{"decreasing":{"line":{"color":"#000033"}},"increasing":{"line":{"color":"#000032"}},"type":"candlestick"}],"contourcarpet":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contourcarpet"}],"contour":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contour"}],"heatmap":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"heatmap"}],"histogram2d":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"histogram2d"}],"icicle":[{"textfont":{"color":"white"},"type":"icicle"}],"sankey":[{"textfont":{"color":"#000036"},"type":"sankey"}],"scatter":[{"marker":{"line":{"width":0}},"type":"scatter"}],"table":[{"cells":{"fill":{"color":"#000038"},"font":{"color":"#000037"},"line":{"color":"#000039"}},"header":{"fill":{"color":"#000040"},"font":{"color":"#000036"},"line":{"color":"#000039"}},"type":"table"}],"waterfall":[{"connector":{"line":{"color":"#000036","width":2}},"decreasing":{"marker":{"color":"#000033"}},"increasing":{"marker":{"color":"#000032"}},"totals":{"marker":{"color":"#000034"}},"type":"waterfall"}]},"layout":{"coloraxis":{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorscale":{"diverging":[[0.0,"#000021"],[0.1,"#000022"],[0.2,"#000023"],[0.3,"#000024"],[0.4,"#000025"],[0.5,"#000026"],[0.6,"#000027"],[0.7,"#000028"],[0.8,"#000029"],[0.9,"#000030"],[1.0,"#000031"]],"sequential":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"sequentialminus":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorway":["#000001","#000002","#000003","#000004","#000005","#000006","#000007","#000008","#000009","#000010"]}},"xaxis":{"anchor":"y","domain":[0.0,0.2888888888888889]},"yaxis":{"anchor":"x","domain":[0.0,1.0],"title":{"text":"ALM (%)"},"range":[0,79.65666666666667]},"xaxis2":{"anchor":"y2","domain":[0.35555555555555557,0.6444444444444445]},"yaxis2":{"anchor":"x2","domain":[0.0,1.0],"title":{"text":"ALM (%)"},"range":[0,79.65666666666667]},"xaxis3":{"anchor":"y3","domain":[0.7111111111111111,1.0]},"yaxis3":{"anchor":"x3","domain":[0.0,1.0],"title":{"text":"ALM (%)"},"range":[0,79.65666666666667]},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Maiz - ALM","x":0.14444444444444446,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"TrigoTriti - ALM","x":0.5,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Cerdos - ALM","x":0.8555555555555556,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"}],"title":{"text":"Comparaci\u00f3n Detallada: Media y Variabilidad por L\u00e1mpara - ALM"},"height":400,"showlegend":true,"barmode":"group"},                        {"responsive": true}                    )                };            </script>        </div>
+</body>
+</html>
+        </div>
+    </details>
+    
+    <details open style="margin: 20px 0; border: 1px solid #ddd; border-radius: 5px; padding: 10px; background-color: white;">
+        <summary style="cursor: pointer; font-weight: bold; padding: 10px; background-color: #f8f9fa; border-radius: 5px; user-select: none; color: #093A34;">
+            📊 Comparación detallada: Aw
+        </summary>
+        <div style="padding: 15px; margin-top: 10px;">
+            <html>
+<head><meta charset="utf-8" /></head>
+<body>
+    <div>                            <div id="graph_Aw" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("graph_Aw")) {                    Plotly.newPlot(                        "graph_Aw",                        [{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":true,"text":["0.53"],"textposition":"inside","x":["L1.2 BL"],"y":[0.525],"type":"bar","xaxis":"x","yaxis":"y"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":true,"text":["0.53"],"textposition":"inside","x":["L1.3 BL"],"y":[0.533],"type":"bar","xaxis":"x","yaxis":"y"}],                        {"template":{"data":{"candlestick":[{"decreasing":{"line":{"color":"#000033"}},"increasing":{"line":{"color":"#000032"}},"type":"candlestick"}],"contourcarpet":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contourcarpet"}],"contour":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contour"}],"heatmap":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"heatmap"}],"histogram2d":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"histogram2d"}],"icicle":[{"textfont":{"color":"white"},"type":"icicle"}],"sankey":[{"textfont":{"color":"#000036"},"type":"sankey"}],"scatter":[{"marker":{"line":{"width":0}},"type":"scatter"}],"table":[{"cells":{"fill":{"color":"#000038"},"font":{"color":"#000037"},"line":{"color":"#000039"}},"header":{"fill":{"color":"#000040"},"font":{"color":"#000036"},"line":{"color":"#000039"}},"type":"table"}],"waterfall":[{"connector":{"line":{"color":"#000036","width":2}},"decreasing":{"marker":{"color":"#000033"}},"increasing":{"marker":{"color":"#000032"}},"totals":{"marker":{"color":"#000034"}},"type":"waterfall"}]},"layout":{"coloraxis":{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorscale":{"diverging":[[0.0,"#000021"],[0.1,"#000022"],[0.2,"#000023"],[0.3,"#000024"],[0.4,"#000025"],[0.5,"#000026"],[0.6,"#000027"],[0.7,"#000028"],[0.8,"#000029"],[0.9,"#000030"],[1.0,"#000031"]],"sequential":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"sequentialminus":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorway":["#000001","#000002","#000003","#000004","#000005","#000006","#000007","#000008","#000009","#000010"]}},"xaxis":{"anchor":"y","domain":[0.0,1.0]},"yaxis":{"anchor":"x","domain":[0.0,1.0],"title":{"text":"Aw (%)"},"range":[0,0.61295]},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Maiz - Aw","x":0.5,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"}],"title":{"text":"Comparaci\u00f3n Detallada: Media y Variabilidad por L\u00e1mpara - Aw"},"height":400,"showlegend":true,"barmode":"group"},                        {"responsive": true}                    )                };            </script>        </div>
+</body>
+</html>
+        </div>
+    </details>
+    
+    <details open style="margin: 20px 0; border: 1px solid #ddd; border-radius: 5px; padding: 10px; background-color: white;">
+        <summary style="cursor: pointer; font-weight: bold; padding: 10px; background-color: #f8f9fa; border-radius: 5px; user-select: none; color: #093A34;">
+            📊 Comparación detallada: MahalanobisGB
+        </summary>
+        <div style="padding: 15px; margin-top: 10px;">
+            <html>
+<head><meta charset="utf-8" /></head>
+<body>
+    <div>                            <div id="graph_MahalanobisGB" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("graph_MahalanobisGB")) {                    Plotly.newPlot(                        "graph_MahalanobisGB",                        [{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":true,"text":["9.93"],"textposition":"inside","x":["L1.2 BL"],"y":[9.933333333333332],"type":"bar","xaxis":"x","yaxis":"y"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":true,"text":["10.17"],"textposition":"inside","x":["L1.3 BL"],"y":[10.166666666666666],"type":"bar","xaxis":"x","yaxis":"y"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["16.57"],"textposition":"inside","x":["L1.2 BL"],"y":[16.566666666666666],"type":"bar","xaxis":"x2","yaxis":"y2"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["15.13"],"textposition":"inside","x":["L1.3 BL"],"y":[15.133333333333335],"type":"bar","xaxis":"x2","yaxis":"y2"}],                        {"template":{"data":{"candlestick":[{"decreasing":{"line":{"color":"#000033"}},"increasing":{"line":{"color":"#000032"}},"type":"candlestick"}],"contourcarpet":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contourcarpet"}],"contour":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contour"}],"heatmap":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"heatmap"}],"histogram2d":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"histogram2d"}],"icicle":[{"textfont":{"color":"white"},"type":"icicle"}],"sankey":[{"textfont":{"color":"#000036"},"type":"sankey"}],"scatter":[{"marker":{"line":{"width":0}},"type":"scatter"}],"table":[{"cells":{"fill":{"color":"#000038"},"font":{"color":"#000037"},"line":{"color":"#000039"}},"header":{"fill":{"color":"#000040"},"font":{"color":"#000036"},"line":{"color":"#000039"}},"type":"table"}],"waterfall":[{"connector":{"line":{"color":"#000036","width":2}},"decreasing":{"marker":{"color":"#000033"}},"increasing":{"marker":{"color":"#000032"}},"totals":{"marker":{"color":"#000034"}},"type":"waterfall"}]},"layout":{"coloraxis":{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorscale":{"diverging":[[0.0,"#000021"],[0.1,"#000022"],[0.2,"#000023"],[0.3,"#000024"],[0.4,"#000025"],[0.5,"#000026"],[0.6,"#000027"],[0.7,"#000028"],[0.8,"#000029"],[0.9,"#000030"],[1.0,"#000031"]],"sequential":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"sequentialminus":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorway":["#000001","#000002","#000003","#000004","#000005","#000006","#000007","#000008","#000009","#000010"]}},"xaxis":{"anchor":"y","domain":[0.0,0.45]},"yaxis":{"anchor":"x","domain":[0.0,1.0],"title":{"text":"MahalanobisGB (%)"},"range":[0,19.051666666666666]},"xaxis2":{"anchor":"y2","domain":[0.55,1.0]},"yaxis2":{"anchor":"x2","domain":[0.0,1.0],"title":{"text":"MahalanobisGB (%)"},"range":[0,19.051666666666666]},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Maiz - MahalanobisGB","x":0.225,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Colza - MahalanobisGB","x":0.775,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"}],"title":{"text":"Comparaci\u00f3n Detallada: Media y Variabilidad por L\u00e1mpara - MahalanobisGB"},"height":400,"showlegend":true,"barmode":"group"},                        {"responsive": true}                    )                };            </script>        </div>
+</body>
+</html>
+        </div>
+    </details>
+    
+    <details open style="margin: 20px 0; border: 1px solid #ddd; border-radius: 5px; padding: 10px; background-color: white;">
+        <summary style="cursor: pointer; font-weight: bold; padding: 10px; background-color: #f8f9fa; border-radius: 5px; user-select: none; color: #093A34;">
+            📊 Comparación detallada: MahalanobisALM
+        </summary>
+        <div style="padding: 15px; margin-top: 10px;">
+            <html>
+<head><meta charset="utf-8" /></head>
+<body>
+    <div>                            <div id="graph_MahalanobisALM" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("graph_MahalanobisALM")) {                    Plotly.newPlot(                        "graph_MahalanobisALM",                        [{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":true,"text":["11.53"],"textposition":"inside","x":["L1.2 BL"],"y":[11.533333333333331],"type":"bar","xaxis":"x","yaxis":"y"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":true,"text":["10.13"],"textposition":"inside","x":["L1.3 BL"],"y":[10.133333333333333],"type":"bar","xaxis":"x","yaxis":"y"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["3.27"],"textposition":"inside","x":["L1.2 BL"],"y":[3.266666666666667],"type":"bar","xaxis":"x2","yaxis":"y2"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["3.17"],"textposition":"inside","x":["L1.3 BL"],"y":[3.1666666666666665],"type":"bar","xaxis":"x2","yaxis":"y2"},{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":false,"text":["3.30"],"textposition":"inside","x":["L1.2 BL"],"y":[3.3000000000000003],"type":"bar","xaxis":"x3","yaxis":"y3"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":false,"text":["3.60"],"textposition":"inside","x":["L1.3 BL"],"y":[3.6],"type":"bar","xaxis":"x3","yaxis":"y3"}],                        {"template":{"data":{"candlestick":[{"decreasing":{"line":{"color":"#000033"}},"increasing":{"line":{"color":"#000032"}},"type":"candlestick"}],"contourcarpet":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contourcarpet"}],"contour":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contour"}],"heatmap":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"heatmap"}],"histogram2d":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"histogram2d"}],"icicle":[{"textfont":{"color":"white"},"type":"icicle"}],"sankey":[{"textfont":{"color":"#000036"},"type":"sankey"}],"scatter":[{"marker":{"line":{"width":0}},"type":"scatter"}],"table":[{"cells":{"fill":{"color":"#000038"},"font":{"color":"#000037"},"line":{"color":"#000039"}},"header":{"fill":{"color":"#000040"},"font":{"color":"#000036"},"line":{"color":"#000039"}},"type":"table"}],"waterfall":[{"connector":{"line":{"color":"#000036","width":2}},"decreasing":{"marker":{"color":"#000033"}},"increasing":{"marker":{"color":"#000032"}},"totals":{"marker":{"color":"#000034"}},"type":"waterfall"}]},"layout":{"coloraxis":{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorscale":{"diverging":[[0.0,"#000021"],[0.1,"#000022"],[0.2,"#000023"],[0.3,"#000024"],[0.4,"#000025"],[0.5,"#000026"],[0.6,"#000027"],[0.7,"#000028"],[0.8,"#000029"],[0.9,"#000030"],[1.0,"#000031"]],"sequential":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"sequentialminus":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorway":["#000001","#000002","#000003","#000004","#000005","#000006","#000007","#000008","#000009","#000010"]}},"xaxis":{"anchor":"y","domain":[0.0,0.2888888888888889]},"yaxis":{"anchor":"x","domain":[0.0,1.0],"title":{"text":"MahalanobisALM (%)"},"range":[0,13.26333333333333]},"xaxis2":{"anchor":"y2","domain":[0.35555555555555557,0.6444444444444445]},"yaxis2":{"anchor":"x2","domain":[0.0,1.0],"title":{"text":"MahalanobisALM (%)"},"range":[0,13.26333333333333]},"xaxis3":{"anchor":"y3","domain":[0.7111111111111111,1.0]},"yaxis3":{"anchor":"x3","domain":[0.0,1.0],"title":{"text":"MahalanobisALM (%)"},"range":[0,13.26333333333333]},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Maiz - MahalanobisALM","x":0.14444444444444446,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"TrigoTriti - MahalanobisALM","x":0.5,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"},{"font":{"size":16},"showarrow":false,"text":"Cerdos - MahalanobisALM","x":0.8555555555555556,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"}],"title":{"text":"Comparaci\u00f3n Detallada: Media y Variabilidad por L\u00e1mpara - MahalanobisALM"},"height":400,"showlegend":true,"barmode":"group"},                        {"responsive": true}                    )                };            </script>        </div>
+</body>
+</html>
+        </div>
+    </details>
+    
+    <details open style="margin: 20px 0; border: 1px solid #ddd; border-radius: 5px; padding: 10px; background-color: white;">
+        <summary style="cursor: pointer; font-weight: bold; padding: 10px; background-color: #f8f9fa; border-radius: 5px; user-select: none; color: #093A34;">
+            📊 Comparación detallada: MahalanobisAw
+        </summary>
+        <div style="padding: 15px; margin-top: 10px;">
+            <html>
+<head><meta charset="utf-8" /></head>
+<body>
+    <div>                            <div id="graph_MahalanobisAw" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("graph_MahalanobisAw")) {                    Plotly.newPlot(                        "graph_MahalanobisAw",                        [{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":true,"text":["3.53"],"textposition":"inside","x":["L1.2 BL"],"y":[3.533333333333333],"type":"bar","xaxis":"x","yaxis":"y"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":true,"text":["3.17"],"textposition":"inside","x":["L1.3 BL"],"y":[3.1666666666666665],"type":"bar","xaxis":"x","yaxis":"y"}],                        {"template":{"data":{"candlestick":[{"decreasing":{"line":{"color":"#000033"}},"increasing":{"line":{"color":"#000032"}},"type":"candlestick"}],"contourcarpet":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contourcarpet"}],"contour":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contour"}],"heatmap":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"heatmap"}],"histogram2d":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"histogram2d"}],"icicle":[{"textfont":{"color":"white"},"type":"icicle"}],"sankey":[{"textfont":{"color":"#000036"},"type":"sankey"}],"scatter":[{"marker":{"line":{"width":0}},"type":"scatter"}],"table":[{"cells":{"fill":{"color":"#000038"},"font":{"color":"#000037"},"line":{"color":"#000039"}},"header":{"fill":{"color":"#000040"},"font":{"color":"#000036"},"line":{"color":"#000039"}},"type":"table"}],"waterfall":[{"connector":{"line":{"color":"#000036","width":2}},"decreasing":{"marker":{"color":"#000033"}},"increasing":{"marker":{"color":"#000032"}},"totals":{"marker":{"color":"#000034"}},"type":"waterfall"}]},"layout":{"coloraxis":{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorscale":{"diverging":[[0.0,"#000021"],[0.1,"#000022"],[0.2,"#000023"],[0.3,"#000024"],[0.4,"#000025"],[0.5,"#000026"],[0.6,"#000027"],[0.7,"#000028"],[0.8,"#000029"],[0.9,"#000030"],[1.0,"#000031"]],"sequential":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"sequentialminus":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorway":["#000001","#000002","#000003","#000004","#000005","#000006","#000007","#000008","#000009","#000010"]}},"xaxis":{"anchor":"y","domain":[0.0,1.0]},"yaxis":{"anchor":"x","domain":[0.0,1.0],"title":{"text":"MahalanobisAw (%)"},"range":[0,4.063333333333333]},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Maiz - MahalanobisAw","x":0.5,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"}],"title":{"text":"Comparaci\u00f3n Detallada: Media y Variabilidad por L\u00e1mpara - MahalanobisAw"},"height":400,"showlegend":true,"barmode":"group"},                        {"responsive": true}                    )                };            </script>        </div>
+</body>
+</html>
+        </div>
+    </details>
+    
+    <details open style="margin: 20px 0; border: 1px solid #ddd; border-radius: 5px; padding: 10px; background-color: white;">
+        <summary style="cursor: pointer; font-weight: bold; padding: 10px; background-color: #f8f9fa; border-radius: 5px; user-select: none; color: #093A34;">
+            📊 Comparación detallada: Grasa total
+        </summary>
+        <div style="padding: 15px; margin-top: 10px;">
+            <html>
+<head><meta charset="utf-8" /></head>
+<body>
+    <div>                            <div id="graph_Grasa_total" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("graph_Grasa_total")) {                    Plotly.newPlot(                        "graph_Grasa_total",                        [{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":true,"text":["5.27"],"textposition":"inside","x":["L1.2 BL"],"y":[5.266666666666667],"type":"bar","xaxis":"x","yaxis":"y"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":true,"text":["5.40"],"textposition":"inside","x":["L1.3 BL"],"y":[5.3999999999999995],"type":"bar","xaxis":"x","yaxis":"y"}],                        {"template":{"data":{"candlestick":[{"decreasing":{"line":{"color":"#000033"}},"increasing":{"line":{"color":"#000032"}},"type":"candlestick"}],"contourcarpet":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contourcarpet"}],"contour":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contour"}],"heatmap":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"heatmap"}],"histogram2d":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"histogram2d"}],"icicle":[{"textfont":{"color":"white"},"type":"icicle"}],"sankey":[{"textfont":{"color":"#000036"},"type":"sankey"}],"scatter":[{"marker":{"line":{"width":0}},"type":"scatter"}],"table":[{"cells":{"fill":{"color":"#000038"},"font":{"color":"#000037"},"line":{"color":"#000039"}},"header":{"fill":{"color":"#000040"},"font":{"color":"#000036"},"line":{"color":"#000039"}},"type":"table"}],"waterfall":[{"connector":{"line":{"color":"#000036","width":2}},"decreasing":{"marker":{"color":"#000033"}},"increasing":{"marker":{"color":"#000032"}},"totals":{"marker":{"color":"#000034"}},"type":"waterfall"}]},"layout":{"coloraxis":{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorscale":{"diverging":[[0.0,"#000021"],[0.1,"#000022"],[0.2,"#000023"],[0.3,"#000024"],[0.4,"#000025"],[0.5,"#000026"],[0.6,"#000027"],[0.7,"#000028"],[0.8,"#000029"],[0.9,"#000030"],[1.0,"#000031"]],"sequential":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"sequentialminus":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorway":["#000001","#000002","#000003","#000004","#000005","#000006","#000007","#000008","#000009","#000010"]}},"xaxis":{"anchor":"y","domain":[0.0,1.0]},"yaxis":{"anchor":"x","domain":[0.0,1.0],"title":{"text":"Grasa total (%)"},"range":[0,6.209999999999999]},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Colza - Grasa total","x":0.5,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"}],"title":{"text":"Comparaci\u00f3n Detallada: Media y Variabilidad por L\u00e1mpara - Grasa total"},"height":400,"showlegend":true,"barmode":"group"},                        {"responsive": true}                    )                };            </script>        </div>
+</body>
+</html>
+        </div>
+    </details>
+    
+    <details open style="margin: 20px 0; border: 1px solid #ddd; border-radius: 5px; padding: 10px; background-color: white;">
+        <summary style="cursor: pointer; font-weight: bold; padding: 10px; background-color: #f8f9fa; border-radius: 5px; user-select: none; color: #093A34;">
+            📊 Comparación detallada: MahalanobisGT
+        </summary>
+        <div style="padding: 15px; margin-top: 10px;">
+            <html>
+<head><meta charset="utf-8" /></head>
+<body>
+    <div>                            <div id="graph_MahalanobisGT" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("graph_MahalanobisGT")) {                    Plotly.newPlot(                        "graph_MahalanobisGT",                        [{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":true,"text":["16.53"],"textposition":"inside","x":["L1.2 BL"],"y":[16.53333333333333],"type":"bar","xaxis":"x","yaxis":"y"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":true,"text":["18.67"],"textposition":"inside","x":["L1.3 BL"],"y":[18.666666666666668],"type":"bar","xaxis":"x","yaxis":"y"}],                        {"template":{"data":{"candlestick":[{"decreasing":{"line":{"color":"#000033"}},"increasing":{"line":{"color":"#000032"}},"type":"candlestick"}],"contourcarpet":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contourcarpet"}],"contour":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contour"}],"heatmap":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"heatmap"}],"histogram2d":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"histogram2d"}],"icicle":[{"textfont":{"color":"white"},"type":"icicle"}],"sankey":[{"textfont":{"color":"#000036"},"type":"sankey"}],"scatter":[{"marker":{"line":{"width":0}},"type":"scatter"}],"table":[{"cells":{"fill":{"color":"#000038"},"font":{"color":"#000037"},"line":{"color":"#000039"}},"header":{"fill":{"color":"#000040"},"font":{"color":"#000036"},"line":{"color":"#000039"}},"type":"table"}],"waterfall":[{"connector":{"line":{"color":"#000036","width":2}},"decreasing":{"marker":{"color":"#000033"}},"increasing":{"marker":{"color":"#000032"}},"totals":{"marker":{"color":"#000034"}},"type":"waterfall"}]},"layout":{"coloraxis":{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorscale":{"diverging":[[0.0,"#000021"],[0.1,"#000022"],[0.2,"#000023"],[0.3,"#000024"],[0.4,"#000025"],[0.5,"#000026"],[0.6,"#000027"],[0.7,"#000028"],[0.8,"#000029"],[0.9,"#000030"],[1.0,"#000031"]],"sequential":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"sequentialminus":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorway":["#000001","#000002","#000003","#000004","#000005","#000006","#000007","#000008","#000009","#000010"]}},"xaxis":{"anchor":"y","domain":[0.0,1.0]},"yaxis":{"anchor":"x","domain":[0.0,1.0],"title":{"text":"MahalanobisGT (%)"},"range":[0,21.466666666666665]},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Colza - MahalanobisGT","x":0.5,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"}],"title":{"text":"Comparaci\u00f3n Detallada: Media y Variabilidad por L\u00e1mpara - MahalanobisGT"},"height":400,"showlegend":true,"barmode":"group"},                        {"responsive": true}                    )                };            </script>        </div>
+</body>
+</html>
+        </div>
+    </details>
+    
+    <details open style="margin: 20px 0; border: 1px solid #ddd; border-radius: 5px; padding: 10px; background-color: white;">
+        <summary style="cursor: pointer; font-weight: bold; padding: 10px; background-color: #f8f9fa; border-radius: 5px; user-select: none; color: #093A34;">
+            📊 Comparación detallada: Fosforo
+        </summary>
+        <div style="padding: 15px; margin-top: 10px;">
+            <html>
+<head><meta charset="utf-8" /></head>
+<body>
+    <div>                            <div id="graph_Fosforo" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("graph_Fosforo")) {                    Plotly.newPlot(                        "graph_Fosforo",                        [{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":true,"text":["0.30"],"textposition":"inside","x":["L1.2 BL"],"y":[0.2966666666666667],"type":"bar","xaxis":"x","yaxis":"y"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":true,"text":["0.31"],"textposition":"inside","x":["L1.3 BL"],"y":[0.3066666666666667],"type":"bar","xaxis":"x","yaxis":"y"}],                        {"template":{"data":{"candlestick":[{"decreasing":{"line":{"color":"#000033"}},"increasing":{"line":{"color":"#000032"}},"type":"candlestick"}],"contourcarpet":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contourcarpet"}],"contour":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contour"}],"heatmap":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"heatmap"}],"histogram2d":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"histogram2d"}],"icicle":[{"textfont":{"color":"white"},"type":"icicle"}],"sankey":[{"textfont":{"color":"#000036"},"type":"sankey"}],"scatter":[{"marker":{"line":{"width":0}},"type":"scatter"}],"table":[{"cells":{"fill":{"color":"#000038"},"font":{"color":"#000037"},"line":{"color":"#000039"}},"header":{"fill":{"color":"#000040"},"font":{"color":"#000036"},"line":{"color":"#000039"}},"type":"table"}],"waterfall":[{"connector":{"line":{"color":"#000036","width":2}},"decreasing":{"marker":{"color":"#000033"}},"increasing":{"marker":{"color":"#000032"}},"totals":{"marker":{"color":"#000034"}},"type":"waterfall"}]},"layout":{"coloraxis":{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorscale":{"diverging":[[0.0,"#000021"],[0.1,"#000022"],[0.2,"#000023"],[0.3,"#000024"],[0.4,"#000025"],[0.5,"#000026"],[0.6,"#000027"],[0.7,"#000028"],[0.8,"#000029"],[0.9,"#000030"],[1.0,"#000031"]],"sequential":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"sequentialminus":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorway":["#000001","#000002","#000003","#000004","#000005","#000006","#000007","#000008","#000009","#000010"]}},"xaxis":{"anchor":"y","domain":[0.0,1.0]},"yaxis":{"anchor":"x","domain":[0.0,1.0],"title":{"text":"Fosforo (%)"},"range":[0,0.3526666666666667]},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Cerdos - Fosforo","x":0.5,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"}],"title":{"text":"Comparaci\u00f3n Detallada: Media y Variabilidad por L\u00e1mpara - Fosforo"},"height":400,"showlegend":true,"barmode":"group"},                        {"responsive": true}                    )                };            </script>        </div>
+</body>
+</html>
+        </div>
+    </details>
+    
+    <details open style="margin: 20px 0; border: 1px solid #ddd; border-radius: 5px; padding: 10px; background-color: white;">
+        <summary style="cursor: pointer; font-weight: bold; padding: 10px; background-color: #f8f9fa; border-radius: 5px; user-select: none; color: #093A34;">
+            📊 Comparación detallada: Calcio
+        </summary>
+        <div style="padding: 15px; margin-top: 10px;">
+            <html>
+<head><meta charset="utf-8" /></head>
+<body>
+    <div>                            <div id="graph_Calcio" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("graph_Calcio")) {                    Plotly.newPlot(                        "graph_Calcio",                        [{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":true,"text":["0.46"],"textposition":"inside","x":["L1.2 BL"],"y":[0.4633333333333333],"type":"bar","xaxis":"x","yaxis":"y"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":true,"text":["0.47"],"textposition":"inside","x":["L1.3 BL"],"y":[0.47333333333333333],"type":"bar","xaxis":"x","yaxis":"y"}],                        {"template":{"data":{"candlestick":[{"decreasing":{"line":{"color":"#000033"}},"increasing":{"line":{"color":"#000032"}},"type":"candlestick"}],"contourcarpet":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contourcarpet"}],"contour":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contour"}],"heatmap":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"heatmap"}],"histogram2d":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"histogram2d"}],"icicle":[{"textfont":{"color":"white"},"type":"icicle"}],"sankey":[{"textfont":{"color":"#000036"},"type":"sankey"}],"scatter":[{"marker":{"line":{"width":0}},"type":"scatter"}],"table":[{"cells":{"fill":{"color":"#000038"},"font":{"color":"#000037"},"line":{"color":"#000039"}},"header":{"fill":{"color":"#000040"},"font":{"color":"#000036"},"line":{"color":"#000039"}},"type":"table"}],"waterfall":[{"connector":{"line":{"color":"#000036","width":2}},"decreasing":{"marker":{"color":"#000033"}},"increasing":{"marker":{"color":"#000032"}},"totals":{"marker":{"color":"#000034"}},"type":"waterfall"}]},"layout":{"coloraxis":{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorscale":{"diverging":[[0.0,"#000021"],[0.1,"#000022"],[0.2,"#000023"],[0.3,"#000024"],[0.4,"#000025"],[0.5,"#000026"],[0.6,"#000027"],[0.7,"#000028"],[0.8,"#000029"],[0.9,"#000030"],[1.0,"#000031"]],"sequential":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"sequentialminus":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorway":["#000001","#000002","#000003","#000004","#000005","#000006","#000007","#000008","#000009","#000010"]}},"xaxis":{"anchor":"y","domain":[0.0,1.0]},"yaxis":{"anchor":"x","domain":[0.0,1.0],"title":{"text":"Calcio (%)"},"range":[0,0.5443333333333333]},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Cerdos - Calcio","x":0.5,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"}],"title":{"text":"Comparaci\u00f3n Detallada: Media y Variabilidad por L\u00e1mpara - Calcio"},"height":400,"showlegend":true,"barmode":"group"},                        {"responsive": true}                    )                };            </script>        </div>
+</body>
+</html>
+        </div>
+    </details>
+    
+    <details open style="margin: 20px 0; border: 1px solid #ddd; border-radius: 5px; padding: 10px; background-color: white;">
+        <summary style="cursor: pointer; font-weight: bold; padding: 10px; background-color: #f8f9fa; border-radius: 5px; user-select: none; color: #093A34;">
+            📊 Comparación detallada: MahalanobisP
+        </summary>
+        <div style="padding: 15px; margin-top: 10px;">
+            <html>
+<head><meta charset="utf-8" /></head>
+<body>
+    <div>                            <div id="graph_MahalanobisP" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("graph_MahalanobisP")) {                    Plotly.newPlot(                        "graph_MahalanobisP",                        [{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":true,"text":["3.33"],"textposition":"inside","x":["L1.2 BL"],"y":[3.3333333333333335],"type":"bar","xaxis":"x","yaxis":"y"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":true,"text":["2.97"],"textposition":"inside","x":["L1.3 BL"],"y":[2.966666666666667],"type":"bar","xaxis":"x","yaxis":"y"}],                        {"template":{"data":{"candlestick":[{"decreasing":{"line":{"color":"#000033"}},"increasing":{"line":{"color":"#000032"}},"type":"candlestick"}],"contourcarpet":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contourcarpet"}],"contour":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contour"}],"heatmap":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"heatmap"}],"histogram2d":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"histogram2d"}],"icicle":[{"textfont":{"color":"white"},"type":"icicle"}],"sankey":[{"textfont":{"color":"#000036"},"type":"sankey"}],"scatter":[{"marker":{"line":{"width":0}},"type":"scatter"}],"table":[{"cells":{"fill":{"color":"#000038"},"font":{"color":"#000037"},"line":{"color":"#000039"}},"header":{"fill":{"color":"#000040"},"font":{"color":"#000036"},"line":{"color":"#000039"}},"type":"table"}],"waterfall":[{"connector":{"line":{"color":"#000036","width":2}},"decreasing":{"marker":{"color":"#000033"}},"increasing":{"marker":{"color":"#000032"}},"totals":{"marker":{"color":"#000034"}},"type":"waterfall"}]},"layout":{"coloraxis":{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorscale":{"diverging":[[0.0,"#000021"],[0.1,"#000022"],[0.2,"#000023"],[0.3,"#000024"],[0.4,"#000025"],[0.5,"#000026"],[0.6,"#000027"],[0.7,"#000028"],[0.8,"#000029"],[0.9,"#000030"],[1.0,"#000031"]],"sequential":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"sequentialminus":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorway":["#000001","#000002","#000003","#000004","#000005","#000006","#000007","#000008","#000009","#000010"]}},"xaxis":{"anchor":"y","domain":[0.0,1.0]},"yaxis":{"anchor":"x","domain":[0.0,1.0],"title":{"text":"MahalanobisP (%)"},"range":[0,3.833333333333333]},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Cerdos - MahalanobisP","x":0.5,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"}],"title":{"text":"Comparaci\u00f3n Detallada: Media y Variabilidad por L\u00e1mpara - MahalanobisP"},"height":400,"showlegend":true,"barmode":"group"},                        {"responsive": true}                    )                };            </script>        </div>
+</body>
+</html>
+        </div>
+    </details>
+    
+    <details open style="margin: 20px 0; border: 1px solid #ddd; border-radius: 5px; padding: 10px; background-color: white;">
+        <summary style="cursor: pointer; font-weight: bold; padding: 10px; background-color: #f8f9fa; border-radius: 5px; user-select: none; color: #093A34;">
+            📊 Comparación detallada: MahalanobisCa
+        </summary>
+        <div style="padding: 15px; margin-top: 10px;">
+            <html>
+<head><meta charset="utf-8" /></head>
+<body>
+    <div>                            <div id="graph_MahalanobisCa" class="plotly-graph-div" style="height:400px; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("graph_MahalanobisCa")) {                    Plotly.newPlot(                        "graph_MahalanobisCa",                        [{"marker":{"color":"#636EFA"},"name":"L1.2 BL","showlegend":true,"text":["2.17"],"textposition":"inside","x":["L1.2 BL"],"y":[2.1666666666666665],"type":"bar","xaxis":"x","yaxis":"y"},{"marker":{"color":"#EF553B"},"name":"L1.3 BL","showlegend":true,"text":["1.90"],"textposition":"inside","x":["L1.3 BL"],"y":[1.9000000000000001],"type":"bar","xaxis":"x","yaxis":"y"}],                        {"template":{"data":{"candlestick":[{"decreasing":{"line":{"color":"#000033"}},"increasing":{"line":{"color":"#000032"}},"type":"candlestick"}],"contourcarpet":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contourcarpet"}],"contour":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"contour"}],"heatmap":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"heatmap"}],"histogram2d":[{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"type":"histogram2d"}],"icicle":[{"textfont":{"color":"white"},"type":"icicle"}],"sankey":[{"textfont":{"color":"#000036"},"type":"sankey"}],"scatter":[{"marker":{"line":{"width":0}},"type":"scatter"}],"table":[{"cells":{"fill":{"color":"#000038"},"font":{"color":"#000037"},"line":{"color":"#000039"}},"header":{"fill":{"color":"#000040"},"font":{"color":"#000036"},"line":{"color":"#000039"}},"type":"table"}],"waterfall":[{"connector":{"line":{"color":"#000036","width":2}},"decreasing":{"marker":{"color":"#000033"}},"increasing":{"marker":{"color":"#000032"}},"totals":{"marker":{"color":"#000034"}},"type":"waterfall"}]},"layout":{"coloraxis":{"colorscale":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorscale":{"diverging":[[0.0,"#000021"],[0.1,"#000022"],[0.2,"#000023"],[0.3,"#000024"],[0.4,"#000025"],[0.5,"#000026"],[0.6,"#000027"],[0.7,"#000028"],[0.8,"#000029"],[0.9,"#000030"],[1.0,"#000031"]],"sequential":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]],"sequentialminus":[[0.0,"#000011"],[0.1111111111111111,"#000012"],[0.2222222222222222,"#000013"],[0.3333333333333333,"#000014"],[0.4444444444444444,"#000015"],[0.5555555555555556,"#000016"],[0.6666666666666666,"#000017"],[0.7777777777777778,"#000018"],[0.8888888888888888,"#000019"],[1.0,"#000020"]]},"colorway":["#000001","#000002","#000003","#000004","#000005","#000006","#000007","#000008","#000009","#000010"]}},"xaxis":{"anchor":"y","domain":[0.0,1.0]},"yaxis":{"anchor":"x","domain":[0.0,1.0],"title":{"text":"MahalanobisCa (%)"},"range":[0,2.4916666666666663]},"annotations":[{"font":{"size":16},"showarrow":false,"text":"Cerdos - MahalanobisCa","x":0.5,"xanchor":"center","xref":"paper","y":1.0,"yanchor":"bottom","yref":"paper"}],"title":{"text":"Comparaci\u00f3n Detallada: Media y Variabilidad por L\u00e1mpara - MahalanobisCa"},"height":400,"showlegend":true,"barmode":"group"},                        {"responsive": true}                    )                };            </script>        </div>
+</body>
+</html>
+        </div>
+    </details>
+    
+        </div>
+    
+        <div class="info-box" id="text-report">
+            <h2>Informe Detallado en Texto</h2>
+            <pre>========================================================================================================================
+INFORME COMPARATIVO DE LÁMPARAS NIR
+Análisis de Predicciones - Reporte Completo
+========================================================================================================================
+
+Fecha de generación: 14/12/2025 17:09:18
+Sensor NIR: 316FG103
+
+LÁMPARAS COMPARADAS:
+  • L1.2 BL
+  • L1.3 BL
+
+------------------------------------------------------------------------------------------------------------------------
+PRODUCTO: SOJA
+------------------------------------------------------------------------------------------------------------------------
+
+RESULTADOS DE PREDICCIÓN:
+
+  Lámpara: L1.2 BL (N=3)
+  ----------------------------------------------------------------------------------------------------
+    H                             10.000 ± 0.000      (min:   10.000, max:   10.000)
+    PB                            46.967 ± 0.058      (min:   46.900, max:   47.000)
+    Grasa bruta                    1.333 ± 0.058      (min:    1.300, max:    1.400)
+    FB                             5.167 ± 0.058      (min:    5.100, max:    5.200)
+    Cz                             5.377 ± 0.006      (min:    5.370, max:    5.380)
+    Speed                         25.000 ± 0.000      (min:   25.000, max:   25.000)
+    MahalanobisH                  32.067 ± 0.493      (min:   31.500, max:   32.400)
+    MahalanobisPB                 15.600 ± 0.265      (min:   15.300, max:   15.800)
+    MahalanobisGrasa              79.967 ± 1.986      (min:   77.800, max:   81.700)
+    MahalanobisFB                  8.567 ± 0.611      (min:    7.900, max:    9.100)
+    MahalanobisCz                 14.300 ± 0.346      (min:   13.900, max:   14.500)
+
+  Lámpara: L1.3 BL (N=3)
+  ----------------------------------------------------------------------------------------------------
+    H                             10.100 ± 0.100      (min:   10.000, max:   10.200)
+    PB                            47.133 ± 0.058      (min:   47.100, max:   47.200)
+    Grasa bruta                    1.300 ± 0.100      (min:    1.200, max:    1.400)
+    FB                             5.300 ± 0.000      (min:    5.300, max:    5.300)
+    Cz                             5.380 ± 0.026      (min:    5.350, max:    5.400)
+    Speed                         25.000 ± 0.000      (min:   25.000, max:   25.000)
+    MahalanobisH                  33.333 ± 0.153      (min:   33.200, max:   33.500)
+    MahalanobisPB                 16.600 ± 0.656      (min:   16.000, max:   17.300)
+    MahalanobisGrasa              80.100 ± 2.787      (min:   78.200, max:   83.300)
+    MahalanobisFB                  9.800 ± 0.458      (min:    9.300, max:   10.200)
+    MahalanobisCz                 14.800 ± 0.346      (min:   14.600, max:   15.200)
+
+  ANÁLISIS DE DIFERENCIAS:
+
+    L1.3 BL vs L1.2 BL (baseline):
+      H                         Δ = +0.100  (+1.00%)
+      PB                        Δ = +0.167  (+0.35%)
+      Grasa bruta               Δ = -0.033  (-2.50%)
+      FB                        Δ = +0.133  (+2.58%)
+      Cz                        Δ = +0.003  (+0.06%)
+      Speed                     Δ = +0.000  (+0.00%)
+      MahalanobisH              Δ = +1.267  (+3.95%)
+      MahalanobisPB             Δ = +1.000  (+6.41%)
+      MahalanobisGrasa          Δ = +0.133  (+0.17%)
+      MahalanobisFB             Δ = +1.233  (+14.40%)
+      MahalanobisCz             Δ = +0.500  (+3.50%)
+
+
+------------------------------------------------------------------------------------------------------------------------
+PRODUCTO: MAIZ
+------------------------------------------------------------------------------------------------------------------------
+
+RESULTADOS DE PREDICCIÓN:
+
+  Lámpara: L1.2 BL (N=3)
+  ----------------------------------------------------------------------------------------------------
+    H                             12.867 ± 0.153      (min:   12.700, max:   13.000)
+    PB                             6.733 ± 0.058      (min:    6.700, max:    6.800)
+    GB                             3.800 ± 0.100      (min:    3.700, max:    3.900)
+    FB                             2.833 ± 0.058      (min:    2.800, max:    2.900)
+    Cz                             0.837 ± 0.047      (min:    0.800, max:    0.890)
+    ALM                           69.267 ± 0.321      (min:   68.900, max:   69.500)
+    Aw                             0.525 ± 0.003      (min:    0.522, max:    0.527)
+    Speed                         25.000 ± 0.000      (min:   25.000, max:   25.000)
+    MahalanobisH                  24.933 ± 1.677      (min:   23.000, max:   26.000)
+    MahalanobisPB                 14.233 ± 1.890      (min:   12.100, max:   15.700)
+    MahalanobisGB                  9.933 ± 1.626      (min:    8.500, max:   11.700)
+    MahalanobisFB                  6.633 ± 1.150      (min:    5.500, max:    7.800)
+    MahalanobisCz                 17.600 ± 2.381      (min:   14.900, max:   19.400)
+    MahalanobisALM                11.533 ± 1.193      (min:   10.200, max:   12.500)
+    MahalanobisAw                  3.533 ± 0.252      (min:    3.300, max:    3.800)
+
+  Lámpara: L1.3 BL (N=3)
+  ----------------------------------------------------------------------------------------------------
+    H                             12.967 ± 0.058      (min:   12.900, max:   13.000)
+    PB                             6.733 ± 0.058      (min:    6.700, max:    6.800)
+    GB                             3.767 ± 0.058      (min:    3.700, max:    3.800)
+    FB                             2.833 ± 0.058      (min:    2.800, max:    2.900)
+    Cz                             0.820 ± 0.020      (min:    0.800, max:    0.840)
+    ALM                           69.033 ± 0.569      (min:   68.400, max:   69.500)
+    Aw                             0.533 ± 0.011      (min:    0.523, max:    0.544)
+    Speed                         25.000 ± 0.000      (min:   25.000, max:   25.000)
+    MahalanobisH                  26.100 ± 1.058      (min:   24.900, max:   26.900)
+    MahalanobisPB                 14.067 ± 0.987      (min:   13.400, max:   15.200)
+    MahalanobisGB                 10.167 ± 0.924      (min:    9.100, max:   10.700)
+    MahalanobisFB                  7.133 ± 1.721      (min:    5.900, max:    9.100)
+    MahalanobisCz                 17.200 ± 0.566      (min:   16.800, max:   17.600)
+    MahalanobisALM                10.133 ± 2.113      (min:    7.900, max:   12.100)
+    MahalanobisAw                  3.167 ± 0.586      (min:    2.500, max:    3.600)
+
+  ANÁLISIS DE DIFERENCIAS:
+
+    L1.3 BL vs L1.2 BL (baseline):
+      H                         Δ = +0.100  (+0.78%)
+      PB                        Δ = +0.000  (+0.00%)
+      GB                        Δ = -0.033  (-0.88%)
+      FB                        Δ = +0.000  (+0.00%)
+      Cz                        Δ = -0.017  (-1.99%)
+      ALM                       Δ = -0.233  (-0.34%)
+      Aw                        Δ = +0.008  (+1.52%)
+      Speed                     Δ = +0.000  (+0.00%)
+      MahalanobisH              Δ = +1.167  (+4.68%)
+      MahalanobisPB             Δ = -0.167  (-1.17%)
+      MahalanobisGB             Δ = +0.233  (+2.35%)
+      MahalanobisFB             Δ = +0.500  (+7.54%)
+      MahalanobisCz             Δ = -0.400  (-2.27%)
+      MahalanobisALM            Δ = -1.400  (-12.14%)
+      MahalanobisAw             Δ = -0.367  (-10.38%)
+
+
+------------------------------------------------------------------------------------------------------------------------
+PRODUCTO: TRIGOTRITI
+------------------------------------------------------------------------------------------------------------------------
+
+RESULTADOS DE PREDICCIÓN:
+
+  Lámpara: L1.2 BL (N=3)
+  ----------------------------------------------------------------------------------------------------
+    H                             11.600 ± 0.100      (min:   11.500, max:   11.700)
+    PB                             7.867 ± 0.153      (min:    7.700, max:    8.000)
+    GB                             1.733 ± 0.058      (min:    1.700, max:    1.800)
+    FB                             3.467 ± 0.058      (min:    3.400, max:    3.500)
+    Cz                             1.333 ± 0.058      (min:    1.300, max:    1.400)
+    ALM                           59.533 ± 0.306      (min:   59.200, max:   59.800)
+    Speed                         25.000 ± 0.000      (min:   25.000, max:   25.000)
+    MahalanobisH                  11.000 ± 1.300      (min:   10.200, max:   12.500)
+    MahalanobisPB                  9.767 ± 1.518      (min:    8.400, max:   11.400)
+    MahalanobisGrasa               5.633 ± 1.457      (min:    4.600, max:    7.300)
+    MahalanobisFB                  4.667 ± 0.666      (min:    4.100, max:    5.400)
+    MahalanobisCz                 10.900 ± nan        (min:   10.900, max:   10.900)
+    MahalanobisALM                 3.267 ± 0.231      (min:    3.000, max:    3.400)
+
+  Lámpara: L1.3 BL (N=3)
+  ----------------------------------------------------------------------------------------------------
+    H                             11.500 ± 0.000      (min:   11.500, max:   11.500)
+    PB                             7.967 ± 0.153      (min:    7.800, max:    8.100)
+    GB                             1.767 ± 0.058      (min:    1.700, max:    1.800)
+    FB                             3.500 ± 0.200      (min:    3.300, max:    3.700)
+    Cz                             1.367 ± 0.058      (min:    1.300, max:    1.400)
+    ALM                           59.467 ± 1.266      (min:   58.500, max:   60.900)
+    Speed                         25.000 ± 0.000      (min:   25.000, max:   25.000)
+    MahalanobisH                   8.600 ± 0.346      (min:    8.200, max:    8.800)
+    MahalanobisPB                  9.333 ± 0.611      (min:    8.800, max:   10.000)
+    MahalanobisGrasa               9.233 ± 2.739      (min:    6.800, max:   12.200)
+    MahalanobisFB                  6.133 ± 0.289      (min:    5.800, max:    6.300)
+    MahalanobisALM                 3.167 ± 0.351      (min:    2.800, max:    3.500)
+
+  ANÁLISIS DE DIFERENCIAS:
+
+    L1.3 BL vs L1.2 BL (baseline):
+      H                         Δ = -0.100  (-0.86%)
+      PB                        Δ = +0.100  (+1.27%)
+      GB                        Δ = +0.033  (+1.92%)
+      FB                        Δ = +0.033  (+0.96%)
+      Cz                        Δ = +0.033  (+2.50%)
+      ALM                       Δ = -0.067  (-0.11%)
+      Speed                     Δ = +0.000  (+0.00%)
+      MahalanobisH              Δ = -2.400  (-21.82%)
+      MahalanobisPB             Δ = -0.433  (-4.44%)
+      MahalanobisGrasa          Δ = +3.600  (+63.91%)
+      MahalanobisFB             Δ = +1.467  (+31.43%)
+      MahalanobisALM            Δ = -0.100  (-3.06%)
+
+
+------------------------------------------------------------------------------------------------------------------------
+PRODUCTO: COLZA
+------------------------------------------------------------------------------------------------------------------------
+
+RESULTADOS DE PREDICCIÓN:
+
+  Lámpara: L1.2 BL (N=3)
+  ----------------------------------------------------------------------------------------------------
+    H                              8.600 ± 0.000      (min:    8.600, max:    8.600)
+    PB                            35.967 ± 0.058      (min:   35.900, max:   36.000)
+    GB                             2.133 ± 0.058      (min:    2.100, max:    2.200)
+    Grasa total                    5.267 ± 0.058      (min:    5.200, max:    5.300)
+    FB                            12.167 ± 0.153      (min:   12.000, max:   12.300)
+    Cz                             6.333 ± 0.058      (min:    6.300, max:    6.400)
+    Speed                         25.000 ± 0.000      (min:   25.000, max:   25.000)
+    MahalanobisH                   4.333 ± 0.306      (min:    4.000, max:    4.600)
+    MahalanobisPB                  8.467 ± 0.351      (min:    8.100, max:    8.800)
+    MahalanobisGB                 16.567 ± 0.208      (min:   16.400, max:   16.800)
+    MahalanobisGT                 16.533 ± 0.833      (min:   15.600, max:   17.200)
+    MahalanobisFB                 14.833 ± 0.723      (min:   14.000, max:   15.300)
+    MahalanobisCz                  6.267 ± 0.404      (min:    5.800, max:    6.500)
+
+  Lámpara: L1.3 BL (N=3)
+  ----------------------------------------------------------------------------------------------------
+    H                              8.533 ± 0.058      (min:    8.500, max:    8.600)
+    PB                            36.433 ± 0.493      (min:   36.100, max:   37.000)
+    GB                             2.267 ± 0.115      (min:    2.200, max:    2.400)
+    Grasa total                    5.400 ± 0.100      (min:    5.300, max:    5.500)
+    FB                            12.200 ± 0.300      (min:   11.900, max:   12.500)
+    Cz                             6.233 ± 0.058      (min:    6.200, max:    6.300)
+    Speed                         25.000 ± 0.000      (min:   25.000, max:   25.000)
+    MahalanobisH                   5.200 ± 0.265      (min:    5.000, max:    5.500)
+    MahalanobisPB                  8.900 ± 0.265      (min:    8.700, max:    9.200)
+    MahalanobisGB                 15.133 ± 0.493      (min:   14.800, max:   15.700)
+    MahalanobisGT                 18.667 ± 1.514      (min:   17.600, max:   20.400)
+    MahalanobisFB                 14.767 ± 1.361      (min:   13.700, max:   16.300)
+    MahalanobisCz                  6.633 ± 0.231      (min:    6.500, max:    6.900)
+
+  ANÁLISIS DE DIFERENCIAS:
+
+    L1.3 BL vs L1.2 BL (baseline):
+      H                         Δ = -0.067  (-0.78%)
+      PB                        Δ = +0.467  (+1.30%)
+      GB                        Δ = +0.133  (+6.25%)
+      Grasa total               Δ = +0.133  (+2.53%)
+      FB                        Δ = +0.033  (+0.27%)
+      Cz                        Δ = -0.100  (-1.58%)
+      Speed                     Δ = +0.000  (+0.00%)
+      MahalanobisH              Δ = +0.867  (+20.00%)
+      MahalanobisPB             Δ = +0.433  (+5.12%)
+      MahalanobisGB             Δ = -1.433  (-8.65%)
+      MahalanobisGT             Δ = +2.133  (+12.90%)
+      MahalanobisFB             Δ = -0.067  (-0.45%)
+      MahalanobisCz             Δ = +0.367  (+5.85%)
+
+
+------------------------------------------------------------------------------------------------------------------------
+PRODUCTO: CERDOS
+------------------------------------------------------------------------------------------------------------------------
+
+RESULTADOS DE PREDICCIÓN:
+
+  Lámpara: L1.2 BL (N=3)
+  ----------------------------------------------------------------------------------------------------
+    H                              9.067 ± 0.058      (min:    9.000, max:    9.100)
+    PB                            15.433 ± 0.115      (min:   15.300, max:   15.500)
+    GB                             5.400 ± 0.000      (min:    5.400, max:    5.400)
+    FB                             3.633 ± 0.058      (min:    3.600, max:    3.700)
+    Cz                             4.293 ± 0.021      (min:    4.270, max:    4.310)
+    ALM                           45.800 ± 0.173      (min:   45.700, max:   46.000)
+    Fosforo                        0.297 ± 0.015      (min:    0.280, max:    0.310)
+    Calcio                         0.463 ± 0.006      (min:    0.460, max:    0.470)
+    Speed                         25.000 ± 0.000      (min:   25.000, max:   25.000)
+    MahalanobisH                   1.700 ± 0.100      (min:    1.600, max:    1.800)
+    MahalanobisPB                  2.500 ± 0.265      (min:    2.300, max:    2.800)
+    MahalanobisGrasa               1.567 ± 0.115      (min:    1.500, max:    1.700)
+    MahalanobisFB                  1.900 ± 0.265      (min:    1.700, max:    2.200)
+    MahalanobisCz                  1.967 ± 0.208      (min:    1.800, max:    2.200)
+    MahalanobisALM                 3.300 ± 0.100      (min:    3.200, max:    3.400)
+    MahalanobisP                   3.333 ± 0.208      (min:    3.100, max:    3.500)
+    MahalanobisCa                  2.167 ± 0.208      (min:    2.000, max:    2.400)
+
+  Lámpara: L1.3 BL (N=3)
+  ----------------------------------------------------------------------------------------------------
+    H                              9.100 ± 0.000      (min:    9.100, max:    9.100)
+    PB                            15.200 ± 0.265      (min:   14.900, max:   15.400)
+    GB                             5.233 ± 0.115      (min:    5.100, max:    5.300)
+    FB                             3.667 ± 0.115      (min:    3.600, max:    3.800)
+    Cz                             4.293 ± 0.080      (min:    4.210, max:    4.370)
+    ALM                           46.767 ± 0.907      (min:   46.100, max:   47.800)
+    Fosforo                        0.307 ± 0.025      (min:    0.280, max:    0.330)
+    Calcio                         0.473 ± 0.006      (min:    0.470, max:    0.480)
+    Speed                         25.000 ± 0.000      (min:   25.000, max:   25.000)
+    MahalanobisH                   1.533 ± 0.058      (min:    1.500, max:    1.600)
+    MahalanobisPB                  2.267 ± 0.058      (min:    2.200, max:    2.300)
+    MahalanobisGrasa               1.433 ± 0.058      (min:    1.400, max:    1.500)
+    MahalanobisFB                  1.500 ± 0.100      (min:    1.400, max:    1.600)
+    MahalanobisCz                  1.600 ± 0.100      (min:    1.500, max:    1.700)
+    MahalanobisALM                 3.600 ± 0.173      (min:    3.500, max:    3.800)
+    MahalanobisP                   2.967 ± 0.153      (min:    2.800, max:    3.100)
+    MahalanobisCa                  1.900 ± 0.100      (min:    1.800, max:    2.000)
+
+  ANÁLISIS DE DIFERENCIAS:
+
+    L1.3 BL vs L1.2 BL (baseline):
+      H                         Δ = +0.033  (+0.37%)
+      PB                        Δ = -0.233  (-1.51%)
+      GB                        Δ = -0.167  (-3.09%)
+      FB                        Δ = +0.033  (+0.92%)
+      Cz                        Δ = +0.000  (+0.00%)
+      ALM                       Δ = +0.967  (+2.11%)
+      Fosforo                   Δ = +0.010  (+3.37%)
+      Calcio                    Δ = +0.010  (+2.16%)
+      Speed                     Δ = +0.000  (+0.00%)
+      MahalanobisH              Δ = -0.167  (-9.80%)
+      MahalanobisPB             Δ = -0.233  (-9.33%)
+      MahalanobisGrasa          Δ = -0.133  (-8.51%)
+      MahalanobisFB             Δ = -0.400  (-21.05%)
+      MahalanobisCz             Δ = -0.367  (-18.64%)
+      MahalanobisALM            Δ = +0.300  (+9.09%)
+      MahalanobisP              Δ = -0.367  (-11.00%)
+      MahalanobisCa             Δ = -0.267  (-12.31%)
+
+
+========================================================================================================================
+RESUMEN ESTADÍSTICO GENERAL
+========================================================================================================================
+
+Producto: Soja
+  H:
+    Media entre lámparas: 10.050 ± 0.050
+    Rango: 0.100
+  PB:
+    Media entre lámparas: 47.050 ± 0.083
+    Rango: 0.167
+  Grasa bruta:
+    Media entre lámparas: 1.317 ± 0.017
+    Rango: 0.033
+  FB:
+    Media entre lámparas: 5.233 ± 0.067
+    Rango: 0.133
+  Cz:
+    Media entre lámparas: 5.378 ± 0.002
+    Rango: 0.003
+
+Producto: Maiz
+  H:
+    Media entre lámparas: 12.917 ± 0.050
+    Rango: 0.100
+  PB:
+    Media entre lámparas: 6.733 ± 0.000
+    Rango: 0.000
+  GB:
+    Media entre lámparas: 3.783 ± 0.017
+    Rango: 0.033
+  FB:
+    Media entre lámparas: 2.833 ± 0.000
+    Rango: 0.000
+  Cz:
+    Media entre lámparas: 0.828 ± 0.008
+    Rango: 0.017
+
+Producto: TrigoTriti
+  H:
+    Media entre lámparas: 11.550 ± 0.050
+    Rango: 0.100
+  PB:
+    Media entre lámparas: 7.917 ± 0.050
+    Rango: 0.100
+  GB:
+    Media entre lámparas: 1.750 ± 0.017
+    Rango: 0.033
+  FB:
+    Media entre lámparas: 3.483 ± 0.017
+    Rango: 0.033
+  Cz:
+    Media entre lámparas: 1.350 ± 0.017
+    Rango: 0.033
+
+Producto: Colza
+  H:
+    Media entre lámparas: 8.567 ± 0.033
+    Rango: 0.067
+  PB:
+    Media entre lámparas: 36.200 ± 0.233
+    Rango: 0.467
+  GB:
+    Media entre lámparas: 2.200 ± 0.067
+    Rango: 0.133
+  Grasa total:
+    Media entre lámparas: 5.333 ± 0.067
+    Rango: 0.133
+  FB:
+    Media entre lámparas: 12.183 ± 0.017
+    Rango: 0.033
+
+Producto: Cerdos
+  H:
+    Media entre lámparas: 9.083 ± 0.017
+    Rango: 0.033
+  PB:
+    Media entre lámparas: 15.317 ± 0.117
+    Rango: 0.233
+  GB:
+    Media entre lámparas: 5.317 ± 0.083
+    Rango: 0.167
+  FB:
+    Media entre lámparas: 3.650 ± 0.017
+    Rango: 0.033
+  Cz:
+    Media entre lámparas: 4.293 ± 0.000
+    Rango: 0.000
+
+========================================================================================================================
+FIN DEL INFORME
+========================================================================================================================</pre>
+        </div>
+    
+        <div class="footer">
+            <p><strong>NIR Predictions Analyzer</strong> - Desarrollado para BUCHI</p>
+            <p>Reporte generado automáticamente el 14/12/2025 17:09:18</p>
+            <p style="color: #093A34; font-weight: bold;">BUCHI Labortechnik AG</p>
+        </div>
+    </body>
+    </html>
+    

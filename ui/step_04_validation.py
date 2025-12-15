@@ -40,8 +40,8 @@ def render_validation_step():
     **Proceso:**
     1. Mide el White Standard con el baseline actual
     2. Comparamos con la referencia del Paso 3
-    3. **Si está bien alineado** (RMS < 0.002) → Generar informe y finalizar ✅
-    4. **Si necesita ajuste** (RMS ≥ 0.002) → Ir al Paso 5 para alinear ⚙️
+    3. **Si está bien alineado** (RMS < 0.005) → Generar informe y finalizar ✅
+    4. **Si necesita ajuste** (RMS ≥ 0.005) → Ir al Paso 5 para alinear ⚙️
     """)
     
     # Inicializar contador de iteraciones si no existe
@@ -275,7 +275,7 @@ def render_validation_step():
     # ==========================================
     # DECISIÓN BASADA EN RMS
     # ==========================================
-    threshold_rms = 0.002
+    threshold_rms = 0.005
     
     # Guardar datos para el informe
     validation_data = {
@@ -321,7 +321,7 @@ def render_validation_success(rms, white_id):
     st.success(f"""
     ✅ **VALIDACIÓN EXITOSA**
     
-    **White Standard ({white_id}):** RMS = {rms:.6f} < 0.002
+    **White Standard ({white_id}):** RMS = {rms:.6f} < 0.005
     
     El equipo está correctamente alineado y listo para usar.
     """)
@@ -364,7 +364,7 @@ def render_alignment_needed(rms, white_id):
     st.warning(f"""
     ⚠️ **ALINEAMIENTO NECESARIO**
     
-    **White Standard ({white_id}):** RMS = {rms:.6f} ≥ 0.002
+    **White Standard ({white_id}):** RMS = {rms:.6f} ≥ 0.005
     
     El equipo necesita alineamiento de baseline.
     """)
