@@ -21,27 +21,4 @@ pages = [
 ]
 pg = st.navigation(pages)
 
-# Link externo a Predictions Report
-st.sidebar.markdown("---")
-st.sidebar.markdown("### 🔗 External Tools")
-st.sidebar.markdown(
-    """
-    <a href="https://predictionsreport.streamlit.app/" target="_blank" style="
-        display: inline-block;
-        width: 100%;
-        padding: 0.5rem 1rem;
-        background-color: transparent;
-        color: inherit;
-        text-decoration: none;
-        border: 1px solid rgba(250, 250, 250, 0.2);
-        border-radius: 0.5rem;
-        text-align: center;
-        font-weight: 500;
-    ">
-        📊 Predictions Report
-    </a>
-    """,
-    unsafe_allow_html=True
-)
-
 pg.run()
