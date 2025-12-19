@@ -47,11 +47,11 @@ st.divider()
 # Tarjetas de navegación
 st.markdown("## 🧰 Herramientas Disponibles")
 
-# CSS para igualar alturas - ahora con 7 tarjetas
+# CSS para igualar alturas - grid 3 + 3 + 1 centrada
 st.markdown("""
 <style>
 .card-container {
-    min-height: 350px;
+    min-height: 400px;
     padding: 20px;
     border-radius: 10px;
     background-color: #f5f5f5;
@@ -77,8 +77,10 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Primera fila - 2 columnas
-col1, col2 = st.columns(2)
+# ---------------------------------------------------------------------------
+# FILA 1 (3 columnas): Baseline | Validation | Offset
+# ---------------------------------------------------------------------------
+col1, col2, col3 = st.columns(3)
 
 with col1:
     st.markdown("""
@@ -116,9 +118,6 @@ with col2:
     if st.button("🚀 Abrir Standard Validation", key="btn_validation", use_container_width=True, type="primary"):
         st.switch_page("pages/2_🎯_Validation_Standards.py")
 
-# Segunda fila - 3 columnas
-col3, col4, col5 = st.columns(3)
-
 with col3:
     st.markdown("""
     <div class="card-container card-orange">
@@ -135,6 +134,11 @@ with col3:
     st.write("")
     if st.button("🚀 Abrir Offset Adjustment", key="btn_offset", use_container_width=True, type="primary"):
         st.switch_page("pages/3_🎚️_Offset_Adjustment.py")
+
+# ---------------------------------------------------------------------------
+# FILA 2 (3 columnas): Spectrum | White | Predictions
+# ---------------------------------------------------------------------------
+col4, col5, col6 = st.columns(3)
 
 with col4:
     st.markdown("""
@@ -170,9 +174,6 @@ with col5:
     if st.button("🚀 Abrir White Reference Analysis", key="btn_white", use_container_width=True, type="primary"):
         st.switch_page("pages/5_⚪_White_Reference_Comparison.py")
 
-# Tercera fila - 2 columnas (NUEVAS PÁGINAS)
-col6, col7 = st.columns(2)
-
 with col6:
     st.markdown("""
     <div class="card-container card-teal">
@@ -190,7 +191,12 @@ with col6:
     if st.button("🚀 Abrir Prediction Reports", key="btn_predictions", use_container_width=True, type="primary"):
         st.switch_page("pages/6_📊_Prediction_Reports.py")
 
-with col7:
+# ---------------------------------------------------------------------------
+# FILA 3 (1 tarjeta centrada, mismo “look” que columna de 3)
+# ---------------------------------------------------------------------------
+sp1, center, sp2 = st.columns([1, 2, 1])
+
+with center:
     st.markdown("""
     <div class="card-container card-gray">
         <h3>📦 Report Consolidator</h3>
@@ -204,11 +210,8 @@ with col7:
     """, unsafe_allow_html=True)
 
     st.write("")
-    # OJO: ajusta el nombre del archivo si el tuyo es 07_📦_Consolidator.py o 07_📦_MetaReports.py
     if st.button("🚀 Abrir Report Consolidator", key="btn_metareports", use_container_width=True, type="primary"):
         st.switch_page("pages/07_📦_MetaReports.py")
-        # Si tu archivo real es este, usa:
-        # st.switch_page("pages/07_📦_Consolidator.py")
 
 st.divider()
 
