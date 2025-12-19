@@ -17,7 +17,7 @@ pages = [
     st.Page("pages/4_🔍_Comparacion_Espectros.py", title="Comparación Espectros", icon="🔍"),
     st.Page("pages/5_⚪_White_Reference_Comparison.py", title="White Reference", icon="⚪"),
     st.Page("pages/6_📊_Prediction_Reports.py", title="Prediction Reports", icon="📊"),
-    st.Page("pages/07_📦_Consolidator.py", title="Report Consolidator", icon="📦"),
+    st.Page("pages/07_📦_MetaReports.py", title="Report Consolidator", icon="📦"),
 ]
 pg = st.navigation(pages)
 
