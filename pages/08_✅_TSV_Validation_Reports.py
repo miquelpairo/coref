@@ -261,7 +261,6 @@ def create_layout(title: str, xaxis_title: str, yaxis_title: str) -> Dict:
         "yaxis": {"gridcolor": "white"},
     }
 
-
 def plot_comparison(df: pd.DataFrame, result_col: str, reference_col: str, residuum_col: str):
     """
     Genera:
@@ -306,7 +305,7 @@ def plot_comparison(df: pd.DataFrame, result_col: str, reference_col: str, resid
             for id_val, date_val, x_val, y_val in zip(hover_id, hover_date, x, y)
         ]
 
-        # Parity plot (colores default como el original)
+        # Parity plot
         fig_parity = go.Figure()
         fig_parity.add_trace(go.Scatter(x=x, y=y, mode="markers", hovertext=hovertext, hoverinfo="text", name="Data"))
         fig_parity.add_trace(go.Scatter(x=x, y=x, mode="lines", line=dict(dash="dash", color="gray"), name="y = x"))
@@ -319,7 +318,9 @@ def plot_comparison(df: pd.DataFrame, result_col: str, reference_col: str, resid
             f"Date: {date_val}<br>ID: {id_val}<br>Residuum: {res_val:.2f}"
             for id_val, date_val, res_val in zip(hover_id, hover_date, residuum)
         ]
-        fig_res = go.Figure(go.Bar(x=list(range(len(residuum))), y=residuum, hovertext=hovertext_res, hoverinfo="text", name="Residuum"))
+        fig_res = go.Figure(
+            go.Bar(x=list(range(len(residuum))), y=residuum, hovertext=hovertext_res, hoverinfo="text", name="Residuum")
+        )
         fig_res.update_layout(**create_layout("Residuum vs N", "N", "Residuum"))
 
         # Histograma (azul como original)
@@ -332,7 +333,6 @@ def plot_comparison(df: pd.DataFrame, result_col: str, reference_col: str, resid
     except Exception as e:
         st.error(f"Error generando plots para {result_col}: {e}")
         return None
-
 
 def build_spectra_figure(df: pd.DataFrame) -> Optional[go.Figure]:
     pixel_cols = [c for c in df.columns if _is_pixel_col(c)]
@@ -356,19 +356,14 @@ def build_spectra_figure(df: pd.DataFrame) -> Optional[go.Figure]:
     for i in range(len(df)):
         y = spec.iloc[i].to_numpy()
 
-        # si toda la fila es NaN, saltar
         if np.all(np.isnan(y)):
             continue
-
-        name = f"{hover_id.iloc[i]}" if "ID" in df.columns else f"Spectrum {i+1}"
 
         fig.add_trace(
             go.Scatter(
                 x=x,
                 y=y,
                 mode="lines",
-                name=name,
-                # para que no sea un caos de leyenda:
                 showlegend=False,
                 line={"width": 1},
                 opacity=0.35,
@@ -383,7 +378,7 @@ def build_spectra_figure(df: pd.DataFrame) -> Optional[go.Figure]:
         )
 
     fig.update_layout(
-        title="Spectra Overlay (all spectra)",
+        title="Spectra",
         xaxis_title="Pixel",
         yaxis_title="Absorbance (AU)",
         width=900,
@@ -396,7 +391,7 @@ def build_spectra_figure(df: pd.DataFrame) -> Optional[go.Figure]:
         yaxis={"gridcolor": "white"},
     )
     return fig
-
+    
 # =============================================================================
 # HTML REPORT GENERATION
 # =============================================================================
@@ -416,6 +411,12 @@ class ReportResult:
 
 
 def generate_html_report(df: pd.DataFrame, file_name: str) -> str:
+    """
+    Genera HTML robusto:
+    - Plotly se embebe INLINE una única vez (primera figura que se inserte)
+    - El resto de figuras usan include_plotlyjs=False
+    - No depende del CDN de Plotly (evita gráficos vacíos en Streamlit Cloud / redes restringidas)
+    """
     columns_result = [c for c in df.columns if str(c).startswith("Result ")]
     columns_reference = [c.replace("Result ", "Reference ") for c in columns_result]
     columns_residuum = [c.replace("Result ", "Residuum ") for c in columns_result]
@@ -424,6 +425,16 @@ def generate_html_report(df: pd.DataFrame, file_name: str) -> str:
 
     # Pre-calc spectra fig (optional)
     fig_spectra = build_spectra_figure(df)
+
+    # Flag para incluir Plotly inline SOLO UNA VEZ
+    plotly_already_included = False
+
+    def _fig_html(fig: go.Figure) -> str:
+        nonlocal plotly_already_included
+        include_js = "inline" if not plotly_already_included else False
+        html = fig.to_html(full_html=False, include_plotlyjs=include_js)
+        plotly_already_included = True
+        return html
 
     html_content = f"""
 <!DOCTYPE html>
@@ -457,8 +468,7 @@ def generate_html_report(df: pd.DataFrame, file_name: str) -> str:
     <script src="https://cdn.datatables.net/buttons/1.6.2/js/buttons.print.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
 
-    <!-- Plotly JS -->
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <!-- Plotly JS: NO CDN (we embed inline in first plot) -->
 
     <style>
         body {{ font-family: Helvetica, Arial, sans-serif; margin: 40px; }}
@@ -620,7 +630,11 @@ def generate_html_report(df: pd.DataFrame, file_name: str) -> str:
         active_class = "show active" if first_valid_tab else ""
         first_valid_tab = False
 
-        # include_plotlyjs=False (we already load plotly in <head>)
+        # Plotly inline solo en la PRIMERA figura que aparezca en el HTML
+        fig_parity_html = _fig_html(fig_parity)
+        fig_residuum_html = fig_residuum.to_html(full_html=False, include_plotlyjs=False)
+        fig_histogram_html = fig_histogram.to_html(full_html=False, include_plotlyjs=False)
+
         html_content += f"""
         <div class="tab-pane fade {active_class}" id="content-{param_id}" role="tabpanel" aria-labelledby="tab-{param_id}">
             <div class="stats-box">
@@ -650,17 +664,17 @@ def generate_html_report(df: pd.DataFrame, file_name: str) -> str:
                 <div class="carousel-inner">
                     <div class="carousel-item active">
                         <div class="plot-container" id="parity-plot-{param_id}">
-                            {fig_parity.to_html(full_html=False, include_plotlyjs=False)}
+                            {fig_parity_html}
                         </div>
                     </div>
                     <div class="carousel-item">
                         <div class="plot-container" id="residuum-plot-{param_id}">
-                            {fig_residuum.to_html(full_html=False, include_plotlyjs=False)}
+                            {fig_residuum_html}
                         </div>
                     </div>
                     <div class="carousel-item">
                         <div class="plot-container" id="histogram-plot-{param_id}">
-                            {fig_histogram.to_html(full_html=False, include_plotlyjs=False)}
+                            {fig_histogram_html}
                         </div>
                     </div>
                 </div>
@@ -727,13 +741,17 @@ def generate_html_report(df: pd.DataFrame, file_name: str) -> str:
         </table>
 """
 
-    # NEW: Spectra plot section (between summary and data table)
+    # Spectra plot section (between summary and data table)
     if fig_spectra is not None:
+        # Si aún no se incluyó Plotly (por ejemplo, no hubo ningún parámetro válido),
+        # lo incluimos inline aquí.
+        spectra_html = _fig_html(fig_spectra) if not plotly_already_included else fig_spectra.to_html(full_html=False, include_plotlyjs=False)
+
         html_content += f"""
         <h2>Spectra</h2>
-        <p>Overlay de espectros</p>
+        <p>Overlay de espectros (todas las filas, sin promedios).</p>
         <div class="plot-container" style="width: 900px;">
-            {fig_spectra.to_html(full_html=False, include_plotlyjs=False)}
+            {spectra_html}
         </div>
 """
 
@@ -754,7 +772,6 @@ def generate_html_report(df: pd.DataFrame, file_name: str) -> str:
                 <tbody>
 """
 
-    # rows
     for _, r in df.iterrows():
         html_content += "<tr>"
         for col in df.columns:
@@ -838,7 +855,6 @@ def generate_html_report(df: pd.DataFrame, file_name: str) -> str:
 </html>
 """
     return html_content
-
 
 # =============================================================================
 # STREAMLIT UI
