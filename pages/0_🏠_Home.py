@@ -29,7 +29,8 @@ st.markdown("### Herramientas de calibración y validación para espectrómetros
 st.divider()
 
 # Descripción general
-st.markdown("""
+st.markdown(
+    """
 **COREF** es un conjunto de herramientas diseñadas para facilitar el mantenimiento 
 y validación de equipos NIR (Near-Infrared), especialmente NIR Online con detectores DAD.
 
@@ -40,15 +41,18 @@ Estas aplicaciones ayudan a técnicos de servicio en:
 - Comparación y análisis de espectros
 - Comparación de predicciones entre lámparas (SX Center)
 - Consolidación de informes en un metainforme único
-""")
+- Generación de informes de validación desde ficheros TSV
+"""
+)
 
 st.divider()
 
 # Tarjetas de navegación
 st.markdown("## 🧰 Herramientas Disponibles")
 
-# CSS para igualar alturas - grid 3 + 3 + 1 centrada
-st.markdown("""
+# CSS para igualar alturas - grid 3 + 3 + 2
+st.markdown(
+    """
 <style>
 .card-container {
     min-height: 400px;
@@ -65,6 +69,7 @@ st.markdown("""
 .card-orange { border: 2px solid #f57c00; }
 .card-teal { border: 2px solid #00897b; }
 .card-gray { border: 2px solid #546e7a; }
+.card-lime { border: 2px solid #7CB342; }
 
 .card-container h3 { margin-top: 0; }
 .card-blue h3 { color: #1976d2; }
@@ -74,8 +79,11 @@ st.markdown("""
 .card-orange h3 { color: #f57c00; }
 .card-teal h3 { color: #00897b; }
 .card-gray h3 { color: #546e7a; }
+.card-lime h3 { color: #7CB342; }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 # ---------------------------------------------------------------------------
 # FILA 1 (3 columnas): Baseline | Validation | Offset
@@ -83,7 +91,8 @@ st.markdown("""
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.markdown("""
+    st.markdown(
+        """
     <div class="card-container card-blue">
         <h3>📐 Baseline Adjustment</h3>
         <p>Ajuste de baseline tras cambio de lámpara. Calcula correcciones basadas en mediciones 
@@ -94,14 +103,22 @@ with col1:
             <li>Corrección de forma espectral</li>
         </ul>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
     st.write("")
-    if st.button("🚀 Abrir Baseline Adjustment", key="btn_baseline", use_container_width=True, type="primary"):
+    if st.button(
+        "🚀 Abrir Baseline Adjustment",
+        key="btn_baseline",
+        use_container_width=True,
+        type="primary",
+    ):
         st.switch_page("pages/1_📐_Baseline adjustment.py")
 
 with col2:
-    st.markdown("""
+    st.markdown(
+        """
     <div class="card-container card-red">
         <h3>🎯 Standard Validation</h3>
         <p>Validación automática de estándares ópticos post-mantenimiento mediante emparejamiento por ID.</p>
@@ -112,14 +129,22 @@ with col2:
             <li>Detección de offset global</li>
         </ul>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
     st.write("")
-    if st.button("🚀 Abrir Standard Validation", key="btn_validation", use_container_width=True, type="primary"):
+    if st.button(
+        "🚀 Abrir Standard Validation",
+        key="btn_validation",
+        use_container_width=True,
+        type="primary",
+    ):
         st.switch_page("pages/2_🎯_Validation_Standards.py")
 
 with col3:
-    st.markdown("""
+    st.markdown(
+        """
     <div class="card-container card-orange">
         <h3>🎚️ Offset Adjustment</h3>
         <p>Ajuste fino de offset vertical al baseline preservando la forma espectral.</p>
@@ -129,10 +154,17 @@ with col3:
             <li>Visualización de impacto</li>
         </ul>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
     st.write("")
-    if st.button("🚀 Abrir Offset Adjustment", key="btn_offset", use_container_width=True, type="primary"):
+    if st.button(
+        "🚀 Abrir Offset Adjustment",
+        key="btn_offset",
+        use_container_width=True,
+        type="primary",
+    ):
         st.switch_page("pages/3_🎚️_Offset_Adjustment.py")
 
 # ---------------------------------------------------------------------------
@@ -141,7 +173,8 @@ with col3:
 col4, col5, col6 = st.columns(3)
 
 with col4:
-    st.markdown("""
+    st.markdown(
+        """
     <div class="card-container card-green">
         <h3>🔍 Spectrum Comparison</h3>
         <p>Comparación avanzada de múltiples espectros NIR con análisis estadístico completo.</p>
@@ -151,14 +184,22 @@ with col4:
             <li>Agrupamiento de réplicas</li>
         </ul>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
     st.write("")
-    if st.button("🚀 Abrir Spectrum Comparison", key="btn_comparison", use_container_width=True, type="primary"):
+    if st.button(
+        "🚀 Abrir Spectrum Comparison",
+        key="btn_comparison",
+        use_container_width=True,
+        type="primary",
+    ):
         st.switch_page("pages/4_🔍_Comparacion_Espectros.py")
 
 with col5:
-    st.markdown("""
+    st.markdown(
+        """
     <div class="card-container card-purple">
         <h3>⚪ White Reference Analysis</h3>
         <p>Análisis especializado para referencias blancas con métricas apropiadas.</p>
@@ -168,14 +209,22 @@ with col5:
             <li>Umbrales específicos</li>
         </ul>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
     st.write("")
-    if st.button("🚀 Abrir White Reference Analysis", key="btn_white", use_container_width=True, type="primary"):
+    if st.button(
+        "🚀 Abrir White Reference Analysis",
+        key="btn_white",
+        use_container_width=True,
+        type="primary",
+    ):
         st.switch_page("pages/5_⚪_White_Reference_Comparison.py")
 
 with col6:
-    st.markdown("""
+    st.markdown(
+        """
     <div class="card-container card-teal">
         <h3>📊 Prediction Reports</h3>
         <p>Comparación de predicciones entre lámparas usando informes <strong>XML</strong> generados desde SX Center.</p>
@@ -185,19 +234,27 @@ with col6:
             <li>Analizar diferencias por muestra/parámetro</li>
         </ul>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
     st.write("")
-    if st.button("🚀 Abrir Prediction Reports", key="btn_predictions", use_container_width=True, type="primary"):
+    if st.button(
+        "🚀 Abrir Prediction Reports",
+        key="btn_predictions",
+        use_container_width=True,
+        type="primary",
+    ):
         st.switch_page("pages/6_📊_Prediction_Reports.py")
 
 # ---------------------------------------------------------------------------
-# FILA 3 (1 tarjeta centrada, mismo “look” que columna de 3)
+# FILA 3 (2 tarjetas centradas): MetaReports | TSV Validation Reports
 # ---------------------------------------------------------------------------
-sp1, center, sp2 = st.columns([1, 2, 1])
+sp1, c1, c2, sp2 = st.columns([0.5, 1, 1, 0.5])
 
-with center:
-    st.markdown("""
+with c1:
+    st.markdown(
+        """
     <div class="card-container card-gray">
         <h3>📦 Report Consolidator</h3>
         <p>Consolida en un <strong>metainforme</strong> único los informes de Baseline, Validación y Predicciones.</p>
@@ -207,16 +264,49 @@ with center:
             <li>Navegación lateral e informes embebidos</li>
         </ul>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
     st.write("")
-    if st.button("🚀 Abrir Report Consolidator", key="btn_metareports", use_container_width=True, type="primary"):
+    if st.button(
+        "🚀 Abrir Report Consolidator",
+        key="btn_metareports",
+        use_container_width=True,
+        type="primary",
+    ):
         st.switch_page("pages/07_📦_MetaReports.py")
+
+with c2:
+    st.markdown(
+        """
+    <div class="card-container card-lime">
+        <h3>✅ TSV Validation Reports</h3>
+        <p>Genera informes de validación a partir de ficheros <strong>TSV</strong> (journal) y produce un HTML interactivo.</p>
+        <ul>
+            <li>Cargar uno o varios TSV</li>
+            <li>Limpieza y reorganización automática</li>
+            <li>Gráficos interactivos y tabla exportable</li>
+        </ul>
+    </div>
+    """,
+        unsafe_allow_html=True,
+    )
+
+    st.write("")
+    if st.button(
+        "🚀 Abrir TSV Validation Reports",
+        key="btn_tsv_validation_reports",
+        use_container_width=True,
+        type="primary",
+    ):
+        st.switch_page("pages/08_✅_TSV_Validation_Reports.py")
 
 st.divider()
 
 # Información adicional actualizada
-st.markdown("""
+st.markdown(
+    """
 ### 📋 Flujo de trabajo típico
 
 **Workflow completo de mantenimiento:**
@@ -254,19 +344,28 @@ st.markdown("""
    - Generar un informe único con resumen ejecutivo
    - ✅ Documentación completa para cierre de servicio
 
+8. **TSV Validation Reports**:
+   - Cargar TSV(s) desde journal / export
+   - Generar informes HTML interactivos (parity, residuum, histograma)
+   - Exportar CSV limpio para trazabilidad
+
 ---
 
 **Herramientas complementarias:**
 - **Spectrum Comparison**: Análisis comparativo general
 - **White Reference Analysis**: Análisis específico de referencias blancas
-""")
+"""
+)
 
 st.divider()
 
 # Footer actualizado
-st.markdown("""
+st.markdown(
+    """
 <div style="text-align: center; color: #666; padding: 20px;">
     <p><strong>COREF Suite</strong> | Versión 2.0 | Desarrollado por MPC</p>
     <p>Para soporte técnico o consultas, contacta con el departamento de servicio.</p>
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
