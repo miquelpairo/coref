@@ -6,4 +6,4 @@ reportlab>=3.6
 plotly>=5.18.0
 beautifulsoup4==4.12.3
 lxml==5.3.0
-sklearn
+scikit-learn
