@@ -3,7 +3,7 @@ COREF Suite - Launcher
 """
 import streamlit as st
 st.set_page_config(
-    page_title="COREF Suite",
+    page_title="COREF Suite",  # Baseline correction tool
     page_icon="🏠",
     layout="wide",
     initial_sidebar_state="expanded"
