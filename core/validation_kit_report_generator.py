@@ -1,8 +1,11 @@
 """
-Validation Kit Report Generator
-================================
+Validation Kit Report Generator (OPTIMIZED)
+============================================
 Genera informes HTML para validación de estándares ópticos NIR.
-Sigue el mismo estilo y estructura que report_generator.py
+OPTIMIZADO: Usa funciones compartidas de core.report_utils
+
+Author: Miquel
+Date: December 2024
 """
 
 from typing import Dict, List
@@ -12,239 +15,17 @@ from datetime import datetime
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
+# ===== IMPORTAR FUNCIONES COMPARTIDAS =====
+from core.report_utils import (
+    wrap_chart_in_expandable,
+    build_sidebar_html,
+    evaluate_offset,
+    generate_service_info_section,
+    generate_footer,
+    start_html_template,
+    calculate_global_metrics
+)
 
-def wrap_chart_in_expandable(chart_html, title, chart_id, default_open=False):
-    """
-    Envuelve un gráfico en un elemento expandible HTML.
-    
-    Args:
-        chart_html (str): HTML del gráfico
-        title (str): Título del expandible
-        chart_id (str): ID único para el expandible
-        default_open (bool): Si debe estar abierto por defecto
-        
-    Returns:
-        str: HTML con el gráfico en un expandible
-    """
-    open_attr = "open" if default_open else ""
-    
-    return f"""
-    <details {open_attr} style="margin: 20px 0; border: 1px solid #ddd; border-radius: 5px; padding: 10px;">
-        <summary style="cursor: pointer; font-weight: bold; padding: 10px; background-color: #f8f9fa; border-radius: 5px; user-select: none;">
-            📊 {title}
-        </summary>
-        <div style="padding: 15px; margin-top: 10px;">
-            {chart_html}
-        </div>
-    </details>
-    """
-
-
-def load_buchi_css():
-    """Carga el CSS corporativo de Buchi"""
-    try:
-        with open('buchi_report_styles_simple.css', 'r', encoding='utf-8') as f:
-            return f.read()
-    except FileNotFoundError:
-        # Fallback CSS básico
-        return """
-            body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
-            .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-            h1, h2, h3 { color: #2c5f3f; }
-            table { width: 100%; border-collapse: collapse; margin: 15px 0; }
-            th { background-color: #2c5f3f; color: white; padding: 10px; text-align: left; }
-            td { padding: 8px; border-bottom: 1px solid #ddd; }
-            .info-box { background-color: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 5px; }
-            .warning-box { background-color: #fff3cd; padding: 20px; margin: 20px 0; border-radius: 5px; border-left: 4px solid #ffc107; }
-            .status-good { color: #4caf50; font-weight: bold; }
-            .status-warning { color: #ff9800; font-weight: bold; }
-            .status-bad { color: #f44336; font-weight: bold; }
-        """
-
-
-def start_html_document(report_data):
-    """
-    Inicia el documento HTML con información del servicio y barra lateral.
-    """
-    sensor_serial = report_data['sensor_serial']
-    customer_name = report_data['customer_name']
-    technician_name = report_data['technician_name']
-    service_notes = report_data['service_notes']
-    report_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    validation_data = report_data['validation_data']
-    
-    # Construir índice del sidebar con secciones normales
-    sections = [
-        ("info-servicio", "Información del Servicio"),
-        ("resumen-ejecutivo", "Resumen Ejecutivo"),
-        ("criterios-validacion", "Criterios de Validación"),
-        ("estadisticas-globales", "Estadísticas Globales"),
-        ("resultados-detallados", "Resultados Detallados"),
-        ("vista-global", "Vista Global de Espectros"),
-    ]
-    
-    sidebar_items = []
-    for sid, label in sections:
-        sidebar_items.append(f'<li><a href="#{sid}">{label}</a></li>')
-    
-    # Sub-índice de estándares individuales (construir HTML)
-    standards_submenu = []
-    for data in validation_data:
-        sample_id = data['id']
-        val_res = data['validation_results']
-        if val_res['pass'] and not data['has_shift']:
-            icon = "✅"
-        elif val_res['pass'] and data['has_shift']:
-            icon = "⚠️"
-        else:
-            icon = "❌"
-        standards_submenu.append(f'<li><a href="#standard-{sample_id}">{icon} {sample_id}</a></li>')
-    
-    standards_html = "\n".join(standards_submenu)
-    
-    # Añadir análisis individual como expandable
-    sidebar_items.append(f'''
-        <li>
-            <details>
-                <summary style="cursor: pointer; padding: 8px; border-radius: 5px; font-weight: bold; font-size: 14px;">
-                    📊 Análisis Individual
-                </summary>
-                <ul style="padding-left: 15px; margin-top: 5px;">
-                    {standards_html}
-                </ul>
-            </details>
-        </li>
-    ''')
-    
-    sidebar_html = "\n".join(sidebar_items)
-    
-    html = f"""
-    <!DOCTYPE html>
-    <html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Informe de Validación - {sensor_serial}</title>
-        <style>
-            {load_buchi_css()}
-            .sidebar {{
-                position: fixed; left: 0; top: 0; width: 250px; height: 100%;
-                background-color: #093A34; padding: 20px; overflow-y: auto; z-index: 1000;
-            }}
-            .sidebar h2 {{
-                color: white; font-size: 16px; margin-bottom: 20px; text-align: center;
-            }}
-            .sidebar ul {{ list-style: none; padding: 0; }}
-            .sidebar ul li {{ margin-bottom: 10px; }}
-            .sidebar ul li a {{
-                color: white; text-decoration: none; display: block; padding: 8px;
-                border-radius: 5px; transition: background-color 0.3s; font-weight: bold;
-                font-size: 14px;
-            }}
-            .sidebar ul li a:hover {{ background-color: #289A93; }}
-            
-            /* Estilos para el expandable */
-            .sidebar details {{ margin-bottom: 10px; }}
-            .sidebar details summary {{
-                color: white;
-                list-style: none;
-                user-select: none;
-            }}
-            .sidebar details summary::-webkit-details-marker {{
-                display: none;
-            }}
-            .sidebar details summary:hover {{
-                background-color: #289A93;
-            }}
-            .sidebar details[open] summary {{
-                background-color: #289A93;
-            }}
-            .sidebar details ul li a {{
-                font-size: 12px;
-                font-weight: normal;
-                padding: 6px 8px;
-            }}
-            
-            .main-content {{ margin-left: 270px; padding: 20px; }}
-            
-            .metrics-grid {{
-                display: grid;
-                grid-template-columns: repeat(4, 1fr);
-                gap: 20px;
-                margin: 20px 0;
-            }}
-            
-            .metric-card {{
-                padding: 20px;
-                border-radius: 8px;
-                text-align: center;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            }}
-            
-            .metric-card.ok {{
-                background-color: #e8f5e9;
-                border-left: 4px solid #4caf50;
-            }}
-            
-            .metric-card.warning {{
-                background-color: #fff3e0;
-                border-left: 4px solid #ff9800;
-            }}
-            
-            .metric-card.fail {{
-                background-color: #ffebee;
-                border-left: 4px solid #f44336;
-            }}
-            
-            .metric-card.total {{
-                background-color: #e3f2fd;
-                border-left: 4px solid #2196f3;
-            }}
-            
-            .metric-value {{
-                font-size: 36px;
-                font-weight: bold;
-                margin-bottom: 5px;
-            }}
-            
-            .metric-label {{
-                font-size: 14px;
-                color: #666;
-            }}
-            
-            @media print {{
-                .sidebar {{ display: none; }}
-                .main-content {{ margin-left: 0; }}
-            }}
-        </style>
-    </head>
-    <body>
-        <div class="sidebar">
-            <h2>📋 Índice</h2>
-            <ul>
-                {sidebar_html}
-            </ul>
-        </div>
-
-        <div class="main-content">
-            <h1>Informe de Validación de Estándares NIR</h1>
-            
-            <div class="info-box" id="info-servicio">
-                <h2>Información del Servicio</h2>
-                <table>
-                    <tr><th>Campo</th><th>Valor</th></tr>
-                    <tr><td><strong>Cliente</strong></td><td>{customer_name}</td></tr>
-                    <tr><td><strong>Técnico</strong></td><td>{technician_name}</td></tr>
-                    <tr><td><strong>Número de Serie</strong></td><td>{sensor_serial}</td></tr>
-                    <tr><td><strong>Fecha del Informe</strong></td><td>{report_date}</td></tr>
-                    <tr><td><strong>Archivo Referencia</strong></td><td>{report_data['ref_filename']}</td></tr>
-                    <tr><td><strong>Archivo Post-Mantenimiento</strong></td><td>{report_data['curr_filename']}</td></tr>
-                    <tr><td><strong>Notas del Servicio</strong></td><td>{service_notes if service_notes else 'N/A'}</td></tr>
-                </table>
-            </div>
-    """
-    
-    return html
 
 def generate_executive_summary(report_data):
     """
@@ -312,14 +93,14 @@ def generate_executive_summary(report_data):
         """
     else:
         status = "✅ VALIDACIÓN EXITOSA"
-        status_class = "info-box"
+        status_class = "success-box"
         recommendation = """
             <p><strong>Todos los estándares pasaron la validación correctamente.</strong></p>
             <p>El equipo está correctamente alineado y listo para uso en producción.</p>
         """
     
     html += f"""
-            <div class="{status_class}" style="margin-top: 20px;">
+            <div class="{status_class} status-box-top-margin">
                 <h3>{status}</h3>
                 {recommendation}
             </div>
@@ -364,7 +145,7 @@ def generate_validation_criteria(thresholds):
                     <td>Error cuadrático medio. Mide la magnitud promedio de las diferencias entre espectros.</td>
                 </tr>
             </table>
-            <p style="margin-top: 15px; color: #6c757d; font-size: 0.95em;">
+            <p class="text-muted-note">
                 <em>Un estándar pasa la validación si cumple TODOS los criterios simultáneamente. 
                 Adicionalmente, se detectan shifts espectrales que podrían indicar problemas de alineamiento.</em>
             </p>
@@ -385,16 +166,13 @@ def generate_global_statistics(validation_data, thresholds):
     Returns:
         str: HTML de estadísticas globales
     """
-    # Calcular estadísticas
-    all_correlations = [d['validation_results']['correlation'] for d in validation_data]
-    all_max_diffs = [d['validation_results']['max_diff'] for d in validation_data]
-    all_rms = [d['validation_results']['rms'] for d in validation_data]
-    all_mean_diffs = [d['validation_results']['mean_diff'] for d in validation_data]
+    # Calcular estadísticas usando función compartida
+    metrics = calculate_global_metrics(validation_data)
     
     html = """
         <div class="info-box" id="estadisticas-globales">
             <h2>Estadísticas Globales</h2>
-            <p style="color: #6c757d; font-size: 0.95em;">
+            <p class="text-caption">
                 <em>Análisis agregado de todos los estándares validados.</em>
             </p>
             <table>
@@ -407,21 +185,21 @@ def generate_global_statistics(validation_data, thresholds):
                 </tr>
     """
     
-    metrics = [
-        ('Correlación', all_correlations, '{:.6f}'),
-        ('Max Diferencia (AU)', all_max_diffs, '{:.6f}'),
-        ('RMS', all_rms, '{:.6f}'),
-        ('Offset Medio (AU)', all_mean_diffs, '{:.6f}')
+    rows = [
+        ('Correlación', 'corr', '{:.6f}'),
+        ('Max Diferencia (AU)', 'max', '{:.6f}'),
+        ('RMS', 'rms', '{:.6f}'),
+        ('Offset Medio (AU)', 'offset', '{:.6f}')
     ]
     
-    for name, values, fmt in metrics:
+    for name, key, fmt in rows:
         html += f"""
                 <tr>
                     <td><strong>{name}</strong></td>
-                    <td>{fmt.format(min(values))}</td>
-                    <td>{fmt.format(max(values))}</td>
-                    <td>{fmt.format(np.mean(values))}</td>
-                    <td>{fmt.format(np.std(values))}</td>
+                    <td>{fmt.format(metrics[f'{key}_min'])}</td>
+                    <td>{fmt.format(metrics[f'{key}_max'])}</td>
+                    <td>{fmt.format(metrics[f'{key}_mean'])}</td>
+                    <td>{fmt.format(metrics[f'{key}_std'])}</td>
                 </tr>
         """
     
@@ -429,14 +207,11 @@ def generate_global_statistics(validation_data, thresholds):
             </table>
     """
     
-    # Offset global
-    global_offset = np.mean(all_mean_diffs)
-    avg_corr = np.mean(all_correlations)
-    avg_max_diff = np.mean(all_max_diffs)
-    avg_rms = np.mean(all_rms)
+    # Offset global y métricas clave
+    global_offset = metrics['offset_mean']
     
     html += f"""
-            <h3 style="margin-top: 30px;">Métricas Clave</h3>
+            <h3 class="metrics-key-section">Métricas Clave</h3>
             <table>
                 <tr>
                     <th>Métrica</th>
@@ -450,21 +225,21 @@ def generate_global_statistics(validation_data, thresholds):
                 </tr>
                 <tr>
                     <td><strong>Correlación Media</strong></td>
-                    <td>{avg_corr:.6f}</td>
-                    <td>{'<span class="status-good">✅ OK</span>' if avg_corr >= thresholds['correlation'] else '<span class="status-warning">⚠️ Revisar</span>'}</td>
+                    <td>{metrics['corr_mean']:.6f}</td>
+                    <td>{'<span class="status-good">✅ OK</span>' if metrics['corr_mean'] >= thresholds['correlation'] else '<span class="status-warning">⚠️ Revisar</span>'}</td>
                 </tr>
                 <tr>
                     <td><strong>Max Diferencia Media</strong></td>
-                    <td>{avg_max_diff:.6f} AU</td>
-                    <td>{'<span class="status-good">✅ OK</span>' if avg_max_diff <= thresholds['max_diff'] else '<span class="status-warning">⚠️ Revisar</span>'}</td>
+                    <td>{metrics['max_mean']:.6f} AU</td>
+                    <td>{'<span class="status-good">✅ OK</span>' if metrics['max_mean'] <= thresholds['max_diff'] else '<span class="status-warning">⚠️ Revisar</span>'}</td>
                 </tr>
                 <tr>
                     <td><strong>RMS Media</strong></td>
-                    <td>{avg_rms:.6f}</td>
-                    <td>{'<span class="status-good">✅ OK</span>' if avg_rms <= thresholds['rms'] else '<span class="status-warning">⚠️ Revisar</span>'}</td>
+                    <td>{metrics['rms_mean']:.6f}</td>
+                    <td>{'<span class="status-good">✅ OK</span>' if metrics['rms_mean'] <= thresholds['rms'] else '<span class="status-warning">⚠️ Revisar</span>'}</td>
                 </tr>
             </table>
-            <p style="margin-top: 10px; color: #6c757d; font-size: 0.9em;">
+            <p class="text-muted-small">
                 <em><strong>Offset Global:</strong> Desplazamiento sistemático promedio entre mediciones pre y post-mantenimiento. 
                 Valores cercanos a cero indican excelente alineamiento.</em>
             </p>
@@ -472,20 +247,6 @@ def generate_global_statistics(validation_data, thresholds):
     """
     
     return html
-
-
-def evaluate_offset(offset):
-    """Evalúa el offset según umbrales."""
-    from config import OFFSET_LIMITS
-    
-    abs_offset = abs(offset)
-    
-    if abs_offset < OFFSET_LIMITS['negligible']:
-        return '<span class="status-good">✅ Despreciable</span>'
-    elif abs_offset < OFFSET_LIMITS['acceptable']:
-        return '<span class="status-good">✓ Aceptable</span>'
-    else:
-        return '<span class="status-warning">⚠️ Significativo</span>'
 
 
 def generate_results_table(results_df):
@@ -589,7 +350,7 @@ def generate_global_overlay_plot(validation_data):
     html = """
         <div class="info-box" id="vista-global">
             <h2>Vista Global de Espectros</h2>
-            <p style="color: #6c757d; font-size: 0.95em;">
+            <p class="text-caption">
                 <em>Comparación simultánea de todos los espectros validados. Las líneas sólidas representan 
                 las mediciones de referencia (pre-mantenimiento) y las líneas punteadas las mediciones 
                 actuales (post-mantenimiento).</em>
@@ -624,7 +385,7 @@ def generate_individual_analysis(validation_data, num_channels):
     html = """
         <div class="info-box" id="analisis-individual">
             <h2>Análisis Individual de Estándares</h2>
-            <p style="color: #6c757d; font-size: 0.95em;">
+            <p class="text-caption">
                 <em>Análisis detallado de cada estándar validado con gráficos de espectros, 
                 diferencias y regiones críticas.</em>
             </p>
@@ -649,10 +410,10 @@ def generate_individual_analysis(validation_data, num_channels):
             estado_class = "status-bad"
         
         html += f"""
-            <div id="standard-{sample_id}" style="margin: 30px 0; padding: 20px; background-color: #fafafa; border-radius: 8px; page-break-inside: avoid;">
+            <div id="standard-{sample_id}" class="standard-analysis-box">
                 <h3>Estándar: {sample_id} <span class="{estado_class}">[{estado}]</span></h3>
                 
-                <table style="margin: 15px 0;">
+                <table class="table-spaced">
                     <tr>
                         <th>Métrica</th>
                         <th>Valor</th>
@@ -706,7 +467,7 @@ def generate_individual_analysis(validation_data, num_channels):
         html += f"""
                 <h4>Regiones Espectrales Críticas</h4>
                 {regions_df.to_html(index=False, classes='table', border=0)}
-                <p style="color: #6c757d; font-size: 0.9em; margin-top: 5px;">
+                <p class="text-caption-small">
                     <em>* = Región ajustada a rango del instrumento (900-1700 nm)</em>
                 </p>
             </div>
@@ -834,47 +595,67 @@ def analyze_critical_regions_for_report(reference, current, regions, num_channel
     return pd.DataFrame(results)
 
 
-def generate_footer():
-    """Genera el footer del informe."""
-    html = f"""
-        <div style="margin-top: 50px; padding-top: 20px; border-top: 2px solid #eee; text-align: center; color: #666; font-size: 12px;">
-            <p>Informe generado automáticamente por COREF Suite - Standard Validation Tool</p>
-            <p>Fecha de generación: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
-            <p>© {datetime.now().year} BÜCHI Labortechnik AG</p>
-        </div>
-    </body>
-    </html>
-    """
-    return html
-
-
 def generate_validation_report(data: Dict) -> str:
     """
     Genera un informe HTML completo de validación de estándares.
+    OPTIMIZADO: Usa funciones compartidas de report_utils
     
     Args:
         data: Diccionario con toda la información necesaria:
-            - sensor_serial
-            - customer_name
-            - technician_name
-            - service_notes
-            - validation_data
-            - results_df
-            - thresholds
+            - sensor_serial, customer_name, technician_name, service_notes
+            - validation_data, results_df, thresholds
             - n_ok, n_warn, n_fail
-            - num_channels
-            - ref_filename, curr_filename
+            - num_channels, ref_filename, curr_filename
         
     Returns:
         String con contenido HTML del informe
     """
-    html = start_html_document(data)
+    # Construir sidebar usando función compartida
+    sections = [
+        ("info-servicio", "Información del Servicio"),
+        ("resumen-ejecutivo", "Resumen Ejecutivo"),
+        ("criterios-validacion", "Criterios de Validación"),
+        ("estadisticas-globales", "Estadísticas Globales"),
+        ("resultados-detallados", "Resultados Detallados"),
+        ("vista-global", "Vista Global de Espectros"),
+    ]
+    
+    sidebar_html = build_sidebar_html(
+        sections=sections,
+        standards_list=data['validation_data'],
+        show_individual_analysis=True
+    )
+    
+    # Iniciar documento usando función compartida
+    html = start_html_template(
+        title=f"Informe de Validación - {data['sensor_serial']}",
+        sidebar_html=sidebar_html
+    )
+    
+    html += "<h1>Informe de Validación de Estándares NIR</h1>"
+    
+    # Información del servicio usando función compartida
+    additional_info = {
+        'Archivo Referencia': data['ref_filename'],
+        'Archivo Post-Mantenimiento': data['curr_filename']
+    }
+    html += generate_service_info_section(
+        data['sensor_serial'],
+        data['customer_name'],
+        data['technician_name'],
+        data['service_notes'],
+        additional_info
+    )
+    
+    # Secciones específicas
     html += generate_executive_summary(data)
     html += generate_validation_criteria(data['thresholds'])
     html += generate_global_statistics(data['validation_data'], data['thresholds'])
     html += generate_results_table(data['results_df'])
     html += generate_global_overlay_plot(data['validation_data'])
     html += generate_individual_analysis(data['validation_data'], data['num_channels'])
-    html += generate_footer()
+    
+    # Footer usando función compartida
+    html += generate_footer("COREF Suite - Standard Validation Tool")
     
     return html

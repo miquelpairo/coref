@@ -1,16 +1,16 @@
 """
-Standard Validation Tool
-========================
+Standard Validation Tool (OPTIMIZED)
+=====================================
 Herramienta dedicada para validación de estándares ópticos NIR.
 Verifica alineamiento espectral post-mantenimiento.
+
+OPTIMIZADO: Usa funciones compartidas de core.standards_analysis
 """
 
 import streamlit as st
 import pandas as pd
 import numpy as np
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-from typing import Dict, List, Tuple
+from typing import Dict, List
 import sys
 from pathlib import Path
 from datetime import datetime
@@ -24,57 +24,48 @@ from auth import check_password
 from buchi_streamlit_theme import apply_buchi_styles
 from config import DEFAULT_VALIDATION_THRESHOLDS, CRITICAL_REGIONS, OFFSET_LIMITS
 
+# ===== IMPORTAR FUNCIONES COMPARTIDAS =====
+from core.standards_analysis import (
+    validate_standard,
+    detect_spectral_shift,
+    find_common_ids,
+    analyze_critical_regions,
+    create_validation_plot,
+    create_overlay_plot,
+    create_global_statistics_table
+)
+
 apply_buchi_styles()
 
-# Corregir estilos del sidebar para mejor contraste
+# Estilos del sidebar
 st.markdown("""
 <style>
-    /* Sidebar general */
     [data-testid="stSidebar"] {
         background-color: #2c5f3f;
     }
-    
     [data-testid="stSidebar"] * {
         color: white !important;
     }
-    
-    /* Headers y títulos */
     [data-testid="stSidebar"] h2,
     [data-testid="stSidebar"] h3 {
         color: white !important;
     }
-    
-    /* Labels - completamente invisibles, solo texto blanco */
     [data-testid="stSidebar"] label {
         color: white !important;
         font-weight: 500 !important;
-        font-size: 14px !important;
-        margin-bottom: 8px !important;
-        display: block !important;
         background: none !important;
         border: none !important;
         padding: 0 !important;
-        box-shadow: none !important;
     }
-    
-    /* Dividers */
     [data-testid="stSidebar"] hr {
         border-color: rgba(255, 255, 255, 0.2) !important;
         margin: 20px 0 !important;
     }
-    
-    /* Expander */
     [data-testid="stSidebar"] [data-testid="stExpander"] {
         background-color: rgba(255, 255, 255, 0.05) !important;
         border: 1px solid rgba(255, 255, 255, 0.1) !important;
         border-radius: 8px !important;
     }
-    
-    [data-testid="stSidebar"] [data-testid="stExpander"] summary {
-        color: white !important;
-    }
-    
-    /* Inputs - FONDO BLANCO con texto oscuro */
     [data-testid="stSidebar"] input[type="number"],
     [data-testid="stSidebar"] input[type="text"] {
         background-color: white !important;
@@ -83,437 +74,20 @@ st.markdown("""
         border-radius: 6px !important;
         padding: 8px 12px !important;
     }
-    
     [data-testid="stSidebar"] input[type="number"]:focus,
     [data-testid="stSidebar"] input[type="text"]:focus {
         border-color: #7cb342 !important;
         box-shadow: 0 0 0 1px #7cb342 !important;
     }
-    
-    /* Number input - botones +/- GRISES OSCUROS sobre blanco */
     [data-testid="stSidebar"] [data-testid="stNumberInput"] button {
         background-color: #f0f0f0 !important;
         color: #333333 !important;
-    }
-    
-    [data-testid="stSidebar"] [data-testid="stNumberInput"] button:hover {
-        background-color: #e0e0e0 !important;
-    }
-    
-    [data-testid="stSidebar"] [data-testid="stNumberInput"] button svg {
-        color: #333333 !important;
-        fill: #333333 !important;
     }
 </style>
 """, unsafe_allow_html=True)
 
 if not check_password():
     st.stop()
-
-# ============================================================================
-# FUNCIONES DE VALIDACIÓN
-# ============================================================================
-
-def validate_standard(reference: np.ndarray, current: np.ndarray, 
-                     thresholds: Dict) -> Dict:
-    """
-    Valida un estándar comparando medición actual vs referencia.
-    
-    Returns:
-        Dict con métricas y veredicto
-    """
-    # Asegurar que son float
-    reference = np.asarray(reference, dtype=np.float64)
-    current = np.asarray(current, dtype=np.float64)
-    
-    # 1. Correlación espectral
-    ref_norm = (reference - np.mean(reference)) / (np.std(reference) + 1e-10)
-    curr_norm = (current - np.mean(current)) / (np.std(current) + 1e-10)
-    correlation = np.sum(ref_norm * curr_norm) / len(ref_norm)
-    
-    # 2. Diferencias
-    diff = current - reference
-    max_diff = np.abs(diff).max()
-    rms = np.sqrt(np.mean(diff**2))
-    mean_diff = np.mean(diff)
-    
-    # 3. Evaluación contra umbrales
-    checks = {
-        'correlation': correlation >= thresholds['correlation'],
-        'max_diff': max_diff <= thresholds['max_diff'],
-        'rms': rms <= thresholds['rms']
-    }
-    
-    all_pass = all(checks.values())
-    
-    return {
-        'correlation': correlation,
-        'max_diff': max_diff,
-        'rms': rms,
-        'mean_diff': mean_diff,
-        'checks': checks,
-        'pass': all_pass,
-        'diff': diff
-    }
-
-
-def detect_spectral_shift(reference: np.ndarray, current: np.ndarray, 
-                         window: int = 5) -> Tuple[bool, float]:
-    """
-    Detecta si hay un shift sistemático en longitud de onda.
-    
-    Returns:
-        (tiene_shift, magnitud_promedio_shift)
-    """
-    # Calcular correlación cruzada
-    correlation = np.correlate(reference, current, mode='same')
-    peak_pos = np.argmax(correlation)
-    center = len(correlation) // 2
-    
-    shift = peak_pos - center
-    
-    # Si shift > window píxeles, considerarlo significativo
-    has_shift = abs(shift) > window
-    
-    return has_shift, float(shift)
-
-
-def find_common_ids(df_ref: pd.DataFrame, df_curr: pd.DataFrame) -> pd.DataFrame:
-    """
-    Encuentra IDs comunes entre referencia y actual, emparejando solo por ID.
-    Si hay múltiples filas con el mismo ID, toma la primera.
-    
-    Returns:
-        DataFrame con columnas: ID, ref_note, curr_note, ref_idx, curr_idx
-    """
-    # Validar que los DataFrames no están vacíos
-    if len(df_ref) == 0 or len(df_curr) == 0:
-        return pd.DataFrame(columns=['ID', 'ref_note', 'curr_note', 'ref_idx', 'curr_idx'])
-    
-    # Validar que tienen columna 'ID'
-    if 'ID' not in df_ref.columns or 'ID' not in df_curr.columns:
-        return pd.DataFrame(columns=['ID', 'ref_note', 'curr_note', 'ref_idx', 'curr_idx'])
-    
-    # Validar que tienen columna 'Note'
-    if 'Note' not in df_ref.columns or 'Note' not in df_curr.columns:
-        return pd.DataFrame(columns=['ID', 'ref_note', 'curr_note', 'ref_idx', 'curr_idx'])
-    
-    # Crear listas para almacenar los resultados
-    ref_data = []
-    for id_val in df_ref['ID'].unique():
-        if pd.isna(id_val):  # Saltar IDs nulos
-            continue
-        mask = df_ref['ID'] == id_val
-        indices = df_ref[mask].index
-        if len(indices) > 0:
-            first_idx = indices[0]
-            ref_data.append({
-                'ID': id_val,
-                'ref_note': df_ref.loc[first_idx, 'Note'] if 'Note' in df_ref.columns else '',
-                'ref_idx': first_idx
-            })
-    
-    curr_data = []
-    for id_val in df_curr['ID'].unique():
-        if pd.isna(id_val):  # Saltar IDs nulos
-            continue
-        mask = df_curr['ID'] == id_val
-        indices = df_curr[mask].index
-        if len(indices) > 0:
-            first_idx = indices[0]
-            curr_data.append({
-                'ID': id_val,
-                'curr_note': df_curr.loc[first_idx, 'Note'] if 'Note' in df_curr.columns else '',
-                'curr_idx': first_idx
-            })
-    
-    # Validar que encontramos datos
-    if len(ref_data) == 0 or len(curr_data) == 0:
-        return pd.DataFrame(columns=['ID', 'ref_note', 'curr_note', 'ref_idx', 'curr_idx'])
-    
-    # Crear DataFrames
-    df_ref_ids = pd.DataFrame(ref_data)
-    df_curr_ids = pd.DataFrame(curr_data)
-    
-    # Hacer merge solo por ID
-    matches = df_ref_ids.merge(df_curr_ids, on='ID', how='inner')
-    
-    return matches[['ID', 'ref_note', 'curr_note', 'ref_idx', 'curr_idx']]
-
-
-def analyze_critical_regions(reference: np.ndarray, current: np.ndarray,
-                            regions: List[Tuple[int, int]], 
-                            num_channels: int) -> pd.DataFrame:
-    """
-    Analiza diferencias en regiones espectrales críticas.
-    Asume rango 900-1700 nm para 256 píxeles.
-    """
-    wavelength_per_pixel = 800 / num_channels  # (1700-900)/256
-    start_wl = 900
-    end_wl = 1700
-    
-    results = []
-    
-    for wl_start, wl_end in regions:
-        # Verificar si la región está dentro del rango del instrumento
-        if wl_end < start_wl or wl_start > end_wl:
-            results.append({
-                'Región (nm)': f"{wl_start}-{wl_end}",
-                'Canales': "Fuera de rango",
-                'Max |Δ|': "N/A",
-                'RMS': "N/A",
-                'Media Δ': "N/A"
-            })
-            continue
-        
-        # Ajustar región a los límites del instrumento
-        wl_start_adjusted = max(wl_start, start_wl)
-        wl_end_adjusted = min(wl_end, end_wl)
-        
-        # Convertir wavelength a índices de píxel
-        px_start = int((wl_start_adjusted - start_wl) / wavelength_per_pixel)
-        px_end = int((wl_end_adjusted - start_wl) / wavelength_per_pixel)
-        
-        px_start = max(0, px_start)
-        px_end = min(num_channels, px_end)
-        
-        # Verificar que hay al menos algunos píxeles en la región
-        if px_end <= px_start:
-            results.append({
-                'Región (nm)': f"{wl_start}-{wl_end}",
-                'Canales': "Región muy pequeña",
-                'Max |Δ|': "N/A",
-                'RMS': "N/A",
-                'Media Δ': "N/A"
-            })
-            continue
-        
-        # Extraer región
-        ref_region = reference[px_start:px_end]
-        curr_region = current[px_start:px_end]
-        
-        # Calcular métricas
-        diff_region = curr_region - ref_region
-        
-        region_label = f"{wl_start}-{wl_end}"
-        if wl_start_adjusted != wl_start or wl_end_adjusted != wl_end:
-            region_label += f" *"  # Asterisco si fue ajustado
-        
-        results.append({
-            'Región (nm)': region_label,
-            'Canales': f"{px_start}-{px_end}",
-            'Max |Δ|': f"{np.abs(diff_region).max():.6f}",
-            'RMS': f"{np.sqrt(np.mean(diff_region**2)):.6f}",
-            'Media Δ': f"{np.mean(diff_region):.6f}"
-        })
-    
-    return pd.DataFrame(results)
-
-
-# ============================================================================
-# VISUALIZACIONES
-# ============================================================================
-
-def create_validation_plot(reference: np.ndarray, current: np.ndarray,
-                          diff: np.ndarray, sample_label: str) -> go.Figure:
-    """Crea gráfico de 3 paneles para validación."""
-    
-    channels = list(range(1, len(reference) + 1))
-    
-    fig = make_subplots(
-        rows=3, cols=1,
-        subplot_titles=(
-            f'Espectros: Referencia vs Actual ({sample_label})',
-            'Diferencia (Actual - Referencia)',
-            'Diferencia Acumulada'
-        ),
-        vertical_spacing=0.1,
-        row_heights=[0.4, 0.3, 0.3]
-    )
-    
-    # Panel 1: Overlay
-    fig.add_trace(
-        go.Scatter(x=channels, y=reference, name='Referencia',
-                  line=dict(color='blue', width=2)),
-        row=1, col=1
-    )
-    fig.add_trace(
-        go.Scatter(x=channels, y=current, name='Actual',
-                  line=dict(color='red', width=2, dash='dash')),
-        row=1, col=1
-    )
-    
-    # Panel 2: Diferencia
-    fig.add_trace(
-        go.Scatter(x=channels, y=diff, name='Δ',
-                  line=dict(color='green', width=2),
-                  fill='tozeroy', fillcolor='rgba(0,255,0,0.1)'),
-        row=2, col=1
-    )
-    fig.add_hline(y=0, line_dash="dash", line_color="gray", 
-                  opacity=0.5, row=2, col=1)
-    
-    # Panel 3: Diferencia acumulada
-    cumsum_diff = np.cumsum(diff)
-    fig.add_trace(
-        go.Scatter(x=channels, y=cumsum_diff, name='Σ Δ',
-                  line=dict(color='purple', width=2)),
-        row=3, col=1
-    )
-    fig.add_hline(y=0, line_dash="dash", line_color="gray", 
-                  opacity=0.5, row=3, col=1)
-    
-    fig.update_xaxes(title_text="Canal espectral", row=3, col=1)
-    fig.update_yaxes(title_text="Absorbancia", row=1, col=1)
-    fig.update_yaxes(title_text="Δ Absorbancia", row=2, col=1)
-    fig.update_yaxes(title_text="Σ Δ", row=3, col=1)
-    
-    fig.update_layout(
-        height=900,
-        showlegend=True,
-        template='plotly_white',
-        hovermode='x unified'
-    )
-    
-    return fig
-
-
-def create_overlay_plot(validation_data: List[Dict], show_reference: bool = True,
-                       show_current: bool = True) -> go.Figure:
-    """
-    Crea gráfico con overlay de todos los espectros de validación.
-    
-    Args:
-        validation_data: Lista de diccionarios con datos de validación
-        show_reference: Si True, muestra espectros de referencia
-        show_current: Si True, muestra espectros actuales
-    """
-    colors_ref = ['#1f77b4', '#2ca02c', '#9467bd', '#8c564b', '#e377c2', 
-                  '#7f7f7f', '#bcbd22', '#17becf', '#ff9896', '#c5b0d5']
-    colors_curr = ['#ff7f0e', '#d62728', '#ff69b4', '#ffa500', '#dc143c',
-                   '#ff4500', '#ff1493', '#ff6347', '#ff8c00', '#ff00ff']
-    
-    fig = go.Figure()
-    
-    if len(validation_data) == 0:
-        return fig
-    
-    channels = list(range(1, len(validation_data[0]['reference']) + 1))
-    
-    # Añadir espectros de referencia
-    if show_reference:
-        for i, data in enumerate(validation_data):
-            color = colors_ref[i % len(colors_ref)]
-            sample_label = f"{data['id']} - Ref"
-            
-            fig.add_trace(go.Scatter(
-                x=channels,
-                y=data['reference'],
-                mode='lines',
-                name=sample_label,
-                line=dict(color=color, width=2),
-                legendgroup='reference',
-                hovertemplate=f'<b>{sample_label}</b><br>' +
-                             'Canal: %{x}<br>' +
-                             'Absorbancia: %{y:.6f}<br>' +
-                             '<extra></extra>'
-            ))
-    
-    # Añadir espectros actuales
-    if show_current:
-        for i, data in enumerate(validation_data):
-            color = colors_curr[i % len(colors_curr)]
-            sample_label = f"{data['id']} - Act"
-            
-            fig.add_trace(go.Scatter(
-                x=channels,
-                y=data['current'],
-                mode='lines',
-                name=sample_label,
-                line=dict(color=color, width=2, dash='dash'),
-                legendgroup='current',
-                hovertemplate=f'<b>{sample_label}</b><br>' +
-                             'Canal: %{x}<br>' +
-                             'Absorbancia: %{y:.6f}<br>' +
-                             '<extra></extra>'
-            ))
-    
-    fig.update_layout(
-        title={
-            'text': 'Comparación Global de Todos los Estándares',
-            'x': 0.5,
-            'xanchor': 'center',
-            'font': {'size': 20, 'color': '#2c5f3f'}
-        },
-        xaxis_title='Canal espectral',
-        yaxis_title='Absorbancia',
-        hovermode='closest',
-        template='plotly_white',
-        height=600,
-        showlegend=True,
-        legend=dict(
-            orientation="v",
-            yanchor="top",
-            y=1,
-            xanchor="left",
-            x=1.02,
-            font=dict(size=10)
-        )
-    )
-    
-    return fig
-
-
-def create_global_statistics_table(validation_data: List[Dict]) -> pd.DataFrame:
-    """
-    Crea tabla con estadísticas globales de todos los estándares.
-    """
-    if len(validation_data) == 0:
-        return pd.DataFrame()
-    
-    # Recopilar métricas de todos los estándares
-    all_correlations = []
-    all_max_diffs = []
-    all_rms = []
-    all_mean_diffs = []
-    
-    for data in validation_data:
-        val_res = data['validation_results']
-        all_correlations.append(val_res['correlation'])
-        all_max_diffs.append(val_res['max_diff'])
-        all_rms.append(val_res['rms'])
-        all_mean_diffs.append(val_res['mean_diff'])
-    
-    # Calcular estadísticas
-    stats = {
-        'Métrica': ['Correlación', 'Max Diferencia (AU)', 'RMS', 'Offset Medio (AU)'],
-        'Mínimo': [
-            f"{min(all_correlations):.6f}",
-            f"{min(all_max_diffs):.6f}",
-            f"{min(all_rms):.6f}",
-            f"{min(all_mean_diffs):.6f}"
-        ],
-        'Máximo': [
-            f"{max(all_correlations):.6f}",
-            f"{max(all_max_diffs):.6f}",
-            f"{max(all_rms):.6f}",
-            f"{max(all_mean_diffs):.6f}"
-        ],
-        'Media': [
-            f"{np.mean(all_correlations):.6f}",
-            f"{np.mean(all_max_diffs):.6f}",
-            f"{np.mean(all_rms):.6f}",
-            f"{np.mean(all_mean_diffs):.6f}"
-        ],
-        'Desv. Est.': [
-            f"{np.std(all_correlations):.6f}",
-            f"{np.std(all_max_diffs):.6f}",
-            f"{np.std(all_rms):.6f}",
-            f"{np.std(all_mean_diffs):.6f}"
-        ]
-    }
-    
-    return pd.DataFrame(stats)
 
 
 # ============================================================================
@@ -538,13 +112,13 @@ def main():
     
     st.divider()
     
-    # Sidebar
+    # Sidebar con umbrales
     with st.sidebar:
         st.markdown("### ⚙️ Configuración")
         st.markdown("---")
         
         # Ajuste de umbrales
-        with st.expander("🎚️ Ajustar Umbrales de Validación"):
+        with st.expander("🎚️ Ajustar Umbrales de Validación", expanded=True):
             st.caption("Modifica los criterios de aceptación según tus necesidades")
             
             corr_threshold = st.number_input(
@@ -669,7 +243,7 @@ def main():
         
         return
     
-    # Cargar archivos
+    # Cargar archivos usando funciones compartidas
     try:
         with st.spinner("⏳ Cargando archivos y detectando estándares comunes..."):
             df_ref = load_tsv_file(ref_file)
@@ -690,7 +264,7 @@ def main():
             
             num_channels = len(spectral_cols_ref)
             
-            # Encontrar IDs comunes
+            # Encontrar IDs comunes usando función compartida
             matches = find_common_ids(df_ref, df_curr)
             
             if len(matches) == 0:
@@ -858,7 +432,7 @@ def main():
             reference = df_ref.loc[ref_idx, spectral_cols_ref].astype(float).values
             current = df_curr.loc[curr_idx, spectral_cols_curr].astype(float).values
             
-            # Validar
+            # Validar usando función compartida
             validation_results = validate_standard(reference, current, thresholds)
             has_shift, shift_magnitude = detect_spectral_shift(reference, current)
             
@@ -882,6 +456,7 @@ def main():
                 'Correlación': f"{validation_results['correlation']:.6f}",
                 'Max Δ (AU)': f"{validation_results['max_diff']:.6f}",
                 'RMS': f"{validation_results['rms']:.6f}",
+                'Offset Medio': f"{validation_results['mean_diff']:.6f}",
                 'Shift (px)': f"{shift_magnitude:.1f}" if has_shift else "0.0"
             })
             
@@ -941,7 +516,7 @@ def main():
     # ==========================================
     st.markdown("### 3️⃣ Análisis Global")
     
-    # Expandable para gráfico overlay
+    # Expandable para gráfico overlay usando función compartida
     with st.expander("📊 Vista Global de Todos los Estándares", expanded=False):
         st.info("""
         Comparación simultánea de todos los espectros validados. 
@@ -958,7 +533,7 @@ def main():
         overlay_fig = create_overlay_plot(all_validation_data, show_ref, show_curr)
         st.plotly_chart(overlay_fig, use_container_width=True)
     
-    # Estadísticas globales
+    # Estadísticas globales usando función compartida
     st.markdown("#### 📈 Estadísticas Globales del Kit")
     st.caption(f"Análisis agregado de {len(all_validation_data)} estándar(es)")
     
@@ -1061,6 +636,7 @@ def main():
     
     with tab1:
         sample_label = f"{sample_data['id']} (Ref: {sample_data['ref_note']} | Act: {sample_data['curr_note']})"
+        # Usar función compartida para crear gráfico
         fig = create_validation_plot(
             sample_data['reference'],
             sample_data['current'],
@@ -1070,6 +646,7 @@ def main():
         st.plotly_chart(fig, use_container_width=True)
     
     with tab2:
+        # Usar función compartida para analizar regiones críticas
         regions_df = analyze_critical_regions(
             sample_data['reference'],
             sample_data['current'],

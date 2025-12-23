@@ -320,24 +320,24 @@ tr:hover {
 }
 
 .warning-box {
-    background-color: #fff3cd;
-    border-left: 5px solid #ffc107;
+    background-color: transparent;
+    border-left: 0px solid #ffc107;
     border-radius: 8px;
     padding: 20px;
     margin: 20px 0;
 }
 
 .status-good {
-    background-color: #d4edda;
-    border-left: 5px solid #28a745;
+    background-color: transparent;
+    border-left: 0px solid #28a745;
     border-radius: 8px;
     padding: 20px;
     margin: 20px 0;
 }
 
 .status-bad {
-    background-color: #f8d7da;
-    border-left: 5px solid #dc3545;
+    background-color: transparent;
+    border-left: 0px solid #dc3545;
     border-radius: 8px;
     padding: 20px;
     margin: 20px 0;
@@ -372,7 +372,7 @@ tr:hover {
 }
 
 /* ===== Expandibles (NUEVO PARA COREF) ===== */
-details {
+.main-content details {
     margin: 20px 0;
     border: 1px solid #ddd;
     border-radius: 5px;
@@ -380,7 +380,7 @@ details {
     background-color: white;
 }
 
-summary {
+.main-content summary {
     cursor: pointer;
     font-weight: bold;
     padding: 10px;
@@ -390,11 +390,11 @@ summary {
     color: #093A34;
 }
 
-summary:hover {
+.main-content summary:hover {
     background-color: #e9ecef;
 }
 
-details[open] summary {
+.main-content details[open] summary {
     border-bottom: 2px solid #289A93;
     margin-bottom: 10px;
 }
@@ -454,5 +454,40 @@ pre {
 
     .info-grid {
         grid-template-columns: 1fr;
+    }
+    .list-spacious {
+        line-height: 1.8;
+    }
+
+    /* Caja de código/fórmula */
+    .code-box {
+        background-color: #f0f0f0;
+        padding: 15px;
+        border-radius: 5px;
+        font-family: 'Courier New', monospace;
+    }
+
+    /* Métricas pequeñas (para subcaption en metric cards) */
+    .metric-subcaption {
+        font-size: 11px;
+        color: #666;
+        margin-top: 8px;
+    }
+
+    /* Valor destacado en tablas */
+    .value-highlighted {
+        font-size: 18px;
+        font-weight: bold;
+        color: #2196f3;
+    }
+
+    /* Margen superior para cajas de estado */
+    .status-box-top-margin {
+        margin-top: 20px;
+    }
+
+    /* Margen inferior para descripciones */
+    .description-bottom-margin {
+        margin-bottom: 20px;
     }
 }

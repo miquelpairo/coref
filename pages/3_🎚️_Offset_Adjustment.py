@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Baseline Offset Adjustment Tool
-================================
+Baseline Offset Adjustment Tool (OPTIMIZED)
+============================================
 Herramienta para aplicar corrección de offset manual a baseline.
 Útil para fine-tuning después de validación con estándares ópticos.
+
+OPTIMIZADO: Usa funciones compartidas de core.standards_analysis
 """
 
 import streamlit as st
@@ -13,7 +15,7 @@ import io
 from datetime import datetime
 from pathlib import Path
 import sys
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 # Añadir directorio raíz al path
 root_dir = Path(__file__).parent.parent
@@ -23,17 +25,79 @@ from core.file_handlers import (
     load_ref_file,
     load_csv_baseline,
     export_ref_file,
-    export_csv_file
+    export_csv_file,
+    load_tsv_file,
+    get_spectral_columns
 )
 from utils.plotting import plot_baseline_comparison
 from auth import check_password
 from buchi_streamlit_theme import apply_buchi_styles
-from core.file_handlers import load_tsv_file, get_spectral_columns
-from typing import Dict
+from config import DEFAULT_VALIDATION_THRESHOLDS, CRITICAL_REGIONS, OFFSET_LIMITS
+
+# ===== IMPORTAR FUNCIONES COMPARTIDAS =====
+from core.standards_analysis import (
+    validate_standard,
+    detect_spectral_shift,
+    find_common_ids,
+    analyze_critical_regions,
+    create_validation_plot,
+    create_overlay_plot,
+    create_global_statistics_table
+)
+
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 apply_buchi_styles()
+
+# Estilos del sidebar
+st.markdown("""
+<style>
+    [data-testid="stSidebar"] {
+        background-color: #2c5f3f;
+    }
+    [data-testid="stSidebar"] * {
+        color: white !important;
+    }
+    [data-testid="stSidebar"] h2,
+    [data-testid="stSidebar"] h3 {
+        color: white !important;
+    }
+    [data-testid="stSidebar"] label {
+        color: white !important;
+        font-weight: 500 !important;
+        background: none !important;
+        border: none !important;
+        padding: 0 !important;
+    }
+    [data-testid="stSidebar"] hr {
+        border-color: rgba(255, 255, 255, 0.2) !important;
+        margin: 20px 0 !important;
+    }
+    [data-testid="stSidebar"] [data-testid="stExpander"] {
+        background-color: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 8px !important;
+    }
+    [data-testid="stSidebar"] input[type="number"],
+    [data-testid="stSidebar"] input[type="text"] {
+        background-color: white !important;
+        color: #333333 !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        border-radius: 6px !important;
+        padding: 8px 12px !important;
+    }
+    [data-testid="stSidebar"] input[type="number"]:focus,
+    [data-testid="stSidebar"] input[type="text"]:focus {
+        border-color: #7cb342 !important;
+        box-shadow: 0 0 0 1px #7cb342 !important;
+    }
+    [data-testid="stSidebar"] [data-testid="stNumberInput"] button {
+        background-color: #f0f0f0 !important;
+        color: #333333 !important;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 if not check_password():
     st.stop()
@@ -62,6 +126,106 @@ def main():
     
     st.divider()
     
+    # ===== SIDEBAR: CONFIGURACIÓN =====
+    with st.sidebar:
+        st.markdown("### ⚙️ Configuración")
+        st.markdown("---")
+        
+        # Configuración de offset
+        with st.expander("🎚️ Configuración de Offset", expanded=True):
+            if 'offset_value' not in st.session_state:
+                st.session_state.offset_value = 0.000
+            
+            offset_value = st.number_input(
+                "Offset a aplicar (AU):",
+                min_value=-0.500,
+                max_value=0.500,
+                value=st.session_state.offset_value,
+                step=0.001,
+                format="%.6f",
+                help="Valor de offset vertical uniforme a aplicar al baseline",
+                key="offset_input"
+            )
+            st.session_state.offset_value = offset_value
+            
+            st.markdown("**Presets:**")
+            col1, col2 = st.columns(2)
+            if col1.button("Reset (0)", use_container_width=True):
+                st.session_state.offset_value = 0.000
+                st.rerun()
+            if col2.button("+0.005", use_container_width=True):
+                st.session_state.offset_value += 0.005
+                st.rerun()
+            if col1.button("-0.005", use_container_width=True):
+                st.session_state.offset_value -= 0.005
+                st.rerun()
+            
+            # Indicador visual
+            st.markdown("---")
+            st.markdown("**Estado del Offset:**")
+            if abs(st.session_state.offset_value) < 0.003:
+                st.success("✅ Cambio pequeño")
+            elif abs(st.session_state.offset_value) < 0.008:
+                st.info("ℹ️ Cambio moderado")
+            else:
+                st.warning("⚠️ Cambio significativo")
+        
+        st.divider()
+        
+        # NUEVA SECCIÓN: Umbrales de Validación
+        with st.expander("📊 Umbrales de Validación", expanded=False):
+            st.caption("Define criterios para evaluar la mejora post-offset")
+            
+            corr_threshold = st.number_input(
+                "Correlación objetivo:",
+                min_value=0.990,
+                max_value=1.000,
+                value=DEFAULT_VALIDATION_THRESHOLDS['correlation'],
+                step=0.001,
+                format="%.3f",
+                help="Correlación mínima deseable"
+            )
+            
+            max_diff_threshold = st.number_input(
+                "Max Δ objetivo (AU):",
+                min_value=0.001,
+                max_value=0.100,
+                value=DEFAULT_VALIDATION_THRESHOLDS['max_diff'],
+                step=0.001,
+                format="%.3f",
+                help="Diferencia máxima deseable"
+            )
+            
+            rms_threshold = st.number_input(
+                "RMS objetivo:",
+                min_value=0.001,
+                max_value=0.100,
+                value=DEFAULT_VALIDATION_THRESHOLDS['rms'],
+                step=0.001,
+                format="%.3f",
+                help="RMS máximo deseable"
+            )
+            
+            thresholds = {
+                'correlation': corr_threshold,
+                'max_diff': max_diff_threshold,
+                'rms': rms_threshold
+            }
+        
+        if 'thresholds' not in locals():
+            thresholds = DEFAULT_VALIDATION_THRESHOLDS
+        
+        st.divider()
+        
+        # Info de regiones críticas
+        with st.expander("ℹ️ Regiones Espectrales Críticas"):
+            st.markdown("""
+            **Regiones analizadas:**
+            - **1100-1200 nm**: Enlaces O-H (hidroxilos)
+            - **1400-1500 nm**: Agua / Humedad
+            - **1600-1700 nm**: Enlaces C-H (grupos metilo)
+            """)
+    
     # ==========================================
     # SECCIÓN 1: CARGAR TSV Y SELECCIÓN DE ESTÁNDARES
     # ==========================================
@@ -76,27 +240,18 @@ def main():
     st.divider()
     
     # ==========================================
-    # SECCIÓN 2: CONFIGURAR OFFSET
+    # SECCIÓN 2: ANÁLISIS GLOBAL DEL KIT
     # ==========================================
-    st.markdown("### 2️⃣ Configurar Offset")
+    st.markdown("### 2️⃣ Análisis Global del Kit")
     
-    render_offset_configuration_section()
+    render_global_kit_analysis_section(thresholds)
     
     st.divider()
     
     # ==========================================
-    # SECCIÓN 3: ANÁLISIS GLOBAL DEL KIT
+    # SECCIÓN 3: CARGAR BASELINE
     # ==========================================
-    st.markdown("### 3️⃣ Análisis Global del Kit")
-    
-    render_global_kit_analysis_section()
-    
-    st.divider()
-    
-    # ==========================================
-    # SECCIÓN 4: CARGAR BASELINE
-    # ==========================================
-    st.markdown("### 4️⃣ Cargar Baseline")
+    st.markdown("### 3️⃣ Cargar Baseline")
     st.info("Sube el archivo de baseline que deseas ajustar (.ref o .csv)")
     
     baseline_loaded = render_baseline_upload_section()
@@ -108,35 +263,34 @@ def main():
     st.divider()
     
     # ==========================================
-    # SECCIÓN 5: VISUALIZACIÓN BASELINE
+    # SECCIÓN 4: VISUALIZACIÓN BASELINE
     # ==========================================
-    st.markdown("### 5️⃣ Visualización del Ajuste de Baseline")
+    st.markdown("### 4️⃣ Visualización del Ajuste de Baseline")
     
     render_visualization_section()
     
     st.divider()
     
     # ==========================================
-    # SECCIÓN 6: EXPORTAR
+    # SECCIÓN 5: EXPORTAR
     # ==========================================
-    st.markdown("### 6️⃣ Exportar Baseline Ajustado")
+    st.markdown("### 5️⃣ Exportar Baseline Ajustado")
     
     render_export_section()
     
     st.divider()
     
     # ==========================================
-    # SECCIÓN 7: GENERAR INFORME  ← NUEVA SECCIÓN AQUÍ
+    # SECCIÓN 6: GENERAR INFORME
     # ==========================================
-    st.markdown("### 7️⃣ Generar Informe de Ajuste de Offset")
+    st.markdown("### 6️⃣ Generar Informe de Ajuste de Offset")
 
     render_report_generation_section()
 
     st.divider()
     
-    
     # ==========================================
-    # SECCIÓN 8: NOTAS IMPORTANTES
+    # SECCIÓN 7: NOTAS IMPORTANTES
     # ==========================================
     render_important_notes_section()
 
@@ -166,7 +320,7 @@ def render_standards_upload_and_selection_section():
         ref_tsv = st.file_uploader(
             "TSV Referencia:",
             type=['tsv'],
-            key="ref_tsv_main",
+            key="ref_tsv_offset",
             help="Mediciones de referencia (baseline antigua)"
         )
     
@@ -174,7 +328,7 @@ def render_standards_upload_and_selection_section():
         curr_tsv = st.file_uploader(
             "TSV Actual:",
             type=['tsv'],
-            key="curr_tsv_main",
+            key="curr_tsv_offset",
             help="Mediciones actuales (baseline nueva)"
         )
     
@@ -182,7 +336,7 @@ def render_standards_upload_and_selection_section():
         st.info("👆 Carga ambos archivos TSV para comenzar")
         return False
     
-    # Cargar archivos
+    # Cargar archivos usando funciones compartidas
     try:
         with st.spinner("⏳ Cargando archivos TSV..."):
             df_ref = load_tsv_file(ref_tsv)
@@ -195,8 +349,8 @@ def render_standards_upload_and_selection_section():
                 st.error("❌ Los archivos tienen diferente número de canales espectrales")
                 return False
             
-            # Encontrar IDs comunes
-            matches = find_common_ids_simple(df_ref, df_curr)
+            # Encontrar IDs comunes usando función compartida
+            matches = find_common_ids(df_ref, df_curr)
             
             if len(matches) == 0:
                 st.error("❌ No se encontraron IDs comunes entre los archivos")
@@ -210,7 +364,9 @@ def render_standards_upload_and_selection_section():
             'df_curr': df_curr,
             'spectral_cols_ref': spectral_cols_ref,
             'spectral_cols_curr': spectral_cols_curr,
-            'matches': matches
+            'matches': matches,
+            'ref_filename': ref_tsv.name,
+            'curr_filename': curr_tsv.name
         }
         
         st.markdown("---")
@@ -253,12 +409,7 @@ def render_standards_upload_and_selection_section():
 
 
 def render_standards_selection_interface(matches: pd.DataFrame) -> List[str]:
-    """
-    Interfaz de selección de estándares.
-    
-    Returns:
-        Lista de IDs seleccionados
-    """
+    """Interfaz de selección de estándares"""
     common_ids = matches['ID'].tolist()
     
     # Inicializar selección
@@ -281,7 +432,7 @@ def render_standards_selection_interface(matches: pd.DataFrame) -> List[str]:
     
     st.info("Selecciona los estándares que deseas incluir en el cálculo del offset")
     
-    with st.form("form_select_standards_main", clear_on_submit=False):
+    with st.form("form_select_standards_offset", clear_on_submit=False):
         edited = st.data_editor(
             df_samples,
             use_container_width=True,
@@ -294,7 +445,7 @@ def render_standards_selection_interface(matches: pd.DataFrame) -> List[str]:
                     default=True,
                 )
             },
-            key="editor_select_standards_main"
+            key="editor_select_standards_offset"
         )
         
         col_a, col_b, col_c, col_d = st.columns([1, 1, 1, 2])
@@ -343,88 +494,13 @@ def render_standards_selection_interface(matches: pd.DataFrame) -> List[str]:
 
 
 # ============================================================================
-# SECCIÓN 2: CONFIGURAR OFFSET
+# SECCIÓN 2: ANÁLISIS GLOBAL DEL KIT
 # ============================================================================
 
-def render_offset_configuration_section():
+def render_global_kit_analysis_section(thresholds: Dict):
     """
-    Sección 2: Configuración del offset.
-    """
-    if 'standards_data' not in st.session_state:
-        return
-    
-    st.info("""
-    Introduce el valor de offset a aplicar. Un valor positivo aumentará todos los valores 
-    del baseline, un valor negativo los disminuirá.
-    
-    **Recomendación:** Usa valores pequeños (< 0.010 AU) para evitar cambios drásticos.
-    """)
-    
-    # Inicializar valor si no existe
-    if 'offset_value' not in st.session_state:
-        st.session_state.offset_value = 0.000
-    
-    col1, col2, col3 = st.columns([2, 1, 2])
-    
-    with col1:
-        # Input de offset con callback
-        def update_offset():
-            st.session_state.offset_value = st.session_state.offset_input
-        
-        offset_value = st.number_input(
-            "Offset a aplicar (AU):",
-            min_value=-0.500,
-            max_value=0.500,
-            value=st.session_state.offset_value,
-            step=0.001,
-            format="%.6f",
-            key="offset_input",
-            help="Valor de offset vertical uniforme a aplicar al baseline",
-            on_change=update_offset
-        )
-    
-    with col2:
-        st.markdown("#### Presets")
-        
-        def reset_offset():
-            st.session_state.offset_value = 0.000
-        
-        def add_offset():
-            st.session_state.offset_value = st.session_state.offset_value + 0.005
-        
-        def subtract_offset():
-            st.session_state.offset_value = st.session_state.offset_value - 0.005
-        
-        if st.button("Resetear (0)", use_container_width=True, on_click=reset_offset):
-            pass
-        
-        if st.button("+0.005", use_container_width=True, on_click=add_offset):
-            pass
-        
-        if st.button("-0.005", use_container_width=True, on_click=subtract_offset):
-            pass
-    
-    with col3:
-        # Información del ajuste
-        st.markdown("#### Información del Offset")
-        st.write(f"**Valor actual:** {st.session_state.offset_value:+.6f} AU")
-        
-        # Indicador visual
-        if abs(st.session_state.offset_value) < 0.003:
-            st.success("✅ Cambio pequeño")
-        elif abs(st.session_state.offset_value) < 0.008:
-            st.info("ℹ️ Cambio moderado")
-        else:
-            st.warning("⚠️ Cambio significativo")
-
-
-# ============================================================================
-# SECCIÓN 3: ANÁLISIS GLOBAL DEL KIT
-# ============================================================================
-
-def render_global_kit_analysis_section():
-    """
-    Sección 3: Análisis global del kit con estándares.
+    Sección 2: Análisis global del kit con estándares.
+    MEJORADO: Ahora incluye evaluación contra umbrales
     """
     if 'standards_data' not in st.session_state:
         return
@@ -457,11 +533,11 @@ def render_global_kit_analysis_section():
             # Simular espectro con offset aplicado
             current_simulated = current_original + offset_value
             
-            # Calcular métricas sin offset
-            metrics_original = validate_standard_simple(reference, current_original)
+            # Calcular métricas sin offset (CON UMBRALES)
+            metrics_original = validate_standard(reference, current_original, thresholds)
             
-            # Calcular métricas con offset
-            metrics_simulated = validate_standard_simple(reference, current_simulated)
+            # Calcular métricas con offset (CON UMBRALES)
+            metrics_simulated = validate_standard(reference, current_simulated, thresholds)
             
             # Guardar datos completos
             all_validation_original.append({
@@ -490,7 +566,7 @@ def render_global_kit_analysis_section():
         'simulated': all_validation_simulated
     }
     
-    # Gráfico overlay de todos los estándares
+    # Gráfico overlay de todos los estándares usando función compartida
     with st.expander("📈 Vista Global de Todos los Estándares", expanded=True):
         st.info("""
         Comparación simultánea de todos los espectros. Las líneas sólidas azules 
@@ -505,7 +581,7 @@ def render_global_kit_analysis_section():
         )
         st.plotly_chart(fig_overlay, use_container_width=True)
     
-    # Estadísticas globales
+    # Estadísticas globales usando función compartida
     st.markdown("#### 📈 Estadísticas Globales del Kit")
     st.caption(f"Análisis agregado de {len(matches_filtered)} estándar(es) seleccionado(s)")
     
@@ -516,8 +592,8 @@ def render_global_kit_analysis_section():
     )
     st.dataframe(stats_comparison, use_container_width=True, hide_index=True)
     
-    # Métricas destacadas
-    col1, col2, col3 = st.columns(3)
+    # Métricas destacadas con evaluación contra umbrales
+    col1, col2, col3, col4 = st.columns(4)
     
     with col1:
         avg_corr_orig = np.mean([d['validation_results']['correlation'] for d in all_validation_original])
@@ -530,6 +606,11 @@ def render_global_kit_analysis_section():
             delta=f"{delta_corr:+.6f}",
             help=f"Original: {avg_corr_orig:.6f} | Simulado: {avg_corr_sim:.6f}"
         )
+        # Evaluación contra umbral
+        if avg_corr_sim >= thresholds['correlation']:
+            st.success(f"✅ > {thresholds['correlation']}")
+        else:
+            st.warning(f"⚠️ < {thresholds['correlation']}")
     
     with col2:
         avg_max_orig = np.mean([d['validation_results']['max_diff'] for d in all_validation_original])
@@ -543,6 +624,11 @@ def render_global_kit_analysis_section():
             delta_color="inverse" if delta_max < 0 else "normal",
             help=f"Original: {avg_max_orig:.6f} | Simulado: {avg_max_sim:.6f}"
         )
+        # Evaluación contra umbral
+        if avg_max_sim <= thresholds['max_diff']:
+            st.success(f"✅ < {thresholds['max_diff']}")
+        else:
+            st.warning(f"⚠️ > {thresholds['max_diff']}")
     
     with col3:
         avg_rms_orig = np.mean([d['validation_results']['rms'] for d in all_validation_original])
@@ -555,6 +641,24 @@ def render_global_kit_analysis_section():
             delta=f"{delta_rms:+.6f}",
             delta_color="inverse" if delta_rms < 0 else "normal",
             help=f"Original: {avg_rms_orig:.6f} | Simulado: {avg_rms_sim:.6f}"
+        )
+        # Evaluación contra umbral
+        if avg_rms_sim <= thresholds['rms']:
+            st.success(f"✅ < {thresholds['rms']}")
+        else:
+            st.warning(f"⚠️ > {thresholds['rms']}")
+    
+    with col4:
+        # Contar cuántos estándares pasan todos los umbrales
+        n_pass_orig = sum(1 for d in all_validation_original if d['validation_results'].get('pass', False))
+        n_pass_sim = sum(1 for d in all_validation_simulated if d['validation_results'].get('pass', False))
+        
+        st.metric(
+            "Estándares OK",
+            f"{n_pass_sim}/{len(matches_filtered)}",
+            delta=f"{n_pass_sim - n_pass_orig:+d}",
+            delta_color="normal" if n_pass_sim >= n_pass_orig else "inverse",
+            help="Número de estándares que pasan todos los umbrales"
         )
     
     st.markdown("---")
@@ -582,7 +686,7 @@ def render_global_kit_analysis_section():
         )
     
     # Evaluación del offset simulado
-    if abs(global_offset_sim) < 0.003:
+    if abs(global_offset_sim) < OFFSET_LIMITS['negligible']:
         st.success(f"✅ **Excelente corrección**: El offset simulado ({offset_value:+.6f} AU) reduce el bias global a nivel despreciable ({global_offset_sim:+.6f} AU)")
     elif abs(global_offset_sim) < abs(global_offset_orig):
         reduction = (1 - abs(global_offset_sim)/abs(global_offset_orig)) * 100
@@ -590,7 +694,7 @@ def render_global_kit_analysis_section():
     else:
         st.warning(f"⚠️ **Empeoramiento**: El offset aplicado ({offset_value:+.6f} AU) aumenta el bias global. Considera ajustar el valor.")
     
-    # Análisis individual por estándar
+    # Análisis individual por estándar (usando funciones compartidas)
     st.markdown("---")
     st.markdown("#### 🔍 Análisis Individual por Estándar")
     
@@ -617,13 +721,14 @@ def render_global_kit_analysis_section():
     metrics_simulated = data_sim['validation_results']
     
     # Tabs de análisis detallado
-    tab1, tab2 = st.tabs([
+    tab1, tab2, tab3 = st.tabs([
         "📈 Gráficos Comparativos",
+        "📋 Regiones Críticas",
         "📊 Métricas Detalladas"
     ])
     
     with tab1:
-        # Gráfico espectral
+        # Gráfico espectral comparativo
         channels = list(range(1, len(reference) + 1))
         
         fig_spectra = make_subplots(
@@ -687,6 +792,26 @@ def render_global_kit_analysis_section():
         st.plotly_chart(fig_spectra, use_container_width=True)
     
     with tab2:
+        # Usar función compartida para analizar regiones críticas
+        st.markdown("**Original (sin offset):**")
+        regions_orig = analyze_critical_regions(
+            reference, current_original,
+            CRITICAL_REGIONS,
+            len(reference)
+        )
+        st.dataframe(regions_orig, use_container_width=True, hide_index=True)
+        
+        st.markdown("---")
+        st.markdown("**Simulado (con offset):**")
+        regions_sim = analyze_critical_regions(
+            reference, current_simulated,
+            CRITICAL_REGIONS,
+            len(reference)
+        )
+        st.dataframe(regions_sim, use_container_width=True, hide_index=True)
+        st.caption("* = Región ajustada a rango del instrumento (900-1700 nm)")
+    
+    with tab3:
         # Mostrar comparación en columnas
         col1, col2, col3 = st.columns(3)
         
@@ -696,6 +821,12 @@ def render_global_kit_analysis_section():
             st.metric("Max Δ", f"{metrics_original['max_diff']:.6f} AU")
             st.metric("RMS", f"{metrics_original['rms']:.6f}")
             st.metric("Offset Medio", f"{metrics_original['mean_diff']:+.6f} AU")
+            
+            # Evaluación contra umbrales
+            if metrics_original.get('pass', False):
+                st.success("✅ Pasa todos los umbrales")
+            else:
+                st.warning("⚠️ Falla umbrales")
         
         with col2:
             st.markdown(f"##### Con Offset ({offset_value:+.6f} AU)")
@@ -703,6 +834,12 @@ def render_global_kit_analysis_section():
             st.metric("Max Δ", f"{metrics_simulated['max_diff']:.6f} AU")
             st.metric("RMS", f"{metrics_simulated['rms']:.6f}")
             st.metric("Offset Medio", f"{metrics_simulated['mean_diff']:+.6f} AU")
+            
+            # Evaluación contra umbrales
+            if metrics_simulated.get('pass', False):
+                st.success("✅ Pasa todos los umbrales")
+            else:
+                st.warning("⚠️ Falla umbrales")
         
         with col3:
             st.markdown("##### Δ Cambio")
@@ -739,7 +876,9 @@ def render_global_kit_analysis_section():
             'RMS_Original': orig['validation_results']['rms'],
             'RMS_Simulado': sim['validation_results']['rms'],
             'Offset_Original': orig['validation_results']['mean_diff'],
-            'Offset_Simulado': sim['validation_results']['mean_diff']
+            'Offset_Simulado': sim['validation_results']['mean_diff'],
+            'Pass_Original': orig['validation_results'].get('pass', False),
+            'Pass_Simulado': sim['validation_results'].get('pass', False)
         })
     
     df_export = pd.DataFrame(export_data)
@@ -755,406 +894,12 @@ def render_global_kit_analysis_section():
 
 
 # ============================================================================
-# SECCIÓN 4: CARGAR BASELINE
+# FUNCIONES AUXILIARES PARA VISUALIZACIÓN
 # ============================================================================
-
-def render_baseline_upload_section():
-    """
-    Sección 4: Carga del baseline (.ref o .csv).
-    Returns True si el baseline está cargado.
-    """
-    
-    baseline_file = st.file_uploader(
-        "Archivo baseline:",
-        type=["ref", "csv"],
-        key="baseline_upload_offset",
-        help="Selecciona el archivo de baseline a ajustar"
-    )
-    
-    if baseline_file:
-        file_extension = baseline_file.name.split('.')[-1].lower()
-        
-        try:
-            if file_extension == 'ref':
-                header, ref_spectrum = load_ref_file(baseline_file)
-                
-                st.success("✅ Baseline .ref cargado correctamente")
-                
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.write("**Cabecera:**")
-                    st.write(f"X1 = {header[0]:.6e}")
-                    st.write(f"X2 = {header[1]:.6e}")
-                    st.write(f"X3 = {header[2]:.6e}")
-                
-                with col2:
-                    st.metric("Puntos espectrales", len(ref_spectrum))
-                    st.metric("Valor medio", f"{np.mean(ref_spectrum):.6f} AU")
-                
-                # Guardar en session_state
-                st.session_state.baseline_offset_tool = {
-                    'spectrum': ref_spectrum,
-                    'header': header,
-                    'df_baseline': None,
-                    'origin': 'ref',
-                    'filename': baseline_file.name
-                }
-                
-                return True
-                
-            elif file_extension == 'csv':
-                df_baseline, ref_spectrum = load_csv_baseline(baseline_file)
-                
-                st.success("✅ Baseline .csv cargado correctamente")
-                
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.metric("NIR Pixels", int(df_baseline['nir_pixels'].iloc[0]))
-                    st.metric("Timestamp", df_baseline['time_stamp'].iloc[0])
-                
-                with col2:
-                    st.metric("Puntos espectrales", len(ref_spectrum))
-                    st.metric("Valor medio", f"{np.mean(ref_spectrum):.6f} AU")
-                
-                # Guardar en session_state
-                st.session_state.baseline_offset_tool = {
-                    'spectrum': ref_spectrum,
-                    'header': None,
-                    'df_baseline': df_baseline,
-                    'origin': 'csv',
-                    'filename': baseline_file.name
-                }
-                
-                return True
-                
-        except Exception as e:
-            st.error(f"❌ Error al cargar baseline: {str(e)}")
-            import traceback
-            with st.expander("🔍 Ver detalles del error"):
-                st.code(traceback.format_exc())
-            return False
-    
-    # Si ya existe baseline cargado previamente
-    if 'baseline_offset_tool' in st.session_state:
-        baseline_data = st.session_state.baseline_offset_tool
-        st.success(f"✅ Baseline cargado: {baseline_data['filename']}")
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            st.metric("Puntos espectrales", len(baseline_data['spectrum']))
-        with col2:
-            st.metric("Valor medio", f"{np.mean(baseline_data['spectrum']):.6f} AU")
-        
-        return True
-    
-    return False
-
-
-# ============================================================================
-# SECCIÓN 5: VISUALIZACIÓN BASELINE
-# ============================================================================
-
-def render_visualization_section():
-    """
-    Sección 5: Visualización comparativa del baseline.
-    """
-    if 'baseline_offset_tool' not in st.session_state:
-        return
-    
-    baseline_data = st.session_state.baseline_offset_tool
-    ref_spectrum = baseline_data['spectrum']
-    offset_value = st.session_state.get('offset_value', 0.0)
-    
-    # Aplicar offset
-    adjusted_spectrum = ref_spectrum - offset_value
-    
-    # Crear gráfico comparativo
-    st.info("Comparación visual entre baseline original y ajustado")
-    
-    # Crear columnas espectrales dummy (canales 1 a N)
-    num_channels = len(ref_spectrum)
-    spectral_cols = [str(i) for i in range(1, num_channels + 1)]
-    
-    fig = plot_baseline_comparison(ref_spectrum, adjusted_spectrum, spectral_cols)
-    
-    # Actualizar título del gráfico
-    fig.update_layout(
-        title=f"Baseline Original vs Ajustado (Offset: {offset_value:+.6f} AU)"
-    )
-    
-    st.plotly_chart(fig, use_container_width=True)
-    
-    # Información del ajuste aplicado
-    original_mean = np.mean(ref_spectrum)
-    new_mean = np.mean(adjusted_spectrum)
-    
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        st.metric("Media Original", f"{original_mean:.6f} AU")
-    
-    with col2:
-        st.metric("Media Ajustada", f"{new_mean:.6f} AU")
-    
-    with col3:
-        st.metric("Cambio Aplicado", f"{offset_value:+.6f} AU")
-    
-    # Estadísticas del ajuste
-    with st.expander("📊 Estadísticas Detalladas", expanded=False):
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("#### Baseline Original")
-            st.write(f"**Mínimo:** {np.min(ref_spectrum):.6f} AU")
-            st.write(f"**Máximo:** {np.max(ref_spectrum):.6f} AU")
-            st.write(f"**Media:** {np.mean(ref_spectrum):.6f} AU")
-            st.write(f"**Desv. Est.:** {np.std(ref_spectrum):.6f} AU")
-        
-        with col2:
-            st.markdown("#### Baseline Ajustado")
-            st.write(f"**Mínimo:** {np.min(adjusted_spectrum):.6f} AU")
-            st.write(f"**Máximo:** {np.max(adjusted_spectrum):.6f} AU")
-            st.write(f"**Media:** {np.mean(adjusted_spectrum):.6f} AU")
-            st.write(f"**Desv. Est.:** {np.std(adjusted_spectrum):.6f} AU")
-    
-    # Tabla de comparación descargable
-    df_comparison = pd.DataFrame({
-        "Canal": range(1, len(ref_spectrum) + 1),
-        "baseline_original": ref_spectrum,
-        "baseline_ajustado": adjusted_spectrum,
-        "offset_aplicado": offset_value
-    })
-    
-    csv_comp = io.StringIO()
-    df_comparison.to_csv(csv_comp, index=False)
-    
-    st.download_button(
-        "📥 Descargar Tabla de Comparación (CSV)",
-        data=csv_comp.getvalue(),
-        file_name=f"comparacion_offset_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-        mime="text/csv",
-        use_container_width=True
-    )
-
-
-# ============================================================================
-# SECCIÓN 6: EXPORTAR
-# ============================================================================
-
-def render_export_section():
-    """
-    Sección 6: Exportar baseline ajustado.
-    """
-    if 'baseline_offset_tool' not in st.session_state:
-        return
-    
-    baseline_data = st.session_state.baseline_offset_tool
-    ref_spectrum = baseline_data['spectrum']
-    offset_value = st.session_state.get('offset_value', 0.0)
-    
-    # Verificar que hay cambio
-    if abs(offset_value) < 0.000001:
-        st.warning("⚠️ El offset es 0.000 - No hay cambios que exportar")
-        return
-    
-    # Aplicar offset
-    adjusted_spectrum = ref_spectrum - offset_value
-    
-    st.info(f"""
-    **Resumen del ajuste:**
-    - Offset aplicado: {offset_value:+.6f} AU
-    - Cambio en media: {offset_value:+.6f} AU
-    - Forma espectral: Preservada ✅
-    """)
-    
-    col_exp1, col_exp2 = st.columns(2)
-    
-    # Exportar .REF
-    with col_exp1:
-        st.markdown("**Formato .ref (binario)**")
-        if baseline_data['origin'] == 'ref' and baseline_data['header'] is not None:
-            st.success("✅ Cabecera original preservada")
-            ref_bytes = export_ref_file(adjusted_spectrum, baseline_data['header'])
-            # Generar nombre conservando el original con NEW_timestamp
-            original_name = baseline_data['filename']
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            name_parts = original_name.rsplit('.', 1)  # Separar nombre y extensión
-            if len(name_parts) == 2:
-                new_filename = f"{name_parts[0]}_OFFSAD_{timestamp}.{name_parts[1]}"
-            else:
-                new_filename = f"{original_name}_OFFSAD_{timestamp}"
-
-            st.download_button(
-                "📥 Descargar .ref ajustado",
-                data=ref_bytes,
-                file_name=new_filename,
-                mime="application/octet-stream",
-                key="download_ref_offset",
-                use_container_width=True
-            )
-        else:
-            st.warning("⚠️ No disponible (archivo original no era .ref)")
-    
-    # Exportar .CSV
-    with col_exp2:
-        st.markdown("**Formato .csv (nuevo software)**")
-        if baseline_data['origin'] == 'csv' and baseline_data['df_baseline'] is not None:
-            st.success("✅ Metadatos originales preservados")
-            csv_bytes = export_csv_file(adjusted_spectrum, df_baseline=baseline_data['df_baseline'])
-        else:
-            st.info("ℹ️ Usando metadatos por defecto")
-            csv_bytes = export_csv_file(adjusted_spectrum)
-        
-        # Generar nombre conservando el original con NEW_timestamp
-        original_name = baseline_data['filename']
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        name_parts = original_name.rsplit('.', 1)  # Separar nombre y extensión
-        if len(name_parts) == 2:
-            new_filename_csv = f"{name_parts[0]}_OFFSAD_{timestamp}.{name_parts[1]}"
-        else:
-            new_filename_csv = f"{original_name}_OFFSAD_{timestamp}"
-
-        st.download_button(
-            "📥 Descargar .csv ajustado",
-            data=csv_bytes,
-            file_name=new_filename_csv,
-            mime="text/csv",
-            key="download_csv_offset",
-            use_container_width=True
-        )
-
-
-# ============================================================================
-# SECCIÓN 8: NOTAS IMPORTANTES
-# ============================================================================
-
-def render_important_notes_section():
-    """
-    Sección 8: Notas importantes y recomendaciones.
-    """
-    with st.expander("ℹ️ Notas Importantes", expanded=True):
-        st.markdown("""
-        ### Recomendaciones después del ajuste:
-        
-        1. **Verificar con estándares ópticos**
-           - Mide los mismos estándares con el baseline ajustado
-           - Comprueba que el bias se ha corregido
-        
-        2. **Documentar el cambio**
-           - Anota el offset aplicado en el log del equipo
-           - Guarda una copia del baseline original
-        
-        3. **Validar calibraciones**
-           - Verifica que las calibraciones activas siguen siendo válidas
-           - Si es necesario, actualiza slope/bias
-        
-        4. **Límite de reproducibilidad**
-           - Offsets < 0.003 AU pueden estar dentro del ruido instrumental
-           - Offsets > 0.010 AU deberían investigarse (posible problema de hardware)
-        
-        ### ¿Cuándo usar esta herramienta?
-        
-        ✅ **Casos apropiados:**
-        - Corrección de bias sistemático detectado en validación
-        - Fine-tuning después de ajuste con white standards
-        - Alineamiento con equipo de referencia
-        
-        ❌ **NO usar para:**
-        - Problemas de ruido o deriva espectral (requiere servicio técnico)
-        - Desalineamientos ópticos (requiere ajuste mecánico)
-        - Compensar problemas de calibración (recalibrar en su lugar)
-        """)
-
-
-# ============================================================================
-# FUNCIONES AUXILIARES
-# ============================================================================
-
-def validate_standard_simple(reference: np.ndarray, current: np.ndarray) -> Dict:
-    """
-    Valida un estándar comparando medición vs referencia.
-    Versión simplificada sin umbrales.
-    """
-    # Asegurar que son float
-    reference = np.asarray(reference, dtype=np.float64)
-    current = np.asarray(current, dtype=np.float64)
-    
-    # 1. Correlación espectral
-    ref_norm = (reference - np.mean(reference)) / (np.std(reference) + 1e-10)
-    curr_norm = (current - np.mean(current)) / (np.std(current) + 1e-10)
-    correlation = np.sum(ref_norm * curr_norm) / len(ref_norm)
-    
-    # 2. Diferencias
-    diff = current - reference
-    max_diff = np.abs(diff).max()
-    rms = np.sqrt(np.mean(diff**2))
-    mean_diff = np.mean(diff)
-    
-    return {
-        'correlation': correlation,
-        'max_diff': max_diff,
-        'rms': rms,
-        'mean_diff': mean_diff,
-        'diff': diff
-    }
-
-
-def find_common_ids_simple(df_ref: pd.DataFrame, df_curr: pd.DataFrame) -> pd.DataFrame:
-    """
-    Encuentra IDs comunes entre referencia y actual.
-    Versión simplificada.
-    """
-    if len(df_ref) == 0 or len(df_curr) == 0:
-        return pd.DataFrame(columns=['ID', 'ref_note', 'curr_note', 'ref_idx', 'curr_idx'])
-    
-    if 'ID' not in df_ref.columns or 'ID' not in df_curr.columns:
-        return pd.DataFrame(columns=['ID', 'ref_note', 'curr_note', 'ref_idx', 'curr_idx'])
-    
-    # Crear listas para almacenar los resultados
-    ref_data = []
-    for id_val in df_ref['ID'].unique():
-        if pd.isna(id_val):
-            continue
-        mask = df_ref['ID'] == id_val
-        indices = df_ref[mask].index
-        if len(indices) > 0:
-            first_idx = indices[0]
-            ref_data.append({
-                'ID': id_val,
-                'ref_note': df_ref.loc[first_idx, 'Note'] if 'Note' in df_ref.columns else '',
-                'ref_idx': first_idx
-            })
-    
-    curr_data = []
-    for id_val in df_curr['ID'].unique():
-        if pd.isna(id_val):
-            continue
-        mask = df_curr['ID'] == id_val
-        indices = df_curr[mask].index
-        if len(indices) > 0:
-            first_idx = indices[0]
-            curr_data.append({
-                'ID': id_val,
-                'curr_note': df_curr.loc[first_idx, 'Note'] if 'Note' in df_curr.columns else '',
-                'curr_idx': first_idx
-            })
-    
-    if len(ref_data) == 0 or len(curr_data) == 0:
-        return pd.DataFrame(columns=['ID', 'ref_note', 'curr_note', 'ref_idx', 'curr_idx'])
-    
-    # Crear DataFrames y merge
-    df_ref_ids = pd.DataFrame(ref_data)
-    df_curr_ids = pd.DataFrame(curr_data)
-    matches = df_ref_ids.merge(df_curr_ids, on='ID', how='inner')
-    
-    return matches[['ID', 'ref_note', 'curr_note', 'ref_idx', 'curr_idx']]
-
 
 def create_simulation_comparison_plot(original_metrics: Dict, simulated_metrics: Dict, 
                                       offset_value: float) -> go.Figure:
-    """
-    Crea gráfico comparativo de métricas antes y después del offset.
-    """
+    """Crea gráfico comparativo de métricas antes y después del offset"""
     metrics = ['Max Δ (AU)', 'RMS', 'Offset Medio']
     original_values = [
         original_metrics['max_diff'],
@@ -1188,7 +933,7 @@ def create_simulation_comparison_plot(original_metrics: Dict, simulated_metrics:
     ))
     
     fig.update_layout(
-        title=f"Impacto del Offset en Métricas de Validación",
+        title="Impacto del Offset en Métricas de Validación",
         barmode='group',
         yaxis_title="Valor",
         template='plotly_white',
@@ -1204,9 +949,7 @@ def create_simulation_comparison_plot(original_metrics: Dict, simulated_metrics:
 def create_overlay_simulation_plot(validation_original: List[Dict], 
                                    validation_simulated: List[Dict],
                                    offset_value: float) -> go.Figure:
-    """
-    Crea gráfico overlay comparando original vs simulado.
-    """
+    """Crea gráfico overlay comparando original vs simulado"""
     colors_ref = ['#1f77b4', '#2ca02c', '#9467bd', '#8c564b', '#e377c2']
     colors_orig = ['#ff7f0e', '#d62728', '#ff69b4', '#ffa500', '#dc143c']
     colors_sim = ['#00cc00', '#00ff00', '#90ee90', '#32cd32', '#00fa9a']
@@ -1291,9 +1034,7 @@ def create_overlay_simulation_plot(validation_original: List[Dict],
 
 def create_global_statistics_comparison(validation_original: List[Dict],
                                         validation_simulated: List[Dict]) -> pd.DataFrame:
-    """
-    Crea tabla comparativa de estadísticas globales.
-    """
+    """Crea tabla comparativa de estadísticas globales"""
     if len(validation_original) == 0:
         return pd.DataFrame()
     
@@ -1339,10 +1080,260 @@ def create_global_statistics_comparison(validation_original: List[Dict],
     
     return pd.DataFrame(stats)
 
+
+# ============================================================================
+# SECCIÓN 3-7: BASELINE, VISUALIZACIÓN, EXPORTAR, INFORME, NOTAS
+# (Mantener código original de estas secciones - NO necesitan optimización)
+# ============================================================================
+
+def render_baseline_upload_section():
+    """Sección 3: Carga del baseline (.ref o .csv)"""
+    baseline_file = st.file_uploader(
+        "Archivo baseline:",
+        type=["ref", "csv"],
+        key="baseline_upload_offset",
+        help="Selecciona el archivo de baseline a ajustar"
+    )
+    
+    if baseline_file:
+        file_extension = baseline_file.name.split('.')[-1].lower()
+        
+        try:
+            if file_extension == 'ref':
+                header, ref_spectrum = load_ref_file(baseline_file)
+                
+                st.success("✅ Baseline .ref cargado correctamente")
+                
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.write("**Cabecera:**")
+                    st.write(f"X1 = {header[0]:.6e}")
+                    st.write(f"X2 = {header[1]:.6e}")
+                    st.write(f"X3 = {header[2]:.6e}")
+                
+                with col2:
+                    st.metric("Puntos espectrales", len(ref_spectrum))
+                    st.metric("Valor medio", f"{np.mean(ref_spectrum):.6f} AU")
+                
+                st.session_state.baseline_offset_tool = {
+                    'spectrum': ref_spectrum,
+                    'header': header,
+                    'df_baseline': None,
+                    'origin': 'ref',
+                    'filename': baseline_file.name
+                }
+                
+                return True
+                
+            elif file_extension == 'csv':
+                df_baseline, ref_spectrum = load_csv_baseline(baseline_file)
+                
+                st.success("✅ Baseline .csv cargado correctamente")
+                
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric("NIR Pixels", int(df_baseline['nir_pixels'].iloc[0]))
+                    st.metric("Timestamp", df_baseline['time_stamp'].iloc[0])
+                
+                with col2:
+                    st.metric("Puntos espectrales", len(ref_spectrum))
+                    st.metric("Valor medio", f"{np.mean(ref_spectrum):.6f} AU")
+                
+                st.session_state.baseline_offset_tool = {
+                    'spectrum': ref_spectrum,
+                    'header': None,
+                    'df_baseline': df_baseline,
+                    'origin': 'csv',
+                    'filename': baseline_file.name
+                }
+                
+                return True
+                
+        except Exception as e:
+            st.error(f"❌ Error al cargar baseline: {str(e)}")
+            import traceback
+            with st.expander("🔍 Ver detalles del error"):
+                st.code(traceback.format_exc())
+            return False
+    
+    if 'baseline_offset_tool' in st.session_state:
+        baseline_data = st.session_state.baseline_offset_tool
+        st.success(f"✅ Baseline cargado: {baseline_data['filename']}")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric("Puntos espectrales", len(baseline_data['spectrum']))
+        with col2:
+            st.metric("Valor medio", f"{np.mean(baseline_data['spectrum']):.6f} AU")
+        
+        return True
+    
+    return False
+
+
+def render_visualization_section():
+    """Sección 4: Visualización comparativa del baseline"""
+    if 'baseline_offset_tool' not in st.session_state:
+        return
+    
+    baseline_data = st.session_state.baseline_offset_tool
+    ref_spectrum = baseline_data['spectrum']
+    offset_value = st.session_state.get('offset_value', 0.0)
+    
+    # Aplicar offset
+    adjusted_spectrum = ref_spectrum - offset_value
+    
+    st.info("Comparación visual entre baseline original y ajustado")
+    
+    # Crear columnas espectrales dummy (canales 1 a N)
+    num_channels = len(ref_spectrum)
+    spectral_cols = [str(i) for i in range(1, num_channels + 1)]
+    
+    fig = plot_baseline_comparison(ref_spectrum, adjusted_spectrum, spectral_cols)
+    
+    # Actualizar título del gráfico
+    fig.update_layout(
+        title=f"Baseline Original vs Ajustado (Offset: {offset_value:+.6f} AU)"
+    )
+    
+    st.plotly_chart(fig, use_container_width=True)
+    
+    # Información del ajuste aplicado
+    original_mean = np.mean(ref_spectrum)
+    new_mean = np.mean(adjusted_spectrum)
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.metric("Media Original", f"{original_mean:.6f} AU")
+    
+    with col2:
+        st.metric("Media Ajustada", f"{new_mean:.6f} AU")
+    
+    with col3:
+        st.metric("Cambio Aplicado", f"{offset_value:+.6f} AU")
+    
+    # Estadísticas del ajuste
+    with st.expander("📊 Estadísticas Detalladas", expanded=False):
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("#### Baseline Original")
+            st.write(f"**Mínimo:** {np.min(ref_spectrum):.6f} AU")
+            st.write(f"**Máximo:** {np.max(ref_spectrum):.6f} AU")
+            st.write(f"**Media:** {np.mean(ref_spectrum):.6f} AU")
+            st.write(f"**Desv. Est.:** {np.std(ref_spectrum):.6f} AU")
+        
+        with col2:
+            st.markdown("#### Baseline Ajustado")
+            st.write(f"**Mínimo:** {np.min(adjusted_spectrum):.6f} AU")
+            st.write(f"**Máximo:** {np.max(adjusted_spectrum):.6f} AU")
+            st.write(f"**Media:** {np.mean(adjusted_spectrum):.6f} AU")
+            st.write(f"**Desv. Est.:** {np.std(adjusted_spectrum):.6f} AU")
+    
+    # Tabla de comparación descargable
+    df_comparison = pd.DataFrame({
+        "Canal": range(1, len(ref_spectrum) + 1),
+        "baseline_original": ref_spectrum,
+        "baseline_ajustado": adjusted_spectrum,
+        "offset_aplicado": offset_value
+    })
+    
+    csv_comp = io.StringIO()
+    df_comparison.to_csv(csv_comp, index=False)
+    
+    st.download_button(
+        "📥 Descargar Tabla de Comparación (CSV)",
+        data=csv_comp.getvalue(),
+        file_name=f"comparacion_offset_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+        mime="text/csv",
+        use_container_width=True
+    )
+
+
+def render_export_section():
+    """Sección 5: Exportar baseline ajustado"""
+    if 'baseline_offset_tool' not in st.session_state:
+        return
+    
+    baseline_data = st.session_state.baseline_offset_tool
+    ref_spectrum = baseline_data['spectrum']
+    offset_value = st.session_state.get('offset_value', 0.0)
+    
+    # Verificar que hay cambio
+    if abs(offset_value) < 0.000001:
+        st.warning("⚠️ El offset es 0.000 - No hay cambios que exportar")
+        return
+    
+    # Aplicar offset
+    adjusted_spectrum = ref_spectrum - offset_value
+    
+    st.info(f"""
+    **Resumen del ajuste:**
+    - Offset aplicado: {offset_value:+.6f} AU
+    - Cambio en media: {offset_value:+.6f} AU
+    - Forma espectral: Preservada ✅
+    """)
+    
+    col_exp1, col_exp2 = st.columns(2)
+    
+    # Exportar .REF
+    with col_exp1:
+        st.markdown("**Formato .ref (binario)**")
+        if baseline_data['origin'] == 'ref' and baseline_data['header'] is not None:
+            st.success("✅ Cabecera original preservada")
+            ref_bytes = export_ref_file(adjusted_spectrum, baseline_data['header'])
+            # Generar nombre conservando el original con NEW_timestamp
+            original_name = baseline_data['filename']
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            name_parts = original_name.rsplit('.', 1)
+            if len(name_parts) == 2:
+                new_filename = f"{name_parts[0]}_OFFSAD_{timestamp}.{name_parts[1]}"
+            else:
+                new_filename = f"{original_name}_OFFSAD_{timestamp}"
+
+            st.download_button(
+                "📥 Descargar .ref ajustado",
+                data=ref_bytes,
+                file_name=new_filename,
+                mime="application/octet-stream",
+                key="download_ref_offset",
+                use_container_width=True
+            )
+        else:
+            st.warning("⚠️ No disponible (archivo original no era .ref)")
+    
+    # Exportar .CSV
+    with col_exp2:
+        st.markdown("**Formato .csv (nuevo software)**")
+        if baseline_data['origin'] == 'csv' and baseline_data['df_baseline'] is not None:
+            st.success("✅ Metadatos originales preservados")
+            csv_bytes = export_csv_file(adjusted_spectrum, df_baseline=baseline_data['df_baseline'])
+        else:
+            st.info("ℹ️ Usando metadatos por defecto")
+            csv_bytes = export_csv_file(adjusted_spectrum)
+        
+        # Generar nombre conservando el original con NEW_timestamp
+        original_name = baseline_data['filename']
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        name_parts = original_name.rsplit('.', 1)
+        if len(name_parts) == 2:
+            new_filename_csv = f"{name_parts[0]}_OFFSAD_{timestamp}.csv"
+        else:
+            new_filename_csv = f"{original_name}_OFFSAD_{timestamp}.csv"
+
+        st.download_button(
+            "📥 Descargar .csv ajustado",
+            data=csv_bytes,
+            file_name=new_filename_csv,
+            mime="text/csv",
+            key="download_csv_offset",
+            use_container_width=True
+        )
+
+
 def render_report_generation_section():
-    """
-    Sección 7: Generación de informe HTML.
-    """
+    """Sección 6: Generación de informe HTML"""
     # Verificar que hay datos necesarios
     if 'standards_data' not in st.session_state:
         st.warning("⚠️ Necesitas cargar los archivos TSV primero")
@@ -1442,8 +1433,8 @@ def render_report_generation_section():
                             'global_offset_simulated': global_offset_sim,
                             'baseline_original': baseline_data['spectrum'],
                             'baseline_adjusted': baseline_adjusted,
-                            'ref_filename': standards_data['df_ref'].iloc[0].get('File', 'referencia.tsv'),
-                            'curr_filename': standards_data['df_curr'].iloc[0].get('File', 'actual.tsv'),
+                            'ref_filename': standards_data.get('ref_filename', 'referencia.tsv'),
+                            'curr_filename': standards_data.get('curr_filename', 'actual.tsv'),
                             'baseline_filename': baseline_data['filename']
                         }
                         
@@ -1469,6 +1460,43 @@ def render_report_generation_section():
                         with st.expander("🔍 Ver detalles del error"):
                             import traceback
                             st.code(traceback.format_exc())
+
+
+def render_important_notes_section():
+    """Sección 7: Notas importantes y recomendaciones"""
+    with st.expander("ℹ️ Notas Importantes", expanded=False):
+        st.markdown("""
+        ### Recomendaciones después del ajuste:
+        
+        1. **Verificar con estándares ópticos**
+           - Mide los mismos estándares con el baseline ajustado
+           - Comprueba que el bias se ha corregido
+        
+        2. **Documentar el cambio**
+           - Anota el offset aplicado en el log del equipo
+           - Guarda una copia del baseline original
+        
+        3. **Validar calibraciones**
+           - Verifica que las calibraciones activas siguen siendo válidas
+           - Si es necesario, actualiza slope/bias
+        
+        4. **Límite de reproducibilidad**
+           - Offsets < 0.003 AU pueden estar dentro del ruido instrumental
+           - Offsets > 0.010 AU deberían investigarse (posible problema de hardware)
+        
+        ### ¿Cuándo usar esta herramienta?
+        
+        ✅ **Casos apropiados:**
+        - Corrección de bias sistemático detectado en validación
+        - Fine-tuning después de ajuste con white standards
+        - Alineamiento con equipo de referencia
+        
+        ❌ **NO usar para:**
+        - Problemas de ruido o deriva espectral (requiere servicio técnico)
+        - Desalineamientos ópticos (requiere ajuste mecánico)
+        - Compensar problemas de calibración (recalibrar en su lugar)
+        """)
+
 
 if __name__ == "__main__":
     main()
