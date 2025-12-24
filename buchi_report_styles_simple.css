@@ -490,4 +490,106 @@ pre {
     .description-bottom-margin {
         margin-bottom: 20px;
     }
+
+
+    /* ===== CLASES CSS ADICIONALES PARA BASELINE REPORT ===== */
+    /* Añadir al final de buchi_report_styles_simple.css */
+
+    /* Tabla con margen top */
+    .table-margin-top {
+        margin-top: 15px;
+    }
+
+    /* Párrafo con estilo de nota al pie de tabla */
+    .table-footnote {
+        margin-top: 10px;
+        font-size: 0.9em;
+        color: #6c757d;
+    }
+
+    /* Sección de métricas con margen superior */
+    .metrics-section {
+        margin-top: 30px;
+    }
+
+    /* Caja de información destacada */
+    .info-highlight {
+        color: #17a2b8;
+        background-color: #d1ecf1;
+        padding: 15px;
+        border-radius: 5px;
+        border-left: 4px solid #17a2b8;
+    }
+
+    /* Estado de verificación con padding y margen */
+    .verification-status {
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 5px;
+    }
+
+    /* Estado fallido con borde destacado */
+    .status-failed {
+        border: 3px solid #dc3545;
+        background-color: #f8d7da;
+    }
+
+    /* Título de verificación con margen superior */
+    .verification-title {
+        margin-top: 30px;
+    }
+
+    /* ===== CLASES CSS ADICIONALES PARA PREDICTION REPORTS ===== */
+    /* Añadir al final de buchi_report_styles_simple.css */
+
+    /* Sección de producto con estilo destacado */
+    .product-section {
+        margin-bottom: 40px;
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid #64B445;
+    }
+
+    /* Título de producto sin margen superior */
+    .product-title {
+        margin-top: 0;
+        color: #093A34;
+    }
+
+    /* Lista con estilos de leyenda */
+    .legend-list {
+        margin: 10px 0 0 20px;
+        font-size: 0.9em;
+    }
+
+    /* Contenedor de comparación con padding */
+    .comparison-container {
+        padding: 20px;
+    }
+
+    /* Footer de comparación con estilo */
+    .comparison-footer {
+        margin-top: 15px;
+        padding: 10px;
+        background-color: #f1f3f4;
+        border-radius: 5px;
+    }
+
+    /* Overflow horizontal para tablas anchas */
+    .table-overflow {
+        overflow-x: auto;
+    }
+
+    /* Margen inferior para descripciones */
+    .section-description {
+        margin-bottom: 25px;
+    }
+
+    /* Color de evaluación para celdas */
+    .eval-excellent { background-color: #e8f5e9; }
+    .eval-acceptable { background-color: #fff3e0; }
+    .eval-review { background-color: #ffe8e8; }
+    .eval-significant { background-color: #ffebee; }
+
 }

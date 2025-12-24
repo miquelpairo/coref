@@ -497,3 +497,229 @@ def calculate_global_metrics(validation_data: List[Dict]) -> Dict:
         'offset_min': np.min(offset_list),
         'offset_max': np.max(offset_list),
     }
+
+# ============================================================================
+# FUNCIONES NUEVAS PARA AÑADIR AL FINAL DE report_utils.py
+# ============================================================================
+
+def generate_client_info_section(client_data: dict) -> str:
+    """
+    Genera sección de información del cliente (reutilizable en todos los informes).
+    
+    Args:
+        client_data: Dict con datos del cliente
+            Keys esperadas: client_name, contact_person, contact_email,
+                           sensor_sn, equipment_model, technician,
+                           location, date
+    
+    Returns:
+        str: HTML de la sección de información del cliente
+    """
+    from datetime import datetime
+    
+    html = f"""
+        <div class="info-box" id="info-cliente">
+            <h2>Información del Cliente</h2>
+            <table>
+                <tr><th>Campo</th><th>Valor</th></tr>
+                <tr><td><strong>Cliente</strong></td><td>{client_data.get('client_name', 'N/A')}</td></tr>
+                <tr><td><strong>Contacto</strong></td><td>{client_data.get('contact_person', 'N/A')}</td></tr>
+                <tr><td><strong>Email</strong></td><td>{client_data.get('contact_email', 'N/A')}</td></tr>
+                <tr><td><strong>N/S Sensor</strong></td><td>{client_data.get('sensor_sn', 'N/A')}</td></tr>
+                <tr><td><strong>Modelo</strong></td><td>{client_data.get('equipment_model', 'N/A')}</td></tr>
+                <tr><td><strong>Técnico</strong></td><td>{client_data.get('technician', 'N/A')}</td></tr>
+                <tr><td><strong>Ubicación</strong></td><td>{client_data.get('location', 'N/A')}</td></tr>
+                <tr><td><strong>Fecha del Proceso</strong></td><td>{client_data.get('date', datetime.now().strftime('%Y-%m-%d %H:%M:%S'))}</td></tr>
+            </table>
+        </div>
+    """
+    return html
+
+
+def generate_notes_section(notes: str) -> str:
+    """
+    Genera sección de notas adicionales (reutilizable en todos los informes).
+    
+    Args:
+        notes: Texto de las notas adicionales
+        
+    Returns:
+        str: HTML de la sección de notas
+    """
+    if not notes:
+        return ""
+    
+    html = f"""
+        <div class="info-box">
+            <h2>📝 Notas Adicionales</h2>
+            <p>{notes}</p>
+        </div>
+    """
+    return html
+
+
+def df_to_html_table(df, float_fmt="{:.2f}", index=False) -> str:
+    """
+    Convierte DataFrame a tabla HTML con formato personalizado.
+    
+    Args:
+        df: DataFrame a convertir
+        float_fmt: Formato para números flotantes
+        index: Si mostrar el índice
+        
+    Returns:
+        str: HTML de la tabla
+    """
+    if df is None or df.empty:
+        return "<p><em>Sin datos</em></p>"
+    
+    df_fmt = df.copy()
+    
+    # Formatear columnas numéricas
+    for col in df_fmt.select_dtypes(include="number").columns:
+        df_fmt[col] = df_fmt[col].apply(
+            lambda x: float_fmt.format(x) if pd.notna(x) else ""
+        )
+    
+    return df_fmt.to_html(index=index, classes="table", border=0)
+
+
+# ============================================================================
+# FUNCIÓN ADICIONAL PARA report_utils.py
+# Añadir después de df_to_html_table()
+# ============================================================================
+
+def generate_evaluated_table(
+    data,
+    columns,
+    evaluation_column=None,
+    evaluation_thresholds=None,
+    title=None
+):
+    """
+    Genera tabla HTML con evaluación automática por colores según umbrales.
+    
+    Esta función es útil para tablas comparativas donde las filas deben
+    colorearse según la magnitud de algún valor (ej: diferencias, errores, etc.)
+    
+    Args:
+        data (list[dict]): Lista de dicts con datos de cada fila
+            Ejemplo: [
+                {'param': 'Proteína', 'baseline': 15.2, 'nueva': 15.8, 'delta': 3.9},
+                {'param': 'Grasa', 'baseline': 3.5, 'nueva': 3.7, 'delta': 5.7}
+            ]
+        
+        columns (list[dict]): Lista de dicts definiendo cada columna
+            Cada dict debe tener:
+            - 'key' (str): Clave en data dict
+            - 'header' (str): Texto del encabezado
+            - 'align' (str, opcional): 'left', 'center', 'right' (default: 'center')
+            - 'format' (str, opcional): String format para números (ej: '{:.3f}')
+            
+            Ejemplo: [
+                {'key': 'param', 'header': 'Parámetro', 'align': 'left'},
+                {'key': 'baseline', 'header': 'Baseline', 'format': '{:.3f}'},
+                {'key': 'nueva', 'header': 'Nueva', 'format': '{:.3f}'},
+                {'key': 'delta', 'header': 'Δ %', 'format': '{:+.2f}%'}
+            ]
+        
+        evaluation_column (str, optional): Nombre de la columna que determina 
+            el color de la fila (se usa valor absoluto)
+        
+        evaluation_thresholds (dict, optional): Dict con umbrales de evaluación.
+            Cada nivel debe tener 'class' y opcionalmente 'max'.
+            El último nivel no debe tener 'max' (es el catch-all).
+            
+            Ejemplo: {
+                'excellent': {'max': 2.0, 'class': 'eval-excellent'},
+                'acceptable': {'max': 5.0, 'class': 'eval-acceptable'},
+                'review': {'max': 10.0, 'class': 'eval-review'},
+                'critical': {'class': 'eval-significant'}
+            }
+        
+        title (str, optional): Título de la tabla
+    
+    Returns:
+        str: HTML de la tabla con clases CSS aplicadas
+    
+    Example:
+        >>> data = [
+        ...     {'param': 'Proteína', 'ref': 15.2, 'new': 15.8, 'diff': 3.9},
+        ...     {'param': 'Grasa', 'ref': 3.5, 'new': 3.4, 'diff': -2.9}
+        ... ]
+        >>> 
+        >>> columns = [
+        ...     {'key': 'param', 'header': 'Parámetro', 'align': 'left'},
+        ...     {'key': 'ref', 'header': 'Referencia', 'format': '{:.1f}'},
+        ...     {'key': 'new', 'header': 'Nueva', 'format': '{:.1f}'},
+        ...     {'key': 'diff', 'header': 'Δ %', 'format': '{:+.1f}%'}
+        ... ]
+        >>> 
+        >>> thresholds = {
+        ...     'good': {'max': 3.0, 'class': 'eval-excellent'},
+        ...     'warning': {'max': 5.0, 'class': 'eval-acceptable'},
+        ...     'bad': {'class': 'eval-review'}
+        ... }
+        >>> 
+        >>> html = generate_evaluated_table(
+        ...     data, columns,
+        ...     evaluation_column='diff',
+        ...     evaluation_thresholds=thresholds,
+        ...     title='Comparación de Resultados'
+        ... )
+    """
+    html = '<div class="table-overflow">\n'
+    
+    if title:
+        html += f'<h4>{title}</h4>\n'
+    
+    html += '<table>\n<thead>\n<tr>\n'
+    
+    # Generar headers
+    for col in columns:
+        align = col.get('align', 'center')
+        header_text = col['header']
+        html += f'<th style="text-align: {align};">{header_text}</th>\n'
+    
+    html += '</tr>\n</thead>\n<tbody>\n'
+    
+    # Generar filas
+    for row_data in data:
+        # Determinar clase CSS para la fila según evaluación
+        row_class = ''
+        
+        if evaluation_column and evaluation_thresholds and evaluation_column in row_data:
+            eval_value = abs(row_data[evaluation_column])
+            
+            # Iterar por los umbrales en orden
+            for level_name, threshold_config in evaluation_thresholds.items():
+                if 'max' in threshold_config:
+                    if eval_value < threshold_config['max']:
+                        row_class = threshold_config['class']
+                        break
+                else:
+                    # Último nivel sin 'max' es el catch-all
+                    row_class = threshold_config['class']
+        
+        html += f'<tr class="{row_class}">\n'
+        
+        # Generar celdas
+        for col in columns:
+            key = col['key']
+            value = row_data.get(key, '-')
+            
+            # Aplicar formato si está especificado y el valor es numérico
+            if 'format' in col and isinstance(value, (int, float)):
+                try:
+                    value = col['format'].format(value)
+                except (ValueError, KeyError):
+                    pass  # Mantener valor original si falla el formato
+            
+            align = col.get('align', 'center')
+            html += f'<td style="text-align: {align};">{value}</td>\n'
+        
+        html += '</tr>\n'
+    
+    html += '</tbody>\n</table>\n</div>\n'
+    
+    return html

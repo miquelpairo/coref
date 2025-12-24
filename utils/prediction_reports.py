@@ -1,5 +1,6 @@
 """
 Prediction Reports - Generación de reportes HTML y texto con estilo COREF Suite
+Optimizado: sin CSS inline, usando report_utils, sidebar estandarizado
 """
 
 from datetime import datetime
@@ -7,347 +8,16 @@ from .nir_analyzer import get_params_in_original_order
 from .prediction_charts import create_detailed_comparison
 import plotly.graph_objects as go
 
+# Imports de funciones compartidas
+from core.report_utils import (
+    load_buchi_css,
+    wrap_chart_in_expandable,
+    start_html_template,
+    build_sidebar_html,
+    generate_footer,
+    generate_evaluated_table
+)
 
-def load_buchi_css():
-    """Carga el CSS corporativo de BUCHI (estilo COREF Suite)"""
-    try:
-        with open('buchi_report_styles_simple.css', 'r', encoding='utf-8') as f:
-            return f.read()
-    except FileNotFoundError:
-        # CSS inline completo como fallback - Estilo COREF Suite
-        return """
-/* Reset básico */
-* {
-    box-sizing: border-box;
-}
-
-/* Estilos globales */
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    line-height: 1.6;
-    color: #333;
-    background-color: #f5f5f5;
-    margin: 0;
-    padding: 0;
-}
-
-/* Sidebar corporativo */
-.sidebar {
-    position: fixed;
-    left: 0;
-    top: 0;
-    width: 250px;
-    height: 100vh;
-    background-color: #093A34;
-    padding: 20px;
-    overflow-y: auto;
-    z-index: 1000;
-    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-}
-
-.sidebar ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.sidebar ul li {
-    margin-bottom: 10px;
-}
-
-.sidebar ul li a {
-    color: white;
-    text-decoration: none;
-    display: block;
-    padding: 10px;
-    border-radius: 5px;
-    transition: background-color 0.3s;
-    font-weight: bold;
-}
-
-.sidebar ul li a:hover {
-    background-color: #289A93;
-}
-
-/* Contenido principal */
-.main-content {
-    margin-left: 290px;
-    padding: 40px;
-    max-width: 1400px;
-}
-
-/* Títulos */
-h1 {
-    color: #093A34;
-    border-bottom: 4px solid #289A93;
-    padding-bottom: 15px;
-    margin-bottom: 30px;
-    font-size: 2.5em;
-}
-
-h2 {
-    color: #093A34;
-    margin-top: 30px;
-    margin-bottom: 15px;
-    font-size: 1.8em;
-    border-left: 5px solid #289A93;
-    padding-left: 15px;
-}
-
-h3 {
-    color: #289A93;
-    margin-top: 25px;
-    margin-bottom: 12px;
-    font-size: 1.4em;
-}
-
-h4 {
-    color: #064d45;
-    margin-top: 20px;
-    margin-bottom: 10px;
-}
-
-/* Cajas de información */
-.info-box {
-    background-color: white;
-    border-radius: 8px;
-    padding: 25px;
-    margin: 20px 0;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.warning-box {
-    background-color: #fff3cd;
-    border-left: 5px solid #ffc107;
-    border-radius: 8px;
-    padding: 20px;
-    margin: 20px 0;
-}
-
-.status-good {
-    background-color: #d4edda;
-    border-left: 5px solid #28a745;
-    border-radius: 8px;
-    padding: 20px;
-    margin: 20px 0;
-}
-
-.status-warning {
-    background-color: #fff3cd;
-    border-left: 5px solid #ffc107;
-    border-radius: 8px;
-    padding: 20px;
-    margin: 20px 0;
-}
-
-.status-bad {
-    background-color: #f8d7da;
-    border-left: 5px solid #dc3545;
-    border-radius: 8px;
-    padding: 20px;
-    margin: 20px 0;
-}
-
-/* Tablas */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 20px 0;
-    background-color: white;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-th {
-    background-color: #093A34;
-    color: white;
-    padding: 12px;
-    text-align: left;
-    font-weight: bold;
-    border: 1px solid #ddd;
-}
-
-td {
-    padding: 10px 12px;
-    border: 1px solid #ddd;
-}
-
-tr:nth-child(even) {
-    background-color: #f8f9fa;
-}
-
-tr:hover {
-    background-color: #e9ecef;
-}
-
-/* Grid de información */
-.info-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    margin: 20px 0;
-}
-
-.info-item {
-    background-color: #f8f9fa;
-    padding: 15px;
-    border-radius: 5px;
-    border-left: 3px solid #289A93;
-}
-
-.info-label {
-    font-weight: bold;
-    color: #093A34;
-    display: block;
-    margin-bottom: 5px;
-    font-size: 0.9em;
-}
-
-.info-value {
-    color: #333;
-    font-size: 1.1em;
-}
-
-/* Expandibles (details/summary) */
-details {
-    margin: 20px 0;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    padding: 10px;
-    background-color: white;
-}
-
-summary {
-    cursor: pointer;
-    font-weight: bold;
-    padding: 10px;
-    background-color: #f8f9fa;
-    border-radius: 5px;
-    user-select: none;
-    color: #093A34;
-}
-
-summary:hover {
-    background-color: #e9ecef;
-}
-
-details[open] summary {
-    border-bottom: 2px solid #289A93;
-    margin-bottom: 10px;
-}
-
-/* Footer */
-.footer {
-    text-align: center;
-    padding: 30px;
-    margin-top: 50px;
-    border-top: 3px solid #289A93;
-    color: #6c757d;
-    background-color: white;
-}
-
-/* Pre-formatted text */
-pre {
-    background-color: #f8f9fa;
-    padding: 20px;
-    border-radius: 8px;
-    border: 1px solid #dee2e6;
-    overflow-x: auto;
-    font-family: 'Courier New', monospace;
-    font-size: 0.85em;
-    line-height: 1.5;
-    white-space: pre-wrap;
-}
-
-/* Plot containers */
-.plot-container {
-    margin: 30px 0;
-    padding: 20px;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .sidebar {
-        width: 100%;
-        height: auto;
-        position: relative;
-    }
-    
-    .main-content {
-        margin-left: 0;
-    }
-    
-    .info-grid {
-        grid-template-columns: 1fr;
-    }
-}
-"""
-
-def wrap_chart_in_expandable(chart_html, title, chart_id, default_open=False):
-    """
-    Envuelve un gráfico en un elemento expandible HTML con estilo BUCHI.
-    
-    Args:
-        chart_html (str): HTML del gráfico
-        title (str): Título del expandible
-        chart_id (str): ID único para el expandible
-        default_open (bool): Si debe estar abierto por defecto
-        
-    Returns:
-        str: HTML con el gráfico en un expandible
-    """
-    open_attr = "open" if default_open else ""
-    
-    return f"""
-    <details {open_attr} id="{chart_id}">
-        <summary>📊 {title}</summary>
-        <div style="padding: 15px; margin-top: 10px;">
-            {chart_html}
-        </div>
-    </details>
-    """
-
-
-def generate_html_header(sections=None):
-    """
-    Genera el encabezado HTML con sidebar BUCHI dinámico.
-    """
-    if sections is None:
-        sections = [
-            ("info-general", "Información General"),
-            ("statistics", "Estadísticas Detalladas"),
-            ("comparison-charts", "Gráficos Comparativos"),
-            ("differences-by-product", "Diferencias por Producto"),
-            ("text-report", "Reporte en Texto")
-        ]
-    
-    sidebar_html = ""
-    for section_id, section_name in sections:
-        sidebar_html += f'            <li><a href="#{section_id}">{section_name}</a></li>\n'
-    
-    css_content = load_buchi_css()
-    
-    return f"""<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reporte de Predicciones NIR - BUCHI</title>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <style>
-{css_content}
-    </style>
-</head>
-<body>
-    <div class="sidebar">
-        <ul>
-{sidebar_html}        </ul>
-    </div>
-    
-    <div class="main-content">
-"""
 
 def calculate_lamp_differences(stats, analyzer):
     """
@@ -424,6 +94,7 @@ def calculate_lamp_differences(stats, analyzer):
 def generate_differences_section(differences_data):
     """
     Genera HTML para la sección de diferencias por producto.
+    Usa generate_evaluated_table() para las tablas de comparación.
     
     Args:
         differences_data (dict): Datos de diferencias calculadas
@@ -434,7 +105,7 @@ def generate_differences_section(differences_data):
     html = """
     <div class="info-box" id="differences-by-product">
         <h2>📊 Diferencias por Producto</h2>
-        <p style='color: #6c757d; font-size: 0.95em; margin-bottom: 25px;'>
+        <p class="text-caption section-description">
             <em>Análisis comparativo detallado entre lámparas para cada producto.</em>
         </p>
     """
@@ -444,9 +115,9 @@ def generate_differences_section(differences_data):
         comparisons = product_data['comparisons']
         
         html += f"""
-        <div style="margin-bottom: 40px; padding: 20px; background-color: #f8f9fa; border-radius: 8px; border-left: 4px solid #64B445;">
-            <h3 style="margin-top: 0; color: #093A34;">🔬 {product}</h3>
-            <p style="color: #6c757d; font-size: 0.9em; margin-bottom: 20px;">
+        <div class="product-section">
+            <h3 class="product-title">🔬 {product}</h3>
+            <p class="text-caption-small">
                 <strong>Lámpara Baseline:</strong> {baseline_lamp} 
                 (N = {comparisons[0]['n_baseline'] if comparisons else 'N/A'})
             </p>
@@ -459,79 +130,84 @@ def generate_differences_section(differences_data):
             
             html += f"""
             <details open>
-                <summary style="padding: 15px;">
-                    📍 {comp_lamp} vs {baseline_lamp} (N = {n_compared})
-                </summary>
+                <summary>📍 {comp_lamp} vs {baseline_lamp} (N = {n_compared})</summary>
                 
-                <div style="padding: 20px;">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th style="text-align: left;">Parámetro</th>
-                                <th style="text-align: center;">{baseline_lamp}<br/><span style="font-weight: normal; font-size: 0.85em;">(Baseline)</span></th>
-                                <th style="text-align: center;">{comp_lamp}<br/><span style="font-weight: normal; font-size: 0.85em;">(Comparada)</span></th>
-                                <th style="text-align: center;">Δ Absoluta</th>
-                                <th style="text-align: center;">Δ Relativa (%)</th>
-                                <th style="text-align: center;">Evaluación</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                <div class="comparison-container">
             """
             
+            # Preparar datos para generate_evaluated_table
             sorted_params = sorted(
                 differences.items(), 
                 key=lambda x: abs(x[1]['absolute_diff']), 
                 reverse=True
             )
             
+            table_data = []
             for param, diff_data in sorted_params:
                 baseline_val = diff_data['baseline_mean']
                 compared_val = diff_data['compared_mean']
                 abs_diff = diff_data['absolute_diff']
                 percent_diff = diff_data['percent_diff']
                 
+                direction = '↑' if abs_diff > 0 else '↓' if abs_diff < 0 else '='
+                
+                # Determinar evaluación
                 abs_percent = abs(percent_diff)
                 if abs_percent < 2.0:
                     evaluation = '🟢 Excelente'
                     eval_color = '#4caf50'
-                    row_bg = '#e8f5e9'
                 elif abs_percent < 5.0:
                     evaluation = '🟡 Aceptable'
                     eval_color = '#ffc107'
-                    row_bg = '#fff3e0'
                 elif abs_percent < 10.0:
                     evaluation = '🟠 Revisar'
                     eval_color = '#ff9800'
-                    row_bg = '#ffe8e8'
                 else:
                     evaluation = '🔴 Significativo'
                     eval_color = '#f44336'
-                    row_bg = '#ffebee'
                 
-                direction = '↑' if abs_diff > 0 else '↓' if abs_diff < 0 else '='
-                
-                html += f"""
-                    <tr style="background-color: {row_bg};">
-                        <td style="font-weight: bold;">{param}</td>
-                        <td style="text-align: center;">{baseline_val:.3f}</td>
-                        <td style="text-align: center;">{compared_val:.3f}</td>
-                        <td style="text-align: center; font-weight: bold;">{direction} {abs(abs_diff):.3f}</td>
-                        <td style="text-align: center; font-weight: bold; color: {eval_color};">
-                            {abs_diff:+.3f} ({percent_diff:+.2f}%)
-                        </td>
-                        <td style="text-align: center; color: {eval_color}; font-weight: bold;">
-                            {evaluation}
-                        </td>
-                    </tr>
-                """
+                table_data.append({
+                    'param': param,
+                    'baseline': baseline_val,
+                    'compared': compared_val,
+                    'abs_diff': f"{direction} {abs(abs_diff):.3f}",
+                    'percent_diff': abs_percent,  # Para evaluación
+                    'percent_display': f"{abs_diff:+.3f} ({percent_diff:+.2f}%)",
+                    'evaluation': evaluation,
+                    'eval_color': eval_color
+                })
             
+            # Definir columnas
+            columns = [
+                {'key': 'param', 'header': 'Parámetro', 'align': 'left'},
+                {'key': 'baseline', 'header': f'{baseline_lamp}<br/><span class="text-caption-small">(Baseline)</span>', 'format': '{:.3f}'},
+                {'key': 'compared', 'header': f'{comp_lamp}<br/><span class="text-caption-small">(Comparada)</span>', 'format': '{:.3f}'},
+                {'key': 'abs_diff', 'header': 'Δ Absoluta', 'align': 'center'},
+                {'key': 'percent_display', 'header': 'Δ Relativa (%)', 'align': 'center'},
+                {'key': 'evaluation', 'header': 'Evaluación', 'align': 'center'}
+            ]
+            
+            # Definir umbrales para colorear filas
+            thresholds = {
+                'excellent': {'max': 2.0, 'class': 'eval-excellent'},
+                'acceptable': {'max': 5.0, 'class': 'eval-acceptable'},
+                'review': {'max': 10.0, 'class': 'eval-review'},
+                'critical': {'class': 'eval-significant'}
+            }
+            
+            # Generar tabla usando función compartida
+            html += generate_evaluated_table(
+                table_data,
+                columns,
+                evaluation_column='percent_diff',
+                evaluation_thresholds=thresholds
+            )
+            
+            # Añadir leyenda
             html += """
-                        </tbody>
-                    </table>
-                    
-                    <div style="margin-top: 15px; padding: 10px; background-color: #f1f3f4; border-radius: 5px;">
+                    <div class="comparison-footer">
                         <strong>📌 Leyenda de Evaluación:</strong>
-                        <ul style="margin: 10px 0 0 20px; font-size: 0.9em;">
+                        <ul class="legend-list">
                             <li><strong>🟢 Excelente:</strong> Δ < 2% - Diferencia despreciable</li>
                             <li><strong>🟡 Aceptable:</strong> 2% ≤ Δ < 5% - Dentro del rango esperado</li>
                             <li><strong>🟠 Revisar:</strong> 5% ≤ Δ < 10% - Diferencia notable</li>
@@ -708,13 +384,23 @@ def generate_html_report(stats, analyzer, filename):
     sensor_serial = analyzer.sensor_serial if analyzer.sensor_serial else "N/A"
     timestamp = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
     
-    # Generar encabezado con sidebar
-    html = generate_html_header()
+    # Definir secciones del sidebar
+    sections = [
+        ("info-general", "Información General"),
+        ("statistics", "Estadísticas Detalladas"),
+        ("comparison-charts", "Gráficos Comparativos"),
+        ("differences-by-product", "Diferencias por Producto"),
+        ("text-report", "Reporte en Texto")
+    ]
     
-    # Título principal
+    # Iniciar HTML con template estandarizado
+    html = start_html_template(
+        title="Reporte de Predicciones NIR",
+        sidebar_sections=sections
+    )
+    
+    # Información general
     html += f"""
-        <h1>Reporte de Predicciones NIR</h1>
-        
         <div class="info-box" id="info-general">
             <h2>Información General del Análisis</h2>
             <div class="info-grid">
@@ -753,7 +439,7 @@ def generate_html_report(stats, analyzer, filename):
     html += """
         <div class="info-box" id="statistics">
             <h2>Estadísticas por Producto y Lámpara</h2>
-            <p style='color: #6c757d; font-size: 0.95em; margin-bottom: 25px;'>
+            <p class="text-caption section-description">
                 <em>Valores promedio y desviación estándar de cada parámetro analítico.</em>
             </p>
     """
@@ -773,16 +459,16 @@ def generate_html_report(stats, analyzer, filename):
         
         html += f"""
             <h3>{product}</h3>
-            <div style="overflow-x: auto;">
+            <div class="table-overflow">
                 <table>
                     <thead>
                         <tr>
-                            <th style="text-align: left;">Lámpara</th>
+                            <th>Lámpara</th>
                             <th>N</th>
         """
         
         for param in params:
-            html += f'<th>{param}<br/><span style="font-weight: normal; font-size: 0.85em;">(Media ± SD)</span></th>'
+            html += f'<th>{param}<br/><span class="text-caption-small">(Media ± SD)</span></th>'
         
         html += """
                         </tr>
@@ -793,7 +479,7 @@ def generate_html_report(stats, analyzer, filename):
         for lamp, lamp_stats in stats[product].items():
             html += f"""
                         <tr>
-                            <td style="font-weight: bold; background-color: #f8f9fa;">{lamp}</td>
+                            <td><strong>{lamp}</strong></td>
                             <td>{lamp_stats['n']}</td>
             """
             
@@ -823,7 +509,7 @@ def generate_html_report(stats, analyzer, filename):
     html += """
         <div class="info-box" id="comparison-charts">
             <h2>Gráficos Comparativos</h2>
-            <p style='color: #6c757d; font-size: 0.95em;'>
+            <p class="text-caption">
                 <em>Análisis visual de las predicciones NIR entre diferentes lámparas.</em>
             </p>
     """
@@ -835,8 +521,9 @@ def generate_html_report(stats, analyzer, filename):
         
         if fig:
             chart_html = fig.to_html(
-                include_plotlyjs=False,
-                div_id=f"graph_{param.replace(' ', '_')}"
+                include_plotlyjs='cdn',
+                div_id=f"graph_{param.replace(' ', '_')}",
+                config={'displayModeBar': True, 'responsive': True}
             )
             
             html += wrap_chart_in_expandable(
@@ -862,23 +549,14 @@ def generate_html_report(stats, analyzer, filename):
     html += f"""
         <div class="info-box" id="text-report">
             <h2>Informe Detallado en Texto</h2>
-            <p style='color: #6c757d; font-size: 0.95em; margin-bottom: 20px;'>
+            <p class="text-caption description-bottom-margin">
                 <em>Reporte completo en formato de texto con análisis estadístico.</em>
             </p>
             <pre>{text_report}</pre>
         </div>
     """
     
-    # Footer - DENTRO del main-content pero cerrando main-content después
-    html += f"""
-        <div class="footer">
-            <p><strong>NIR Predictions Analyzer</strong> - Desarrollado para BUCHI</p>
-            <p>Reporte generado automáticamente el {timestamp}</p>
-            <p>© BUCHI Labortechnik AG</p>
-        </div>
-    </div>
-</body>
-</html>
-"""
+    # Footer
+    html += generate_footer()
     
     return html
