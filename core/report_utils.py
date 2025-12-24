@@ -428,40 +428,70 @@ def generate_footer(tool_name: str = "COREF Suite") -> str:
     return html
 
 
-def start_html_template(title: str, sidebar_html: str) -> str:
+def start_html_template(title: str, sidebar_html: str = None, 
+                        sidebar_sections: list = None, client_info: dict = None) -> str:
     """
-    Inicia el documento HTML con estructura base.
+    Inicia el documento HTML con sidebar y opcionalmente información del cliente.
     
     Args:
-        title: Título del documento
-        sidebar_html: HTML del sidebar ya construido
-        
+        title: Título del informe
+        sidebar_html: HTML del sidebar ya construido (DEPRECATED, usar sidebar_sections)
+        sidebar_sections: Lista de tuplas (id, label) para construir el sidebar
+            Ejemplo: [("section1", "Sección 1"), ("section2", "Sección 2")]
+        client_info: Dict con información del cliente (opcional)
+    
     Returns:
         str: HTML inicial del documento
     """
-    return f"""
-    <!DOCTYPE html>
-    <html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>{title}</title>
-        <style>
-            {load_buchi_css()}
-            {get_sidebar_styles()}
-            {get_common_report_styles()}
-        </style>
-    </head>
-    <body>
-        <div class="sidebar">
-            <h2>📋 Índice</h2>
-            <ul>
-                {sidebar_html}
-            </ul>
-        </div>
-
-        <div class="main-content">
-    """
+    # Cargar CSS
+    buchi_css = load_buchi_css()
+    sidebar_css = get_sidebar_styles()
+    common_css = get_common_report_styles()
+    
+    # Construir sidebar
+    if sidebar_sections is not None:
+        # NUEVO: Construir desde lista de secciones (sin parámetros opcionales)
+        sidebar_items = []
+        for sid, label in sidebar_sections:
+            sidebar_items.append(f'            <li><a href="#{sid}">{label}</a></li>')
+        sidebar_content = '\n'.join(sidebar_items)
+    elif sidebar_html is not None:
+        # LEGACY: Usar HTML proporcionado directamente
+        sidebar_content = sidebar_html
+    else:
+        # Por defecto, sidebar vacío
+        sidebar_content = ""
+    
+    # HTML base
+    html = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{title}</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+{buchi_css}
+{sidebar_css}
+{common_css}
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <ul>
+{sidebar_content}
+        </ul>
+    </div>
+    
+    <div class="main-content">
+        <h1>{title}</h1>
+"""
+    
+    # Si hay info cliente, añadir sección
+    if client_info:
+        html += generate_client_info_section(client_info)
+    
+    return html
 
 
 def calculate_global_metrics(validation_data: List[Dict]) -> Dict:

@@ -769,7 +769,7 @@ def main():
                         
                         # Descargar
                         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                        filename = f"Validation_Report_{sensor_serial.replace(' ', '_')}_{timestamp}.html"
+                        filename = f"STANDARDS_VALIDATION_Report_{sensor_serial.replace(' ', '_')}_{timestamp}.html"
                         
                         st.success("✅ Informe generado correctamente")
                         

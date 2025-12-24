@@ -1442,7 +1442,7 @@ def render_report_generation_section():
                         
                         # Descargar
                         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                        filename = f"Offset_Adjustment_Report_{sensor_serial.replace(' ', '_')}_{timestamp}.html"
+                        filename = f"OFFSET_Adjustment_Report_{sensor_serial.replace(' ', '_')}_{timestamp}.html"
                         
                         st.success("✅ Informe generado correctamente")
                         

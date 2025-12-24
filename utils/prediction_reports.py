@@ -1,6 +1,7 @@
 """
 Prediction Reports - Generación de reportes HTML y texto con estilo COREF Suite
 Optimizado: sin CSS inline, usando report_utils, sidebar estandarizado
+FIXED: Tablas con scroll horizontal + Título "Índice" en sidebar
 """
 
 from datetime import datetime
@@ -393,10 +394,15 @@ def generate_html_report(stats, analyzer, filename):
         ("text-report", "Reporte en Texto")
     ]
     
+    # ⭐ FIX: Construir sidebar manualmente con título "Índice"
+    sidebar_html = '<h2>📋 Índice</h2>\n'
+    for section_id, section_label in sections:
+        sidebar_html += f'            <li><a href="#{section_id}">{section_label}</a></li>\n'
+    
     # Iniciar HTML con template estandarizado
     html = start_html_template(
         title="Reporte de Predicciones NIR",
-        sidebar_sections=sections
+        sidebar_html=sidebar_html  # ⭐ Usar sidebar_html en lugar de sidebar_sections
     )
     
     # Información general
@@ -435,7 +441,7 @@ def generate_html_report(stats, analyzer, filename):
         </div>
     """
     
-    # Estadísticas por producto
+    # ⭐ FIX: Estadísticas por producto CON SCROLL HORIZONTAL
     html += """
         <div class="info-box" id="statistics">
             <h2>Estadísticas por Producto y Lámpara</h2>
@@ -459,12 +465,12 @@ def generate_html_report(stats, analyzer, filename):
         
         html += f"""
             <h3>{product}</h3>
-            <div class="table-overflow">
-                <table>
+            <div class="stats-table-container">
+                <table class="stats-table">
                     <thead>
                         <tr>
-                            <th>Lámpara</th>
-                            <th>N</th>
+                            <th class="sticky-col-lamp">Lámpara</th>
+                            <th class="sticky-col-n">N</th>
         """
         
         for param in params:
@@ -478,9 +484,9 @@ def generate_html_report(stats, analyzer, filename):
         
         for lamp, lamp_stats in stats[product].items():
             html += f"""
-                        <tr>
-                            <td><strong>{lamp}</strong></td>
-                            <td>{lamp_stats['n']}</td>
+                <tr>
+                    <td class="sticky-col-lamp">{lamp}</td>
+                    <td class="sticky-col-n">{lamp_stats['n']}</td>
             """
             
             for param in params:

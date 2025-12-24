@@ -6,72 +6,22 @@ import streamlit as st
 from datetime import datetime
 import sys
 from pathlib import Path
-from buchi_streamlit_theme import apply_buchi_styles
 
 # Añadir path de módulos
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from buchi_streamlit_theme import apply_buchi_styles
 from modules.consolidator.parsers import BaselineParser, ValidationParser, PredictionsParser
 from modules.consolidator import ReportConsolidatorV2
-from auth import check_password  # ← AÑADIR ESTO
+from auth import check_password
+from ui.ui_helpers import show_success, show_info, show_error
 
 # Aplicar estilos corporativos Buchi
 apply_buchi_styles()
 
-# Estilos personalizados COREF
-st.markdown("""
-    <style>
-    .upload-section {
-        background-color: #f8f9fa;
-        padding: 20px;
-        border-radius: 10px;
-        margin-bottom: 20px;
-        border: 2px dashed #ddd;
-    }
-    .upload-section:hover {
-        border-color: #289A93;
-    }
-    .success-box {
-        background-color: #e8f5e9;
-        border-left: 4px solid #4caf50;
-        padding: 15px;
-        border-radius: 5px;
-        margin: 10px 0;
-    }
-    .info-box {
-        background-color: #e3f2fd;
-        border-left: 4px solid #2196f3;
-        padding: 15px;
-        border-radius: 5px;
-        margin: 10px 0;
-    }
-    .warning-box {
-        background-color: #fff3e0;
-        border-left: 4px solid #ff9800;
-        padding: 15px;
-        border-radius: 5px;
-        margin: 10px 0;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
 # VERIFICACIÓN DE AUTENTICACIÓN
 if not check_password():
     st.stop()
-
-def show_success(message):
-    """Muestra mensaje de éxito"""
-    st.markdown(f'<div class="success-box">{message}</div>', unsafe_allow_html=True)
-
-
-def show_info(message):
-    """Muestra mensaje informativo"""
-    st.markdown(f'<div class="info-box">{message}</div>', unsafe_allow_html=True)
-
-
-def show_error(message):
-    """Muestra mensaje de error"""
-    st.error(message)
 
 
 def extract_service_info(baseline_html=None, validation_html=None, predictions_html=None):
@@ -462,7 +412,7 @@ def generate_consolidated_report(baseline_html, validation_html, predictions_htm
             
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             sensor_id = service_info['sensor_id'] or "NIR"
-            filename = f"Informe_Consolidado_{sensor_id}_{timestamp}.html"
+            filename = f"METAREPORT_{sensor_id}_{timestamp}.html"
             
             st.download_button(
                 label="📥 Descargar Informe Consolidado (HTML)",

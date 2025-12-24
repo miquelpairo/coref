@@ -593,3 +593,257 @@ pre {
     .eval-significant { background-color: #ffebee; }
 
 }
+/* Tablas con scroll horizontal y columnas sticky */
+.stats-table-container {
+    overflow-x: auto;
+    max-width: 100%;
+}
+
+.stats-table {
+    min-width: 800px;
+}
+
+.stats-table th.sticky-col-lamp,
+.stats-table th.sticky-col-n {
+    position: sticky;
+    background-color: #f8f9fa;
+    z-index: 10;
+}
+
+.stats-table th.sticky-col-lamp {
+    left: 0;
+}
+
+.stats-table th.sticky-col-n {
+    left: 80px;
+}
+
+.stats-table td.sticky-col-lamp,
+.stats-table td.sticky-col-n {
+    position: sticky;
+    background-color: #f8f9fa;
+    z-index: 5;
+}
+
+.stats-table td.sticky-col-lamp {
+    left: 0;
+    font-weight: bold;
+}
+
+.stats-table td.sticky-col-n {
+    left: 80px;
+}
+# ============================================================================
+# CSS ADICIONAL PARA buchi_streamlit_theme.py
+# Añadir dentro de la función apply_buchi_styles() en el st.markdown()
+# ============================================================================
+
+    /* Estilos para páginas de COREF Suite */
+    
+    /* Sección de carga de archivos */
+    .upload-section {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        border: 2px dashed #ddd;
+        transition: border-color 0.3s ease;
+    }
+    
+    .upload-section:hover {
+        border-color: #289A93;
+    }
+    
+    /* Caja de éxito */
+    .success-box {
+        background-color: #e8f5e9;
+        border-left: 4px solid #4caf50;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 10px 0;
+    }
+    
+    /* Caja informativa */
+    .info-box {
+        background-color: #e3f2fd;
+        border-left: 4px solid #2196f3;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 10px 0;
+    }
+    
+    /* Caja de advertencia */
+    .warning-box {
+        background-color: #fff3e0;
+        border-left: 4px solid #ff9800;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 10px 0;
+    }
+
+    /* ===== ESTILOS ESPECÍFICOS DEL CONSOLIDADOR ===== */
+/* Añadir al final de buchi_report_styles_simple.css */
+
+/* Secciones colapsables del consolidador */
+.consolidator-section {
+    background-color: #ffffff;
+    padding: 20px;
+    margin: 25px 0;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+}
+
+.consolidator-section > details {
+    margin: 0;
+}
+
+.consolidator-section > details > summary {
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    transition: background-color 0.3s;
+}
+
+.consolidator-section > details > summary::-webkit-details-marker {
+    display: none;
+}
+
+.consolidator-section > details > summary::before {
+    content: '▶ ';
+    display: inline-block;
+    margin-right: 10px;
+    transition: transform 0.3s;
+}
+
+.consolidator-section > details[open] > summary::before {
+    transform: rotate(90deg);
+}
+
+.consolidator-section > details > summary:hover {
+    background-color: #e9ecef;
+}
+
+.consolidator-section-header h2 {
+    display: inline;
+    margin: 0;
+    font-size: 1.5em;
+}
+
+.consolidator-parsed-content {
+    padding: 20px 0;
+}
+
+/* Link al informe completo */
+.consolidator-full-report-link {
+    margin-top: 30px;
+    padding: 20px;
+    border-top: 2px solid #e9ecef;
+    text-align: center;
+}
+
+.consolidator-open-btn {
+    display: inline-block;
+    padding: 15px 30px;
+    background: #64B445;
+    color: white;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 1.1em;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    border: none;
+    cursor: pointer;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.consolidator-open-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    background-color: #289A93;
+}
+
+.consolidator-open-btn:active {
+    transform: translateY(0);
+}
+
+.consolidator-link-description {
+    margin-top: 10px;
+    color: #6c757d;
+    font-size: 0.9em;
+    font-style: italic;
+}
+
+/* Cajas de estado del consolidador */
+.consolidator-status-box {
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.consolidator-status-ok {
+    background-color: #e8f5e9;
+    border-left: 4px solid #4caf50;
+}
+
+.consolidator-status-warning {
+    background-color: #fff3e0;
+    border-left: 4px solid #ff9800;
+}
+
+.consolidator-status-fail {
+    background-color: #ffebee;
+    border-left: 4px solid #f44336;
+}
+
+.consolidator-status-info {
+    background-color: #e3f2fd;
+    border-left: 4px solid #2196f3;
+}
+
+/* Nota de gráficos */
+.consolidator-charts-note {
+    margin-top: 30px;
+    padding: 15px;
+    background-color: #e3f2fd;
+    border-left: 4px solid #2196f3;
+    border-radius: 5px;
+}
+
+/* Descripción de texto */
+.consolidator-description {
+    color: #6c757d;
+    font-size: 0.95em;
+}
+/* ===== SIDEBAR CORPORATIVO FIJO ===== */
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 250px;
+    height: 100vh;
+    background-color: #093A34;
+    padding: 20px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+}
+
+/* ⭐ AÑADIR/MODIFICAR ESTA REGLA: */
+.sidebar h2 {
+    color: white !important;           /* ← Añadir !important */
+    font-size: 16px !important;        /* ← Añadir !important */
+    font-weight: bold !important;    /* ← Añadir !important */
+    margin-bottom: 20px;
+    text-align: center;
+    margin-top: 0;                     /* ← Añadir */
+    padding: 0;                        /* ← Añadir */
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}

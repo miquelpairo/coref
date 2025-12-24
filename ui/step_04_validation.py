@@ -504,7 +504,7 @@ def render_report_generation():
     # Botón de descarga
     if st.session_state.validation_report_html:
         client_data = st.session_state.get('client_data', {})
-        filename = f"Informe_{client_data.get('sensor_sn', 'sensor')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+        filename = f"BASELINE_CHECK_REPORT_{client_data.get('sensor_sn', 'sensor')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
         
         st.download_button(
             "⬇️ Descargar Informe HTML",

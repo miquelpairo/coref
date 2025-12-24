@@ -243,7 +243,7 @@ if st.session_state.pred_stats is not None:
             st.download_button(
                 label="💾 Descargar TXT",
                 data=report_text,
-                file_name=f"informe_nir_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
+                file_name=f"DIFERENCIAS ENTRE LAMPARAS_informe_nir_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
                 mime="text/plain",
                 key='download_txt'
             )
@@ -266,7 +266,7 @@ if st.session_state.pred_stats is not None:
         
         sensor_serial = analyzer.sensor_serial if analyzer.sensor_serial else "sensor"
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        filename = f"Predictions_Report_{sensor_serial}_{lamps_str}_{timestamp}.html"
+        filename = f"PREDICTIONS_REPORT_{sensor_serial}_{lamps_str}_{timestamp}.html"
         
         st.info(f"📄 **Nombre del archivo:** `{filename}`")
     
