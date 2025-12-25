@@ -216,14 +216,6 @@ def try_parse_date(date_str) -> pd.Timestamp:
 
 
 def clean_tsv_file(uploaded_file) -> pd.DataFrame:
-    """
-    Pipeline completo:
-    - Lee TSV
-    - Filtra metadata + espectros (pixeles)
-    - Elimina filas Result==0
-    - Reorganiza Reference/Result/Residuum
-    - Parsea Date
-    """
     df_raw = pd.read_csv(uploaded_file, delimiter="\t", keep_default_na=False)
     data = df_raw.to_dict("records")
 
@@ -231,7 +223,18 @@ def clean_tsv_file(uploaded_file) -> pd.DataFrame:
     data = delete_zero_rows(data)
     data = reorganize_results_and_reference(data)
 
+    # ✅ df SIEMPRE definido
     df = pd.DataFrame(data)
+
+    # --- NORMALIZAR ESPECTROS (#1..#n) ---
+    if not df.empty:
+        pixel_cols = [c for c in df.columns if _is_pixel_col(c)]
+        if pixel_cols:
+            df[pixel_cols] = df[pixel_cols].replace(",", ".", regex=True)
+            df[pixel_cols] = df[pixel_cols].apply(
+                pd.to_numeric, errors="coerce"
+            )
+    # ------------------------------------
 
     if "Date" in df.columns:
         df["Date"] = df["Date"].apply(try_parse_date)
@@ -343,7 +346,11 @@ def build_spectra_figure(df: pd.DataFrame) -> Optional[go.Figure]:
     x = [int(str(c)[1:]) for c in pixel_cols]
 
     # matriz espectral (n_rows x n_pixels)
-    spec = df[pixel_cols].apply(pd.to_numeric, errors="coerce")
+    spec = (
+    df[pixel_cols]
+    .replace(",", ".", regex=True)   # convierte coma decimal a punto
+    .apply(pd.to_numeric, errors="coerce")
+)
 
     # etiquetas para hover (opcional)
     hover_id = df["ID"].astype(str) if "ID" in df.columns else pd.Series([str(i) for i in range(len(df))])

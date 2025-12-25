@@ -50,54 +50,6 @@ from plotly.subplots import make_subplots
 
 apply_buchi_styles()
 
-# Estilos del sidebar
-st.markdown("""
-<style>
-    [data-testid="stSidebar"] {
-        background-color: #2c5f3f;
-    }
-    [data-testid="stSidebar"] * {
-        color: white !important;
-    }
-    [data-testid="stSidebar"] h2,
-    [data-testid="stSidebar"] h3 {
-        color: white !important;
-    }
-    [data-testid="stSidebar"] label {
-        color: white !important;
-        font-weight: 500 !important;
-        background: none !important;
-        border: none !important;
-        padding: 0 !important;
-    }
-    [data-testid="stSidebar"] hr {
-        border-color: rgba(255, 255, 255, 0.2) !important;
-        margin: 20px 0 !important;
-    }
-    [data-testid="stSidebar"] [data-testid="stExpander"] {
-        background-color: rgba(255, 255, 255, 0.05) !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        border-radius: 8px !important;
-    }
-    [data-testid="stSidebar"] input[type="number"],
-    [data-testid="stSidebar"] input[type="text"] {
-        background-color: white !important;
-        color: #333333 !important;
-        border: 1px solid rgba(255, 255, 255, 0.3) !important;
-        border-radius: 6px !important;
-        padding: 8px 12px !important;
-    }
-    [data-testid="stSidebar"] input[type="number"]:focus,
-    [data-testid="stSidebar"] input[type="text"]:focus {
-        border-color: #7cb342 !important;
-        box-shadow: 0 0 0 1px #7cb342 !important;
-    }
-    [data-testid="stSidebar"] [data-testid="stNumberInput"] button {
-        background-color: #f0f0f0 !important;
-        color: #333333 !important;
-    }
-</style>
-""", unsafe_allow_html=True)
 
 if not check_password():
     st.stop()
@@ -182,7 +134,7 @@ def main():
                 max_value=1.000,
                 value=DEFAULT_VALIDATION_THRESHOLDS['correlation'],
                 step=0.001,
-                format="%.3f",
+                format="%.4f",
                 help="Correlación mínima deseable"
             )
             
@@ -192,7 +144,7 @@ def main():
                 max_value=0.100,
                 value=DEFAULT_VALIDATION_THRESHOLDS['max_diff'],
                 step=0.001,
-                format="%.3f",
+                format="%.4f",
                 help="Diferencia máxima deseable"
             )
             
@@ -202,7 +154,7 @@ def main():
                 max_value=0.100,
                 value=DEFAULT_VALIDATION_THRESHOLDS['rms'],
                 step=0.001,
-                format="%.3f",
+                format="%.4f",
                 help="RMS máximo deseable"
             )
             
