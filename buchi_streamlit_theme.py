@@ -22,6 +22,7 @@ def apply_buchi_styles() -> None:
     - Botones PRIMARY verdes (global) → también en form_submit_button
     - Botones SECONDARY: default en main, pero en SIDEBAR gris oscuro para contraste con texto blanco
     - Header Streamlit intacto (Deploy/Settings/Rerun)
+    - File uploader dropzone con fondo gris oscuro
     - (Opcional) inyecta el CSS de reports si existe, pero NO dependemos de él
     """
     shared_css = load_shared_report_css()
@@ -131,6 +132,56 @@ def apply_buchi_styles() -> None:
         [data-testid="stSidebar"] li {{
             color: #ffffff !important;
         }}
+
+        /* =========================================================
+        FILE UPLOADER DROPZONE – SIDEBAR
+        ========================================================= */
+        [data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] {{
+            background-color: #4a5f5a !important;
+            border: 2px dashed rgba(255, 255, 255, 0.4) !important;
+            border-radius: 8px !important;
+        }}
+
+        [data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"]:hover {{
+            background-color: #5a6f6a !important;
+            border-color: rgba(255, 255, 255, 0.6) !important;
+        }}
+
+        /* Texto del dropzone en blanco */
+        [data-testid="stSidebar"] [data-testid="stFileUploaderDropzoneInstructions"] * {{
+            color: #ffffff !important;
+        }}
+
+        /* =========================================================
+        TARJETAS HOME - COREF SUITE
+        ========================================================= */
+        .card-container {{
+            min-height: 400px;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+        }}
+
+        .card-blue {{ border: 2px solid #1976d2; }}
+        .card-red {{ border: 2px solid #d32f2f; }}
+        .card-green {{ border: 2px solid #388e3c; }}
+        .card-purple {{ border: 2px solid #7b1fa2; }}
+        .card-orange {{ border: 2px solid #f57c00; }}
+        .card-teal {{ border: 2px solid #00897b; }}
+        .card-gray {{ border: 2px solid #546e7a; }}
+        .card-lime {{ border: 2px solid #7CB342; }}
+
+        .card-container h3 {{ margin-top: 0; }}
+        .card-blue h3 {{ color: #1976d2; }}
+        .card-red h3 {{ color: #d32f2f; }}
+        .card-green h3 {{ color: #388e3c; }}
+        .card-purple h3 {{ color: #7b1fa2; }}
+        .card-orange h3 {{ color: #f57c00; }}
+        .card-teal h3 {{ color: #00897b; }}
+        .card-gray h3 {{ color: #546e7a; }}
+        .card-lime h3 {{ color: #7CB342; }}
         </style>
         """,
         unsafe_allow_html=True,

@@ -50,41 +50,6 @@ st.divider()
 # Tarjetas de navegación
 st.markdown("## 🧰 Herramientas Disponibles")
 
-# CSS para igualar alturas - grid 3 + 3 + 2
-st.markdown(
-    """
-<style>
-.card-container {
-    min-height: 400px;
-    padding: 20px;
-    border-radius: 10px;
-    background-color: #f5f5f5;
-    display: flex;
-    flex-direction: column;
-}
-.card-blue { border: 2px solid #1976d2; }
-.card-red { border: 2px solid #d32f2f; }
-.card-green { border: 2px solid #388e3c; }
-.card-purple { border: 2px solid #7b1fa2; }
-.card-orange { border: 2px solid #f57c00; }
-.card-teal { border: 2px solid #00897b; }
-.card-gray { border: 2px solid #546e7a; }
-.card-lime { border: 2px solid #7CB342; }
-
-.card-container h3 { margin-top: 0; }
-.card-blue h3 { color: #1976d2; }
-.card-red h3 { color: #d32f2f; }
-.card-green h3 { color: #388e3c; }
-.card-purple h3 { color: #7b1fa2; }
-.card-orange h3 { color: #f57c00; }
-.card-teal h3 { color: #00897b; }
-.card-gray h3 { color: #546e7a; }
-.card-lime h3 { color: #7CB342; }
-</style>
-""",
-    unsafe_allow_html=True,
-)
-
 # ---------------------------------------------------------------------------
 # FILA 1 (3 columnas): Baseline | Validation | Offset
 # ---------------------------------------------------------------------------
@@ -168,9 +133,9 @@ with col3:
         st.switch_page("pages/3_🎚️_Offset_Adjustment.py")
 
 # ---------------------------------------------------------------------------
-# FILA 2 (3 columnas): Spectrum | White | Predictions
+# FILA 2 (2 columnas): Spectrum | Predictions
 # ---------------------------------------------------------------------------
-col4, col5, col6 = st.columns(3)
+col4, col5 = st.columns(2)
 
 with col4:
     st.markdown(
@@ -182,6 +147,7 @@ with col4:
             <li>Overlay de espectros</li>
             <li>Análisis de residuales y correlación</li>
             <li>Agrupamiento de réplicas</li>
+            <li>Modo White Reference integrado</li>
         </ul>
     </div>
     """,
@@ -198,31 +164,6 @@ with col4:
         st.switch_page("pages/4_🔍_Comparacion_Espectros.py")
 
 with col5:
-    st.markdown(
-        """
-    <div class="card-container card-purple">
-        <h3>⚪ White Reference Analysis</h3>
-        <p>Análisis especializado para referencias blancas con métricas apropiadas.</p>
-        <ul>
-            <li>Escala absoluta de evaluación</li>
-            <li>RMS y diferencias absolutas</li>
-            <li>Umbrales específicos</li>
-        </ul>
-    </div>
-    """,
-        unsafe_allow_html=True,
-    )
-
-    st.write("")
-    if st.button(
-        "🚀 Abrir White Reference Analysis",
-        key="btn_white",
-        use_container_width=True,
-        type="primary",
-    ):
-        st.switch_page("pages/5_⚪_White_Reference_Comparison.py")
-
-with col6:
     st.markdown(
         """
     <div class="card-container card-teal">
@@ -352,8 +293,7 @@ st.markdown(
 ---
 
 **Herramientas complementarias:**
-- **Spectrum Comparison**: Análisis comparativo general
-- **White Reference Analysis**: Análisis específico de referencias blancas
+- **Spectrum Comparison**: Análisis comparativo general con modo White Reference integrado
 """
 )
 
