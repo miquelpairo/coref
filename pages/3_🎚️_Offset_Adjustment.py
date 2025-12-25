@@ -41,7 +41,7 @@ from core.standards_analysis import (
     find_common_ids,
     analyze_critical_regions,
     create_validation_plot,
-    create_overlay_plot,
+    create_validation_overlay_plot,
     create_global_statistics_table
 )
 

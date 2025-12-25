@@ -24,6 +24,7 @@ from auth import check_password
 from buchi_streamlit_theme import apply_buchi_styles
 from config import DEFAULT_VALIDATION_THRESHOLDS, CRITICAL_REGIONS, OFFSET_LIMITS
 
+
 # ===== IMPORTAR FUNCIONES COMPARTIDAS =====
 from core.standards_analysis import (
     validate_standard,
@@ -31,7 +32,7 @@ from core.standards_analysis import (
     find_common_ids,
     analyze_critical_regions,
     create_validation_plot,
-    create_overlay_plot,
+    create_validation_overlay_plot,
     create_global_statistics_table
 )
 
@@ -483,7 +484,7 @@ def main():
             show_ref = st.checkbox("Mostrar Referencia", value=True, key="show_ref_overlay")
             show_curr = st.checkbox("Mostrar Actual", value=True, key="show_curr_overlay")
         
-        overlay_fig = create_overlay_plot(all_validation_data, show_ref, show_curr)
+        overlay_fig = create_validation_overlay_plot(all_validation_data, show_ref, show_curr)
         st.plotly_chart(overlay_fig, use_container_width=True)
     
     # Estadísticas globales usando función compartida

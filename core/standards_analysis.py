@@ -368,7 +368,7 @@ def create_validation_plot(reference: np.ndarray, current: np.ndarray,
     return fig
 
 
-def create_overlay_plot(validation_data: List[Dict], show_reference: bool = True,
+def create_validation_overlay_plot(validation_data: List[Dict], show_reference: bool = True,
                        show_current: bool = True) -> go.Figure:
     """
     Crea gráfico con overlay de todos los espectros de validación.

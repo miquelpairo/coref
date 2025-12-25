@@ -172,7 +172,6 @@ def apply_buchi_styles() -> None:
         .card-teal {{ border: 2px solid #00897b; }}
         .card-gray {{ border: 2px solid #546e7a; }}
         .card-lime {{ border: 2px solid #7CB342; }}
-
         .card-container h3 {{ margin-top: 0; }}
         .card-blue h3 {{ color: #1976d2; }}
         .card-red h3 {{ color: #d32f2f; }}
