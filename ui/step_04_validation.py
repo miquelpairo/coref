@@ -14,6 +14,9 @@ from session_manager import (
     reset_session_state,
     go_to_next_step
 )
+from core.standards_analysis import (
+    create_white_comparison_plot
+)
 from core.file_handlers import load_tsv_file, get_spectral_columns
 from core.spectral_processing import (
     find_common_samples,
@@ -260,7 +263,7 @@ def render_validation_step():
     
     # Visualización
     with st.expander("📊 Ver comparación del White Standard", expanded=True):
-        fig = plot_white_comparison_simple(
+        fig = create_white_comparison_plot(
             ref_white_spectrum,
             new_white_spectrum,
             diff_white,
@@ -515,72 +518,4 @@ def render_report_generation():
         )
 
 
-def plot_white_comparison_simple(ref_spectrum, new_spectrum, diff, spectral_cols, rms, sample_id):
-    """
-    Gráfico simple de comparación
-    """
-    import plotly.graph_objects as go
-    from plotly.subplots import make_subplots
-    
-    fig = make_subplots(
-        rows=2, cols=1,
-        subplot_titles=(
-            f'Espectros de {sample_id} (RMS = {rms:.6f})',
-            'Diferencia (Nuevo - Referencia)'
-        ),
-        vertical_spacing=0.12,
-        row_heights=[0.6, 0.4]
-    )
-    
-    channels = list(range(1, len(ref_spectrum) + 1))
-    
-    # Subplot 1: Espectros
-    fig.add_trace(
-        go.Scatter(
-            x=channels,
-            y=ref_spectrum,
-            name='Referencia (Paso 3)',
-            line=dict(color='blue', width=2)
-        ),
-        row=1, col=1
-    )
-    
-    fig.add_trace(
-        go.Scatter(
-            x=channels,
-            y=new_spectrum,
-            name='Nueva medición',
-            line=dict(color='red', width=2, dash='dash')
-        ),
-        row=1, col=1
-    )
-    
-    # Subplot 2: Diferencia
-    fig.add_trace(
-        go.Scatter(
-            x=channels,
-            y=diff,
-            name='Diferencia',
-            line=dict(color='orange', width=2),
-            fill='tozeroy',
-            fillcolor='rgba(255, 165, 0, 0.3)'
-        ),
-        row=2, col=1
-    )
-    
-    fig.add_hline(y=0, line_dash="dot", line_color="gray", row=2, col=1)
-    fig.add_hline(y=0.002, line_dash="dash", line_color="red", opacity=0.5, row=2, col=1)
-    fig.add_hline(y=-0.002, line_dash="dash", line_color="red", opacity=0.5, row=2, col=1)
-    
-    fig.update_xaxes(title_text="Canal espectral", row=2, col=1)
-    fig.update_yaxes(title_text="Absorbancia", row=1, col=1)
-    fig.update_yaxes(title_text="Diferencia", row=2, col=1)
-    
-    fig.update_layout(
-        height=700,
-        showlegend=True,
-        hovermode='x unified',
-        template='plotly_white'
-    )
-    
-    return fig
+   

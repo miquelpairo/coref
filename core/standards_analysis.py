@@ -514,3 +514,96 @@ def create_global_statistics_table(validation_data: List[Dict]) -> pd.DataFrame:
     }
     
     return pd.DataFrame(stats)
+
+def create_white_comparison_plot(
+    ref_spectrum: np.ndarray,
+    new_spectrum: np.ndarray,
+    diff: np.ndarray,
+    spectral_cols: List[str],
+    rms: float,
+    sample_id: str
+) -> go.Figure:
+    """
+    Crea gráfico de comparación para White Standard (validación).
+    
+    Args:
+        ref_spectrum: Espectro de referencia
+        new_spectrum: Espectro nuevo
+        diff: Diferencia (nuevo - referencia)
+        spectral_cols: Columnas espectrales
+        rms: Valor RMS calculado
+        sample_id: ID del estándar
+        
+    Returns:
+        Figura de Plotly con subplots
+    """
+    from plotly.subplots import make_subplots
+    
+    fig = make_subplots(
+        rows=2, cols=1,
+        subplot_titles=(
+            f'Espectros de {sample_id} (RMS = {rms:.6f})',
+            'Diferencia (Nuevo - Referencia)'
+        ),
+        vertical_spacing=0.12,
+        row_heights=[0.6, 0.4]
+    )
+    
+    channels = list(range(1, len(ref_spectrum) + 1))
+    
+    # Subplot 1: Espectros
+    fig.add_trace(
+        go.Scatter(
+            x=channels,
+            y=ref_spectrum,
+            name='Referencia (Paso 3)',
+            line=dict(color='blue', width=2),
+            hovertemplate='Referencia<br>Canal: %{x}<br>Abs: %{y:.6f}<extra></extra>'
+        ),
+        row=1, col=1
+    )
+    
+    fig.add_trace(
+        go.Scatter(
+            x=channels,
+            y=new_spectrum,
+            name='Nueva medición',
+            line=dict(color='red', width=2, dash='dash'),
+            hovertemplate='Nueva<br>Canal: %{x}<br>Abs: %{y:.6f}<extra></extra>'
+        ),
+        row=1, col=1
+    )
+    
+    # Subplot 2: Diferencia
+    fig.add_trace(
+        go.Scatter(
+            x=channels,
+            y=diff,
+            name='Diferencia',
+            line=dict(color='orange', width=2),
+            fill='tozeroy',
+            fillcolor='rgba(255, 165, 0, 0.3)',
+            hovertemplate='Diferencia<br>Canal: %{x}<br>Δ: %{y:.6f}<extra></extra>',
+            showlegend=False
+        ),
+        row=2, col=1
+    )
+    
+    # Líneas de referencia
+    fig.add_hline(y=0, line_dash="dot", line_color="gray", row=2, col=1)
+    fig.add_hline(y=0.002, line_dash="dash", line_color="red", opacity=0.5, row=2, col=1)
+    fig.add_hline(y=-0.002, line_dash="dash", line_color="red", opacity=0.5, row=2, col=1)
+    
+    # Configuración de ejes
+    fig.update_xaxes(title_text="Canal espectral", row=2, col=1)
+    fig.update_yaxes(title_text="Absorbancia", row=1, col=1)
+    fig.update_yaxes(title_text="Diferencia", row=2, col=1)
+    
+    fig.update_layout(
+        height=700,
+        showlegend=True,
+        hovermode='x unified',
+        template='plotly_white'
+    )
+    
+    return fig

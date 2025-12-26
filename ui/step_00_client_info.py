@@ -68,6 +68,7 @@ def render_client_info_step():
             if not client_name or not sensor_sn:
                 st.error("Los campos marcados con * son obligatorios")
             else:
+                st.session_state.unsaved_changes = False
                 save_client_data(
                     client_name=client_name,
                     sensor_sn=sensor_sn,
@@ -82,5 +83,6 @@ def render_client_info_step():
     
     st.markdown("---")
     if st.button("Omitir (no recomendado)", use_container_width=True):
+        st.session_state.unsaved_changes = False
         save_default_client_data()
         go_to_next_step()

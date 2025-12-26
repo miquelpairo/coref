@@ -101,7 +101,7 @@ def render_sidebar():
                         f"**{step_number}. {step_name}**",
                         key=f"current_step_{step_idx}",
                         use_container_width=True,
-                        type="secondary",
+                        type="primary",
                         disabled=True
                     )
                 

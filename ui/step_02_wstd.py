@@ -140,7 +140,7 @@ def render_wstd_step():
             st.success("✅ TSV de referencia disponible del paso anterior")
         
         with col_continue:
-            if st.button("✅ Continuar al Paso 4 (Checkpoints)", type="primary", use_container_width=True):
+            if st.button("✅ Continuar", type="primary", use_container_width=True):
                 st.session_state.unsaved_changes = False
                 go_to_next_step()
     else:
