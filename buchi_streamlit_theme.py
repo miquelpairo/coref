@@ -23,6 +23,7 @@ def apply_buchi_styles() -> None:
     - Botones SECONDARY: default en main, pero en SIDEBAR gris oscuro para contraste con texto blanco
     - Header Streamlit intacto (Deploy/Settings/Rerun)
     - File uploader dropzone con fondo gris oscuro
+    - Expander: icono blanco + estado OPEN con fondo más oscuro (sidebar)
     - (Opcional) inyecta el CSS de reports si existe, pero NO dependemos de él
     """
     shared_css = load_shared_report_css()
@@ -84,7 +85,6 @@ def apply_buchi_styles() -> None:
            → dejamos el estilo DEFAULT de Streamlit (NO TOCAR)
            ========================================================= */
 
-
         /* =========================================================
            BOTONES SECONDARY – SIDEBAR
            Gris medio oscuro para contraste con texto blanco
@@ -118,24 +118,54 @@ def apply_buchi_styles() -> None:
         }}
 
         /* =========================================================
-        EXPANDER ICON (flecha) – SIDEBAR
-        ========================================================= */
+           EXPANDER – SIDEBAR (icono + open state)
+           ========================================================= */
+
+        /* El summary (cabecera) siempre legible */
+        [data-testid="stSidebar"] details > summary {{
+            color: #FFFFFF !important;
+        }}
+
+        /* Por si el texto interno del summary viene en spans/divs */
+        [data-testid="stSidebar"] details > summary * {{
+            color: #FFFFFF !important;
+        }}
+
+        /* Chevron del expander (usa currentColor) */
         [data-testid="stSidebar"] svg[data-testid="stExpanderToggleIcon"] {{
-            color: #ffffff !important;
+            color: #FFFFFF !important;
             fill: currentColor !important;
         }}
 
+        /* Cuando está ABIERTO: fondo más oscuro */
+        [data-testid="stSidebar"] details[open] > summary {{
+            background-color: rgba(255, 255, 255, 0.10) !important;
+            color: #FFFFFF !important;
+            border-radius: 8px !important;
+        }}
+
+        /* Contenido interno del expander */
+        [data-testid="stSidebar"] details[open] > div {{
+            background-color: rgba(255, 255, 255, 0.06) !important;
+            border-radius: 8px !important;
+        }}
+
+        /* Wrapper del expander (evitar fondos raros) */
+        [data-testid="stSidebar"] [data-testid="stExpander"] {{
+            background-color: transparent !important;
+        }}
+
         /* =========================================================
-        LISTAS / ITEMS DENTRO DEL SIDEBAR (ul / li)
-        ========================================================= */
+           LISTAS / ITEMS DENTRO DEL SIDEBAR (ul / li)
+           ========================================================= */
         [data-testid="stSidebar"] ul,
         [data-testid="stSidebar"] li {{
             color: #ffffff !important;
         }}
 
         /* =========================================================
-        FILE UPLOADER DROPZONE – SIDEBAR
-        ========================================================= */
+           FILE UPLOADER DROPZONE – SIDEBAR
+           ========================================================= */
         [data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] {{
             background-color: #4a5f5a !important;
             border: 2px dashed rgba(255, 255, 255, 0.4) !important;
@@ -153,8 +183,8 @@ def apply_buchi_styles() -> None:
         }}
 
         /* =========================================================
-        TARJETAS HOME - COREF SUITE
-        ========================================================= */
+           TARJETAS HOME - COREF SUITE
+           ========================================================= */
         .card-container {{
             min-height: 400px;
             padding: 20px;
@@ -172,6 +202,7 @@ def apply_buchi_styles() -> None:
         .card-teal {{ border: 2px solid #00897b; }}
         .card-gray {{ border: 2px solid #546e7a; }}
         .card-lime {{ border: 2px solid #7CB342; }}
+
         .card-container h3 {{ margin-top: 0; }}
         .card-blue h3 {{ color: #1976d2; }}
         .card-red h3 {{ color: #d32f2f; }}
@@ -181,45 +212,8 @@ def apply_buchi_styles() -> None:
         .card-teal h3 {{ color: #00897b; }}
         .card-gray h3 {{ color: #546e7a; }}
         .card-lime h3 {{ color: #7CB342; }}
+
         </style>
         """,
         unsafe_allow_html=True,
-
-        /* =========================
-        SIDEBAR – EXPANDER (CERRADO/ABIERTO)
-        ========================= */
-
-        /* El summary (cabecera) siempre legible */
-        [data-testid="stSidebar"] details > summary {{
-        color: #FFFFFF !important;
-        }}
-
-        /* Cuando está ABIERTO: fija fondo oscuro y texto blanco */
-        [data-testid="stSidebar"] details[open] > summary {{
-        background-color: rgba(255, 255, 255, 0.10) !important;  /* ajusta 0.08–0.18 */
-        color: #FFFFFF !important;
-        border-radius: 8px !important;
-        }}
-
-        /* Contenido interno del expander (lo que aparece al abrir) */
-        [data-testid="stSidebar"] details[open] > div {{
-        background-color: rgba(255, 255, 255, 0.06) !important;  /* un pelín más oscuro */
-        border-radius: 8px !important;
-        }}
-
-        /* Por si el texto interno del summary viene en spans/divs */
-        [data-testid="stSidebar"] details > summary * {{
-        color: #FFFFFF !important;
-        }}
-
-        /* Chevron del expander (tu SVG usa currentColor) */
-        [data-testid="stSidebar"] svg[data-testid="stExpanderToggleIcon"] {{
-        color: #FFFFFF !important;
-        fill: currentColor !important;
-        }}
-
-        /* BONUS: si Streamlit te pinta un fondo claro en el wrapper del expander */
-        [data-testid="stSidebar"] [data-testid="stExpander"] {{
-        background-color: transparent !important;
-        }}
     )
