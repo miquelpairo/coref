@@ -295,3 +295,185 @@ MESSAGES = {
     'success_control_initial': "✅ Muestras de control iniciales guardadas correctamente",
     'success_control_final': "✅ Muestras de control finales guardadas correctamente",
 }
+
+# ============================================================================
+# HOME PAGE - TEXTOS Y CONFIGURACIÓN
+# ============================================================================
+
+HOME_PAGE = {
+    'title': 'NIR ServiceKit',
+    'subtitle': 'Herramientas de calibración y validación para espectrómetros NIR',
+    'version': '2.0',
+    
+    'description': """
+**NIR ServiceKit** es un conjunto de herramientas diseñadas para facilitar el mantenimiento 
+y validación de equipos NIR (Near-Infrared), especialmente NIR Online con detectores DAD.
+
+Estas aplicaciones ayudan a técnicos de servicio y usuarios en:
+- Ajuste de baseline post-cambio de lámpara
+- Validación de estándares ópticos
+- Corrección de offset fino
+- Comparación y análisis de espectros
+- Comparación de predicciones entre lámparas (SX Center)
+- Consolidación de informes en un metainforme único
+- Generación de informes de validación desde ficheros TSV
+""",
+    
+    'service_tools': {
+        'section_title': '🔧 Service Tools',
+        'section_subtitle': 'Herramientas especializadas para mantenimiento y servicio técnico',
+        
+        'baseline': {
+            'title': '📐 Baseline Adjustment',
+            'description': 'Ajuste de baseline tras cambio de lámpara. Calcula correcciones basadas en mediciones de referencia blanca externa.',
+            'features': [
+                'Análisis de diferencias espectrales',
+                'Cálculo automático de correcciones',
+                'Corrección de forma espectral'
+            ],
+            'button': '🚀 Abrir Baseline Adjustment',
+            'page': 'pages/1_📐_Baseline adjustment.py',
+            'card_class': 'card-blue'
+        },
+        
+        'validation': {
+            'title': '🎯 Standard Validation',
+            'description': 'Validación automática de estándares ópticos post-mantenimiento mediante emparejamiento por ID.',
+            'features': [
+                'Detección automática de IDs comunes',
+                'Validación múltiple simultánea',
+                'Análisis de regiones críticas',
+                'Detección de offset global'
+            ],
+            'button': '🚀 Abrir Standard Validation',
+            'page': 'pages/2_🎯_Validation_Standards.py',
+            'card_class': 'card-red'
+        },
+        
+        'offset': {
+            'title': '🎚️ Offset Adjustment',
+            'description': 'Ajuste fino de offset vertical al baseline preservando la forma espectral.',
+            'features': [
+                'Corrección de bias sistemático',
+                'Simulación con estándares ópticos',
+                'Visualización de impacto'
+            ],
+            'button': '🚀 Abrir Offset Adjustment',
+            'page': 'pages/3_🎚️_Offset_Adjustment.py',
+            'card_class': 'card-orange'
+        }
+    },
+    
+    'application_tools': {
+        'section_title': '📊 Application Tools',
+        'section_subtitle': 'Herramientas de análisis y generación de informes',
+        
+        'spectrum': {
+            'title': '🔍 Spectrum Comparison',
+            'description': 'Comparación avanzada de múltiples espectros NIR con análisis estadístico completo.',
+            'features': [
+                'Overlay de espectros',
+                'Análisis de residuales y correlación',
+                'Agrupamiento de réplicas',
+                'Modo White Reference integrado'
+            ],
+            'button': '🚀 Abrir Spectrum Comparison',
+            'page': 'pages/4_🔍_Comparacion_Espectros.py',
+            'card_class': 'card-green'
+        },
+        
+        'predictions': {
+            'title': '📊 Prediction Reports',
+            'description': 'Comparación de predicciones entre lámparas usando informes <strong>XML</strong> generados desde SX Center.',
+            'features': [
+                'Cargar reporte XML de SX Center',
+                'Comparar predicciones entre lámparas',
+                'Analizar diferencias por muestra/parámetro'
+            ],
+            'button': '🚀 Abrir Prediction Reports',
+            'page': 'pages/6_📊_Prediction_Reports.py',
+            'card_class': 'card-teal'
+        },
+        
+        'metareports': {
+            'title': '📦 Report Consolidator',
+            'description': 'Consolida en un <strong>metainforme</strong> único los informes de Baseline, Validación y Predicciones.',
+            'features': [
+                'Subir 1-3 informes (HTML/XML según módulo)',
+                'Resumen ejecutivo y estado global',
+                'Navegación lateral e informes embebidos'
+            ],
+            'button': '🚀 Abrir Report Consolidator',
+            'page': 'pages/07_📦_MetaReports.py',
+            'card_class': 'card-gray'
+        },
+        
+        'tsv_validation': {
+            'title': '📋 TSV Validation Reports',
+            'description': 'Genera informes de validación a partir de ficheros <strong>TSV</strong> (journal) y produce un HTML interactivo.',
+            'features': [
+                'Cargar uno o varios TSV',
+                'Limpieza y reorganización automática',
+                'Gráficos interactivos y tabla'
+            ],
+            'button': '🚀 Abrir TSV Validation Reports',
+            'page': 'pages/08_📋_TSV_Validation_Reports.py',
+            'card_class': 'card-lime'
+        }
+    },
+    
+    'workflow': {
+        'title': '📋 Flujo de trabajo típico',
+        'content': """
+**Workflow completo de mantenimiento:**
+
+1. **Pre-mantenimiento**: 
+   - Medir y guardar referencia blanca (TSV)
+   - Medir estándares ópticos certificados (TSV)
+
+2. **Cambio de lámpara** en NIR Online
+   - Warm-up 15-30 minutos
+
+3. **Baseline Adjustment** (Corrección de forma):
+   - Nueva medición de referencia blanca
+   - Cálculo de corrección espectral
+   - Exportar baseline corregido
+
+4. **Standard Validation** (Detección de offset):
+   - Medir mismos estándares ópticos con baseline nuevo
+   - Validar correlación, RMS, Max Δ
+   - **Detectar offset global del kit**
+
+5. **Offset Adjustment** (Corrección de bias - OPCIONAL):
+   - Si offset global > 0.003 AU
+   - Simular impacto del offset en estándares
+   - Aplicar corrección al baseline
+   - Re-exportar baseline final
+
+6. **Prediction Reports (SX Center)**:
+   - Cargar informe XML con predicciones
+   - Comparar resultados entre lámparas / configuraciones
+   - Detectar sesgos y desviaciones por parámetro
+
+7. **MetaReports**:
+   - Consolidar Baseline + Validación + Predicciones
+   - Generar un informe único con resumen ejecutivo
+   - ✅ Documentación completa para cierre de servicio
+
+8. **TSV Validation Reports**:
+   - Cargar TSV(s) desde journal / export
+   - Generar informes HTML interactivos (parity, residuum, histograma)
+   - Exportar CSV limpio para trazabilidad
+
+---
+
+**Herramientas complementarias:**
+- **Spectrum Comparison**: Análisis comparativo general con modo White Reference integrado
+"""
+    },
+    
+    'footer': {
+        'app_name': 'NIR ServiceKit',
+        'support_text': 'Para soporte técnico o consultas, contacta con el departamento de servicio.'
+    }
+}

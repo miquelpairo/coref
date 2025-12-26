@@ -11,6 +11,7 @@ Date: 2025
 import streamlit as st
 from auth import check_password
 from buchi_streamlit_theme import apply_buchi_styles
+from app_config.messages import HOME_PAGE
 
 # Aplicar estilos corporativos
 apply_buchi_styles()
@@ -23,49 +24,41 @@ if not check_password():
 # PÁGINA HOME
 # ============================================================================
 
-st.title("NIR ServiceKit")
-st.markdown("### Herramientas de calibración y validación para espectrómetros NIR")
+st.title(HOME_PAGE['title'])
+st.markdown(f"### {HOME_PAGE['subtitle']}")
 
 st.divider()
 
 # Descripción general
-st.markdown(
-    """
-**NIR ServiceKit** es un conjunto de herramientas diseñadas para facilitar el mantenimiento 
-y validación de equipos NIR (Near-Infrared), especialmente NIR Online con detectores DAD.
-
-Estas aplicaciones ayudan a técnicos de servicio en:
-- Ajuste de baseline post-cambio de lámpara
-- Validación de estándares ópticos
-- Corrección de offset fino
-- Comparación y análisis de espectros
-- Comparación de predicciones entre lámparas (SX Center)
-- Consolidación de informes en un metainforme único
-- Generación de informes de validación desde ficheros TSV
-"""
-)
+st.markdown(HOME_PAGE['description'])
 
 st.divider()
 
-# Tarjetas de navegación
-st.markdown("## 🧰 Herramientas Disponibles")
+# ============================================================================
+# SECCIÓN 1: SERVICE TOOLS
+# ============================================================================
+service = HOME_PAGE['service_tools']
+st.markdown(f"## {service['section_title']}")
+st.markdown(f"*{service['section_subtitle']}*")
+
+st.write("")
 
 # ---------------------------------------------------------------------------
 # FILA 1 (3 columnas): Baseline | Validation | Offset
 # ---------------------------------------------------------------------------
 col1, col2, col3 = st.columns(3)
 
+# BASELINE
 with col1:
+    tool = service['baseline']
+    features_html = ''.join([f'<li>{f}</li>' for f in tool['features']])
     st.markdown(
-        """
-    <div class="card-container card-blue">
-        <h3>📐 Baseline Adjustment</h3>
-        <p>Ajuste de baseline tras cambio de lámpara. Calcula correcciones basadas en mediciones 
-        de referencia blanca externa.</p>
+        f"""
+    <div class="card-container {tool['card_class']}">
+        <h3>{tool['title']}</h3>
+        <p>{tool['description']}</p>
         <ul>
-            <li>Análisis de diferencias espectrales</li>
-            <li>Cálculo automático de correcciones</li>
-            <li>Corrección de forma espectral</li>
+            {features_html}
         </ul>
     </div>
     """,
@@ -74,24 +67,24 @@ with col1:
 
     st.write("")
     if st.button(
-        "🚀 Abrir Baseline Adjustment",
+        tool['button'],
         key="btn_baseline",
         use_container_width=True,
         type="primary",
     ):
-        st.switch_page("pages/1_📐_Baseline adjustment.py")
+        st.switch_page(tool['page'])
 
+# VALIDATION
 with col2:
+    tool = service['validation']
+    features_html = ''.join([f'<li>{f}</li>' for f in tool['features']])
     st.markdown(
-        """
-    <div class="card-container card-red">
-        <h3>🎯 Standard Validation</h3>
-        <p>Validación automática de estándares ópticos post-mantenimiento mediante emparejamiento por ID.</p>
+        f"""
+    <div class="card-container {tool['card_class']}">
+        <h3>{tool['title']}</h3>
+        <p>{tool['description']}</p>
         <ul>
-            <li>Detección automática de IDs comunes</li>
-            <li>Validación múltiple simultánea</li>
-            <li>Análisis de regiones críticas</li>
-            <li>Detección de offset global</li>
+            {features_html}
         </ul>
     </div>
     """,
@@ -100,23 +93,24 @@ with col2:
 
     st.write("")
     if st.button(
-        "🚀 Abrir Standard Validation",
+        tool['button'],
         key="btn_validation",
         use_container_width=True,
         type="primary",
     ):
-        st.switch_page("pages/2_🎯_Validation_Standards.py")
+        st.switch_page(tool['page'])
 
+# OFFSET
 with col3:
+    tool = service['offset']
+    features_html = ''.join([f'<li>{f}</li>' for f in tool['features']])
     st.markdown(
-        """
-    <div class="card-container card-orange">
-        <h3>🎚️ Offset Adjustment</h3>
-        <p>Ajuste fino de offset vertical al baseline preservando la forma espectral.</p>
+        f"""
+    <div class="card-container {tool['card_class']}">
+        <h3>{tool['title']}</h3>
+        <p>{tool['description']}</p>
         <ul>
-            <li>Corrección de bias sistemático</li>
-            <li>Simulación con estándares ópticos</li>
-            <li>Visualización de impacto</li>
+            {features_html}
         </ul>
     </div>
     """,
@@ -125,29 +119,40 @@ with col3:
 
     st.write("")
     if st.button(
-        "🚀 Abrir Offset Adjustment",
+        tool['button'],
         key="btn_offset",
         use_container_width=True,
         type="primary",
     ):
-        st.switch_page("pages/3_🎚️_Offset_Adjustment.py")
+        st.switch_page(tool['page'])
+
+st.divider()
+
+# ============================================================================
+# SECCIÓN 2: APPLICATION TOOLS
+# ============================================================================
+apps = HOME_PAGE['application_tools']
+st.markdown(f"## {apps['section_title']}")
+st.markdown(f"*{apps['section_subtitle']}*")
+
+st.write("")
 
 # ---------------------------------------------------------------------------
-# FILA 2 (2 columnas): Spectrum | Predictions
+# FILA 2 (2 columnas centradas): Spectrum | Predictions
 # ---------------------------------------------------------------------------
-col4, col5 = st.columns(2)
+sp3, col4, col5, sp4 = st.columns([0.5, 1, 1, 0.5])
 
+# SPECTRUM COMPARISON
 with col4:
+    tool = apps['spectrum']
+    features_html = ''.join([f'<li>{f}</li>' for f in tool['features']])
     st.markdown(
-        """
-    <div class="card-container card-green">
-        <h3>🔍 Spectrum Comparison</h3>
-        <p>Comparación avanzada de múltiples espectros NIR con análisis estadístico completo.</p>
+        f"""
+    <div class="card-container {tool['card_class']}">
+        <h3>{tool['title']}</h3>
+        <p>{tool['description']}</p>
         <ul>
-            <li>Overlay de espectros</li>
-            <li>Análisis de residuales y correlación</li>
-            <li>Agrupamiento de réplicas</li>
-            <li>Modo White Reference integrado</li>
+            {features_html}
         </ul>
     </div>
     """,
@@ -156,23 +161,24 @@ with col4:
 
     st.write("")
     if st.button(
-        "🚀 Abrir Spectrum Comparison",
+        tool['button'],
         key="btn_comparison",
         use_container_width=True,
         type="primary",
     ):
-        st.switch_page("pages/4_🔍_Comparacion_Espectros.py")
+        st.switch_page(tool['page'])
 
+# PREDICTION REPORTS
 with col5:
+    tool = apps['predictions']
+    features_html = ''.join([f'<li>{f}</li>' for f in tool['features']])
     st.markdown(
-        """
-    <div class="card-container card-teal">
-        <h3>📊 Prediction Reports</h3>
-        <p>Comparación de predicciones entre lámparas usando informes <strong>XML</strong> generados desde SX Center.</p>
+        f"""
+    <div class="card-container {tool['card_class']}">
+        <h3>{tool['title']}</h3>
+        <p>{tool['description']}</p>
         <ul>
-            <li>Cargar reporte XML de SX Center</li>
-            <li>Comparar predicciones entre lámparas</li>
-            <li>Analizar diferencias por muestra/parámetro</li>
+            {features_html}
         </ul>
     </div>
     """,
@@ -181,28 +187,31 @@ with col5:
 
     st.write("")
     if st.button(
-        "🚀 Abrir Prediction Reports",
+        tool['button'],
         key="btn_predictions",
         use_container_width=True,
         type="primary",
     ):
-        st.switch_page("pages/6_📊_Prediction_Reports.py")
+        st.switch_page(tool['page'])
 
 # ---------------------------------------------------------------------------
 # FILA 3 (2 tarjetas centradas): MetaReports | TSV Validation Reports
 # ---------------------------------------------------------------------------
+st.write("")
+
 sp1, c1, c2, sp2 = st.columns([0.5, 1, 1, 0.5])
 
+# METAREPORTS
 with c1:
+    tool = apps['metareports']
+    features_html = ''.join([f'<li>{f}</li>' for f in tool['features']])
     st.markdown(
-        """
-    <div class="card-container card-gray">
-        <h3>📦 Report Consolidator</h3>
-        <p>Consolida en un <strong>metainforme</strong> único los informes de Baseline, Validación y Predicciones.</p>
+        f"""
+    <div class="card-container {tool['card_class']}">
+        <h3>{tool['title']}</h3>
+        <p>{tool['description']}</p>
         <ul>
-            <li>Subir 1-3 informes (HTML/XML según módulo)</li>
-            <li>Resumen ejecutivo y estado global</li>
-            <li>Navegación lateral e informes embebidos</li>
+            {features_html}
         </ul>
     </div>
     """,
@@ -211,23 +220,24 @@ with c1:
 
     st.write("")
     if st.button(
-        "🚀 Abrir Report Consolidator",
+        tool['button'],
         key="btn_metareports",
         use_container_width=True,
         type="primary",
     ):
-        st.switch_page("pages/07_📦_MetaReports.py")
+        st.switch_page(tool['page'])
 
+# TSV VALIDATION REPORTS
 with c2:
+    tool = apps['tsv_validation']
+    features_html = ''.join([f'<li>{f}</li>' for f in tool['features']])
     st.markdown(
-        """
-    <div class="card-container card-lime">
-        <h3>📋 TSV Validation Reports</h3>
-        <p>Genera informes de validación a partir de ficheros <strong>TSV</strong> (journal) y produce un HTML interactivo.</p>
+        f"""
+    <div class="card-container {tool['card_class']}">
+        <h3>{tool['title']}</h3>
+        <p>{tool['description']}</p>
         <ul>
-            <li>Cargar uno o varios TSV</li>
-            <li>Limpieza y reorganización automática</li>
-            <li>Gráficos interactivos y tabla</li>
+            {features_html}
         </ul>
     </div>
     """,
@@ -236,75 +246,28 @@ with c2:
 
     st.write("")
     if st.button(
-        "🚀 Abrir TSV Validation Reports",
+        tool['button'],
         key="btn_tsv_validation_reports",
         use_container_width=True,
         type="primary",
     ):
-        st.switch_page("pages/08_📋_TSV_Validation_Reports.py")
+        st.switch_page(tool['page'])
 
 st.divider()
 
-# Información adicional actualizada
-st.markdown(
-    """
-### 📋 Flujo de trabajo típico
-
-**Workflow completo de mantenimiento:**
-
-1. **Pre-mantenimiento**: 
-   - Medir y guardar referencia blanca (TSV)
-   - Medir estándares ópticos certificados (TSV)
-
-2. **Cambio de lámpara** en NIR Online
-   - Warm-up 15-30 minutos
-
-3. **Baseline Adjustment** (Corrección de forma):
-   - Nueva medición de referencia blanca
-   - Cálculo de corrección espectral
-   - Exportar baseline corregido
-
-4. **Standard Validation** (Detección de offset):
-   - Medir mismos estándares ópticos con baseline nuevo
-   - Validar correlación, RMS, Max Δ
-   - **Detectar offset global del kit**
-
-5. **Offset Adjustment** (Corrección de bias - OPCIONAL):
-   - Si offset global > 0.003 AU
-   - Simular impacto del offset en estándares
-   - Aplicar corrección al baseline
-   - Re-exportar baseline final
-
-6. **Prediction Reports (SX Center)**:
-   - Cargar informe XML con predicciones
-   - Comparar resultados entre lámparas / configuraciones
-   - Detectar sesgos y desviaciones por parámetro
-
-7. **MetaReports**:
-   - Consolidar Baseline + Validación + Predicciones
-   - Generar un informe único con resumen ejecutivo
-   - ✅ Documentación completa para cierre de servicio
-
-8. **TSV Validation Reports**:
-   - Cargar TSV(s) desde journal / export
-   - Generar informes HTML interactivos (parity, residuum, histograma)
-   - Exportar CSV limpio para trazabilidad
-
----
-
-**Herramientas complementarias:**
-- **Spectrum Comparison**: Análisis comparativo general con modo White Reference integrado
-"""
-)
+# Información adicional - Workflow
+st.markdown(f"### {HOME_PAGE['workflow']['title']}")
+st.markdown(HOME_PAGE['workflow']['content'])
 
 st.divider()
 
-# Footer actualizado
+# Footer
+footer = HOME_PAGE['footer']
 st.markdown(
-    """
+    f"""
 <div style="text-align: center; color: #666; padding: 20px;">
-    <p><strong>NIR ServiceKit</strong> | Versión 2.0 </p>
-    <p>Para soporte técnico o consultas, contacta con el departamento de servicio.</p>
+    <p><strong>{footer['app_name']}</strong> | Versión {HOME_PAGE['version']} </p>
+    <p>{footer['support_text']}</p>
 </div>
 """,
     unsafe_allow_html=True,
