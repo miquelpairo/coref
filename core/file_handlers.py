@@ -12,6 +12,7 @@ from app_config import DEFAULT_CSV_METADATA
 def load_tsv_file(file):
     """
     Carga un archivo TSV y lo convierte a DataFrame.
+    Maneja múltiples encodings y BOM.
     
     Args:
         file: Archivo subido por Streamlit
@@ -19,9 +20,29 @@ def load_tsv_file(file):
     Returns:
         pd.DataFrame: DataFrame con los datos del archivo
     """
-    content = file.read().decode("utf-8").replace(",", ".")
-    df = pd.read_csv(io.StringIO(content), sep="\t")
-    return df
+    # Probar varios encodings en orden
+    encodings = ['utf-8', 'utf-8-sig', 'latin-1', 'cp1252', 'iso-8859-1']
+    
+    for encoding in encodings:
+        try:
+            file.seek(0)  # Volver al inicio
+            content = file.read().decode(encoding).replace(",", ".")
+            
+            # Eliminar BOM si existe
+            if content.startswith('\ufeff'):
+                content = content[1:]
+            
+            df = pd.read_csv(io.StringIO(content), sep="\t")
+            return df
+            
+        except (UnicodeDecodeError, UnicodeError):
+            continue
+    
+    # Si todos fallan
+    raise ValueError(
+        "No se pudo decodificar el archivo. "
+        "Intenta guardarlo con encoding UTF-8 desde tu editor."
+    )
 
 
 def get_spectral_columns(df):
@@ -77,7 +98,7 @@ def load_csv_baseline(file):
         raise ValueError("El archivo CSV no tiene la columna 'data'")
     
     # Leer la ÚLTIMA línea (baseline más reciente)
-    data_string = df['data'].iloc[-1]  # Cambio: iloc[0] → iloc[-1]
+    data_string = df['data'].iloc[-1]
     spectrum = np.array(json.loads(data_string))
     
     return df, spectrum
