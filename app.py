@@ -21,11 +21,11 @@ pages = {
         st.Page("pages/2_🎯_Validation_Standards.py", title="Validation Standards", icon="🎯"),
         st.Page("pages/3_🎚️_Offset_Adjustment.py", title="Offset Adjustment", icon="🎚️"),
     ],
-    "📊 Application": [
+    "🧪 Application": [
         st.Page("pages/4_🔍_Comparacion_Espectros.py", title="Comparación Espectros", icon="🔍"),
         st.Page("pages/6_📊_Prediction_Reports.py", title="Prediction Reports", icon="📊"),
         st.Page("pages/07_📦_MetaReports.py", title="Report Consolidator", icon="📦"),
-        st.Page("pages/08_✅_TSV_Validation_Reports.py", title="TSV Validation Reports", icon="✅"),
+        st.Page("pages/08_📋_TSV_Validation_Reports.py", title="TSV Validation Reports", icon="📋"),
     ],
 }
 
