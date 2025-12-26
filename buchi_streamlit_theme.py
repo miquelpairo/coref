@@ -15,27 +15,11 @@ def load_shared_report_css() -> str:
         return ""
 
 
-# buchi_streamlit_theme.py
-
-import streamlit as st
-
-
-def load_shared_report_css() -> str:
-    """
-    Carga CSS compartido de informes HTML (para reports descargables).
-    Si no existe el archivo, devuelve string vacío.
-    """
-    try:
-        with open("buchi_report_styles_simple.css", "r", encoding="utf-8") as f:
-            return f.read()
-    except FileNotFoundError:
-        return ""
-
-
 def apply_buchi_styles() -> None:
     """
     Estilos BUCHI en Streamlit (sin romper nada):
     - Sidebar corporativo (fondo + tipografía)
+    - Navigation section headers (Service Tools / Application Tools)
     - Botones PRIMARY verdes (global) → también en form_submit_button
     - Botones SECONDARY: default en main, pero en SIDEBAR gris oscuro para contraste con texto blanco
     - Header Streamlit intacto (Deploy/Settings/Rerun)
@@ -77,6 +61,24 @@ def apply_buchi_styles() -> None:
         [data-testid="stSidebar"] textarea {{
             background-color: #ffffff !important;
             color: #111111 !important;
+        }}
+
+        /* =========================================================
+           NAVIGATION SECTION HEADERS (st.navigation)
+           Service Tools / Application Tools
+           ========================================================= */
+        [data-testid="stSidebar"] [data-testid="stNavSectionHeader"] {{
+            color: #FFFFFF !important;
+            font-weight: 700 !important;
+            opacity: 1 !important;
+        }}
+
+        /* =========================================================
+           LISTAS / ITEMS DENTRO DEL SIDEBAR (ul / li)
+           ========================================================= */
+        [data-testid="stSidebar"] ul,
+        [data-testid="stSidebar"] li {{
+            color: #ffffff !important;
         }}
 
         /* =========================================================
@@ -173,14 +175,6 @@ def apply_buchi_styles() -> None:
         }}
 
         /* =========================================================
-           LISTAS / ITEMS DENTRO DEL SIDEBAR (ul / li)
-           ========================================================= */
-        [data-testid="stSidebar"] ul,
-        [data-testid="stSidebar"] li {{
-            color: #ffffff !important;
-        }}
-
-        /* =========================================================
            FILE UPLOADER DROPZONE – SIDEBAR
            ========================================================= */
         [data-testid="stSidebar"] [data-testid="stFileUploaderDropzone"] {{
@@ -200,7 +194,7 @@ def apply_buchi_styles() -> None:
         }}
 
         /* =========================================================
-           TARJETAS HOME - COREF SUITE
+           TARJETAS HOME - NIR ServiceKit
            ========================================================= */
         .card-container {{
             min-height: 400px;
@@ -229,16 +223,6 @@ def apply_buchi_styles() -> None:
         .card-teal h3 {{ color: #00897b; }}
         .card-gray h3 {{ color: #546e7a; }}
         .card-lime h3 {{ color: #7CB342; }}
-
-        /* =========================================================
-        NAVIGATION SECTION HEADERS (st.navigation)
-        Service Tools / Application Tools
-        ========================================================= */
-        [data-testid="stSidebar"] [data-testid="stNavSectionHeader"] {{
-            color: #FFFFFF !important;
-            font-weight: 700 !important;
-            opacity: 1 !important;
-        }}
 
         </style>
         """,
