@@ -184,4 +184,42 @@ def apply_buchi_styles() -> None:
         </style>
         """,
         unsafe_allow_html=True,
+
+        /* =========================
+        SIDEBAR – EXPANDER (CERRADO/ABIERTO)
+        ========================= */
+
+        /* El summary (cabecera) siempre legible */
+        [data-testid="stSidebar"] details > summary {{
+        color: #FFFFFF !important;
+        }}
+
+        /* Cuando está ABIERTO: fija fondo oscuro y texto blanco */
+        [data-testid="stSidebar"] details[open] > summary {{
+        background-color: rgba(255, 255, 255, 0.10) !important;  /* ajusta 0.08–0.18 */
+        color: #FFFFFF !important;
+        border-radius: 8px !important;
+        }}
+
+        /* Contenido interno del expander (lo que aparece al abrir) */
+        [data-testid="stSidebar"] details[open] > div {{
+        background-color: rgba(255, 255, 255, 0.06) !important;  /* un pelín más oscuro */
+        border-radius: 8px !important;
+        }}
+
+        /* Por si el texto interno del summary viene en spans/divs */
+        [data-testid="stSidebar"] details > summary * {{
+        color: #FFFFFF !important;
+        }}
+
+        /* Chevron del expander (tu SVG usa currentColor) */
+        [data-testid="stSidebar"] svg[data-testid="stExpanderToggleIcon"] {{
+        color: #FFFFFF !important;
+        fill: currentColor !important;
+        }}
+
+        /* BONUS: si Streamlit te pinta un fondo claro en el wrapper del expander */
+        [data-testid="stSidebar"] [data-testid="stExpander"] {{
+        background-color: transparent !important;
+        }}
     )
