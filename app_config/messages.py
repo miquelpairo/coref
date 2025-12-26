@@ -1,47 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Configuración y constantes para NIR ServiceKit
+Mensajes de UI, instrucciones y textos
 """
 
 # ============================================================================
-# 1) CONFIGURACIÓN DE LA PÁGINA (STREAMLIT)
-# ============================================================================
-
-PAGE_CONFIG = {
-    "page_title": "NIR ServiceKit",
-    "page_icon": "🏠",
-    "layout": "wide",
-}
-
-# ============================================================================
-# 2) DEFINICIÓN DE PASOS DEL PROCESO
-# ============================================================================
-
-STEPS = {
-    1: "Datos del cliente",
-    2: "Backup de archivos",
-    3: "Diagnóstico Inicial",
-    4: "Validación",
-    5: "Alineamiento de Baseline",
-}
-
-# ============================================================================
-# 3) RUTAS Y EXTENSIONES SOPORTADAS
-# ============================================================================
-
-BASELINE_PATHS = {
-    'old_software': r"C:\ProgramData\NIR-Online\SX-Suite",
-    'new_software': r"C:\ProgramData\NIR-Online\SX-Suite\Data\Reference",
-}
-
-SUPPORTED_EXTENSIONS = {
-    'tsv': ['tsv', 'txt', 'csv'],
-    'baseline': ['ref', 'csv'],
-    'ref': ['ref'],
-}
-
-# ============================================================================
-# 4) IDENTIFICADORES ESPECIALES
+# IDENTIFICADORES ESPECIALES
 # ============================================================================
 
 SPECIAL_IDS = {
@@ -49,106 +12,17 @@ SPECIAL_IDS = {
 }
 
 # ============================================================================
-# 5) UMBRALES DE DIAGNÓSTICO (WSTD)
-# ============================================================================
-
-WSTD_THRESHOLDS = {
-    'good': 0.015,
-    'warning': 0.05,
-    'bad': float('inf'),
-}
-
-DIAGNOSTIC_STATUS = {
-    'good': {
-        'icon': '🟢',
-        'label': 'Bien ajustado',
-        'color': 'green',
-    },
-    'warning': {
-        'icon': '🟡',
-        'label': 'Desviación moderada',
-        'color': 'warning',
-    },
-    'bad': {
-        'icon': '🔴',
-        'label': 'Offset, ajustar a offset inicial',
-        'color': 'red',
-    },
-}
-
-# ============================================================================
-# 6) METADATOS POR DEFECTO PARA CSV
-# ============================================================================
-
-DEFAULT_CSV_METADATA = {
-    'expires': '',
-    'sys_temp': 35.0,
-    'tec_temp': 25.0,
-    'lamp_time': '0:00:00',
-    'count': 1,
-    'vis_avg': 32000,
-    'vis_max': 65535,
-    'vis_int_time': 100,
-    'vis_gain': 1,
-    'vis_offset': 0,
-    'vis_scans': 10,
-    'vis_first': 0,
-    'vis_pixels': 256,
-    'nir_avg': 1000.0,
-    'nir_max': 4095,
-    'nir_int_time': 10.0,
-    'nir_gain': 1.0,
-    'nir_offset': 0,
-    'nir_scans': 10,
-    'nir_first': 0,
-    'bounds': '400.0,1000.0',
-}
-
-# ============================================================================
-# 7) CONFIGURACIÓN DE MUESTRAS DE CONTROL
-# ============================================================================
-
-CONTROL_SAMPLES_CONFIG = {
-    'min_samples': 1,
-    'max_samples': 50,
-    'prediction_tolerance': {
-        'good': 0.5,
-        'warning': 2.0,
-        'bad': float('inf'),
-    },
-}
-
-# ============================================================================
-# 8) CONFIGURACIÓN DE GRÁFICOS
-# ============================================================================
-
-PLOT_CONFIG = {
-    'figsize_default': (12, 6),
-    'figsize_large': (12, 8),
-    'figsize_report': (14, 7),
-    'dpi': 150,
-    'alpha_spectrum': 0.85,
-    'alpha_grid': 0.3,
-    'linewidth_default': 2,
-    'linewidth_thin': 1,
-}
-
-# ============================================================================
-# 9) INSTRUCCIONES POR PASO (UI)
+# INSTRUCCIONES POR PASO (UI)
 # ============================================================================
 
 INSTRUCTIONS = {
-    # ========================================================================
-    # STEP 00: CLIENT INFO
-    # ========================================================================
+    # CLIENT INFO
     'client_info': """
 Por favor, completa los siguientes datos antes de comenzar el proceso de ajuste.
 Esta información se incluirá en el informe final.
     """,
 
-    # ========================================================================
-    # STEP 01: BACKUP
-    # ========================================================================
+    # BACKUP
     'backup': """
 ### ⚠️ CRÍTICO: Diagnóstico del Estado Actual
 **Antes de continuar, debes caracterizar cómo está midiendo el equipo actualmente.**
@@ -181,9 +55,7 @@ no sirve para realizar el ajuste.
 4. **Verifica que la copia se realizó correctamente**
     """,
 
-    # ========================================================================
-    # STEP 02: WSTD - DIAGNÓSTICO INICIAL
-    # ========================================================================
+    # WSTD - DIAGNÓSTICO INICIAL
     'wstd': """
 ### 📊 Diagnóstico Inicial del Sensor
 **Objetivo:** Caracterizar el estado actual del sensor antes de realizar cualquier ajuste.
@@ -216,9 +88,7 @@ Asegúrate de medir con el baseline actual del equipo antes de cualquier ajuste.
 Este archivo es necesario como referencia para el alineamiento de baseline en el Paso 5.
     """,
 
-    # ========================================================================
-    # STEP 04: VALIDATION
-    # ========================================================================
+    # VALIDATION
     'validation_objective': """
 ### 🎯 Objetivo
 Verificar si el equipo está correctamente alineado midiendo el White Standard.
@@ -278,9 +148,7 @@ El informe incluirá:
 - Conclusiones
     """,
 
-    # ========================================================================
-    # STEP 05: ALIGNMENT
-    # ========================================================================
+    # ALIGNMENT
     'alignment_intro': """
 ### ⚙️ Alineamiento de Baseline
 
@@ -366,9 +234,7 @@ Vuelve al Paso 4 para realizar la validación primero
 5. ✅ Mide de nuevo el White Standard
     """,
 
-    # ========================================================================
-    # LEGACY / OTROS (mantener por compatibilidad)
-    # ========================================================================
+    # LEGACY / OTROS
     'control_samples': """
 ### 🎯 Muestras de Control (Opcional)
 
@@ -400,7 +266,7 @@ el impacto en las predicciones.
 }
 
 # ============================================================================
-# 10) MENSAJES DE ÉXITO/ERROR/INFO
+# MENSAJES DE ÉXITO/ERROR/INFO
 # ============================================================================
 
 MESSAGES = {
@@ -429,132 +295,3 @@ MESSAGES = {
     'success_control_initial': "✅ Muestras de control iniciales guardadas correctamente",
     'success_control_final': "✅ Muestras de control finales guardadas correctamente",
 }
-
-# ============================================================================
-# 11) UMBRALES Y CONFIGURACIÓN DE VALIDACIÓN
-# ============================================================================
-
-VALIDATION_THRESHOLDS = {
-    'excellent': 0.001,
-    'good': 0.01,
-    'acceptable': 0.05,
-    'bad': float('inf'),
-}
-
-VALIDATION_STATUS = {
-    'excellent': {
-        'icon': '✅',
-        'label': 'Excelente',
-        'color': 'green',
-    },
-    'good': {
-        'icon': '✅',
-        'label': 'Bueno',
-        'color': 'green',
-    },
-    'acceptable': {
-        'icon': '⚠️',
-        'label': 'Aceptable',
-        'color': 'warning',
-    },
-    'bad': {
-        'icon': '❌',
-        'label': 'Requiere atención',
-        'color': 'red',
-    },
-}
-
-# Umbral crítico para decidir si necesita alineamiento en Paso 4
-VALIDATION_RMS_THRESHOLD = 0.005
-
-WHITE_REFERENCE_THRESHOLDS = {
-    'excellent': {'rms': 0.002, 'max_diff': 0.005, 'color': '#4caf50'},
-    'good': {'rms': 0.005, 'max_diff': 0.01, 'color': '#8bc34a'},
-    'acceptable': {'rms': 0.01, 'max_diff': 0.02, 'color': '#ffc107'},
-    'review': {'color': '#f44336'},
-}
-
-DEFAULT_VALIDATION_THRESHOLDS = {
-    'correlation': 0.9995,
-    'max_diff': 0.015,
-    'rms': 0.010,
-}
-
-CRITICAL_REGIONS = [(1100, 1200), (1400, 1500), (1600, 1700)]
-
-OFFSET_LIMITS = {
-    'negligible': 0.001,
-    'acceptable': 0.005,
-}
-
-# ============================================================================
-# 12) CONFIGURACIÓN DE INFORMES HTML
-# ============================================================================
-
-REPORT_STYLE = """
-body { font-family: Arial, sans-serif; margin: 40px; }
-h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
-h2 { color: #34495e; margin-top: 30px; }
-h3 { color: #5a6c7d; margin-top: 20px; }
-.info-box { background-color: #ecf0f1; padding: 15px; border-radius: 5px; margin: 10px 0; }
-.warning-box { background-color: #fff3cd; padding: 15px; border-radius: 5px; margin: 10px 0; border-left: 4px solid #ffc107; }
-.success-box { background-color: #d4edda; padding: 15px; border-radius: 5px; margin: 10px 0; border-left: 4px solid #28a745; }
-.metric { display: inline-block; margin: 10px 20px 10px 0; }
-.metric-label { font-weight: bold; color: #7f8c8d; }
-.metric-value { color: #2c3e50; font-size: 1.1em; }
-table { border-collapse: collapse; width: 100%; margin: 20px 0; }
-th, td { border: 1px solid #bdc3c7; padding: 10px; text-align: left; }
-th { background-color: #3498db; color: white; }
-tr:nth-child(even) { background-color: #f2f2f2; }
-.status-good { color: #28a745; font-weight: bold; }
-.status-warning { color: #ffc107; font-weight: bold; }
-.status-bad { color: #dc3545; font-weight: bold; }
-.footer { margin-top: 50px; padding-top: 20px; border-top: 1px solid #bdc3c7; text-align: center; color: #7f8c8d; font-size: 0.9em; }
-.tag { display:inline-block; padding:2px 8px; border-radius:12px; font-size:0.85em; margin: 2px; }
-.tag-ok { background:#e8f5e9; color:#2e7d32; border:1px solid #c8e6c9; }
-.tag-no { background:#fff3e0; color:#e65100; border:1px solid #ffe0b2; }
-img { max-width: 100%; height: auto; margin: 20px 0; }
-"""
-
-# ============================================================================
-# 13) COLORES Y PLANTILLA PLOTLY
-# ============================================================================
-
-BUCHI_COLORS = {
-    'primary': '#093A34',
-    'secondary': '#289A93',
-    'accent': '#00BFA5',
-    'success': '#28a745',
-    'warning': '#ffc107',
-    'danger': '#dc3545',
-    'info': '#17a2b8',
-    'light': '#f8f9fa',
-    'dark': '#343a40',
-}
-
-PLOTLY_TEMPLATE = {
-    'layout': {
-        'colorway': ['#093A34', '#289A93', '#00BFA5', '#FF6B6B', '#4ECDC4'],
-        'font': {'family': 'Segoe UI, Arial, sans-serif'},
-        'plot_bgcolor': 'white',
-        'paper_bgcolor': 'white',
-    }
-}
-
-# ============================================================================
-# 14) INFORMACIÓN DE VERSIÓN
-# ============================================================================
-
-VERSION = "3.1.0"
-VERSION_DATE = "2025-12-26"
-VERSION_NOTES = """
-Versión 3.1.0 - Optimización y Refactorización:
-- ✅ Mensajes e instrucciones centralizados en config.py
-- ✅ Eliminación de duplicación en funciones de visualización
-- ✅ Arquitectura modular mejorada (plotly_utils, standards_analysis)
-- ✅ CSS centralizado en buchi_streamlit_theme.py
-- ✅ Gestión consistente de unsaved_changes en todos los steps
-- ✅ Nomenclatura clara para funciones específicas vs genéricas
-- 📊 Reducción de ~6,000 líneas de código (-33%)
-- 🎨 UI consistente con estilos corporativos BUCHI
-"""
