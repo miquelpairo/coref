@@ -9,13 +9,13 @@ PAGE_CONFIG = {
     "layout": "wide"
 }
 
-# Definición de pasos del proceso (⭐ ACTUALIZADO A 5 PASOS)
+# Definición de pasos del proceso
 STEPS = {
     1: "Datos del cliente",
     2: "Backup de archivos",
     3: "Diagnóstico Inicial",
-    4: "Validación",              # ⭐ NUEVO - Validación primero
-    5: "Alineamiento de Baseline"  # ⭐ NUEVO - Alineamiento solo si falla validación
+    4: "Validación",
+    5: "Alineamiento de Baseline"
 }
 
 # Rutas de archivos baseline
@@ -33,9 +33,9 @@ SUPPORTED_EXTENSIONS = {
 
 # Umbrales de diagnóstico para External White
 WSTD_THRESHOLDS = {
-    'good': 0.015,           # Bien ajustado
-    'warning': 0.05,        # Desviación moderada
-    'bad': float('inf')     # Requiere ajuste
+    'good': 0.015,
+    'warning': 0.05,
+    'bad': float('inf')
 }
 
 # Estados de diagnóstico
@@ -84,17 +84,17 @@ DEFAULT_CSV_METADATA = {
 
 # Identificadores especiales
 SPECIAL_IDS = {
-    'wstd': 'WSTD'  # White Standard ID (ya no es obligatorio)
+    'wstd': 'WSTD'
 }
 
-# ⭐ NUEVO: Configuración de muestras de control
+# Configuración de muestras de control
 CONTROL_SAMPLES_CONFIG = {
     'min_samples': 1,
     'max_samples': 50,
     'prediction_tolerance': {
-        'good': 0.5,      # Diferencia < 0.5% = buena reproducibilidad
-        'warning': 2.0,   # Diferencia < 2% = aceptable
-        'bad': float('inf')  # Diferencia > 2% = revisar
+        'good': 0.5,
+        'warning': 2.0,
+        'bad': float('inf')
     }
 }
 
@@ -110,379 +110,324 @@ PLOT_CONFIG = {
     'linewidth_thin': 1
 }
 
-# Mensajes de instrucciones
+# ============================================================================
+# INSTRUCCIONES POR PASO
+# ============================================================================
+
 INSTRUCTIONS = {
+    # ========================================================================
+    # STEP 00: CLIENT INFO
+    # ========================================================================
     'client_info': """
-    Por favor, completa los siguientes datos antes de comenzar el proceso de ajuste.
-    Esta información se incluirá en el informe final.
+Por favor, completa los siguientes datos antes de comenzar el proceso de ajuste.
+Esta información se incluirá en el informe final.
     """,
     
+    # ========================================================================
+    # STEP 01: BACKUP
+    # ========================================================================
     'backup': """
-    ### ⚠️ CRÍTICO: Diagnóstico del Estado Actual
-    **Antes de continuar, debes caracterizar cómo está midiendo el equipo actualmente.**
+### ⚠️ CRÍTICO: Diagnóstico del Estado Actual
+**Antes de continuar, debes caracterizar cómo está midiendo el equipo actualmente.**
 
-    Lo más importante es documentar el estado actual del sensor para poder alinear correctamente 
-    la baseline tras el cambio de lámpara. Una copia de seguridad sin esta información de referencia 
-    no sirve para realizar el ajuste.
+Lo más importante es documentar el estado actual del sensor para poder alinear correctamente 
+la baseline tras el cambio de lámpara. Una copia de seguridad sin esta información de referencia 
+no sirve para realizar el ajuste.
     """,
     
     'backup_procedure': r"""
-    ### Procedimiento para el backup:
+### Procedimiento para el backup:
 
-    **Objetivo:** Identificar la baseline que se usa actualmente y hacer una copia de seguridad.
+**Objetivo:** Identificar la baseline que se usa actualmente y hacer una copia de seguridad.
 
-    1. **Localiza la carpeta de baseline según tu versión de software:**
-       
-       - **SX Suite ≤531**: `C:\ProgramData\NIR-Online\SX-Suite`
-         - El archivo tiene un patrón de nombre: `serialnumber.lamp.date.ref` (ej: `316FG103.1.2025-11-21.ref`)
-         - La posición de la lámpara: **1** indica primaria, **2** indica secundaria
-         - **Copia los archivos .ref de ambas lámparas**
-         - **Si no hay archivos .ref**, el equipo está trabajando sin línea base
-       
-       - **SX Suite ≥554**: `C:\ProgramData\NIR-Online\SX-Suite\Data\Reference`
-         - El archivo tiene el nombre: `numerodeserie.baseline.lampara.csv` (ej: `316FG103.Baseline.1.csv')
+1. **Localiza la carpeta de baseline según tu versión de software:**
+   
+   - **SX Suite ≤531**: `C:\ProgramData\NIR-Online\SX-Suite`
+     - El archivo tiene un patrón de nombre: `serialnumber.lamp.date.ref` (ej: `316FG103.1.2025-11-21.ref`)
+     - La posición de la lámpara: **1** indica primaria, **2** indica secundaria
+     - **Copia los archivos .ref de ambas lámparas**
+     - **Si no hay archivos .ref**, el equipo está trabajando sin línea base
+   
+   - **SX Suite ≥554**: `C:\ProgramData\NIR-Online\SX-Suite\Data\Reference`
+     - El archivo tiene el nombre: `numerodeserie.baseline.lampara.csv` (ej: `316FG103.Baseline.1.csv')
 
-    2. **Haz copia de los archivos**, incluyendo el número de serie en el nombre de la carpeta (ej: `316FG103_Backup_2025-11-21`)
+2. **Haz copia de los archivos**, incluyendo el número de serie en el nombre de la carpeta (ej: `316FG103_Backup_2025-11-21`)
 
-    3. **Carga la baseline en el PC de trabajo** para continuar con el proceso
+3. **Carga la baseline en el PC de trabajo** para continuar con el proceso
 
-    4. **Verifica que la copia se realizó correctamente**
+4. **Verifica que la copia se realizó correctamente**
     """,
     
+    # ========================================================================
+    # STEP 02: WSTD - DIAGNÓSTICO INICIAL
+    # ========================================================================
     'wstd': """
-    ### 📊 Diagnóstico Inicial del Sensor
-    **Objetivo:** Caracterizar el estado actual del sensor antes de realizar cualquier ajuste.
+### 📊 Diagnóstico Inicial del Sensor
+**Objetivo:** Caracterizar el estado actual del sensor antes de realizar cualquier ajuste.
 
-    **Procedimiento:**
-    1. **Comprueba qué archivo de baseline se está usando actualmente** en el equipo y cárgalo
-    2. **Mide una referencia blanca** (External White) con el baseline que se está usando. 
-    3. **Asigna un ID identificable** a la medición (ej: "WHITE"). Usa el mismo ID en todo el proceso.
-    4. **Exporta el archivo TSV** con las mediciones
-    5. **Selecciona las filas correspondientes** usando los checkboxes
+**Procedimiento:**
+1. **Comprueba qué archivo de baseline se está usando actualmente** en el equipo y cárgalo
+2. **Mide una referencia blanca** (External White) con el baseline que se está usando. 
+3. **Asigna un ID identificable** a la medición (ej: "WHITE"). Usa el mismo ID en todo el proceso.
+4. **Exporta el archivo TSV** con las mediciones
+5. **Selecciona las filas correspondientes** usando los checkboxes
 
-    **¿Qué evaluamos?**
-    Las desviaciones del espectro respecto a cero nos indican la línea base actual.
-    Esto sirve como referencia para alinear el sensor a la misma línea base.
+**¿Qué evaluamos?**
+Las desviaciones del espectro respecto a cero nos indican la línea base actual.
+Esto sirve como referencia para alinear el sensor a la misma línea base.
 
-    **IMPORTANTE:** Este archivo TSV servirá para alinear la lámpara posteriormente. Se cargará como referencia en el Paso 4.
+**IMPORTANTE:** Este archivo TSV servirá para alinear la lámpara posteriormente. Se cargará como referencia en el Paso 4.
     """,
     
-    'control_samples': """
-    ### 🎯 Muestras de Control (Opcional)
+    'wstd_file_info': """
+📋 **Este archivo TSV se usará como referencia en el Paso 5 (Alineamiento de Baseline)**
 
-    **Objetivo:** Validar que el ajuste de baseline mejora las predicciones del equipo.
-
-    **¿Qué son muestras de control?**
-    Muestras reales que medirás **antes** y **después** del ajuste para comparar 
-    el impacto en las predicciones.
-
-    **Procedimiento:**
-    1. **Mide 3-10 muestras representativas** con la configuración actual
-    2. **Asigna IDs únicos** a cada muestra (serán necesarios después)
-    3. **Exporta el archivo TSV** - debe incluir la columna "Results" con predicciones
-    4. Después del ajuste, medirás las mismas muestras para comparar
-
-    **Requisitos del archivo:**
-    - Debe contener la columna "Results" con las predicciones NIR
-    - Los IDs deben ser consistentes y fáciles de identificar
+Asegúrate de medir con el baseline actual del equipo antes de cualquier ajuste.
     """,
     
-    'kit': """
-    ### 📦 Archivos para Calcular la Corrección
+    'wstd_selection_instruction': "✅ Marca las casillas de las mediciones que corresponden al White Standard.",
+    
+    'wstd_continue_warning': """
+⚠️ **Debes cargar el archivo TSV de External White para continuar**
 
-    **La herramienta necesita DOS archivos TSV para calcular el ajuste:**
-
-    **Archivo 1 - Referencia (estado deseado):**
-    - Mediciones del sensor en el estado que quieres replicar
-    - Puede ser de un equipo de referencia, o del mismo equipo en buen estado
-    - Contiene los espectros "objetivo"
-
-    **Archivo 2 - Estado Actual (a corregir):**
-    - Mediciones del sensor en su estado actual
-    - Debe contener las **MISMAS muestras** que el archivo de referencia
-    - Usa **EXACTAMENTE los MISMOS IDs** de muestra
-
-    **Importante:** 
-    - Los archivos se emparejan por ID de muestra
-    - Cuantas más muestras uses (10-30), mejor será el ajuste
-    - Las muestras deben cubrir el rango analítico de interés
+Este archivo es necesario como referencia para el alineamiento de baseline en el Paso 5.
     """,
     
-    'baseline_load': """
-    ### 📁 Cargar Baseline Actual
+    # ========================================================================
+    # STEP 04: VALIDATION
+    # ========================================================================
+    'validation_objective': """
+### 🎯 Objetivo
+Verificar si el equipo está correctamente alineado midiendo el White Standard.
 
-    **Necesitas el archivo baseline que usaste para medir el "Estado Actual" en el paso anterior.**
-
-    **Formatos soportados:**
-    - **Archivo .ref** (SX Suite ≤531) - Formato binario
-    - **Archivo .csv** (SX Suite ≥557) - Formato de texto
-
-    **Validación:** El archivo debe tener exactamente **{n_channels} canales** espectrales 
-    para coincidir con tus mediciones TSV.
-    
-    Este baseline será corregido y podrás exportarlo en ambos formatos.
+**Proceso:**
+1. Mide el White Standard con el baseline actual
+2. Comparamos con la referencia del Paso 3
+3. **Si está bien alineado** (RMS < 0.005) → Generar informe y finalizar ✅
+4. **Si necesita ajuste** (RMS ≥ 0.005) → Ir al Paso 5 para alinear ⚙️
     """,
     
-    'validation_control': """
-    ### ✅ Validación con Muestras de Control
-
-    **Si definiste muestras de control al inicio, ahora puedes validar el ajuste.**
-
-    **Procedimiento:**
-    1. **Aplica el nuevo baseline corregido** al equipo NIR
-    2. **Mide las MISMAS muestras de control** que mediste al inicio
-    3. **Usa los MISMOS IDs** para poder comparar
-    4. **Exporta el archivo TSV** con las mediciones
-
-    **Análisis automático:**
-    La aplicación comparará:
-    - Espectros NIR antes vs. después del ajuste
-    - Predicciones antes vs. después del ajuste
-    - Te mostrará si las predicciones mejoraron
-
-    **Nota:** Este paso es opcional. Si no tienes muestras de control, puedes omitirlo.
+    'validation_first_measurement': """
+**Primera medición:**
+1. Con el baseline actual del equipo
+2. Mide el MISMO White Standard del Paso 3
+3. Exporta el TSV y cárgalo aquí
     """,
     
-        # ⭐ NUEVO: Instrucciones para Paso 4 - Alineamiento
+    'validation_success_title': """
+✅ **VALIDACIÓN EXITOSA**
+
+**White Standard ({white_id}):** RMS = {rms:.6f} < 0.005
+
+El equipo está correctamente alineado y listo para usar.
+    """,
+    
+    'validation_alignment_needed': """
+⚠️ **ALINEAMIENTO NECESARIO**
+
+**White Standard ({white_id}):** RMS = {rms:.6f} ≥ 0.005
+
+El equipo necesita alineamiento de baseline.
+    """,
+    
+    'validation_option_continue': """
+**Recomendado**: Ve al Paso 5 para ajustar el baseline.
+
+En el Paso 5 podrás:
+1. Cargar el baseline actual
+2. Calcular la corrección necesaria
+3. Exportar el baseline corregido
+4. Volver a este paso para validar
+    """,
+    
+    'validation_option_force': """
+⚠️ **No recomendado**: Genera el informe con el estado actual 
+aunque no se cumpla el umbral de RMS < 0.002.
+
+El informe indicará claramente que el alineamiento no fue exitoso.
+    """,
+    
+    'validation_report_intro': """
+El informe incluirá:
+- Datos del cliente y equipo
+- Métricas del White Standard
+- Gráficos comparativos
+- Conclusiones
+    """,
+    
+    # ========================================================================
+    # STEP 05: ALIGNMENT
+    # ========================================================================
     'alignment_intro': """
-    ### 🎯 Objetivo del Alineamiento
-    
-    Este paso ajusta la línea base del equipo para que la medición del White Standard 
-    quede igual después del cambio de lámpara. El proceso genera un baseline corregido 
-    que alinea el equipo al estado de referencia.
-    
-    **Resultado esperado:** Después de aplicar el baseline corregido, el equipo medirá 
-    el White Standard con los mismos valores que antes del cambio.
+### ⚙️ Alineamiento de Baseline
+
+Has llegado aquí porque el RMS del White Standard es ≥ 0.002.
+
+**En este paso:**
+1. Cargas el baseline actual del equipo
+2. Calculamos la corrección necesaria
+3. Exportas el baseline corregido
+4. Lo instalas en el equipo
+5. Vuelves al Paso 4 para validar
     """,
     
     'alignment_procedure': """
-    ### 📋 Procedimiento de Alineamiento
-    
-    **IMPORTANTE:** El equipo debe estar estabilizado (mínimo 30 minutos encendido) antes de comenzar.
-    
-    **Pasos a seguir:**
-    
-    1. **Tomar nueva baseline** en el equipo con la lámpara nueva
-       - Asegúrate de que el equipo esté estabilizado (≥30 min)
-       - Toma la baseline siguiendo el procedimiento normal del equipo
-    
-    2. **Medir el White Standard** con la nueva baseline
-       - Usa el MISMO White Standard del Paso 3
-       - Asigna el mismo ID identificable (ej: "WHITE")
-       - Exporta el TSV con esta medición
-    
-    3. **Cargar los archivos en esta aplicación:**
-       - Baseline tomada (archivo .ref o .csv)
-       - TSV de referencia (Paso 3) - se carga automáticamente
-       - TSV de nueva medición (que acabas de medir)
-    
-    4. **Generar baseline corregido**
-       - La aplicación calculará la corrección necesaria
-       - Descarga el archivo baseline corregido
-    
-    5. **Sustituir el baseline en el equipo:**
-       - **SX Suite ≤531**: Copia el archivo .ref corregido a `C:\\ProgramData\\NIR-Online\\SX-Suite`
-       - **SX Suite ≥554**: Copia el archivo .csv corregido a `C:\\ProgramData\\NIR-Online\\SX-Suite\\Data\\Reference`
-       - Reemplaza el archivo baseline actual con el corregido
-    
-    **Verificación:** Después de sustituir el baseline, pasa al Paso 5 para validar el ajuste.
+### 📋 Procedimiento de Alineamiento
+
+**IMPORTANTE:** El equipo debe estar estabilizado (mínimo 30 minutos encendido) antes de comenzar.
+
+**Pasos a seguir:**
+
+1. **Tomar nueva baseline** en el equipo con la lámpara nueva
+   - Asegúrate de que el equipo esté estabilizado (≥30 min)
+   - Toma la baseline siguiendo el procedimiento normal del equipo
+
+2. **Medir el White Standard** con la nueva baseline
+   - Usa el MISMO White Standard del Paso 3
+   - Asigna el mismo ID identificable (ej: "WHITE")
+   - Exporta el TSV con esta medición
+
+3. **Cargar los archivos en esta aplicación:**
+   - Baseline tomada (archivo .ref o .csv)
+   - TSV de referencia (Paso 3) - se carga automáticamente
+   - TSV de nueva medición (que acabas de medir)
+
+4. **Generar baseline corregido**
+   - La aplicación calculará la corrección necesaria
+   - Descarga el archivo baseline corregido
+
+5. **Sustituir el baseline en el equipo:**
+   - **SX Suite ≤531**: Copia el archivo .ref corregido a `C:\\ProgramData\\NIR-Online\\SX-Suite`
+   - **SX Suite ≥554**: Copia el archivo .csv corregido a `C:\\ProgramData\\NIR-Online\\SX-Suite\\Data\\Reference`
+   - Reemplaza el archivo baseline actual con el corregido
+
+**Verificación:** Después de sustituir el baseline, vuelve al Paso 4 para validar el ajuste.
     """,
     
-    'alignment_baseline_upload': """
-    ### 📁 Cargar Baseline Nueva
+    'alignment_load_baseline': "### 1️⃣ Cargar Baseline Actual",
     
-    Sube el archivo de baseline que **acabas de tomar** con la lámpara nueva.
+    'alignment_baseline_info': "Sube el archivo de baseline actual del equipo (.ref o .csv)",
     
-    **Requisitos:**
-    - El equipo debe haber estado encendido mínimo 30 minutos
-    - Debe ser la baseline tomada DESPUÉS del cambio de lámpara
-    - Formatos: .ref (SX Suite ≤531) o .csv (SX Suite ≥554)
+    'alignment_validation_data': "### 2️⃣ Datos de Validación",
+    
+    'alignment_validation_error': """
+❌ No hay datos de validación del Paso 4
+
+Vuelve al Paso 4 para realizar la validación primero
     """,
     
-    'alignment_ref_tsv': """
-    ### 📊 TSV de Referencia (Paso 3)
+    'alignment_validation_loaded': "✅ Datos de validación cargados (White ID: {white_id})",
     
-    Este archivo contiene el espectro del White Standard medido ANTES del cambio, 
-    con el equipo en buen estado. Es el "objetivo" al que queremos alinear.
+    'alignment_apply_correction': "### 3️⃣ Aplicar Corrección al Baseline",
     
-    **Se carga automáticamente desde el Paso 3.**
+    'alignment_correction_applied': "✅ Corrección aplicada al baseline",
+    
+    'alignment_dimension_error': """
+❌ Error de dimensiones:
+- Baseline: {baseline_points} puntos
+- Corrección: {correction_points} puntos
     """,
     
-    'alignment_new_tsv': """
-    ### 📊 TSV de Nueva Medición
+    'alignment_export': "### 4️⃣ Exportar Baseline Corregido",
     
-    Sube el TSV con la medición del White Standard que **acabas de realizar** 
-    con la baseline nueva (lámpara nueva).
+    'alignment_export_ref': "**Formato .ref (binario)**",
     
-    **Importante:**
-    - Debe ser el MISMO White Standard físico del Paso 3
-    - Usa el MISMO ID (ej: "WHITE")
-    - Medición realizada CON la baseline nueva
+    'alignment_export_csv': "**Formato .csv (nuevo software)**",
+    
+    'alignment_header_preserved': "✅ Cabecera original preservada",
+    
+    'alignment_metadata_preserved': "✅ Metadatos originales preservados",
+    
+    'alignment_no_header': "⚠️ No hay cabecera original (archivo no era .ref)",
+    
+    'alignment_metadata_default': "ℹ️ Usando metadatos por defecto",
+    
+    'alignment_return': "### ⬅️ Volver a Validación",
+    
+    'alignment_next_steps': """
+**⚠️ PRÓXIMOS PASOS:**
+
+1. ✅ Descarga el baseline corregido
+2. ✅ Cópialo al equipo (reemplaza el anterior)
+3. ✅ Reinicia SX Suite
+4. ✅ Haz clic en "Volver a Validación"
+5. ✅ Mide de nuevo el White Standard
     """,
     
-    'alignment_final': """
-    ### 💾 Aplicar el Baseline Corregido al Equipo
-    
-    **Último paso - CRÍTICO:**
-    
-    1. **Descarga** el baseline corregido (formato .ref o .csv según tu versión)
-    
-    2. **Localiza la carpeta** del equipo según tu versión:
-       - **SX Suite ≤531**: `C:\\ProgramData\\NIR-Online\\SX-Suite`
-       - **SX Suite ≥554**: `C:\\ProgramData\\NIR-Online\\SX-Suite\\Data\\Reference`
-    
-    3. **Haz backup** del baseline actual (por seguridad)
-    
-    4. **Sustituye** el archivo baseline actual con el corregido
-       - Usa el mismo nombre de archivo que tenía el original
-       - Formato: `numerodeserie.lamp.fecha.ref` o `numerodeserie.baseline.lampara.csv`
-    
-    5. **Reinicia** el software SX Suite para que cargue el nuevo baseline
-    
-    **Verificación:** Continúa al Paso 5 para validar que el ajuste funcionó correctamente.
+    # ========================================================================
+    # LEGACY / OTROS (mantener por compatibilidad)
+    # ========================================================================
+    'control_samples': """
+### 🎯 Muestras de Control (Opcional)
+
+**Objetivo:** Validar que el ajuste de baseline mejora las predicciones del equipo.
+
+**¿Qué son muestras de control?**
+Muestras reales que medirás **antes** y **después** del ajuste para comparar 
+el impacto en las predicciones.
     """,
     
-        # ⭐ NUEVO: Instrucciones para Paso 5 - Validación
-    'validation_intro': """
-    ### ✅ Objetivo de la Validación
-    
-    Este paso verifica que el alineamiento de la línea base realizado en el Paso 4 
-    fue exitoso. Se compara la medición actual del White Standard con la medición 
-    de referencia del Paso 3 para confirmar que ahora están alineados.
-    
-    **Resultado esperado:** El White Standard debe medir prácticamente igual que 
-    antes del cambio de lámpara, confirmando que el baseline está correctamente alineado.
+    'kit': """
+### 📦 Archivos para Calcular la Corrección
+
+**La herramienta necesita DOS archivos TSV para calcular el ajuste:**
+
+**Archivo 1 - Referencia (estado deseado):**
+- Mediciones del sensor en el estado que quieres replicar
+
+**Archivo 2 - Estado Actual (a corregir):**
+- Mediciones del sensor en su estado actual
+- Debe contener las **MISMAS muestras** que el archivo de referencia
     """,
     
-    'validation_procedure': """
-    ### 📋 Procedimiento de Validación
-    
-    **IMPORTANTE:** El equipo debe tener instalado el baseline corregido del Paso 4.
-    
-    **Pasos a seguir:**
-    
-    1. **Asegúrate de tener instalado el baseline corregido**
-       - Debe estar copiado en la carpeta correspondiente del equipo
-       - Reinicia SX Suite si es necesario para cargar el nuevo baseline
-    
-    2. **Verifica la estabilización del equipo**
-       - El equipo debe estar encendido mínimo 30 minutos
-       - Temperatura estabilizada
-    
-    3. **Mide el White Standard**
-       - Usa el MISMO White Standard físico de los pasos anteriores
-       - Usa el MISMO ID que en el Paso 3 (ej: "WHITE")
-       - Realiza 3 repeticiones mínimo
-       - Exporta el TSV con estas mediciones
-    
-    4. **Validación adicional (opcional)**
-       - Puedes medir otros estándares o muestras de control
-       - Usa IDs identificables y consistentes
-       - Estas mediciones adicionales también se analizarán
-    
-    5. **Carga el TSV en esta aplicación**
-       - El TSV de referencia (Paso 3) se carga automáticamente
-       - Sube el TSV con las nuevas mediciones (post-ajuste)
-    
-    **Análisis:** La aplicación comparará los espectros y mostrará si el ajuste fue exitoso.
+    'baseline_load': """
+### 📁 Cargar Baseline Actual
+
+**Necesitas el archivo baseline que usaste para medir el "Estado Actual" en el paso anterior.**
     """,
-    
-    'validation_ref_tsv': """
-    ### 📊 TSV de Referencia (ANTES del ajuste)
-    
-    Este archivo contiene las mediciones del White Standard (y otras muestras) 
-    realizadas ANTES del cambio de lámpara, cuando el equipo estaba en buen estado.
-    
-    **Se carga automáticamente desde el Paso 3.**
-    
-    Si necesitas usar otro archivo de referencia, puedes cargarlo manualmente.
-    """,
-    
-    'validation_new_tsv': """
-    ### 📊 TSV Post-Ajuste (DESPUÉS del ajuste)
-    
-    Sube el TSV con las mediciones realizadas DESPUÉS de aplicar el baseline corregido.
-    
-    **Requisitos:**
-    - Baseline corregido del Paso 4 instalado en el equipo
-    - MISMO White Standard físico que en el Paso 3
-    - MISMO ID para el White Standard (ej: "WHITE")
-    - Equipo estabilizado (≥30 min)
-    
-    **Muestras adicionales (opcional):**
-    Puedes incluir otras muestras de control con IDs únicos. 
-    La aplicación las analizará automáticamente si tienen IDs comunes con la referencia.
-    """,
-    
-    'validation_analysis': """
-    ### 📈 Análisis de Validación
-    
-    **White Standard (Crítico):**
-    La diferencia espectral del White Standard indica si el baseline está correctamente alineado.
-    - **< 0.001**: Excelente alineamiento
-    - **< 0.01**: Buen alineamiento
-    - **< 0.05**: Aceptable
-    - **> 0.05**: Requiere revisión
-    
-    **Otras muestras (Informativo):**
-    Las diferencias en otras muestras de control ayudan a verificar la consistencia 
-    del ajuste en todo el rango espectral.
-    """
-    
 }
 
-# Mensajes de éxito/error comunes
+# ============================================================================
+# MENSAJES DE ÉXITO/ERROR/INFO
+# ============================================================================
+
 MESSAGES = {
+    # Generales
     'success_file_loaded': "✅ Archivo cargado correctamente",
+    'success_dimension_match': "✅ Validación correcta: {n_points} puntos en ambos archivos",
+    'success_correction_applied': "✅ Corrección aplicada al baseline",
+    
+    # Errores
     'error_no_wstd': "❌ No se encontraron mediciones con ID = 'External White' en el archivo.",
     'error_no_samples': "❌ No se encontraron mediciones de muestras (todas son WSTD).",
     'error_no_common_samples': "❌ No hay muestras comunes entre los dos archivos. Verifica que uses las mismas IDs.",
     'error_dimension_mismatch': "**Error de validación:** El baseline tiene {baseline_points} puntos, pero el TSV tiene {tsv_channels} canales. No coinciden.",
-    'success_dimension_match': "✅ Validación correcta: {n_points} puntos en ambos archivos",
-    'success_correction_applied': "✅ Corrección aplicada al baseline",
-    'warning_no_header': "⚠️ No se puede generar .ref desde CSV: faltan valores de cabecera del sensor",
-    'warning_default_metadata': "⚠️ Metadatos generados por defecto",
-    'info_two_files': "ℹ️ Proceso actualizado: ahora usamos dos archivos TSV separados para mayor flexibilidad",
-    # ⭐ NUEVO: Mensajes para muestras de control
-    'success_control_initial': "✅ Muestras de control iniciales guardadas correctamente",
-    'success_control_final': "✅ Muestras de control finales guardadas correctamente",
     'error_no_predictions': "❌ El archivo no contiene la columna 'Results' con las predicciones",
     'error_no_common_control': "❌ No se encontraron muestras de control comunes entre las mediciones iniciales y finales",
-    'info_control_skipped': "ℹ️ Paso de muestras de control omitido"
+    
+    # Advertencias
+    'warning_no_header': "⚠️ No se puede generar .ref desde CSV: faltan valores de cabecera del sensor",
+    'warning_default_metadata': "⚠️ Metadatos generados por defecto",
+    
+    # Info
+    'info_two_files': "ℹ️ Proceso actualizado: ahora usamos dos archivos TSV separados para mayor flexibilidad",
+    'info_control_skipped': "ℹ️ Paso de muestras de control omitido",
+    
+    # Muestras de control
+    'success_control_initial': "✅ Muestras de control iniciales guardadas correctamente",
+    'success_control_final': "✅ Muestras de control finales guardadas correctamente",
 }
 
-# Configuración de informes HTML
-REPORT_STYLE = """
-body { font-family: Arial, sans-serif; margin: 40px; }
-h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
-h2 { color: #34495e; margin-top: 30px; }
-h3 { color: #5a6c7d; margin-top: 20px; }
-.info-box { background-color: #ecf0f1; padding: 15px; border-radius: 5px; margin: 10px 0; }
-.warning-box { background-color: #fff3cd; padding: 15px; border-radius: 5px; margin: 10px 0; border-left: 4px solid #ffc107; }
-.success-box { background-color: #d4edda; padding: 15px; border-radius: 5px; margin: 10px 0; border-left: 4px solid #28a745; }
-.metric { display: inline-block; margin: 10px 20px 10px 0; }
-.metric-label { font-weight: bold; color: #7f8c8d; }
-.metric-value { color: #2c3e50; font-size: 1.1em; }
-table { border-collapse: collapse; width: 100%; margin: 20px 0; }
-th, td { border: 1px solid #bdc3c7; padding: 10px; text-align: left; }
-th { background-color: #3498db; color: white; }
-tr:nth-child(even) { background-color: #f2f2f2; }
-.status-good { color: #28a745; font-weight: bold; }
-.status-warning { color: #ffc107; font-weight: bold; }
-.status-bad { color: #dc3545; font-weight: bold; }
-.footer { margin-top: 50px; padding-top: 20px; border-top: 1px solid #bdc3c7; text-align: center; color: #7f8c8d; font-size: 0.9em; }
-.tag { display:inline-block; padding:2px 8px; border-radius:12px; font-size:0.85em; margin: 2px; }
-.tag-ok { background:#e8f5e9; color:#2e7d32; border:1px solid #c8e6c9; }
-.tag-no { background:#fff3e0; color:#e65100; border:1px solid #ffe0b2; }
-img { max-width: 100%; height: auto; margin: 20px 0; }
-"""
+# ============================================================================
+# UMBRALES Y CONFIGURACIÓN DE VALIDACIÓN
+# ============================================================================
 
 # Umbrales de validación (diferencias espectrales post-ajuste)
 VALIDATION_THRESHOLDS = {
-    'excellent': 0.001,     # Alineamiento excelente
-    'good': 0.01,           # Alineamiento correcto
-    'acceptable': 0.05,     # Alineamiento marginal
-    'bad': float('inf')     # Requiere atención
+    'excellent': 0.001,
+    'good': 0.01,
+    'acceptable': 0.05,
+    'bad': float('inf')
 }
 
 # Estados de validación
@@ -509,9 +454,8 @@ VALIDATION_STATUS = {
     }
 }
 
-
 # Umbral crítico para decidir si necesita alineamiento en Paso 4
-VALIDATION_RMS_THRESHOLD = 0.005  # RMS < 0.005 = Validación exitosa, no necesita Paso 5
+VALIDATION_RMS_THRESHOLD = 0.005
 
 # Umbrales para White Reference Comparison
 WHITE_REFERENCE_THRESHOLDS = {
@@ -521,13 +465,7 @@ WHITE_REFERENCE_THRESHOLDS = {
     'review': {'color': '#f44336'}
 }
 
-
-# ============================================================================
-# UMBRALES DE VALIDACIÓN - STANDARD VALIDATION TOOL
-# ============================================================================
-
-
-
+# Umbrales por defecto para Standard Validation Tool
 DEFAULT_VALIDATION_THRESHOLDS = {
     'correlation': 0.9995,
     'max_diff': 0.015,
@@ -539,33 +477,48 @@ CRITICAL_REGIONS = [(1100, 1200), (1400, 1500), (1600, 1700)]
 
 # Límites para interpretación de offset global
 OFFSET_LIMITS = {
-    'negligible': 0.001,  # Offset despreciable
-    'acceptable': 0.005,  # Offset aceptable
-    # Por encima de 0.005 se considera significativo
+    'negligible': 0.001,
+    'acceptable': 0.005,
 }
 
+# ============================================================================
+# CONFIGURACIÓN DE INFORMES HTML
+# ============================================================================
 
-# Información de versión
-VERSION = "3.0.0"  # ⭐ ACTUALIZADO
-VERSION_DATE = "2025-01-16"  # ⭐ ACTUALIZADO
-VERSION_NOTES = """
-Versión 3.0.0 - Refactorización Mayor:
-- ⭐ NUEVO: Proceso simplificado con validación primero (Paso 4)
-- ⭐ NUEVO: Alineamiento iterativo solo si RMS ≥ 0.002 (Paso 5)
-- ⭐ NUEVO: Flujo iterativo: Validación → Alineamiento → Validación
-- TSV de referencia se arrastra automáticamente desde Paso 3
-- Selección de filas en TSVs para mayor control
-- Threshold automático decide flujo (RMS < 0.002 = éxito)
-- Arquitectura modular mejorada
-- Flujo de trabajo más intuitivo y eficiente
+REPORT_STYLE = """
+body { font-family: Arial, sans-serif; margin: 40px; }
+h1 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; }
+h2 { color: #34495e; margin-top: 30px; }
+h3 { color: #5a6c7d; margin-top: 20px; }
+.info-box { background-color: #ecf0f1; padding: 15px; border-radius: 5px; margin: 10px 0; }
+.warning-box { background-color: #fff3cd; padding: 15px; border-radius: 5px; margin: 10px 0; border-left: 4px solid #ffc107; }
+.success-box { background-color: #d4edda; padding: 15px; border-radius: 5px; margin: 10px 0; border-left: 4px solid #28a745; }
+.metric { display: inline-block; margin: 10px 20px 10px 0; }
+.metric-label { font-weight: bold; color: #7f8c8d; }
+.metric-value { color: #2c3e50; font-size: 1.1em; }
+table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+th, td { border: 1px solid #bdc3c7; padding: 10px; text-align: left; }
+th { background-color: #3498db; color: white; }
+tr:nth-child(even) { background-color: #f2f2f2; }
+.status-good { color: #28a745; font-weight: bold; }
+.status-warning { color: #ffc107; font-weight: bold; }
+.status-bad { color: #dc3545; font-weight: bold; }
+.footer { margin-top: 50px; padding-top: 20px; border-top: 1px solid #bdc3c7; text-align: center; color: #7f8c8d; font-size: 0.9em; }
+.tag { display:inline-block; padding:2px 8px; border-radius:12px; font-size:0.85em; margin: 2px; }
+.tag-ok { background:#e8f5e9; color:#2e7d32; border:1px solid #c8e6c9; }
+.tag-no { background:#fff3e0; color:#e65100; border:1px solid #ffe0b2; }
+img { max-width: 100%; height: auto; margin: 20px 0; }
 """
 
+# ============================================================================
+# COLORES Y ESTILOS
+# ============================================================================
 
-# Colores corporativos
+# Colores corporativos BUCHI
 BUCHI_COLORS = {
-    'primary': '#093A34',      # Verde oscuro BUCHI
-    'secondary': '#289A93',    # Verde claro BUCHI
-    'accent': '#00BFA5',       # Turquesa
+    'primary': '#093A34',
+    'secondary': '#289A93',
+    'accent': '#00BFA5',
     'success': '#28a745',
     'warning': '#ffc107',
     'danger': '#dc3545',
@@ -583,3 +536,21 @@ PLOTLY_TEMPLATE = {
         'paper_bgcolor': 'white'
     }
 }
+
+# ============================================================================
+# INFORMACIÓN DE VERSIÓN
+# ============================================================================
+
+VERSION = "3.1.0"
+VERSION_DATE = "2025-12-26"
+VERSION_NOTES = """
+Versión 3.1.0 - Optimización y Refactorización:
+- ✅ Mensajes e instrucciones centralizados en config.py
+- ✅ Eliminación de duplicación en funciones de visualización
+- ✅ Arquitectura modular mejorada (plotly_utils, standards_analysis)
+- ✅ CSS centralizado en buchi_streamlit_theme.py
+- ✅ Gestión consistente de unsaved_changes en todos los steps
+- ✅ Nomenclatura clara para funciones específicas vs genéricas
+- 📊 Reducción de ~6,000 líneas de código (-33%)
+- 🎨 UI consistente con estilos corporativos BUCHI
+"""

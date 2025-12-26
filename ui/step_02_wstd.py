@@ -1,23 +1,18 @@
 """
 Paso 3: Diagnostico WSTD (White Standard) + Muestras de Control
-VERSIÓN CORREGIDA: Guarda IDs seleccionados para Paso 5
+VERSIÓN OPTIMIZADA: Todos los mensajes desde config.py
 """
 import streamlit as st
 import pandas as pd
 import numpy as np
-import io
 import plotly.graph_objects as go
-from config import INSTRUCTIONS, MESSAGES, SPECIAL_IDS, WSTD_THRESHOLDS, DIAGNOSTIC_STATUS
+from config import INSTRUCTIONS, MESSAGES, WSTD_THRESHOLDS, DIAGNOSTIC_STATUS
 from session_manager import (
     save_wstd_data,
-    save_reference_tsv,  # ⭐ NUEVO - Para guardar TSV completo
+    save_reference_tsv,
     go_to_next_step,
-#    save_control_samples_initial
 )
 from core.file_handlers import load_tsv_file, get_spectral_columns
-from utils.validators import validate_wstd_measurements
-from utils.plotting import plot_wstd_spectra
-#from utils.control_samples import extract_predictions_from_results
 
 
 def render_wstd_step():
@@ -30,11 +25,7 @@ def render_wstd_step():
     
     # ========== SECCIÓN 1: EXTERNAL WHITE (OBLIGATORIO) ==========
     st.markdown("### 🔍 Diagnóstico External White (Obligatorio)")
-    st.info("""
-    📋 **Este archivo TSV se usará como referencia en el Paso 5 (Alineamiento de Baseline)**
-    
-    Asegúrate de medir con el baseline actual del equipo antes de cualquier ajuste.
-    """)
+    st.info(INSTRUCTIONS['wstd_file_info'])
     
     wstd_file = st.file_uploader(
         "Sube el archivo TSV con las mediciones de External White", 
@@ -52,12 +43,12 @@ def render_wstd_step():
             df = load_tsv_file(wstd_file)
             spectral_cols = get_spectral_columns(df)
             
-            # ⭐ NUEVO: Guardar el TSV completo para usar en Paso 5
+            # Guardar el TSV completo para usar en Paso 5
             save_reference_tsv(df, spectral_cols)
             st.success("✅ Archivo TSV guardado como referencia para el Paso 5")
             
             st.markdown("#### Selecciona las filas que corresponden a la referencia externa (External White)")
-            st.info("✅ Marca las casillas de las mediciones que corresponden al White Standard.")
+            st.info(INSTRUCTIONS['wstd_selection_instruction'])
             
             # Crear tabla con índice visible
             df_display = df[['ID', 'Note']].copy()
@@ -83,11 +74,13 @@ def render_wstd_step():
                 
                 st.success(f"✅ {len(df_wstd)} filas seleccionadas para análisis External White")
                 
-                # ⭐ NUEVO: Guardar IDs e ÍNDICES seleccionados para el Paso 5
-                selected_ids = df_wstd['ID'].unique().tolist()  # IDs únicos
+                # Guardar IDs e ÍNDICES seleccionados para el Paso 5
+                selected_ids = df_wstd['ID'].unique().tolist()
                 st.session_state.selected_wstd_ids = selected_ids
-                st.session_state.selected_wstd_indices = selected_indices  # ← AÑADIDO
-                st.info(f"📋 **{len(selected_indices)} filas seleccionadas guardadas para Paso 5** (IDs: {', '.join(str(x) for x in selected_ids)})")
+                st.session_state.selected_wstd_indices = selected_indices
+                
+                ids_str = ', '.join(str(x) for x in selected_ids)
+                st.info(f"📋 **{len(selected_indices)} filas seleccionadas guardadas para Paso 5** (IDs: {ids_str})")
                 
                 # Mostrar info detallada
                 st.write("**Filas seleccionadas:**")
@@ -144,13 +137,12 @@ def render_wstd_step():
                 st.session_state.unsaved_changes = False
                 go_to_next_step()
     else:
-        st.warning("""
-        ⚠️ **Debes cargar el archivo TSV de External White para continuar**
-        
-        Este archivo es necesario como referencia para el alineamiento de baseline en el Paso 5.
-        """)
-        
-# ========== FUNCIONES DE VISUALIZACIÓN (sin cambios) ==========
+        st.warning(INSTRUCTIONS['wstd_continue_warning'])
+
+
+# ============================================================================
+# FUNCIONES DE VISUALIZACIÓN Y HELPERS
+# ============================================================================
 
 def plot_wstd_individual(df_wstd, spectral_cols, selected_indices):
     """

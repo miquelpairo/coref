@@ -478,6 +478,7 @@ def start_html_template(title: str, sidebar_html: str = None,
 </head>
 <body>
     <div class="sidebar">
+        <h2>📋 Índice</h2>
         <ul>
 {sidebar_content}
         </ul>

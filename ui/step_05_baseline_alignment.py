@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Paso 5: Alineamiento de Baseline (Opcional, solo si falla validación)
+VERSIÓN OPTIMIZADA: Todos los mensajes desde config.py
 """
 import streamlit as st
 import pandas as pd
@@ -39,33 +40,21 @@ from utils.validators import validate_common_samples, validate_dimension_match
 def render_baseline_alignment_step():
     """
     Renderiza el paso de Alineamiento de Baseline (Paso 5).
-    Solo se llega aquí si la validación (Paso 4) indica RMS ≥ 0.002
+    Solo se llega aquí si la validación (Paso 4) indica RMS ≥ 0.005
     """
     st.markdown("## PASO 5 DE 5: Alineamiento de Baseline")
-    
-    st.info("""
-    ### ⚙️ Alineamiento de Baseline
-    
-    Has llegado aquí porque el RMS del White Standard es ≥ 0.002.
-    
-    **En este paso:**
-    1. Cargas el baseline actual del equipo
-    2. Calculamos la corrección necesaria
-    3. Exportas el baseline corregido
-    4. Lo instalas en el equipo
-    5. Vuelves al Paso 4 para validar
-    """)
+    st.info(INSTRUCTIONS['alignment_intro'])
     
     with st.expander("🔍 Ver procedimiento completo", expanded=False):
-        st.markdown(INSTRUCTIONS.get('alignment_procedure', 'Procedimiento de alineamiento'))
+        st.markdown(INSTRUCTIONS['alignment_procedure'])
     
     st.markdown("---")
     
     # ==========================================
     # SECCIÓN 1: CARGAR BASELINE
     # ==========================================
-    st.markdown("### 1️⃣ Cargar Baseline Actual")
-    st.info("Sube el archivo de baseline actual del equipo (.ref o .csv)")
+    st.markdown(INSTRUCTIONS['alignment_load_baseline'])
+    st.info(INSTRUCTIONS['alignment_baseline_info'])
     baseline_loaded = render_baseline_upload_section()
     
     if not baseline_loaded:
@@ -76,20 +65,22 @@ def render_baseline_alignment_step():
     # SECCIÓN 2: OBTENER DATOS DE VALIDACIÓN
     # ==========================================
     st.markdown("---")
-    st.markdown("### 2️⃣ Datos de Validación")
+    st.markdown(INSTRUCTIONS['alignment_validation_data'])
     
     # Obtener datos del Paso 4
     if 'validation_data' not in st.session_state:
-        st.error("❌ No hay datos de validación del Paso 4")
-        st.info("Vuelve al Paso 4 para realizar la validación primero")
+        st.error(INSTRUCTIONS['alignment_validation_error'])
         return
     
     val_data = st.session_state.validation_data
     diff_white = val_data['diff']
     spectral_cols = val_data['spectral_cols']
     
-    st.success(f"✅ Datos de validación cargados (White ID: {val_data['white_id']})")
-    st.info(f"📊 RMS detectado: {val_data['rms']:.6f}")
+    white_id = val_data['white_id']
+    rms = val_data['rms']
+    success_msg = INSTRUCTIONS['alignment_validation_loaded'].format(white_id=white_id)
+    st.success(success_msg)
+    st.info(f"📊 RMS detectado: {rms:.6f}")
     
     # Mostrar estadísticas de la corrección necesaria
     col1, col2, col3 = st.columns(3)
@@ -108,24 +99,24 @@ def render_baseline_alignment_step():
     # ==========================================
     # SECCIÓN 3: APLICAR CORRECCIÓN
     # ==========================================
-    st.markdown("### 3️⃣ Aplicar Corrección al Baseline")
+    st.markdown(INSTRUCTIONS['alignment_apply_correction'])
     
     baseline_data = st.session_state.baseline_current
     ref_spectrum = baseline_data['spectrum']
     
     # Validar dimensiones
     if len(ref_spectrum) != len(diff_white):
-        st.error(f"""
-        ❌ Error de dimensiones:
-        - Baseline: {len(ref_spectrum)} puntos
-        - Corrección: {len(diff_white)} puntos
-        """)
+        error_msg = INSTRUCTIONS['alignment_dimension_error'].format(
+            baseline_points=len(ref_spectrum),
+            correction_points=len(diff_white)
+        )
+        st.error(error_msg)
         return
     
     # Aplicar corrección
     ref_corrected = apply_baseline_correction(ref_spectrum, diff_white)
     
-    st.success("✅ Corrección aplicada al baseline")
+    st.success(INSTRUCTIONS['alignment_correction_applied'])
     
     # Guardar corrección para compatibilidad
     st.session_state.correction_vector = diff_white
@@ -159,15 +150,15 @@ def render_baseline_alignment_step():
     # ==========================================
     # SECCIÓN 4: EXPORTAR BASELINE CORREGIDO
     # ==========================================
-    st.markdown("### 4️⃣ Exportar Baseline Corregido")
+    st.markdown(INSTRUCTIONS['alignment_export'])
     
     col_exp1, col_exp2 = st.columns(2)
     
     # Exportar .REF
     with col_exp1:
-        st.markdown("**Formato .ref (binario)**")
+        st.markdown(INSTRUCTIONS['alignment_export_ref'])
         if baseline_data['origin'] == 'ref' and baseline_data['header'] is not None:
-            st.info("✅ Cabecera original preservada")
+            st.info(INSTRUCTIONS['alignment_header_preserved'])
             ref_bytes = export_ref_file(ref_corrected, baseline_data['header'])
             
             original_name = baseline_data['filename']
@@ -187,16 +178,16 @@ def render_baseline_alignment_step():
                 use_container_width=True
             )
         else:
-            st.warning("⚠️ No hay cabecera original (archivo no era .ref)")
+            st.warning(INSTRUCTIONS['alignment_no_header'])
     
     # Exportar .CSV
     with col_exp2:
-        st.markdown("**Formato .csv (nuevo software)**")
+        st.markdown(INSTRUCTIONS['alignment_export_csv'])
         if baseline_data['origin'] == 'csv' and baseline_data['df_baseline'] is not None:
-            st.info("✅ Metadatos originales preservados")
+            st.info(INSTRUCTIONS['alignment_metadata_preserved'])
             csv_bytes = export_csv_file(ref_corrected, df_baseline=baseline_data['df_baseline'])
         else:
-            st.warning("ℹ️ Usando metadatos por defecto")
+            st.warning(INSTRUCTIONS['alignment_metadata_default'])
             csv_bytes = export_csv_file(ref_corrected)
         
         original_name = baseline_data['filename']
@@ -348,17 +339,8 @@ def render_navigation_section():
     """
     Navegación para volver a validación (Paso 4)
     """
-    st.markdown("### ⬅️ Volver a Validación")
-    
-    st.warning("""
-    **⚠️ PRÓXIMOS PASOS:**
-    
-    1. ✅ Descarga el baseline corregido
-    2. ✅ Cópialo al equipo (reemplaza el anterior)
-    3. ✅ Reinicia SX Suite
-    4. ✅ Haz clic en "Volver a Validación"
-    5. ✅ Mide de nuevo el White Standard
-    """)
+    st.markdown(INSTRUCTIONS['alignment_return'])
+    st.warning(INSTRUCTIONS['alignment_next_steps'])
     
     if st.button("⬅️ Volver a Validación (Paso 4)", type="primary", use_container_width=True):
         # Marcar que venimos del alineamiento

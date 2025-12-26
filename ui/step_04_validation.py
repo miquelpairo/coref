@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """
 Paso 4: Validación del Alineamiento (Verificación primero)
+VERSIÓN OPTIMIZADA: Todos los mensajes desde config.py
 """
 import streamlit as st
 import pandas as pd
 import numpy as np
-import io
 from datetime import datetime
 from config import INSTRUCTIONS, MESSAGES, VALIDATION_THRESHOLDS
 from session_manager import (
@@ -14,15 +14,9 @@ from session_manager import (
     reset_session_state,
     go_to_next_step
 )
-from core.standards_analysis import (
-    create_white_comparison_plot
-)
+from core.standards_analysis import create_white_comparison_plot
 from core.file_handlers import load_tsv_file, get_spectral_columns
-from core.spectral_processing import (
-    find_common_samples,
-    calculate_spectral_correction
-)
-from utils.plotting import plot_kit_spectra
+from core.spectral_processing import find_common_samples
 from utils.validators import validate_common_samples
 
 
@@ -31,21 +25,11 @@ def render_validation_step():
     Paso 4: Validación del alineamiento.
     
     Primero verifica si el equipo está correctamente alineado.
-    - Si RMS < 0.002: Validación exitosa → Generar informe
-    - Si RMS ≥ 0.002: Alineamiento necesario → Ir a Paso 5
+    - Si RMS < 0.005: Validación exitosa → Generar informe
+    - Si RMS ≥ 0.005: Alineamiento necesario → Ir a Paso 5
     """
     st.markdown("## PASO 4 DE 5: Validación del Alineamiento")
-    
-    st.info("""
-    ### 🎯 Objetivo
-    Verificar si el equipo está correctamente alineado midiendo el White Standard.
-    
-    **Proceso:**
-    1. Mide el White Standard con el baseline actual
-    2. Comparamos con la referencia del Paso 3
-    3. **Si está bien alineado** (RMS < 0.005) → Generar informe y finalizar ✅
-    4. **Si necesita ajuste** (RMS ≥ 0.005) → Ir al Paso 5 para alinear ⚙️
-    """)
+    st.info(INSTRUCTIONS['validation_objective'])
     
     # Inicializar contador de iteraciones si no existe
     if 'alignment_iterations' not in st.session_state:
@@ -63,10 +47,11 @@ def render_validation_step():
     # Si se fuerza el informe aunque no cumpla umbral
     # ============================================
     if st.session_state.get('force_report', False):
+        rms_val = st.session_state.validation_data['rms']
         st.error(f"""
         ⚠️ **ADVERTENCIA**: Generando informe sin cumplir el umbral de calidad
         
-        El RMS actual ({st.session_state.validation_data['rms']:.6f}) es mayor que el umbral recomendado (0.002).
+        El RMS actual ({rms_val:.6f}) es mayor que el umbral recomendado (0.002).
         El informe incluirá esta advertencia.
         """)
         
@@ -78,7 +63,7 @@ def render_validation_step():
             st.session_state.force_report = False
             st.rerun()
         
-        return  # No mostrar el resto del paso
+        return
     
     # ==========================================
     # SECCIÓN 1: TSV REFERENCIA (PASO 3)
@@ -118,15 +103,11 @@ def render_validation_step():
     st.markdown("### 2️⃣ Medir White Standard")
     
     if st.session_state.alignment_iterations == 0:
-        st.info("""
-        **Primera medición:**
-        1. Con el baseline actual del equipo
-        2. Mide el MISMO White Standard del Paso 3
-        3. Exporta el TSV y cárgalo aquí
-        """)
+        st.info(INSTRUCTIONS['validation_first_measurement'])
     else:
+        iter_num = st.session_state.alignment_iterations
         st.warning(f"""
-        **Iteración #{st.session_state.alignment_iterations}:**
+        **Iteración #{iter_num}:**
         
         Verificando el baseline corregido del Paso 5:
         1. ✅ Confirma que instalaste el nuevo baseline
@@ -176,7 +157,6 @@ def render_validation_step():
     # SECCIÓN 3: SELECCIÓN DE FILAS
     # ==========================================
     st.markdown("### 3️⃣ Seleccionar filas a usar")
-    
     st.info("✅ Marca las filas que corresponden al White Standard")
     
     # Crear tabla con índice visible
@@ -198,7 +178,6 @@ def render_validation_step():
         return
     
     df_new_selected = df_new.loc[selected_indices].copy()
-    
     st.success(f"✅ {len(df_new_selected)} filas seleccionadas")
     
     st.markdown("---")
@@ -310,10 +289,8 @@ def render_validation_step():
         }
     
     if rms_white < threshold_rms:
-        # ✅ VALIDACIÓN EXITOSA
         render_validation_success(rms_white, white_id)
     else:
-        # ⚠️ NECESITA ALINEAMIENTO
         render_alignment_needed(rms_white, white_id)
 
 
@@ -321,13 +298,8 @@ def render_validation_success(rms, white_id):
     """
     Renderiza resultado de validación exitosa
     """
-    st.success(f"""
-    ✅ **VALIDACIÓN EXITOSA**
-    
-    **White Standard ({white_id}):** RMS = {rms:.6f} < 0.005
-    
-    El equipo está correctamente alineado y listo para usar.
-    """)
+    success_msg = INSTRUCTIONS['validation_success_title'].format(white_id=white_id, rms=rms)
+    st.success(success_msg)
     
     # Evaluar calidad
     if rms < VALIDATION_THRESHOLDS['excellent']:
@@ -364,13 +336,8 @@ def render_alignment_needed(rms, white_id):
     """
     Renderiza resultado cuando necesita alineamiento
     """
-    st.warning(f"""
-    ⚠️ **ALINEAMIENTO NECESARIO**
-    
-    **White Standard ({white_id}):** RMS = {rms:.6f} ≥ 0.005
-    
-    El equipo necesita alineamiento de baseline.
-    """)
+    alignment_msg = INSTRUCTIONS['validation_alignment_needed'].format(white_id=white_id, rms=rms)
+    st.warning(alignment_msg)
     
     st.session_state.validation_data['final_status'] = 'NEEDS_ALIGNMENT'
     
@@ -381,15 +348,7 @@ def render_alignment_needed(rms, white_id):
     
     with col1:
         st.markdown("#### Opción 1: Continuar Alineamiento")
-        st.info("""
-        **Recomendado**: Ve al Paso 5 para ajustar el baseline.
-        
-        En el Paso 5 podrás:
-        1. Cargar el baseline actual
-        2. Calcular la corrección necesaria
-        3. Exportar el baseline corregido
-        4. Volver a este paso para validar
-        """)
+        st.info(INSTRUCTIONS['validation_option_continue'])
         
         if st.button("➡️ Ir a Alineamiento (Paso 5)", type="primary", use_container_width=True):
             st.session_state.unsaved_changes = False
@@ -397,30 +356,19 @@ def render_alignment_needed(rms, white_id):
     
     with col2:
         st.markdown("#### Opción 2: Finalizar sin cumplir umbral")
-        st.error("""
-        ⚠️ **No recomendado**: Genera el informe con el estado actual 
-        aunque no se cumpla el umbral de RMS < 0.002.
-        
-        El informe indicará claramente que el alineamiento no fue exitoso.
-        """)
+        st.error(INSTRUCTIONS['validation_option_force'])
         
         if st.button("📄 Generar Informe (sin cumplir umbral)", use_container_width=True):
             st.session_state.validation_data['final_status'] = 'FAILED_THRESHOLD'
             st.session_state.force_report = True
-            # No cambiar de paso, solo marcar para mostrar generación de informe
             st.rerun()
+
 
 def render_report_generation():
     """
     Renderiza sección de generación de informes
     """
-    st.info("""
-    El informe incluirá:
-    - Datos del cliente y equipo
-    - Métricas del White Standard
-    - Gráficos comparativos
-    - Conclusiones
-    """)
+    st.info(INSTRUCTIONS['validation_report_intro'])
     
     if 'validation_report_html' not in st.session_state:
         st.session_state.validation_report_html = None
@@ -433,31 +381,28 @@ def render_report_generation():
                 st.error("❌ No hay datos de validación disponibles")
                 return
             
-            # Generar informe
-            val_data = st.session_state.get('validation_data')
             baseline_data = st.session_state.get('baseline_data')
             correction_vector = st.session_state.get('correction_vector')
             iterations = val_data.get('iterations_needed', 0)
 
             if iterations > 0 and baseline_data is not None and correction_vector is not None:
-                # Caso 2: Hubo alineamiento
+                # Caso: Hubo alineamiento - Generar informe completo
+                from core.report_generator import generate_html_report, generate_validation_section, generate_footer
                 
-                # Usar datos pre-corrección para mostrar medición ANTES del ajuste
                 pre_corr = st.session_state.get('pre_correction_data')
                 
                 if pre_corr:
                     kit_data = {
                         'df': None,
-                        'df_ref_grouped': pre_corr['df_ref_val'],      # Referencia (Paso 3)
-                        'df_new_grouped': pre_corr['df_new_val'],      # ANTES de corregir
+                        'df_ref_grouped': pre_corr['df_ref_val'],
+                        'df_new_grouped': pre_corr['df_new_val'],
                         'spectral_cols': pre_corr['spectral_cols'],
                         'lamp_ref': val_data['lamp_ref'],
                         'lamp_new': val_data['lamp_new'],
                         'common_ids': pre_corr['common_ids'],
-                        'mean_diff': correction_vector                  # Corrección aplicada
+                        'mean_diff': correction_vector
                     }
                 else:
-                    # Fallback si no hay pre_correction_data (no debería pasar)
                     kit_data = {
                         'df': None,
                         'df_ref_grouped': val_data['df_ref_val'],
@@ -469,21 +414,30 @@ def render_report_generation():
                         'mean_diff': correction_vector
                     }
                 
-                from core.report_generator import generate_validation_report
-                html_content = generate_validation_report(
-                    kit_data=kit_data,  # No usamos kit_data en nuevo flujo
+                # Generar informe completo (baseline adjustment)
+                html_content = generate_html_report(
+                    kit_data=kit_data,
                     baseline_data=baseline_data,
                     ref_corrected=baseline_data['ref_spectrum'] - correction_vector,
                     origin=baseline_data.get('origin'),
-                    validation_data=val_data,
-                    mean_diff_before=correction_vector,  # La corrección que se aplicó
-                    mean_diff_after=val_data['diff']     # La diferencia final
+                    validation_data=val_data
                 )
+                
+                # Añadir sección de validación
+                validation_html = generate_validation_section(
+                    val_data,
+                    mean_diff_before=correction_vector,
+                    mean_diff_after=val_data['diff']
+                )
+                
+                # Insertar validación antes del footer
+                footer_html = generate_footer()
+                html_content = html_content.replace(footer_html, validation_html + footer_html)
+                
             else:
-                # Caso 1: Sin alineamiento o datos incompletos
+                # Caso: Sin alineamiento - Generar informe parcial (solo validación)
                 from core.report_generator import generate_partial_report
                 
-                # Sin alineamiento previo, la diferencia "antes" es cero (no hubo corrección)
                 mean_diff_before = np.zeros_like(val_data['diff'])
                 
                 html_content = generate_partial_report(
@@ -516,6 +470,3 @@ def render_report_generation():
             mime="text/html",
             use_container_width=True
         )
-
-
-   

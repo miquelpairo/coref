@@ -31,7 +31,7 @@ from core.report_utils import (
 )
 
 
-def generate_html_report(kit_data, baseline_data, ref_corrected, origin):
+def generate_html_report(kit_data, baseline_data, ref_corrected, origin, validation_data=None):
     """
     Genera el informe HTML completo del proceso de ajuste de baseline.
     
@@ -40,6 +40,7 @@ def generate_html_report(kit_data, baseline_data, ref_corrected, origin):
         baseline_data (dict): Datos del baseline original
         ref_corrected (np.array): Baseline corregido
         origin (str): Tipo de archivo ('ref' o 'csv')
+        validation_data (dict, optional): Datos de validación post-ajuste
         
     Returns:
         str: Contenido HTML del informe
@@ -84,6 +85,10 @@ def generate_html_report(kit_data, baseline_data, ref_corrected, origin):
     # Añadir WSTD al inicio si existe
     if isinstance(wstd_data, dict) and wstd_data.get("df") is not None:
         sections.insert(0, ("wstd-section", "Diagnóstico WSTD Inicial"))
+    
+    # Añadir validación al sidebar si existe
+    if validation_data is not None:
+        sections.append(("verification-section", "Verificación Post-Ajuste"))
 
     # Iniciar HTML con template estandarizado
     html = start_html_template(
@@ -124,6 +129,14 @@ def generate_html_report(kit_data, baseline_data, ref_corrected, origin):
         ref_corrected, header, origin,
         ref_spectrum, spectral_cols
     )
+
+    # Añadir validación ANTES del footer si existe
+    if validation_data is not None:
+        html += generate_validation_section(
+            validation_data,
+            mean_diff_before=mean_diff,
+            mean_diff_after=validation_data['diff']
+        )
 
     # Notas adicionales (si existen)
     if client_data.get("notes"):
@@ -653,7 +666,7 @@ def generate_validation_section(validation_data, mean_diff_before, mean_diff_aft
                     <tr>
                         <td><strong>RMS</strong></td>
                         <td>{rms:.6f}</td>
-                        <td>⚠️ ≥ 0.002 (no cumple)</td>
+                        <td>⚠️ ≥ 0.005 (no cumple)</td>
                     </tr>
                     <tr>
                         <td><strong>Diferencia Máxima</strong></td>
@@ -671,7 +684,7 @@ def generate_validation_section(validation_data, mean_diff_before, mean_diff_aft
             <div class="status-bad verification-status status-failed">
                 <h2>❌ ADVERTENCIA: Informe Generado sin Cumplir Umbral</h2>
                 <p class="text-spacious">
-                    <strong>RMS:</strong> {rms:.6f} AU (Umbral recomendado: < 0.002 AU)
+                    <strong>RMS:</strong> {rms:.6f} AU (Umbral recomendado: < 0.005 AU)
                 </p>
                 <p class="text-muted-note">
                     Este informe se generó a petición del usuario aunque el alineamiento 

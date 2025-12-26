@@ -396,13 +396,11 @@ def generate_html_report(stats, analyzer, filename):
     
     # ⭐ FIX: Construir sidebar manualmente con título "Índice"
     sidebar_html = '<h2>📋 Índice</h2>\n'
-    for section_id, section_label in sections:
-        sidebar_html += f'            <li><a href="#{section_id}">{section_label}</a></li>\n'
-    
+
     # Iniciar HTML con template estandarizado
     html = start_html_template(
         title="Reporte de Predicciones NIR",
-        sidebar_html=sidebar_html  # ⭐ Usar sidebar_html en lugar de sidebar_sections
+        sidebar_sections=sections  # ⭐ Usar sidebar_html en lugar de sidebar_sections
     )
     
     # Información general
