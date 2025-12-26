@@ -9,7 +9,7 @@ from datetime import datetime
 from app_config import DEFAULT_CSV_METADATA
 
 
-ddef load_tsv_file(file):
+def load_tsv_file(file):
     """
     Carga un archivo TSV y lo convierte a DataFrame.
     Maneja múltiples encodings y BOM.
