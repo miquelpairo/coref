@@ -4,12 +4,12 @@ C:\coref-coref2\.streamlit
 C:\coref-coref2\app.py
 C:\coref-coref2\app2.py
 C:\coref-coref2\auth.py
-C:\coref-coref2\buchi_report_styles_simple.css
+C:\coref-coref2\buchi_report_styles.css
 C:\coref-coref2\buchi_streamlit_theme.py
 C:\coref-coref2\config.py
 C:\coref-coref2\core
 C:\coref-coref2\Documentacion COREF2.docx
-C:\coref-coref2\Documentaci¢n de Arquitectura Modular.docx
+C:\coref-coref2\Documentaciï¿½n de Arquitectura Modular.docx
 C:\coref-coref2\estructura.txt
 C:\coref-coref2\readme.md
 C:\coref-coref2\requirements.txt
@@ -20,7 +20,7 @@ C:\coref-coref2\test_datsa
 C:\coref-coref2\ui
 C:\coref-coref2\utils
 C:\coref-coref2\__pycache__
-C:\coref-coref2\~$cumentaci¢n de Arquitectura Modular.docx
+C:\coref-coref2\~$cumentaciï¿½n de Arquitectura Modular.docx
 C:\coref-coref2\.devcontainer\devcontainer.json
 C:\coref-coref2\.git\.COMMIT_EDITMSG.swp
 C:\coref-coref2\.git\COMMIT_EDITMSG

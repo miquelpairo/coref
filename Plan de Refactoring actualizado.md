@@ -26,7 +26,7 @@
 - ✅ Solución: Selectores específicos
   - Sidebar: `.sidebar .sidebar-menu-details`
   - Gráficos: `.main-content .chart-expandable`
-- ✅ Modificaciones en `buchi_report_styles_simple.css` (líneas 354-390)
+- ✅ Modificaciones en `buchi_report_styles.css` (líneas 354-390)
   - `details` → `.main-content details`
   - `summary` → `.main-content summary`
   - `summary:hover` → `.main-content summary:hover`
@@ -78,7 +78,7 @@
 
 2. **`buchi_additional_classes.css`**
    - 14 clases CSS nuevas
-   - Listas para añadir a `buchi_report_styles_simple.css`
+   - Listas para añadir a `buchi_report_styles.css`
    - Reemplazan todo el CSS inline
 
 **Optimizados:**
@@ -96,11 +96,11 @@
 
 **1. Actualizar CSS**
 ```bash
-# Añadir al final de buchi_report_styles_simple.css
-cat buchi_additional_classes.css >> buchi_report_styles_simple.css
+# Añadir al final de buchi_report_styles.css
+cat buchi_additional_classes.css >> buchi_report_styles.css
 ```
 
-**2. Modificar buchi_report_styles_simple.css (líneas 354-390)**
+**2. Modificar buchi_report_styles.css (líneas 354-390)**
 Cambiar selectores genéricos por `.main-content`:
 - `details` → `.main-content details`
 - `summary` → `.main-content summary`  
@@ -354,8 +354,8 @@ Los parsers de MetaReports deben soportar:
 - [x] ✅ `core/report_utils.py` creado y funcional
 - [x] ✅ `core/validation_kit_report_generator.py` optimizado (sin CSS inline)
 - [x] ✅ `core/offset_adjustment_report_generator.py` optimizado (sin CSS inline)
-- [x] ✅ `buchi_additional_classes.css` añadido a `buchi_report_styles_simple.css`
-- [x] ✅ CSS de `details/summary` en `buchi_report_styles_simple.css` corregido
+- [x] ✅ `buchi_additional_classes.css` añadido a `buchi_report_styles.css`
+- [x] ✅ CSS de `details/summary` en `buchi_report_styles.css` corregido
 - [x] ✅ Testing: Informes HTML se generan correctamente
 - [x] ✅ Testing: Sidebar con "Análisis Individual" se ve correctamente
 - [x] ✅ Testing: Gráficos expandibles funcionan en main-content

@@ -50,7 +50,7 @@ def load_buchi_css() -> str:
         str: Contenido CSS
     """
     try:
-        with open('buchi_report_styles_simple.css', 'r', encoding='utf-8') as f:
+        with open('buchi_report_styles.css', 'r', encoding='utf-8') as f:
             return f.read()
     except FileNotFoundError:
         # Fallback CSS básico

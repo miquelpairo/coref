@@ -9,7 +9,7 @@ def load_shared_report_css() -> str:
     Si no existe el archivo, devuelve string vacío.
     """
     try:
-        with open("buchi_report_styles_simple.css", "r", encoding="utf-8") as f:
+        with open("buchi_report_styles.css", "r", encoding="utf-8") as f:
             return f.read()
     except FileNotFoundError:
         return ""

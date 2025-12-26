@@ -4,7 +4,7 @@ Combina parsing para resumen ejecutivo + HTML completo embebido
 Parte del módulo COREF Suite
 
 Optimizaciones v2024.12:
-- CSS cargado desde buchi_report_styles_simple.css
+- CSS cargado desde buchi_report_styles.css
 - Sin CSS inline (todo en archivo CSS)
 - Funciones compartidas desde report_utils
 """
