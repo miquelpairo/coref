@@ -2,7 +2,7 @@
 Paso 2: Advertencia de Backup
 """
 import streamlit as st
-from config import INSTRUCTIONS, BASELINE_PATHS
+from app_config import INSTRUCTIONS, BASELINE_PATHS
 from session_manager import go_to_next_step
 
 

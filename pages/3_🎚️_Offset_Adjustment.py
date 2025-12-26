@@ -32,7 +32,7 @@ from core.file_handlers import (
 from utils.plotting import plot_baseline_comparison
 from auth import check_password
 from buchi_streamlit_theme import apply_buchi_styles
-from config import DEFAULT_VALIDATION_THRESHOLDS, CRITICAL_REGIONS, OFFSET_LIMITS
+from app_config import DEFAULT_VALIDATION_THRESHOLDS, CRITICAL_REGIONS, OFFSET_LIMITS
 
 # ===== IMPORTAR FUNCIONES COMPARTIDAS =====
 from core.standards_analysis import (

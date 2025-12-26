@@ -7,7 +7,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from datetime import datetime
-from config import INSTRUCTIONS, MESSAGES, VALIDATION_THRESHOLDS
+from app_config import INSTRUCTIONS, MESSAGES, VALIDATION_THRESHOLDS
 from session_manager import (
     has_reference_tsv,
     get_reference_tsv,

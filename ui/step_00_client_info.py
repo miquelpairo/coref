@@ -3,7 +3,7 @@
 Paso 1: Informacion del Cliente
 """
 import streamlit as st
-from config import INSTRUCTIONS
+from app_config import INSTRUCTIONS
 from session_manager import (
     save_client_data, 
     save_default_client_data, 

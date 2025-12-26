@@ -6,7 +6,7 @@ import numpy as np
 import re
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from config import CONTROL_SAMPLES_CONFIG
+from app_config import CONTROL_SAMPLES_CONFIG
 
 
 _NUM_RE = re.compile(r"[-+]?\d+(?:[.,]\d+)?")

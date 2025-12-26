@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import numpy as np
 import pandas as pd
-from config import PLOT_CONFIG
+from app_config import PLOT_CONFIG
 
 
 def plot_wstd_spectra(df_wstd_grouped, spectral_cols, lamps):

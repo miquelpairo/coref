@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 import io
 from datetime import datetime
-from config import INSTRUCTIONS, MESSAGES
+from app_config import INSTRUCTIONS, MESSAGES
 from session_manager import (
     has_reference_tsv,
     get_reference_tsv,

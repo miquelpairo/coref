@@ -6,7 +6,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
-from config import INSTRUCTIONS, MESSAGES, WSTD_THRESHOLDS, DIAGNOSTIC_STATUS
+from app_config import INSTRUCTIONS, MESSAGES, WSTD_THRESHOLDS, DIAGNOSTIC_STATUS
 from session_manager import (
     save_wstd_data,
     save_reference_tsv,

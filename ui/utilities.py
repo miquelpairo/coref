@@ -7,7 +7,7 @@ import pandas as pd
 import io
 import json
 from datetime import datetime
-from config import DEFAULT_CSV_METADATA
+from app_config import DEFAULT_CSV_METADATA
 
 
 def render_utilities_section():

@@ -22,7 +22,7 @@ sys.path.insert(0, str(root_dir))
 from core.file_handlers import load_tsv_file, get_spectral_columns
 from auth import check_password
 from buchi_streamlit_theme import apply_buchi_styles
-from config import DEFAULT_VALIDATION_THRESHOLDS, CRITICAL_REGIONS, OFFSET_LIMITS
+from app_config import DEFAULT_VALIDATION_THRESHOLDS, CRITICAL_REGIONS, OFFSET_LIMITS
 
 
 # ===== IMPORTAR FUNCIONES COMPARTIDAS =====

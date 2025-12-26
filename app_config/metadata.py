@@ -44,18 +44,3 @@ CONTROL_SAMPLES_CONFIG = {
         'bad': float('inf'),
     },
 }
-```
-
----
-
-## ✅ Resultado:
-```
-📁 config/
-├── __init__.py          # Re-exporta todo (imports intactos)
-├── app.py               # PAGE_CONFIG, STEPS, VERSION
-├── paths.py             # BASELINE_PATHS, SUPPORTED_EXTENSIONS
-├── thresholds.py        # Todos los umbrales y criterios
-├── plotting.py          # PLOT_CONFIG, BUCHI_COLORS, PLOTLY_TEMPLATE
-├── messages.py          # INSTRUCTIONS, MESSAGES, SPECIAL_IDS
-├── reports.py           # REPORT_STYLE
-└── metadata.py          # DEFAULT_CSV_METADATA, CONTROL_SAMPLES_CONFIG

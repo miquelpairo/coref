@@ -320,7 +320,7 @@ def evaluate_offset(offset: float) -> str:
     Returns:
         str: HTML con evaluación estilizada
     """
-    from config import OFFSET_LIMITS
+    from app_config import OFFSET_LIMITS
     
     abs_offset = abs(offset)
     

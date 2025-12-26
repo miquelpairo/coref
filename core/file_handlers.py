@@ -6,7 +6,7 @@ import numpy as np
 import io
 import json
 from datetime import datetime
-from config import DEFAULT_CSV_METADATA
+from app_config import DEFAULT_CSV_METADATA
 
 
 def load_tsv_file(file):

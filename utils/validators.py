@@ -2,7 +2,7 @@
 Funciones de validación
 """
 import streamlit as st
-from config import MESSAGES
+from app_config import MESSAGES
 
 
 def validate_wstd_measurements(df_wstd, lamps):

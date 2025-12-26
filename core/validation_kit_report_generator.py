@@ -380,7 +380,7 @@ def generate_individual_analysis(validation_data, num_channels):
     Returns:
         str: HTML con análisis individual
     """
-    from config import CRITICAL_REGIONS
+    from app_config import CRITICAL_REGIONS
     
     html = """
         <div class="info-box" id="analisis-individual">

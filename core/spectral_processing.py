@@ -3,7 +3,7 @@ Procesamiento de datos espectrales
 """
 import pandas as pd
 import numpy as np
-from config import SPECIAL_IDS
+from app_config import SPECIAL_IDS
 
 
 def group_measurements_by_lamp(df, spectral_cols, lamp_ref, lamp_new):

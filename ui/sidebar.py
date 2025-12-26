@@ -3,7 +3,7 @@
 Componente de barra lateral con progreso del proceso
 """
 import streamlit as st
-from config import STEPS
+from app_config import STEPS
 from session_manager import get_current_step
 
 

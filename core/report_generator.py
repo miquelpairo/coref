@@ -9,7 +9,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 # Imports de módulos internos
-from config import WSTD_THRESHOLDS
+from app_config import WSTD_THRESHOLDS
 from utils.plotting import (
     plot_kit_spectra,
     plot_correction_differences,

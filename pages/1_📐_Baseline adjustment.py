@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import streamlit as st
-from config import PAGE_CONFIG
+from app_config import PAGE_CONFIG
 from session_manager import initialize_session_state
 from ui.sidebar import render_sidebar
 from ui.step_00_client_info import render_client_info_step
