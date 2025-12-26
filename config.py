@@ -1,10 +1,10 @@
 """
-Configuración y constantes para Baseline Adjustment Tool
+Configuración y constantes para NIR ServiceKit
 """
 
 # Configuración de la página de Streamlit
 PAGE_CONFIG = {
-    "page_title": "Baseline Adjustment Tool",
+    "page_title": "NIR ServiceKit",
     "page_icon":"🏠",
     "layout": "wide"
 }

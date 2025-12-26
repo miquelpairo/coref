@@ -52,7 +52,7 @@ def main():
     # Header principal con boton de logout
     col1, col2 = st.columns([5, 1])
     with col1:
-        st.title("Baseline Adjustment Tool")
+        st.title("NIR ServiceKit")
         st.markdown("### Asistente para ajuste de linea base en espectrometros NIR")
     with col2:
         st.markdown("")  # Espaciado

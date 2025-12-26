@@ -1,13 +1,16 @@
 """
-COREF Suite - Launcher
+NIR ServiceKit - Launcher
+Professional Service Toolkit for NIR Spectroscopy
 """
 import streamlit as st
+
 st.set_page_config(
-    page_title="COREF Suite",  # Baseline correction tool
-    page_icon="🏠",
+    page_title="NIR ServiceKit",
+    page_icon="🔬",
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
 # Definir páginas manualmente para control total del sidebar
 pages = [
     st.Page("pages/0_🏠_Home.py", title="Home", icon="🏠"),
@@ -19,6 +22,6 @@ pages = [
     st.Page("pages/07_📦_MetaReports.py", title="Report Consolidator", icon="📦"),
     st.Page("pages/08_✅_TSV_Validation_Reports.py", title="TSV Validation Reports", icon="✅"),
 ]
-pg = st.navigation(pages)
 
+pg = st.navigation(pages)
 pg.run()

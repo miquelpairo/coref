@@ -406,7 +406,7 @@ def generate_service_info_section(sensor_serial: str, customer_name: str,
     return html
 
 
-def generate_footer(tool_name: str = "COREF Suite") -> str:
+def generate_footer(tool_name: str = "NIR ServiceKit") -> str:
     """
     Genera el footer del informe.
     

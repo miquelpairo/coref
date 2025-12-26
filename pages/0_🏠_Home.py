@@ -23,7 +23,7 @@ if not check_password():
 # PÁGINA HOME
 # ============================================================================
 
-st.title("🏠 COREF - Baseline Correction Tool Suite")
+st.title("NIR ServiceKit")
 st.markdown("### Herramientas de calibración y validación para espectrómetros NIR")
 
 st.divider()
@@ -31,7 +31,7 @@ st.divider()
 # Descripción general
 st.markdown(
     """
-**COREF** es un conjunto de herramientas diseñadas para facilitar el mantenimiento 
+**NIR ServiceKit** es un conjunto de herramientas diseñadas para facilitar el mantenimiento 
 y validación de equipos NIR (Near-Infrared), especialmente NIR Online con detectores DAD.
 
 Estas aplicaciones ayudan a técnicos de servicio en:
@@ -303,7 +303,7 @@ st.divider()
 st.markdown(
     """
 <div style="text-align: center; color: #666; padding: 20px;">
-    <p><strong>COREF Suite</strong> | Versión 2.0 | Desarrollado por MPC</p>
+    <p><strong>NIR ServiceKit</strong> | Versión 2.0 </p>
     <p>Para soporte técnico o consultas, contacta con el departamento de servicio.</p>
 </div>
 """,
