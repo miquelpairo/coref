@@ -9,7 +9,7 @@ from datetime import datetime
 from app_config import DEFAULT_CSV_METADATA
 
 
-def load_tsv_file(file):
+ddef load_tsv_file(file):
     """
     Carga un archivo TSV y lo convierte a DataFrame.
     Maneja múltiples encodings y BOM.
@@ -26,24 +26,54 @@ def load_tsv_file(file):
     for encoding in encodings:
         try:
             file.seek(0)  # Volver al inicio
-            content = file.read().decode(encoding).replace(",", ".")
+            
+            # Leer el contenido como bytes primero
+            raw_content = file.read()
+            
+            # Decodificar
+            if isinstance(raw_content, bytes):
+                content = raw_content.decode(encoding)
+            else:
+                content = raw_content
             
             # Eliminar BOM si existe
             if content.startswith('\ufeff'):
                 content = content[1:]
             
-            df = pd.read_csv(io.StringIO(content), sep="\t")
+            # Reemplazar comas por puntos (formato decimal)
+            content = content.replace(",", ".")
+            
+            # Normalizar saltos de línea (importante para iOS)
+            content = content.replace('\r\n', '\n').replace('\r', '\n')
+            
+            # Leer como CSV
+            df = pd.read_csv(
+                io.StringIO(content), 
+                sep="\t",
+                encoding=None,  # Ya está decodificado
+                on_bad_lines='skip'  # Ignorar líneas problemáticas
+            )
+            
+            # Validar que tiene columnas
+            if len(df.columns) == 0:
+                continue
+                
             return df
             
-        except (UnicodeDecodeError, UnicodeError):
+        except (UnicodeDecodeError, UnicodeError, pd.errors.ParserError) as e:
+            continue
+        except Exception as e:
+            # Último intento: permitir cualquier error y continuar
             continue
     
     # Si todos fallan
     raise ValueError(
-        "No se pudo decodificar el archivo. "
-        "Intenta guardarlo con encoding UTF-8 desde tu editor."
+        "No se pudo decodificar el archivo TSV. "
+        "Por favor, verifica que:\n"
+        "1. El archivo está separado por tabuladores\n"
+        "2. El archivo no está corrupto\n"
+        "3. Intenta guardarlo con encoding UTF-8"
     )
-
 
 def get_spectral_columns(df):
     """
