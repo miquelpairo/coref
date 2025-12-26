@@ -6,7 +6,7 @@ Genera informes HTML interactivos (Bootstrap + DataTables + Plotly) a partir de 
 - Limpieza y reorganización tipo Node-RED
 - Parity / Residuum vs N / Histograma por parámetro
 - Summary of statistics
-- NUEVO: Plot de espectros (columnas #1..#n) debajo del summary y encima de la tabla
+- NUEVO: Plot de espectros (columnas #1..#n) + Filtro por fechas
 
 Autor: Miquel
 """
@@ -33,7 +33,7 @@ from buchi_streamlit_theme import apply_buchi_styles
 
 
 # =============================================================================
-# STREAMLIT PAGE SETUP (NO st.set_page_config HERE: handled by app launcher)
+# STREAMLIT PAGE SETUP
 # =============================================================================
 apply_buchi_styles()
 
@@ -45,7 +45,7 @@ st.markdown("Generación de informes de validación NIR (TSV) con gráficos inte
 
 
 # =============================================================================
-# DATA CLEANING / NODE-RED LOGIC (refactor: all in one place, testable)
+# DATA CLEANING / NODE-RED LOGIC
 # =============================================================================
 
 PIXEL_RE = re.compile(r"^#\d+$")
@@ -76,7 +76,6 @@ def filter_relevant_data(data: List[Dict]) -> List[Dict]:
 
     # 2) Pixel columns: #1..#n
     pixel_cols = [c for c in all_columns if _is_pixel_col(c)]
-    # ordenarlas por número para consistencia
     pixel_cols = sorted(pixel_cols, key=lambda s: int(str(s)[1:]))
 
     columns_to_keep = base_cols + pixel_cols
@@ -95,7 +94,6 @@ def filter_relevant_data(data: List[Dict]) -> List[Dict]:
 def delete_zero_rows(data: List[Dict]) -> List[Dict]:
     """
     Elimina filas donde 'Result' esté vacío o donde TODOS los valores result sean 0.
-    'Result' suele venir como "v1;v2;v3;..."
     """
     out: List[Dict] = []
     for row in data:
@@ -128,12 +126,6 @@ def reorganize_results_and_reference(data: List[Dict]) -> List[Dict]:
     Reorganiza a:
     - columnas no-parámetro (ID, Date, Recipe, Note, etc.)
     - Reference <param>, Result <param>, Residuum <param>
-
-    Se asume:
-    - Hay una columna 'Reference' que marca inicio bloque parámetros
-    - Hay una columna 'Begin' que marca el final del bloque parámetros
-    - Entre ambas están los parámetros con los valores de referencia
-    - 'Result' contiene valores en el mismo orden separados por ';'
     """
     if not data:
         return []
@@ -150,7 +142,6 @@ def reorganize_results_and_reference(data: List[Dict]) -> List[Dict]:
         begin_i = all_cols.index("Begin")
         parameter_cols = all_cols[ref_i + 1 : begin_i]
 
-        # Copiar columnas "no parámetros" (pero conserva espectro)
         new_row: Dict = {}
         for key in all_cols:
             if key in parameter_cols:
@@ -159,14 +150,11 @@ def reorganize_results_and_reference(data: List[Dict]) -> List[Dict]:
                 continue
             new_row[key] = row.get(key)
 
-        # Result values list
         result_values: List[str] = []
         if row.get("Result") is not None:
             result_values = [v.strip() for v in str(row["Result"]).split(";")]
 
-        # Construir Reference/Result/Residuum por parámetro
         for idx, p in enumerate(parameter_cols):
-            # reference value (viene en columna p)
             ref_val = row.get(p)
             if ref_val is not None and ref_val != "":
                 ref_val = str(ref_val).replace(",", ".")
@@ -177,7 +165,6 @@ def reorganize_results_and_reference(data: List[Dict]) -> List[Dict]:
             else:
                 ref_val_f = None
 
-            # result value en Result semicolon list
             res_val_f = None
             if idx < len(result_values):
                 rv = result_values[idx].replace(",", ".")
@@ -223,18 +210,13 @@ def clean_tsv_file(uploaded_file) -> pd.DataFrame:
     data = delete_zero_rows(data)
     data = reorganize_results_and_reference(data)
 
-    # ✅ df SIEMPRE definido
     df = pd.DataFrame(data)
 
-    # --- NORMALIZAR ESPECTROS (#1..#n) ---
     if not df.empty:
         pixel_cols = [c for c in df.columns if _is_pixel_col(c)]
         if pixel_cols:
             df[pixel_cols] = df[pixel_cols].replace(",", ".", regex=True)
-            df[pixel_cols] = df[pixel_cols].apply(
-                pd.to_numeric, errors="coerce"
-            )
-    # ------------------------------------
+            df[pixel_cols] = df[pixel_cols].apply(pd.to_numeric, errors="coerce")
 
     if "Date" in df.columns:
         df["Date"] = df["Date"].apply(try_parse_date)
@@ -243,11 +225,10 @@ def clean_tsv_file(uploaded_file) -> pd.DataFrame:
 
 
 # =============================================================================
-# PLOTLY FIGURES (parity/residuum/hist + spectra)
+# PLOTLY FIGURES
 # =============================================================================
 
 def create_layout(title: str, xaxis_title: str, yaxis_title: str) -> Dict:
-    # Look "original" (Plotly template + background)
     return {
         "title": title,
         "xaxis_title": xaxis_title,
@@ -264,13 +245,13 @@ def create_layout(title: str, xaxis_title: str, yaxis_title: str) -> Dict:
         "yaxis": {"gridcolor": "white"},
     }
 
+
 def plot_comparison(df: pd.DataFrame, result_col: str, reference_col: str, residuum_col: str):
     """
     Genera:
     - Parity plot
     - Residuum vs N
     - Histograma residuum
-    y devuelve métricas.
     """
     try:
         valid_mask = (
@@ -326,7 +307,7 @@ def plot_comparison(df: pd.DataFrame, result_col: str, reference_col: str, resid
         )
         fig_res.update_layout(**create_layout("Residuum vs N", "N", "Residuum"))
 
-        # Histograma (azul como original)
+        # Histograma
         fig_hist = go.Figure()
         fig_hist.add_trace(go.Histogram(x=residuum, nbinsx=20, marker=dict(color="blue")))
         fig_hist.update_layout(**create_layout("Residuum Histogram", "Residuum", "Count"))
@@ -337,6 +318,7 @@ def plot_comparison(df: pd.DataFrame, result_col: str, reference_col: str, resid
         st.error(f"Error generando plots para {result_col}: {e}")
         return None
 
+
 def build_spectra_figure(df: pd.DataFrame) -> Optional[go.Figure]:
     pixel_cols = [c for c in df.columns if _is_pixel_col(c)]
     if not pixel_cols:
@@ -345,21 +327,18 @@ def build_spectra_figure(df: pd.DataFrame) -> Optional[go.Figure]:
     pixel_cols = sorted(pixel_cols, key=lambda s: int(str(s)[1:]))
     x = [int(str(c)[1:]) for c in pixel_cols]
 
-    # matriz espectral (n_rows x n_pixels)
     spec = (
-    df[pixel_cols]
-    .replace(",", ".", regex=True)   # convierte coma decimal a punto
-    .apply(pd.to_numeric, errors="coerce")
-)
+        df[pixel_cols]
+        .replace(",", ".", regex=True)
+        .apply(pd.to_numeric, errors="coerce")
+    )
 
-    # etiquetas para hover (opcional)
     hover_id = df["ID"].astype(str) if "ID" in df.columns else pd.Series([str(i) for i in range(len(df))])
     hover_date = df["Date"].astype(str) if "Date" in df.columns else pd.Series([""] * len(df))
     hover_note = df["Note"].astype(str) if "Note" in df.columns else pd.Series([""] * len(df))
 
     fig = go.Figure()
 
-    # ✅ OVERLAY: una traza por espectro (fila)
     for i in range(len(df)):
         y = spec.iloc[i].to_numpy()
 
@@ -388,8 +367,8 @@ def build_spectra_figure(df: pd.DataFrame) -> Optional[go.Figure]:
         title="Spectra",
         xaxis_title="Pixel",
         yaxis_title="Absorbance (AU)",
-        width=900,
-        height=520,
+        width=1250,
+        height=700,
         hovermode="closest",
         template="plotly",
         plot_bgcolor="#E5ECF6",
@@ -398,7 +377,8 @@ def build_spectra_figure(df: pd.DataFrame) -> Optional[go.Figure]:
         yaxis={"gridcolor": "white"},
     )
     return fig
-    
+
+
 # =============================================================================
 # HTML REPORT GENERATION
 # =============================================================================
@@ -419,21 +399,16 @@ class ReportResult:
 
 def generate_html_report(df: pd.DataFrame, file_name: str) -> str:
     """
-    Genera HTML robusto:
-    - Plotly se embebe INLINE una única vez (primera figura que se inserte)
-    - El resto de figuras usan include_plotlyjs=False
-    - No depende del CDN de Plotly (evita gráficos vacíos en Streamlit Cloud / redes restringidas)
+    Genera HTML con Bootstrap tabs + sidebar BUCHI + CSS corporativo.
     """
+    from core.report_utils import load_buchi_css, get_sidebar_styles, get_common_report_styles
+    
     columns_result = [c for c in df.columns if str(c).startswith("Result ")]
     columns_reference = [c.replace("Result ", "Reference ") for c in columns_result]
     columns_residuum = [c.replace("Result ", "Residuum ") for c in columns_result]
 
     summary_data: List[Dict] = []
-
-    # Pre-calc spectra fig (optional)
     fig_spectra = build_spectra_figure(df)
-
-    # Flag para incluir Plotly inline SOLO UNA VEZ
     plotly_already_included = False
 
     def _fig_html(fig: go.Figure) -> str:
@@ -443,11 +418,70 @@ def generate_html_report(df: pd.DataFrame, file_name: str) -> str:
         plotly_already_included = True
         return html
 
-    html_content = f"""
-<!DOCTYPE html>
+    # Build valid params list
+    valid_params: List[Tuple[str, str, Tuple]] = []
+    for result_col, reference_col, residuum_col in zip(columns_result, columns_reference, columns_residuum):
+        param_name = str(result_col).replace("Result ", "")
+        param_id = _safe_html_id(param_name)
+        plots = plot_comparison(df, result_col, reference_col, residuum_col)
+        if plots:
+            valid_params.append((param_name, param_id, plots))
+            fig_parity, fig_res, fig_hist, r2, rmse, bias, n = plots
+            summary_data.append({"Parameter": param_name, "R2": r2, "RMSE": rmse, "BIAS": bias, "N": n})
+
+    # ========================================================================
+    # CONSTRUCCIÓN DEL SIDEBAR
+    # ========================================================================
+    sidebar_items = """
+        <h2>📋 Índice</h2>
+        <ul>
+            <li><a href="#info-general">Información General</a></li>
+            <li><a href="#summary-stats">Resumen Estadístico</a></li>
+    """
+    
+    if fig_spectra:
+        sidebar_items += '<li><a href="#spectra-section">Espectros</a></li>\n'
+    
+    if valid_params:
+        sidebar_items += '''
+            <li>
+                <details class="sidebar-menu-details">
+                    <summary>Análisis por Parámetro</summary>
+                    <ul style="padding-left: 15px; margin-top: 5px;">
+'''
+        for param_name, param_id, _ in valid_params:
+            onclick_code = f"$('#tab-{param_id}').tab('show'); document.getElementById('tabs-section').scrollIntoView({{behavior: 'smooth'}}); return false;"
+            sidebar_items += f'                        <li><a href="#" onclick="{onclick_code}">{param_name}</a></li>\n'
+        
+        sidebar_items += '''
+                    </ul>
+                </details>
+            </li>
+'''
+    
+    sidebar_items += '''
+            <li><a href="#data-table-section">Tabla de Datos</a></li>
+        </ul>
+'''
+
+    # ========================================================================
+    # CARGAR CSS BUCHI
+    # ========================================================================
+    buchi_css = load_buchi_css()
+    sidebar_css = get_sidebar_styles()
+    common_css = get_common_report_styles()
+
+    # ========================================================================
+    # HTML COMPLETO
+    # ========================================================================
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    year = datetime.now().year
+    
+    html_content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Validation Report - {file_name}</title>
 
     <!-- Bootstrap CSS -->
@@ -456,316 +490,227 @@ def generate_html_report(df: pd.DataFrame, file_name: str) -> str:
     <!-- DataTables CSS -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/fixedheader/3.1.8/css/fixedHeader.dataTables.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/select/1.3.1/css/select.dataTables.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/1.6.2/css/buttons.dataTables.min.css">
 
-    <!-- jQuery (ONLY FULL VERSION, no slim) -->
+    <!-- jQuery (ONLY FULL VERSION) -->
     <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
 
-    <!-- Bootstrap JS + dependencies -->
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
     <!-- DataTables JS -->
     <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/fixedheader/3.1.8/js/dataTables.fixedHeader.min.js"></script>
-    <script src="https://cdn.datatables.net/select/1.3.1/js/dataTables.select.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/1.6.2/js/dataTables.buttons.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/1.6.2/js/buttons.html5.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/1.6.2/js/buttons.print.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
-
-    <!-- Plotly JS: NO CDN (we embed inline in first plot) -->
 
     <style>
-        body {{ font-family: Helvetica, Arial, sans-serif; margin: 40px; }}
-        body > *:first-child {{ margin-top: 0; }}
-
-        h1 {{ color: black; margin-top: 0px; }}
-        h2 {{ color: black; }}
-        .container {{ width: 90%; margin: 0 auto; }}
-        table {{ border-collapse: collapse; margin: 20px 0; width: 100%; }}
-        table, th, td {{ border: none; }}
-        th, td {{ padding: 5px 10px; text-align: left; font-size: 12px; }}
-
-        .file-info {{
-            display: flex;
-            margin-top: 20px;
-            gap: 20px;
-            align-items: center;
-        }}
-
-        .row-wrapper {{
-            overflow-x: auto;
-            white-space: nowrap;
-        }}
-
-        .plot-container {{
-            display: inline-block;
-            width: 900px;
-            margin-right: 20px;
-        }}
-
-        .summary-table {{
-            font-size: 16px;
-            margin-top: 80px;
-            margin-bottom: 40px;
-            width: 100%;
-            border-collapse: collapse;
-        }}
-        .summary-table th, .summary-table td {{
-            padding: 10px;
-            text-align: left;
-        }}
-        .summary-table th {{
-            font-weight: bold;
-            background-color: #f4f4f4;
-        }}
-        .summary-table td {{ border-bottom: 1px solid #ddd; }}
-
-        .stats-box {{
-            background-color: white;
-            border: none;
-            border-radius: 5px;
-            padding: 10px;
-            font-size: 12px;
-            color: black;
-            width: fit-content;
-            padding-left: 150px;
-            margin-bottom: 10px;
-        }}
-
-        .nav-link {{ color: #64B445 !important; }}
-        .nav-link.active {{
-            color: #64B445 !important;
-            font-weight: bold;
-        }}
-
-        /* Carrusel: look del "original" pero corregido */
-        .carousel-control-prev-icon, .carousel-control-next-icon {{
-            background-color: #64B445;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background-image: none;
-        }}
-        .carousel-control-prev-icon {{
-            position: absolute;
-            left: 20px;
-            margin-left: -50px;
-            top: 50%;
-            transform: translateY(-50%);
-        }}
-        .carousel-control-next-icon {{
-            position: relative;
-        }}
-        .carousel-control-prev-icon::before {{
-            content: '<';
-            font-size: 30px;
-            color: white;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }}
-        .carousel-control-next-icon::before {{
-            content: '>';
-            font-size: 30px;
-            color: white;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }}
-        .carousel-control-prev:hover .carousel-control-prev-icon,
-        .carousel-control-next:hover .carousel-control-next-icon {{
-            background-color: #4CAF50;
-        }}
+{buchi_css}
+{sidebar_css}
+{common_css}
     </style>
 </head>
 <body>
-    <div class="container">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+{sidebar_items}
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
         <h1>Validation Report</h1>
-        <div class="file-info">
-            <p><strong>File:</strong> {file_name}</p>
-            <p><strong>Date:</strong> {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
-        </div>
-
-        <p>
-            This report analyzes predicted and reference values using statistical metrics like R², RMSE, and Bias.
-            It includes parity and Residuum vs N plots for each parameter, plus a summary table.
-        </p>
-
-        <ul class="nav nav-tabs" id="myTab" role="tablist">
-"""
-
-    # Build tabs only for valid parameters
-    valid_params: List[Tuple[str, str, Tuple]] = []
-    first_valid_tab = True
-
-    for result_col, reference_col, residuum_col in zip(columns_result, columns_reference, columns_residuum):
-        param_name = str(result_col).replace("Result ", "")
-        param_id = _safe_html_id(param_name)
-
-        plots = plot_comparison(df, result_col, reference_col, residuum_col)
-        if plots:
-            valid_params.append((param_name, param_id, plots))
-            active_class = "active show" if first_valid_tab else ""
-            first_valid_tab = False
-
-            html_content += f"""
-            <li class="nav-item">
-                <a class="nav-link {active_class}" id="tab-{param_id}" data-toggle="tab"
-                   href="#content-{param_id}" role="tab"
-                   aria-controls="content-{param_id}"
-                   aria-selected="{str(bool(active_class)).lower()}">{param_name}</a>
-            </li>
-"""
-
-    html_content += """
-        </ul>
-        <div class="tab-content" id="myTabContent">
-"""
-
-    # Tabs content
-    first_valid_tab = True
-    for param_name, param_id, plots in valid_params:
-        fig_parity, fig_residuum, fig_histogram, r2, rmse, bias, n = plots
-
-        summary_data.append({"Parameter": param_name, "R2": r2, "RMSE": rmse, "BIAS": bias, "N": n})
-
-        active_class = "show active" if first_valid_tab else ""
-        first_valid_tab = False
-
-        # Plotly inline solo en la PRIMERA figura que aparezca en el HTML
-        fig_parity_html = _fig_html(fig_parity)
-        fig_residuum_html = fig_residuum.to_html(full_html=False, include_plotlyjs=False)
-        fig_histogram_html = fig_histogram.to_html(full_html=False, include_plotlyjs=False)
-
-        html_content += f"""
-        <div class="tab-pane fade {active_class}" id="content-{param_id}" role="tabpanel" aria-labelledby="tab-{param_id}">
-            <div class="stats-box">
-                <table>
-                    <tr>
-                        <td><strong>R²</strong></td>
-                        <td><strong>RMSE</strong></td>
-                        <td><strong>BIAS</strong></td>
-                        <td><strong>N</strong></td>
-                    </tr>
-                    <tr>
-                        <td>{r2:.2f}</td>
-                        <td>{rmse:.2f}</td>
-                        <td>{bias:.2f}</td>
-                        <td>{n}</td>
-                    </tr>
-                </table>
-            </div>
-
-            <div id="carousel-{param_id}" class="carousel slide" data-ride="carousel" data-interval="false">
-                <ol class="carousel-indicators">
-                    <li data-target="#carousel-{param_id}" data-slide-to="0" class="active"></li>
-                    <li data-target="#carousel-{param_id}" data-slide-to="1"></li>
-                    <li data-target="#carousel-{param_id}" data-slide-to="2"></li>
-                </ol>
-
-                <div class="carousel-inner">
-                    <div class="carousel-item active">
-                        <div class="plot-container" id="parity-plot-{param_id}">
-                            {fig_parity_html}
-                        </div>
-                    </div>
-                    <div class="carousel-item">
-                        <div class="plot-container" id="residuum-plot-{param_id}">
-                            {fig_residuum_html}
-                        </div>
-                    </div>
-                    <div class="carousel-item">
-                        <div class="plot-container" id="histogram-plot-{param_id}">
-                            {fig_histogram_html}
-                        </div>
-                    </div>
-                </div>
-
-                <a class="carousel-control-prev" href="#carousel-{param_id}" role="button" data-slide="prev">
-                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                    <span class="sr-only">Previous</span>
-                </a>
-                <a class="carousel-control-next" href="#carousel-{param_id}" role="button" data-slide="next">
-                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                    <span class="sr-only">Next</span>
-                </a>
-            </div>
-        </div>
-"""
-
-    # Summary table
-    html_content += """
-        </div>
-        <h2>Summary of Statistics</h2>
-        <table class="summary-table">
-            <tbody>
+        
+        <!-- INFO GENERAL -->
+        <div class="info-box" id="info-general">
+            <h2>Información General</h2>
+            <table>
                 <tr>
-                    <th>Parameter</th>
+                    <th>Archivo</th>
+                    <td>{file_name}</td>
+                </tr>
+                <tr>
+                    <th>Fecha de generación</th>
+                    <td>{timestamp}</td>
+                </tr>
+                <tr>
+                    <th>Número de muestras</th>
+                    <td>{len(df)}</td>
+                </tr>
+                <tr>
+                    <th>Parámetros analizados</th>
+                    <td>{len(valid_params)}</td>
+                </tr>
+            </table>
+            <p class="text-caption">
+                <em>Este informe analiza valores predichos vs referencia usando métricas estadísticas (R², RMSE, BIAS).</em>
+            </p>
+        </div>
+
+        <!-- SUMMARY STATS -->
+        <div class="info-box" id="summary-stats">
+            <h2>Resumen Estadístico</h2>
+            <table class="summary-table">
+                <thead>
+                    <tr>
+                        <th>Parámetro</th>
 """
+
     for row in summary_data:
         html_content += f"<th>{row['Parameter']}</th>"
 
     html_content += """
-                </tr>
-                <tr>
-                    <td><strong>R²</strong></td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>R²</strong></td>
 """
     for row in summary_data:
-        html_content += f"<td>{row['R2']:.2f}</td>"
+        html_content += f"<td>{row['R2']:.3f}</td>"
 
     html_content += """
-                </tr>
-                <tr>
-                    <td><strong>RMSE</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>RMSE</strong></td>
 """
     for row in summary_data:
-        html_content += f"<td>{row['RMSE']:.2f}</td>"
+        html_content += f"<td>{row['RMSE']:.3f}</td>"
 
     html_content += """
-                </tr>
-                <tr>
-                    <td><strong>BIAS</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>BIAS</strong></td>
 """
     for row in summary_data:
-        html_content += f"<td>{row['BIAS']:.2f}</td>"
+        html_content += f"<td>{row['BIAS']:.3f}</td>"
 
     html_content += """
-                </tr>
-                <tr>
-                    <td><strong>N</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>N</strong></td>
 """
     for row in summary_data:
         html_content += f"<td>{row['N']}</td>"
 
     html_content += """
-                </tr>
-            </tbody>
-        </table>
-"""
-
-    # Spectra plot section (between summary and data table)
-    if fig_spectra is not None:
-        # Si aún no se incluyó Plotly (por ejemplo, no hubo ningún parámetro válido),
-        # lo incluimos inline aquí.
-        spectra_html = _fig_html(fig_spectra) if not plotly_already_included else fig_spectra.to_html(full_html=False, include_plotlyjs=False)
-
-        html_content += f"""
-        <h2>Spectra</h2>
-        <p>Overlay de espectros (todas las filas, sin promedios).</p>
-        <div class="plot-container" style="width: 900px;">
-            {spectra_html}
+                    </tr>
+                </tbody>
+            </table>
         </div>
 """
 
-    # Data table
+    # SPECTRA
+    if fig_spectra is not None:
+        spectra_html = _fig_html(fig_spectra) if not plotly_already_included else fig_spectra.to_html(full_html=False, include_plotlyjs=False)
+        html_content += f"""
+        <div class="info-box" id="spectra-section">
+            <h2>Espectros</h2>
+            <p class="text-caption">
+                <em>Overlay de todos los espectros NIR (columnas #1..#n).</em>
+            </p>
+            <div class="plot-container">
+                {spectra_html}
+            </div>
+        </div>
+"""
+
+    # TABS POR PARÁMETRO
+    if valid_params:
+        html_content += """
+        <div class="info-box" id="tabs-section">
+            <h2>Análisis por Parámetro</h2>
+            <p class="text-caption">
+                <em>Gráficos interactivos (Parity, Residuum vs N, Histograma) para cada parámetro.</em>
+            </p>
+            
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+"""
+
+        first_tab = True
+        for param_name, param_id, _ in valid_params:
+            active_class = "active" if first_tab else ""
+            first_tab = False
+            html_content += f"""
+                <li class="nav-item">
+                    <a class="nav-link {active_class}" id="tab-{param_id}" data-toggle="tab"
+                       href="#content-{param_id}" role="tab">{param_name}</a>
+                </li>
+"""
+
+        html_content += """
+            </ul>
+            
+            <div class="tab-content" id="myTabContent">
+"""
+
+        first_tab = True
+        for param_name, param_id, plots in valid_params:
+            fig_parity, fig_residuum, fig_histogram, r2, rmse, bias, n = plots
+            active_class = "show active" if first_tab else ""
+            first_tab = False
+
+            fig_parity_html = _fig_html(fig_parity) if not plotly_already_included else fig_parity.to_html(full_html=False, include_plotlyjs=False)
+            fig_residuum_html = fig_residuum.to_html(full_html=False, include_plotlyjs=False)
+            fig_histogram_html = fig_histogram.to_html(full_html=False, include_plotlyjs=False)
+
+            html_content += f"""
+                <div class="tab-pane fade {active_class}" id="content-{param_id}" role="tabpanel">
+                    <div class="stats-box">
+                        <table>
+                            <tr>
+                                <td><strong>R²</strong></td>
+                                <td><strong>RMSE</strong></td>
+                                <td><strong>BIAS</strong></td>
+                                <td><strong>N</strong></td>
+                            </tr>
+                            <tr>
+                                <td>{r2:.3f}</td>
+                                <td>{rmse:.3f}</td>
+                                <td>{bias:.3f}</td>
+                                <td>{n}</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div id="carousel-{param_id}" class="carousel slide" data-ride="carousel" data-interval="false">
+                        <ol class="carousel-indicators">
+                            <li data-target="#carousel-{param_id}" data-slide-to="0" class="active"></li>
+                            <li data-target="#carousel-{param_id}" data-slide-to="1"></li>
+                            <li data-target="#carousel-{param_id}" data-slide-to="2"></li>
+                        </ol>
+
+                        <div class="carousel-inner">
+                            <div class="carousel-item active">
+                                <div class="plot-container">{fig_parity_html}</div>
+                            </div>
+                            <div class="carousel-item">
+                                <div class="plot-container">{fig_residuum_html}</div>
+                            </div>
+                            <div class="carousel-item">
+                                <div class="plot-container">{fig_histogram_html}</div>
+                            </div>
+                        </div>
+
+                        <a class="carousel-control-prev" href="#carousel-{param_id}" role="button" data-slide="prev">
+                            <span class="carousel-control-prev-icon"></span>
+                        </a>
+                        <a class="carousel-control-next" href="#carousel-{param_id}" role="button" data-slide="next">
+                            <span class="carousel-control-next-icon"></span>
+                        </a>
+                    </div>
+                </div>
+"""
+
+        html_content += """
+            </div>
+        </div>
+"""
+
+    # DATA TABLE
     html_content += """
-        <h2>Original Data Table</h2>
-        <div class="row-wrapper">
+        <div class="info-box" id="data-table-section">
+            <h2>Tabla de Datos Original</h2>
+            <p class="text-caption">
+                <em>Datos limpios y reorganizados con filtrado por columnas.</em>
+            </p>
             <table id="data-table" class="display nowrap" style="width:100%">
                 <thead>
                     <tr>
@@ -789,79 +734,62 @@ def generate_html_report(df: pd.DataFrame, file_name: str) -> str:
                 html_content += f"<td>{v}</td>"
         html_content += "</tr>"
 
-    html_content += """
+    html_content += f"""
                 </tbody>
             </table>
         </div>
 
-        <button id="delete-row">Eliminar Fila Seleccionada</button>
+        <!-- FOOTER -->
+        <div style="margin-top: 50px; padding-top: 20px; border-top: 2px solid #eee; text-align: center; color: #666; font-size: 12px;">
+            <p>Informe generado automáticamente por COREF Suite</p>
+            <p>Fecha: {timestamp}</p>
+            <p>© {year} BÜCHI Labortechnik AG</p>
+        </div>
     </div>
 
     <script>
-        $(document).ready(function() {
-            var table = $('#data-table').DataTable({
+        $(document).ready(function() {{
+            // Clonar el header ANTES de inicializar DataTable
+            $('#data-table thead tr').clone(true).appendTo('#data-table thead');
+            $('#data-table thead tr:eq(1) th').each(function(i) {{
+                var title = $(this).text();
+                $(this).html('<input type="text" placeholder="Filtrar ' + title + '" style="width:100%; padding: 5px; font-size: 12px; box-sizing: border-box;"/>');
+            }});
+
+            // Ahora inicializar DataTable
+            var table = $('#data-table').DataTable({{
                 scrollX: true,
                 pageLength: 25,
-                select: { style: 'multi' },
                 fixedHeader: true,
                 orderCellsTop: true,
-                searching: false,
-                dom: 'Bfrtip',
-                buttons: [
-                    {
-                        extend: 'copy',
-                        text: 'Copiar seleccionadas',
-                        exportOptions: { modifier: { selected: true } }
-                    },
-                    {
-                        extend: 'csv',
-                        text: 'Exportar CSV',
-                        fieldSeparator: ';',
-                        exportOptions: { columns: ':visible' }
-                    },
-                    'excel', 'pdf', 'print'
-                ]
-            });
+                searching: true
+            }});
 
-            $('#data-table thead tr').clone(true).appendTo('#data-table thead');
-            $('#data-table thead tr:eq(1) th').each(function(i) {
-                var title = $(this).text();
-                $(this).html('<input type="text" placeholder="Filtrar ' + title + '" style="width:100%;"/>');
-                $('input', this).on('keyup change', function() {
-                    if (table.column(i).search() !== this.value) {
+            // Conectar los inputs de filtro
+            $('#data-table thead tr:eq(1) th').each(function(i) {{
+                $('input', this).on('keyup change', function() {{
+                    if (table.column(i).search() !== this.value) {{
                         table.column(i).search(this.value).draw();
-                    }
-                });
-            });
+                    }}
+                }});
+            }});
 
-            function loadInitialGraph() {
-                var firstActiveTab = $('.tab-pane.active .plot-container');
-                if (firstActiveTab.length) {
-                    firstActiveTab.find('.plotly-graph-div').each(function() {
-                        Plotly.relayout(this, { autosize: true });
-                    });
-                }
-            }
-
-            loadInitialGraph();
-
-            $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+            // Plotly resize on tab show
+            $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {{
                 var target = $(e.target).attr('href');
-                $(target).find('.plotly-graph-div').each(function() {
-                    Plotly.relayout(this, { autosize: true });
-                });
-            });
-
-            $('#delete-row').click(function() {
-                table.rows('.selected').remove().draw(false);
-            });
-        });
+                $(target).find('.plotly-graph-div').each(function() {{
+                    Plotly.relayout(this, {{ autosize: true }});
+                }});
+            }});
+        }});
     </script>
 
 </body>
 </html>
 """
+
     return html_content
+
 
 # =============================================================================
 # STREAMLIT UI
@@ -872,11 +800,12 @@ st.markdown(
     """
 ### 🧭 Cómo funciona
 1. **Carga** uno o varios archivos TSV
-2. La app **limpia y procesa** los datos automáticamente (tipo Node-RED)
-3. **Genera** reportes HTML interactivos con Plotly + DataTables
-4. **Descarga** HTML + CSV limpio (y ZIP si subes varios)
+2. **Opcionalmente filtra** por rango de fechas
+3. La app **limpia y procesa** los datos automáticamente
+4. **Genera** reportes HTML interactivos con Plotly + DataTables + Sidebar BUCHI
+5. **Descarga** HTML + CSV limpio (y ZIP si subes varios)
 
-📌 **Nuevo:** si el TSV contiene columnas espectrales `#1..#n`, el HTML incluirá un **plot de espectros** bajo el *Summary of Statistics*.
+📌 **Nuevo:** Filtrado por fechas + plot de espectros si el TSV contiene columnas `#1..#n`
 """
 )
 
@@ -889,8 +818,52 @@ uploaded_files = st.file_uploader(
 
 if uploaded_files:
     st.success(f"✅ {len(uploaded_files)} archivo(s) cargado(s)")
-
-
+    
+    # ========================================================================
+    # FILTRO POR FECHAS
+    # ========================================================================
+    st.markdown("---")
+    st.subheader("📅 Filtrado por Fechas (Opcional)")
+    
+    col1, col2, col3 = st.columns([2, 2, 1])
+    
+    with col1:
+        start_date = st.date_input(
+            "Fecha de inicio",
+            value=None,
+            help="Dejar vacío para incluir desde el inicio"
+        )
+    
+    with col2:
+        end_date = st.date_input(
+            "Fecha de fin",
+            value=None,
+            help="Dejar vacío para incluir hasta el final"
+        )
+    
+    with col3:
+        st.markdown("<br>", unsafe_allow_html=True)
+        clear_dates = st.button("🗑️ Limpiar fechas")
+    
+    if clear_dates:
+        st.rerun()
+    
+    # Mostrar info del filtro
+    if start_date or end_date:
+        filter_info = "🔍 **Filtro activo:** "
+        if start_date and end_date:
+            filter_info += f"Desde {start_date.strftime('%d/%m/%Y')} hasta {end_date.strftime('%d/%m/%Y')}"
+        elif start_date:
+            filter_info += f"Desde {start_date.strftime('%d/%m/%Y')} en adelante"
+        elif end_date:
+            filter_info += f"Hasta {end_date.strftime('%d/%m/%Y')}"
+        st.info(filter_info)
+    
+    st.markdown("---")
+    
+    # ========================================================================
+    # PROCESAMIENTO
+    # ========================================================================
     if st.button("🚀 Procesar y Generar Reportes", type="primary"):
         results: List[ReportResult] = []
         progress_bar = st.progress(0)
@@ -901,17 +874,44 @@ if uploaded_files:
             status_text.text(f"Procesando {file_name}...")
 
             try:
+                # Limpiar datos
                 df_clean = clean_tsv_file(uploaded_file)
+                
+                # Aplicar filtro de fechas si existe
+                df_filtered = df_clean.copy()
+                rows_before = len(df_filtered)
+                
+                if "Date" in df_filtered.columns:
+                    if start_date is not None:
+                        start_datetime = pd.Timestamp(start_date)
+                        df_filtered = df_filtered[df_filtered["Date"] >= start_datetime]
+                    
+                    if end_date is not None:
+                        # Incluir todo el día final (hasta las 23:59:59)
+                        end_datetime = pd.Timestamp(end_date) + pd.Timedelta(days=1) - pd.Timedelta(seconds=1)
+                        df_filtered = df_filtered[df_filtered["Date"] <= end_datetime]
+                    
+                    rows_after = len(df_filtered)
+                    
+                    if rows_before != rows_after:
+                        st.info(f"📊 {file_name}: {rows_before} → {rows_after} filas después del filtro de fechas")
+                    
+                    if rows_after == 0:
+                        st.warning(f"⚠️ {file_name}: No hay datos en el rango de fechas seleccionado. Se omite este archivo.")
+                        continue
+                else:
+                    if start_date or end_date:
+                        st.warning(f"⚠️ {file_name}: No tiene columna 'Date', se ignora el filtro de fechas.")
 
-                html = generate_html_report(df_clean, file_name)
+                # Generar reporte
+                html = generate_html_report(df_filtered, file_name)
 
-                results.append(ReportResult(name=file_name, html=html, csv=df_clean))
+                results.append(ReportResult(name=file_name, html=html, csv=df_filtered))
                 st.success(f"✅ {file_name} procesado correctamente")
 
             except Exception as e:
                 st.error(f"❌ Error procesando {file_name}: {e}")
                 import traceback
-
                 st.code(traceback.format_exc())
 
             progress_bar.progress(idx / len(uploaded_files))
@@ -968,5 +968,5 @@ if uploaded_files:
             st.markdown("---")
             if st.checkbox("👀 Vista previa del primer reporte"):
                 st.components.v1.html(results[0].html, height=850, scrolling=True)
-
-
+        elif start_date or end_date:
+            st.warning("⚠️ No se generaron reportes. Verifica que haya datos en el rango de fechas seleccionado.")
