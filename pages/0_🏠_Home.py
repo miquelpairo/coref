@@ -1,11 +1,11 @@
 """
-COREF - Home
+NIR ServiceKit - Home
 ============
-Baseline Correction Tool Suite
+NIR Service & Application Tools Suite
 Página principal con navegación a herramientas.
 
 Author: Miquel
-Date: 2024
+Date: 2025
 """
 
 import streamlit as st
@@ -222,12 +222,12 @@ with c2:
     st.markdown(
         """
     <div class="card-container card-lime">
-        <h3>✅ TSV Validation Reports</h3>
+        <h3>📋 TSV Validation Reports</h3>
         <p>Genera informes de validación a partir de ficheros <strong>TSV</strong> (journal) y produce un HTML interactivo.</p>
         <ul>
             <li>Cargar uno o varios TSV</li>
             <li>Limpieza y reorganización automática</li>
-            <li>Gráficos interactivos y tabla exportable</li>
+            <li>Gráficos interactivos y tabla</li>
         </ul>
     </div>
     """,
@@ -241,7 +241,7 @@ with c2:
         use_container_width=True,
         type="primary",
     ):
-        st.switch_page("pages/08_✅_TSV_Validation_Reports.py")
+        st.switch_page("pages/08_📋_TSV_Validation_Reports.py")
 
 st.divider()
 

@@ -1,63 +1,85 @@
+# -*- coding: utf-8 -*-
 """
 Configuración y constantes para NIR ServiceKit
 """
 
-# Configuración de la página de Streamlit
+# ============================================================================
+# 1) CONFIGURACIÓN DE LA PÁGINA (STREAMLIT)
+# ============================================================================
+
 PAGE_CONFIG = {
     "page_title": "NIR ServiceKit",
-    "page_icon":"🏠",
-    "layout": "wide"
+    "page_icon": "🏠",
+    "layout": "wide",
 }
 
-# Definición de pasos del proceso
+# ============================================================================
+# 2) DEFINICIÓN DE PASOS DEL PROCESO
+# ============================================================================
+
 STEPS = {
     1: "Datos del cliente",
     2: "Backup de archivos",
     3: "Diagnóstico Inicial",
     4: "Validación",
-    5: "Alineamiento de Baseline"
+    5: "Alineamiento de Baseline",
 }
 
-# Rutas de archivos baseline
+# ============================================================================
+# 3) RUTAS Y EXTENSIONES SOPORTADAS
+# ============================================================================
+
 BASELINE_PATHS = {
     'old_software': r"C:\ProgramData\NIR-Online\SX-Suite",
-    'new_software': r"C:\ProgramData\NIR-Online\SX-Suite\Data\Reference"
+    'new_software': r"C:\ProgramData\NIR-Online\SX-Suite\Data\Reference",
 }
 
-# Extensiones de archivo soportadas
 SUPPORTED_EXTENSIONS = {
     'tsv': ['tsv', 'txt', 'csv'],
     'baseline': ['ref', 'csv'],
-    'ref': ['ref']
+    'ref': ['ref'],
 }
 
-# Umbrales de diagnóstico para External White
+# ============================================================================
+# 4) IDENTIFICADORES ESPECIALES
+# ============================================================================
+
+SPECIAL_IDS = {
+    'wstd': 'WSTD',
+}
+
+# ============================================================================
+# 5) UMBRALES DE DIAGNÓSTICO (WSTD)
+# ============================================================================
+
 WSTD_THRESHOLDS = {
     'good': 0.015,
     'warning': 0.05,
-    'bad': float('inf')
+    'bad': float('inf'),
 }
 
-# Estados de diagnóstico
 DIAGNOSTIC_STATUS = {
     'good': {
         'icon': '🟢',
         'label': 'Bien ajustado',
-        'color': 'green'
+        'color': 'green',
     },
     'warning': {
         'icon': '🟡',
         'label': 'Desviación moderada',
-        'color': 'warning'
+        'color': 'warning',
     },
     'bad': {
         'icon': '🔴',
         'label': 'Offset, ajustar a offset inicial',
-        'color': 'red'
-    }
+        'color': 'red',
+    },
 }
 
-# Metadatos por defecto para archivos CSV
+# ============================================================================
+# 6) METADATOS POR DEFECTO PARA CSV
+# ============================================================================
+
 DEFAULT_CSV_METADATA = {
     'expires': '',
     'sys_temp': 35.0,
@@ -79,26 +101,27 @@ DEFAULT_CSV_METADATA = {
     'nir_offset': 0,
     'nir_scans': 10,
     'nir_first': 0,
-    'bounds': '400.0,1000.0'
+    'bounds': '400.0,1000.0',
 }
 
-# Identificadores especiales
-SPECIAL_IDS = {
-    'wstd': 'WSTD'
-}
+# ============================================================================
+# 7) CONFIGURACIÓN DE MUESTRAS DE CONTROL
+# ============================================================================
 
-# Configuración de muestras de control
 CONTROL_SAMPLES_CONFIG = {
     'min_samples': 1,
     'max_samples': 50,
     'prediction_tolerance': {
         'good': 0.5,
         'warning': 2.0,
-        'bad': float('inf')
-    }
+        'bad': float('inf'),
+    },
 }
 
-# Configuración de gráficos
+# ============================================================================
+# 8) CONFIGURACIÓN DE GRÁFICOS
+# ============================================================================
+
 PLOT_CONFIG = {
     'figsize_default': (12, 6),
     'figsize_large': (12, 8),
@@ -107,11 +130,11 @@ PLOT_CONFIG = {
     'alpha_spectrum': 0.85,
     'alpha_grid': 0.3,
     'linewidth_default': 2,
-    'linewidth_thin': 1
+    'linewidth_thin': 1,
 }
 
 # ============================================================================
-# INSTRUCCIONES POR PASO
+# 9) INSTRUCCIONES POR PASO (UI)
 # ============================================================================
 
 INSTRUCTIONS = {
@@ -122,7 +145,7 @@ INSTRUCTIONS = {
 Por favor, completa los siguientes datos antes de comenzar el proceso de ajuste.
 Esta información se incluirá en el informe final.
     """,
-    
+
     # ========================================================================
     # STEP 01: BACKUP
     # ========================================================================
@@ -134,7 +157,7 @@ Lo más importante es documentar el estado actual del sensor para poder alinear 
 la baseline tras el cambio de lámpara. Una copia de seguridad sin esta información de referencia 
 no sirve para realizar el ajuste.
     """,
-    
+
     'backup_procedure': r"""
 ### Procedimiento para el backup:
 
@@ -157,7 +180,7 @@ no sirve para realizar el ajuste.
 
 4. **Verifica que la copia se realizó correctamente**
     """,
-    
+
     # ========================================================================
     # STEP 02: WSTD - DIAGNÓSTICO INICIAL
     # ========================================================================
@@ -178,21 +201,21 @@ Esto sirve como referencia para alinear el sensor a la misma línea base.
 
 **IMPORTANTE:** Este archivo TSV servirá para alinear la lámpara posteriormente. Se cargará como referencia en el Paso 4.
     """,
-    
+
     'wstd_file_info': """
 📋 **Este archivo TSV se usará como referencia en el Paso 5 (Alineamiento de Baseline)**
 
 Asegúrate de medir con el baseline actual del equipo antes de cualquier ajuste.
     """,
-    
+
     'wstd_selection_instruction': "✅ Marca las casillas de las mediciones que corresponden al White Standard.",
-    
+
     'wstd_continue_warning': """
 ⚠️ **Debes cargar el archivo TSV de External White para continuar**
 
 Este archivo es necesario como referencia para el alineamiento de baseline en el Paso 5.
     """,
-    
+
     # ========================================================================
     # STEP 04: VALIDATION
     # ========================================================================
@@ -206,14 +229,14 @@ Verificar si el equipo está correctamente alineado midiendo el White Standard.
 3. **Si está bien alineado** (RMS < 0.005) → Generar informe y finalizar ✅
 4. **Si necesita ajuste** (RMS ≥ 0.005) → Ir al Paso 5 para alinear ⚙️
     """,
-    
+
     'validation_first_measurement': """
 **Primera medición:**
 1. Con el baseline actual del equipo
 2. Mide el MISMO White Standard del Paso 3
 3. Exporta el TSV y cárgalo aquí
     """,
-    
+
     'validation_success_title': """
 ✅ **VALIDACIÓN EXITOSA**
 
@@ -221,7 +244,7 @@ Verificar si el equipo está correctamente alineado midiendo el White Standard.
 
 El equipo está correctamente alineado y listo para usar.
     """,
-    
+
     'validation_alignment_needed': """
 ⚠️ **ALINEAMIENTO NECESARIO**
 
@@ -229,7 +252,7 @@ El equipo está correctamente alineado y listo para usar.
 
 El equipo necesita alineamiento de baseline.
     """,
-    
+
     'validation_option_continue': """
 **Recomendado**: Ve al Paso 5 para ajustar el baseline.
 
@@ -239,14 +262,14 @@ En el Paso 5 podrás:
 3. Exportar el baseline corregido
 4. Volver a este paso para validar
     """,
-    
+
     'validation_option_force': """
 ⚠️ **No recomendado**: Genera el informe con el estado actual 
 aunque no se cumpla el umbral de RMS < 0.002.
 
 El informe indicará claramente que el alineamiento no fue exitoso.
     """,
-    
+
     'validation_report_intro': """
 El informe incluirá:
 - Datos del cliente y equipo
@@ -254,7 +277,7 @@ El informe incluirá:
 - Gráficos comparativos
 - Conclusiones
     """,
-    
+
     # ========================================================================
     # STEP 05: ALIGNMENT
     # ========================================================================
@@ -270,7 +293,7 @@ Has llegado aquí porque el RMS del White Standard es ≥ 0.002.
 4. Lo instalas en el equipo
 5. Vuelves al Paso 4 para validar
     """,
-    
+
     'alignment_procedure': """
 ### 📋 Procedimiento de Alineamiento
 
@@ -303,47 +326,36 @@ Has llegado aquí porque el RMS del White Standard es ≥ 0.002.
 
 **Verificación:** Después de sustituir el baseline, vuelve al Paso 4 para validar el ajuste.
     """,
-    
+
     'alignment_load_baseline': "### 1️⃣ Cargar Baseline Actual",
-    
     'alignment_baseline_info': "Sube el archivo de baseline actual del equipo (.ref o .csv)",
-    
     'alignment_validation_data': "### 2️⃣ Datos de Validación",
-    
+
     'alignment_validation_error': """
 ❌ No hay datos de validación del Paso 4
 
 Vuelve al Paso 4 para realizar la validación primero
     """,
-    
+
     'alignment_validation_loaded': "✅ Datos de validación cargados (White ID: {white_id})",
-    
     'alignment_apply_correction': "### 3️⃣ Aplicar Corrección al Baseline",
-    
     'alignment_correction_applied': "✅ Corrección aplicada al baseline",
-    
+
     'alignment_dimension_error': """
 ❌ Error de dimensiones:
 - Baseline: {baseline_points} puntos
 - Corrección: {correction_points} puntos
     """,
-    
+
     'alignment_export': "### 4️⃣ Exportar Baseline Corregido",
-    
     'alignment_export_ref': "**Formato .ref (binario)**",
-    
     'alignment_export_csv': "**Formato .csv (nuevo software)**",
-    
     'alignment_header_preserved': "✅ Cabecera original preservada",
-    
     'alignment_metadata_preserved': "✅ Metadatos originales preservados",
-    
     'alignment_no_header': "⚠️ No hay cabecera original (archivo no era .ref)",
-    
     'alignment_metadata_default': "ℹ️ Usando metadatos por defecto",
-    
     'alignment_return': "### ⬅️ Volver a Validación",
-    
+
     'alignment_next_steps': """
 **⚠️ PRÓXIMOS PASOS:**
 
@@ -353,7 +365,7 @@ Vuelve al Paso 4 para realizar la validación primero
 4. ✅ Haz clic en "Volver a Validación"
 5. ✅ Mide de nuevo el White Standard
     """,
-    
+
     # ========================================================================
     # LEGACY / OTROS (mantener por compatibilidad)
     # ========================================================================
@@ -366,7 +378,7 @@ Vuelve al Paso 4 para realizar la validación primero
 Muestras reales que medirás **antes** y **después** del ajuste para comparar 
 el impacto en las predicciones.
     """,
-    
+
     'kit': """
 ### 📦 Archivos para Calcular la Corrección
 
@@ -379,7 +391,7 @@ el impacto en las predicciones.
 - Mediciones del sensor en su estado actual
 - Debe contener las **MISMAS muestras** que el archivo de referencia
     """,
-    
+
     'baseline_load': """
 ### 📁 Cargar Baseline Actual
 
@@ -388,7 +400,7 @@ el impacto en las predicciones.
 }
 
 # ============================================================================
-# MENSAJES DE ÉXITO/ERROR/INFO
+# 10) MENSAJES DE ÉXITO/ERROR/INFO
 # ============================================================================
 
 MESSAGES = {
@@ -396,7 +408,7 @@ MESSAGES = {
     'success_file_loaded': "✅ Archivo cargado correctamente",
     'success_dimension_match': "✅ Validación correcta: {n_points} puntos en ambos archivos",
     'success_correction_applied': "✅ Corrección aplicada al baseline",
-    
+
     # Errores
     'error_no_wstd': "❌ No se encontraron mediciones con ID = 'External White' en el archivo.",
     'error_no_samples': "❌ No se encontraron mediciones de muestras (todas son WSTD).",
@@ -404,85 +416,79 @@ MESSAGES = {
     'error_dimension_mismatch': "**Error de validación:** El baseline tiene {baseline_points} puntos, pero el TSV tiene {tsv_channels} canales. No coinciden.",
     'error_no_predictions': "❌ El archivo no contiene la columna 'Results' con las predicciones",
     'error_no_common_control': "❌ No se encontraron muestras de control comunes entre las mediciones iniciales y finales",
-    
+
     # Advertencias
     'warning_no_header': "⚠️ No se puede generar .ref desde CSV: faltan valores de cabecera del sensor",
     'warning_default_metadata': "⚠️ Metadatos generados por defecto",
-    
+
     # Info
     'info_two_files': "ℹ️ Proceso actualizado: ahora usamos dos archivos TSV separados para mayor flexibilidad",
     'info_control_skipped': "ℹ️ Paso de muestras de control omitido",
-    
+
     # Muestras de control
     'success_control_initial': "✅ Muestras de control iniciales guardadas correctamente",
     'success_control_final': "✅ Muestras de control finales guardadas correctamente",
 }
 
 # ============================================================================
-# UMBRALES Y CONFIGURACIÓN DE VALIDACIÓN
+# 11) UMBRALES Y CONFIGURACIÓN DE VALIDACIÓN
 # ============================================================================
 
-# Umbrales de validación (diferencias espectrales post-ajuste)
 VALIDATION_THRESHOLDS = {
     'excellent': 0.001,
     'good': 0.01,
     'acceptable': 0.05,
-    'bad': float('inf')
+    'bad': float('inf'),
 }
 
-# Estados de validación
 VALIDATION_STATUS = {
     'excellent': {
         'icon': '✅',
         'label': 'Excelente',
-        'color': 'green'
+        'color': 'green',
     },
     'good': {
         'icon': '✅',
         'label': 'Bueno',
-        'color': 'green'
+        'color': 'green',
     },
     'acceptable': {
         'icon': '⚠️',
         'label': 'Aceptable',
-        'color': 'warning'
+        'color': 'warning',
     },
     'bad': {
         'icon': '❌',
         'label': 'Requiere atención',
-        'color': 'red'
-    }
+        'color': 'red',
+    },
 }
 
 # Umbral crítico para decidir si necesita alineamiento en Paso 4
 VALIDATION_RMS_THRESHOLD = 0.005
 
-# Umbrales para White Reference Comparison
 WHITE_REFERENCE_THRESHOLDS = {
     'excellent': {'rms': 0.002, 'max_diff': 0.005, 'color': '#4caf50'},
     'good': {'rms': 0.005, 'max_diff': 0.01, 'color': '#8bc34a'},
     'acceptable': {'rms': 0.01, 'max_diff': 0.02, 'color': '#ffc107'},
-    'review': {'color': '#f44336'}
+    'review': {'color': '#f44336'},
 }
 
-# Umbrales por defecto para Standard Validation Tool
 DEFAULT_VALIDATION_THRESHOLDS = {
     'correlation': 0.9995,
     'max_diff': 0.015,
-    'rms': 0.010
+    'rms': 0.010,
 }
 
-# Regiones espectrales críticas para análisis (nm)
 CRITICAL_REGIONS = [(1100, 1200), (1400, 1500), (1600, 1700)]
 
-# Límites para interpretación de offset global
 OFFSET_LIMITS = {
     'negligible': 0.001,
     'acceptable': 0.005,
 }
 
 # ============================================================================
-# CONFIGURACIÓN DE INFORMES HTML
+# 12) CONFIGURACIÓN DE INFORMES HTML
 # ============================================================================
 
 REPORT_STYLE = """
@@ -511,10 +517,9 @@ img { max-width: 100%; height: auto; margin: 20px 0; }
 """
 
 # ============================================================================
-# COLORES Y ESTILOS
+# 13) COLORES Y PLANTILLA PLOTLY
 # ============================================================================
 
-# Colores corporativos BUCHI
 BUCHI_COLORS = {
     'primary': '#093A34',
     'secondary': '#289A93',
@@ -524,21 +529,20 @@ BUCHI_COLORS = {
     'danger': '#dc3545',
     'info': '#17a2b8',
     'light': '#f8f9fa',
-    'dark': '#343a40'
+    'dark': '#343a40',
 }
 
-# Configuración de gráficos Plotly
 PLOTLY_TEMPLATE = {
     'layout': {
         'colorway': ['#093A34', '#289A93', '#00BFA5', '#FF6B6B', '#4ECDC4'],
         'font': {'family': 'Segoe UI, Arial, sans-serif'},
         'plot_bgcolor': 'white',
-        'paper_bgcolor': 'white'
+        'paper_bgcolor': 'white',
     }
 }
 
 # ============================================================================
-# INFORMACIÓN DE VERSIÓN
+# 14) INFORMACIÓN DE VERSIÓN
 # ============================================================================
 
 VERSION = "3.1.0"
