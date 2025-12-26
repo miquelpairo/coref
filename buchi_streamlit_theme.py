@@ -15,6 +15,23 @@ def load_shared_report_css() -> str:
         return ""
 
 
+# buchi_streamlit_theme.py
+
+import streamlit as st
+
+
+def load_shared_report_css() -> str:
+    """
+    Carga CSS compartido de informes HTML (para reports descargables).
+    Si no existe el archivo, devuelve string vacío.
+    """
+    try:
+        with open("buchi_report_styles_simple.css", "r", encoding="utf-8") as f:
+            return f.read()
+    except FileNotFoundError:
+        return ""
+
+
 def apply_buchi_styles() -> None:
     """
     Estilos BUCHI en Streamlit (sin romper nada):
@@ -212,6 +229,16 @@ def apply_buchi_styles() -> None:
         .card-teal h3 {{ color: #00897b; }}
         .card-gray h3 {{ color: #546e7a; }}
         .card-lime h3 {{ color: #7CB342; }}
+
+        /* =========================================================
+        NAVIGATION SECTION HEADERS (st.navigation)
+        Service Tools / Application Tools
+        ========================================================= */
+        [data-testid="stSidebar"] [data-testid="stNavSectionHeader"] {{
+            color: #FFFFFF !important;
+            font-weight: 700 !important;
+            opacity: 1 !important;
+        }}
 
         </style>
         """,

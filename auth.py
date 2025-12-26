@@ -14,7 +14,7 @@ def check_password():
         return True
     
     # Mostrar formulario de login
-    st.markdown("# 🔐 Baseline Adjustment Tool")
+    st.markdown("# 🔐 NIR ServiceKit")
     st.markdown("### Acceso Restringido")
     st.markdown("---")
     
