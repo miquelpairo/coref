@@ -40,7 +40,7 @@ apply_buchi_styles()
 if not check_password():
     st.stop()
 
-st.title("✅ TSV Validation Reports")
+st.title("📋 TSV Validation Reports")
 st.markdown("Generación de informes de validación NIR (TSV) con gráficos interactivos y espectros.")
 
 
