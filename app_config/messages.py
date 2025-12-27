@@ -302,21 +302,13 @@ MESSAGES = {
 
 HOME_PAGE = {
     'title': 'NIR ServiceKit',
-    'subtitle': 'Herramientas de calibración y validación para espectrómetros NIR',
+    'subtitle': 'Análisis, calibración y validación de espectrómetros NIR',
     'version': '2.0',
     
     'description': """
-**NIR ServiceKit** es un conjunto de herramientas diseñadas para facilitar el mantenimiento 
-y validación de equipos NIR (Near-Infrared), especialmente NIR Online con detectores DAD.
+**NIR ServiceKit** es un conjunto de herramientas diseñadas para el análisis, mantenimiento 
+y validación de equipos NIR (Near-Infrared) con detectores dioade-array.
 
-Estas aplicaciones ayudan a técnicos de servicio y usuarios en:
-- Ajuste de baseline post-cambio de lámpara
-- Validación de estándares ópticos
-- Corrección de offset fino
-- Comparación y análisis de espectros
-- Comparación de predicciones entre lámparas (SX Center)
-- Consolidación de informes en un metainforme único
-- Generación de informes de validación desde ficheros TSV
 """,
     
     'service_tools': {
@@ -365,7 +357,7 @@ Estas aplicaciones ayudan a técnicos de servicio y usuarios en:
     },
     
     'application_tools': {
-        'section_title': '📊 Application Tools',
+        'section_title': '🧪 Application Tools',
         'section_subtitle': 'Herramientas de análisis y generación de informes',
         
         'spectrum': {
@@ -412,9 +404,9 @@ Estas aplicaciones ayudan a técnicos de servicio y usuarios en:
             'title': '📋 TSV Validation Reports',
             'description': 'Genera informes de validación a partir de ficheros <strong>TSV</strong> (journal) y produce un HTML interactivo.',
             'features': [
-                'Cargar uno o varios TSV',
-                'Limpieza y reorganización automática',
-                'Gráficos interactivos y tabla'
+                'Cargar uno o varios TSV con predicciones y valores de referencia',
+                'Limpieza y reorganización automática de datos',
+                'Gráficos interactivos y estadísticas'
             ],
             'button': '🚀 Abrir TSV Validation Reports',
             'page': 'pages/08_📋_TSV_Validation_Reports.py',
@@ -445,7 +437,7 @@ Estas aplicaciones ayudan a técnicos de servicio y usuarios en:
    - **Detectar offset global del kit**
 
 5. **Offset Adjustment** (Corrección de bias - OPCIONAL):
-   - Si offset global > 0.003 AU
+   - Si offset global > 0.005 AU
    - Simular impacto del offset en estándares
    - Aplicar corrección al baseline
    - Re-exportar baseline final
