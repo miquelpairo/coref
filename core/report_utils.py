@@ -44,17 +44,40 @@ def wrap_chart_in_expandable(chart_html: str, title: str, chart_id: str,
 
 def load_buchi_css() -> str:
     """
-    Carga el CSS corporativo de Buchi con fallback.
+    Carga y consolida todos los archivos CSS corporativos de Buchi.
     
     Returns:
-        str: Contenido CSS
+        str: Contenido CSS completo
     """
-    try:
-        with open('buchi_report_styles.css', 'r', encoding='utf-8') as f:
-            return f.read()
-    except FileNotFoundError:
-        # Fallback CSS básico
-        return """
+    css_files = [
+        'css/base.css',
+        'css/sidebar.css',
+        'css/tables.css',
+        'css/buttons.css',
+        'css/boxes.css',
+        'css/plots.css',
+        'css/tabs.css',
+        'css/consolidator.css',
+        'css/tsv_validation.css',
+        'css/prediction_reports.css',
+        'css/responsive.css'
+    ]
+    
+    consolidated_css = ""
+    
+    for css_file in css_files:
+        try:
+            with open(css_file, 'r', encoding='utf-8') as f:
+                consolidated_css += f"\n/* ===== {css_file} ===== */\n"
+                consolidated_css += f.read()
+                consolidated_css += "\n"
+        except FileNotFoundError:
+            print(f"Warning: CSS file not found: {css_file}")
+            continue
+    
+    # Fallback si no se cargó nada
+    if not consolidated_css:
+        consolidated_css = """
             body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
             .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
             h1, h2, h3 { color: #2c5f3f; }
@@ -68,7 +91,8 @@ def load_buchi_css() -> str:
             .status-warning { color: #ff9800; font-weight: bold; }
             .status-bad { color: #f44336; font-weight: bold; }
         """
-
+    
+    return consolidated_css
 
 def get_sidebar_styles() -> str:
     """
@@ -108,6 +132,7 @@ def get_sidebar_styles() -> str:
             border-radius: 5px;
             font-weight: bold;
             font-size: 14px;
+            font: helvetica;
         }
         .sidebar .sidebar-menu-details summary::-webkit-details-marker {
             display: none;

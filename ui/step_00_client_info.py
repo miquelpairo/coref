@@ -15,6 +15,38 @@ def render_client_info_step():
     """
     Renderiza el formulario de informacion del cliente (Paso 0).
     """
+    # Expander informativo sobre el proceso
+    with st.expander("ℹ️ Información sobre el proceso de ajuste de baseline"):
+        st.markdown("""
+        ### Workflow completo de mantenimiento
+        
+        Este asistente te guiará a través de los siguientes pasos:
+        
+        1. **Información del Cliente** (actual)
+           - Registro de datos del equipo y cliente
+        
+        2. **Diagnóstico Inicial (WSTD)**
+           - Medición de referencia blanca con baseline actual
+           - Caracterización del estado del sensor
+        
+        3. **Validación**
+           - Verificación de alineamiento del equipo
+           - Comprobación de RMS con estándares ópticos
+        
+        4. **Alineamiento de Baseline** (si es necesario)
+           - Cálculo de corrección espectral
+           - Exportación de baseline corregido
+        
+        5. **Informe Final**
+           - Generación de documentación completa
+           - Resumen de métricas y resultados
+        
+        ---
+        
+        **Tiempo estimado:** 15-30 minutos  
+        **Requisitos:** Baseline actual del equipo y mediciones TSV de referencia blanca
+        """)
+    
     st.markdown("## PASO 1 DE 5: Informacion del Cliente")
     st.info(INSTRUCTIONS['client_info'])
     

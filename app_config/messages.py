@@ -24,12 +24,18 @@ Esta información se incluirá en el informe final.
 
     # BACKUP
     'backup': """
-### ⚠️ CRÍTICO: Diagnóstico del Estado Actual
-**Antes de continuar, debes caracterizar cómo está midiendo el equipo actualmente.**
+### ⚠️ Medición de Referencia Pre-Mantenimiento
+**Registra el estado actual del sensor antes de realizar cualquier cambio.**
 
-Lo más importante es documentar el estado actual del sensor para poder alinear correctamente 
-la baseline tras el cambio de lámpara. Una copia de seguridad sin esta información de referencia 
-no sirve para realizar el ajuste.
+El objetivo es establecer una línea base de referencia que nos permita alinear el equipo 
+después del mantenimiento. Al medir el External White con el baseline actual, documentamos 
+cómo está midiendo el sensor ahora, para luego ajustar las mediciones post-mantenimiento 
+a este mismo estado de referencia.
+
+**¿Por qué es importante?**
+- Esta medida será tu punto de referencia para el ajuste posterior
+- Sin esta referencia, no podremos calcular la corrección necesaria
+- Permite mantener la continuidad en las mediciones antes y después del cambio de lámpara
     """,
 
     'backup_procedure': r"""
@@ -57,21 +63,21 @@ no sirve para realizar el ajuste.
 
     # WSTD - DIAGNÓSTICO INICIAL
     'wstd': """
-### 📊 Diagnóstico Inicial del Sensor
-**Objetivo:** Caracterizar el estado actual del sensor antes de realizar cualquier ajuste.
+### 📊 Registro del Estado Actual del Sensor
+**Objetivo:** Documentar cómo está midiendo el sensor actualmente para usarlo como referencia.
 
 **Procedimiento:**
 1. **Comprueba qué archivo de baseline se está usando actualmente** en el equipo y cárgalo
-2. **Mide una referencia blanca** (External White) con el baseline que se está usando. 
-3. **Asigna un ID identificable** a la medición (ej: "WHITE"). Usa el mismo ID en todo el proceso.
-4. **Exporta el archivo TSV** con las mediciones
-5. **Selecciona las filas correspondientes** usando los checkboxes
+2. **Mide una referencia blanca** (External White) con el baseline que se está usando
+3. **Asigna un ID identificable** a la medición (ej: "WHITE"). Usa el mismo ID en todo el proceso
+4. **Exporta el archivo TSV** con las mediciones y cárgalo
+5. **Selecciona las filas correspondientes a la referencia blanca** usando los checkboxes
 
-**¿Qué evaluamos?**
-Las desviaciones del espectro respecto a cero nos indican la línea base actual.
-Esto sirve como referencia para alinear el sensor a la misma línea base.
+**¿Qué registramos?**
+Las desviaciones del espectro respecto a cero representan el estado de referencia actual del sensor.
+Esta medición servirá como punto de comparación para alinear el equipo tras el mantenimiento.
 
-**IMPORTANTE:** Este archivo TSV servirá para alinear la lámpara posteriormente. Se cargará como referencia en el Paso 4.
+**IMPORTANTE:** Este archivo TSV se usará en el Paso 5 para calcular la corrección necesaria y alinear la nueva lámpara al mismo estado de referencia.
     """,
 
     'wstd_file_info': """
@@ -91,7 +97,7 @@ Este archivo es necesario como referencia para el alineamiento de baseline en el
     # VALIDATION
     'validation_objective': """
 ### 🎯 Objetivo
-Verificar si el equipo está correctamente alineado midiendo el White Standard.
+Verificar si el equipo está correctamente alineado al estado de referencia midiendo el White Standard.
 
 **Proceso:**
 1. Mide el White Standard con el baseline actual

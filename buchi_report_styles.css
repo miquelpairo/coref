@@ -1,15 +1,14 @@
 /* ===== NIR ServiceKit - Estilos Corporativos BUCHI ===== */
 /* Archivo orquestador que importa todos los módulos CSS */
 
-@import url('css/base.css');
-@import url('css/sidebar.css');
-@import url('css/tables.css');
-@import url('css/buttons.css');
-@import url('css/boxes.css');
-@import url('css/plots.css');
-@import url('css/tabs.css');
-@import url('css/consolidator.css');
-@import url('css/tsv_validation.css');
-@import url('css/prediction_reports.css');
-@import url('css/responsive.css');
-
+@import url('./css/base.css');
+@import url('./css/sidebar.css');
+@import url('./css/tables.css');
+@import url('./css/buttons.css');
+@import url('./css/boxes.css');
+@import url('./css/plots.css');
+@import url('./css/tabs.css');
+@import url('./css/consolidator.css');
+@import url('./css/tsv_validation.css');
+@import url('./css/prediction_reports.css');
+@import url('./css/responsive.css');
