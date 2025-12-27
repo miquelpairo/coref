@@ -9,9 +9,11 @@ Date: 2025
 """
 
 import streamlit as st
+import streamlit.components.v1 as components
 from auth import check_password
 from buchi_streamlit_theme import apply_buchi_styles
 from app_config.messages import HOME_PAGE
+from css.carousel_styles import CAROUSEL_CSS
 
 # Aplicar estilos corporativos
 apply_buchi_styles()
@@ -19,6 +21,81 @@ apply_buchi_styles()
 # Verificación de autenticación
 if not check_password():
     st.stop()
+
+# ============================================================================
+# FUNCIÓN PARA RENDERIZAR CARRUSEL BOOTSTRAP
+# ============================================================================
+def render_carousel(title, subtitle, items, carousel_id):
+    """
+    Renderiza un carrusel Bootstrap completamente funcional
+    
+    Args:
+        title: Título de la sección
+        subtitle: Subtítulo de la sección
+        items: Lista de diccionarios con tool configs
+        carousel_id: ID único para el carrusel
+    """
+    
+    # Construir slides del carrusel
+    slides_html = ""
+    for idx, tool in enumerate(items):
+        features_html = ''.join([f'<li>{f}</li>' for f in tool['features']])
+        active_class = "active" if idx == 0 else ""
+        
+        slides_html += f"""
+        <div class="carousel-item {active_class}">
+            <div class="d-flex justify-content-center">
+                <div class="card tool-card {tool['card_class']}">
+                    <div class="card-body">
+                        <h5 class="card-title">{tool['title']}</h5>
+                        <p class="card-text">{tool['description']}</p>
+                        <ul class="card-features">
+                            {features_html}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        """
+    
+    # HTML completo autocontenido
+    html_content = f"""
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+        <style>
+            {CAROUSEL_CSS}
+        </style>
+    </head>
+    <body>
+        <h3 class="section-header">{title}</h3>
+        
+        <div id="{carousel_id}" class="carousel slide" data-bs-ride="false">
+            <div class="carousel-indicators">
+                {' '.join([f'<button type="button" data-bs-target="#{carousel_id}" data-bs-slide-to="{i}" {"class=active" if i==0 else ""}></button>' for i in range(len(items))])}
+            </div>
+            
+            <div class="carousel-inner">
+                {slides_html}
+            </div>
+            
+            <button class="carousel-control-prev" type="button" data-bs-target="#{carousel_id}" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon"></span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#{carousel_id}" data-bs-slide="next">
+                <span class="carousel-control-next-icon"></span>
+            </button>
+        </div>
+        
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    </body>
+    </html>
+    """
+    
+    components.html(html_content, height=480, scrolling=False)
 
 # ============================================================================
 # PÁGINA HOME
@@ -29,239 +106,63 @@ st.markdown(f"### {HOME_PAGE['subtitle']}")
 
 st.divider()
 
-# Descripción general
 st.markdown(HOME_PAGE['description'])
 
 st.divider()
 
 # ============================================================================
-# SECCIÓN 1: SERVICE TOOLS
+# CARRUSELES LADO A LADO
 # ============================================================================
-service = HOME_PAGE['service_tools']
-st.markdown(f"## {service['section_title']}")
-st.markdown(f"*{service['section_subtitle']}*")
 
-st.write("")
+# Crear dos columnas para los carruseles
+carousel_col1, carousel_col2 = st.columns(2)
 
-# ---------------------------------------------------------------------------
-# FILA 1 (3 columnas): Baseline | Validation | Offset
-# ---------------------------------------------------------------------------
-col1, col2, col3 = st.columns(3)
-
-# BASELINE
-with col1:
-    tool = service['baseline']
-    features_html = ''.join([f'<li>{f}</li>' for f in tool['features']])
-    st.markdown(
-        f"""
-    <div class="card-container {tool['card_class']}">
-        <h3>{tool['title']}</h3>
-        <p>{tool['description']}</p>
-        <ul>
-            {features_html}
-        </ul>
-    </div>
-    """,
-        unsafe_allow_html=True,
+# COLUMNA 1: SERVICE TOOLS
+with carousel_col1:
+    service = HOME_PAGE['service_tools']
+    
+    service_items = [
+        service['baseline'],
+        service['validation'],
+        service['offset']
+    ]
+    
+    render_carousel(
+        title=service['section_title'],
+        subtitle=service['section_subtitle'],
+        items=service_items,
+        carousel_id="carouselService"
     )
 
-    st.write("")
-    if st.button(
-        tool['button'],
-        key="btn_baseline",
-        use_container_width=True,
-        type="primary",
-    ):
-        st.switch_page(tool['page'])
-
-# VALIDATION
-with col2:
-    tool = service['validation']
-    features_html = ''.join([f'<li>{f}</li>' for f in tool['features']])
-    st.markdown(
-        f"""
-    <div class="card-container {tool['card_class']}">
-        <h3>{tool['title']}</h3>
-        <p>{tool['description']}</p>
-        <ul>
-            {features_html}
-        </ul>
-    </div>
-    """,
-        unsafe_allow_html=True,
+# COLUMNA 2: APPLICATION TOOLS
+with carousel_col2:
+    apps = HOME_PAGE['application_tools']
+    
+    app_items = [
+        apps['spectrum'],
+        apps['predictions'],
+        apps['metareports'],
+        apps['tsv_validation']
+    ]
+    
+    render_carousel(
+        title=apps['section_title'],
+        subtitle=apps['section_subtitle'],
+        items=app_items,
+        carousel_id="carouselApps"
     )
-
-    st.write("")
-    if st.button(
-        tool['button'],
-        key="btn_validation",
-        use_container_width=True,
-        type="primary",
-    ):
-        st.switch_page(tool['page'])
-
-# OFFSET
-with col3:
-    tool = service['offset']
-    features_html = ''.join([f'<li>{f}</li>' for f in tool['features']])
-    st.markdown(
-        f"""
-    <div class="card-container {tool['card_class']}">
-        <h3>{tool['title']}</h3>
-        <p>{tool['description']}</p>
-        <ul>
-            {features_html}
-        </ul>
-    </div>
-    """,
-        unsafe_allow_html=True,
-    )
-
-    st.write("")
-    if st.button(
-        tool['button'],
-        key="btn_offset",
-        use_container_width=True,
-        type="primary",
-    ):
-        st.switch_page(tool['page'])
 
 st.divider()
 
 # ============================================================================
-# SECCIÓN 2: APPLICATION TOOLS
+# WORKFLOW & FOOTER
 # ============================================================================
-apps = HOME_PAGE['application_tools']
-st.markdown(f"## {apps['section_title']}")
-st.markdown(f"*{apps['section_subtitle']}*")
 
-st.write("")
-
-# ---------------------------------------------------------------------------
-# FILA 2 (2 columnas centradas): Spectrum | Predictions
-# ---------------------------------------------------------------------------
-sp3, col4, col5, sp4 = st.columns([0.5, 1, 1, 0.5])
-
-# SPECTRUM COMPARISON
-with col4:
-    tool = apps['spectrum']
-    features_html = ''.join([f'<li>{f}</li>' for f in tool['features']])
-    st.markdown(
-        f"""
-    <div class="card-container {tool['card_class']}">
-        <h3>{tool['title']}</h3>
-        <p>{tool['description']}</p>
-        <ul>
-            {features_html}
-        </ul>
-    </div>
-    """,
-        unsafe_allow_html=True,
-    )
-
-    st.write("")
-    if st.button(
-        tool['button'],
-        key="btn_comparison",
-        use_container_width=True,
-        type="primary",
-    ):
-        st.switch_page(tool['page'])
-
-# PREDICTION REPORTS
-with col5:
-    tool = apps['predictions']
-    features_html = ''.join([f'<li>{f}</li>' for f in tool['features']])
-    st.markdown(
-        f"""
-    <div class="card-container {tool['card_class']}">
-        <h3>{tool['title']}</h3>
-        <p>{tool['description']}</p>
-        <ul>
-            {features_html}
-        </ul>
-    </div>
-    """,
-        unsafe_allow_html=True,
-    )
-
-    st.write("")
-    if st.button(
-        tool['button'],
-        key="btn_predictions",
-        use_container_width=True,
-        type="primary",
-    ):
-        st.switch_page(tool['page'])
-
-# ---------------------------------------------------------------------------
-# FILA 3 (2 tarjetas centradas): MetaReports | TSV Validation Reports
-# ---------------------------------------------------------------------------
-st.write("")
-
-sp1, c1, c2, sp2 = st.columns([0.5, 1, 1, 0.5])
-
-# METAREPORTS
-with c1:
-    tool = apps['metareports']
-    features_html = ''.join([f'<li>{f}</li>' for f in tool['features']])
-    st.markdown(
-        f"""
-    <div class="card-container {tool['card_class']}">
-        <h3>{tool['title']}</h3>
-        <p>{tool['description']}</p>
-        <ul>
-            {features_html}
-        </ul>
-    </div>
-    """,
-        unsafe_allow_html=True,
-    )
-
-    st.write("")
-    if st.button(
-        tool['button'],
-        key="btn_metareports",
-        use_container_width=True,
-        type="primary",
-    ):
-        st.switch_page(tool['page'])
-
-# TSV VALIDATION REPORTS
-with c2:
-    tool = apps['tsv_validation']
-    features_html = ''.join([f'<li>{f}</li>' for f in tool['features']])
-    st.markdown(
-        f"""
-    <div class="card-container {tool['card_class']}">
-        <h3>{tool['title']}</h3>
-        <p>{tool['description']}</p>
-        <ul>
-            {features_html}
-        </ul>
-    </div>
-    """,
-        unsafe_allow_html=True,
-    )
-
-    st.write("")
-    if st.button(
-        tool['button'],
-        key="btn_tsv_validation_reports",
-        use_container_width=True,
-        type="primary",
-    ):
-        st.switch_page(tool['page'])
-
-st.divider()
-
-# Información adicional - Workflow
 st.markdown(f"### {HOME_PAGE['workflow']['title']}")
 st.markdown(HOME_PAGE['workflow']['content'])
 
 st.divider()
 
-# Footer
 footer = HOME_PAGE['footer']
 st.markdown(
     f"""
