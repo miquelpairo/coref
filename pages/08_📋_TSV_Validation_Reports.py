@@ -41,7 +41,50 @@ if not check_password():
     st.stop()
 
 st.title("📋 TSV Validation Reports")
-st.markdown("Generación de informes de validación NIR (TSV) con gráficos interactivos y espectros.")
+st.markdown("## Generación de informes de validación NIR (TSV) con gráficos interactivos y espectros.")
+
+# Información de uso
+with st.expander("ℹ️ Instrucciones de Uso"):
+    st.markdown("""
+    ### Cómo usar TSV Validation Reports:
+    
+    **1. Cargar Archivos TSV:**
+    - Sube uno o varios archivos TSV (export/journal de NIR-Online)
+    - Los archivos pueden estar en formato estándar o journal
+    - Soporta carga múltiple para procesamiento batch
+    
+    **2. Filtrar por Fechas (Opcional):**
+    - Define rango de fechas para filtrar las mediciones
+    - Útil para analizar períodos específicos de validación
+    - Deja vacío para procesar todas las fechas
+    
+    **3. Procesamiento Automático:**
+    - La herramienta limpia y reorganiza los datos (tipo Node-RED)
+    - Elimina filas con todos los resultados en cero
+    - Reorganiza columnas: Reference, Result, Residuum por parámetro
+    - Convierte formatos de fecha automáticamente
+    
+    **4. Generación de Reportes:**
+    - Presiona **"Procesar y Generar Reportes"**
+    - Genera informes HTML interactivos con:
+        - Resumen estadístico (R², RMSE, BIAS, N)
+        - Gráficos por parámetro (Parity, Residuum vs N, Histograma)
+        - Plot de espectros NIR (columnas #1..#n)
+        - Tabla de datos con filtrado por columnas
+        - Sidebar de navegación estilo BUCHI
+    
+    **5. Descargar Resultados:**
+    - HTML: Reporte completo interactivo con Plotly + DataTables
+    - CSV: Datos limpios y reorganizados
+    - ZIP: Descarga todos los reportes si procesas múltiples archivos
+    
+    **Características:**
+    - ✅ Gráficos interactivos con Plotly (zoom, pan, hover)
+    - ✅ Tabla de datos con búsqueda y filtrado
+    - ✅ Diseño corporativo BUCHI con sidebar de navegación
+    - ✅ Soporte para múltiples parámetros simultáneos
+    - ✅ Vista de espectros completos NIR
+    """)
 
 
 # =============================================================================
@@ -795,17 +838,13 @@ def generate_html_report(df: pd.DataFrame, file_name: str) -> str:
 # STREAMLIT UI
 # =============================================================================
 
+
 st.markdown("---")
-st.markdown(
+st.info(
     """
-### 🧭 Cómo funciona
 1. **Carga** uno o varios archivos TSV
 2. **Opcionalmente filtra** por rango de fechas
-3. La app **limpia y procesa** los datos automáticamente
-4. **Genera** reportes HTML interactivos con Plotly + DataTables + Sidebar BUCHI
-5. **Descarga** HTML + CSV limpio (y ZIP si subes varios)
 
-📌 **Nuevo:** Filtrado por fechas + plot de espectros si el TSV contiene columnas `#1..#n`
 """
 )
 

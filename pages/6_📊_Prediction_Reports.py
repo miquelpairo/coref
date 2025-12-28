@@ -18,7 +18,6 @@ from utils.prediction_charts import (
     create_comparison_plots,
     create_detailed_comparison,
     create_box_plots,
-    create_scatter_plots
 )
 from utils.prediction_reports import generate_html_report, generate_text_report
 from datetime import datetime
@@ -29,11 +28,43 @@ from auth import check_password
 apply_buchi_styles()
 
 st.title("📊 Prediction Reports")
-st.markdown("Análisis comparativo de predicciones NIR entre diferentes lámparas")
+st.markdown("## Análisis comparativo de predicciones NIR entre diferentes lámparas")
 
 # VERIFICACIÓN DE AUTENTICACIÓN
 if not check_password():
     st.stop()
+
+# Información de uso
+with st.expander("ℹ️ Instrucciones de Uso"):
+    st.markdown("""
+    ### Cómo usar Prediction Reports:
+    
+    **1. Cargar Archivo XML:**
+    - Sube el archivo XML generado por NIR-Online
+    - El sistema extraerá automáticamente productos y lámparas
+    
+    **2. Seleccionar Datos:**
+    - Elige los productos a analizar
+    - Filtra por IDs y lámparas específicas
+    - Genera el análisis estadístico
+    
+    **3. Explorar Resultados:**
+    - **Comparación Detallada**: Medias por producto y parámetro
+    - **Diferencias**: Cambios porcentuales respecto a baseline
+    - **Box Plots**: Distribución completa de mediciones
+    - **Reporte**: Informe completo en texto
+    
+    **4. Generar Reportes:**
+    - Descarga el informe en formato TXT
+    - Genera un reporte HTML interactivo con todos los gráficos
+    
+    **Formato del archivo:**
+    - **Tipo**: XML de NIR-Online
+    - **Estructura**: Múltiples worksheets (uno por producto)
+    - **Columnas requeridas**: No, ID, Note, Product, Method, parámetros numéricos
+    """)
+
+st.markdown("---")
 
 # Inicializar session state específico
 if 'pred_analyzer' not in st.session_state:
@@ -47,7 +78,7 @@ if 'pred_stats' not in st.session_state:
 # SECCIÓN 1: CARGA DE ARCHIVO
 # ==============================================================================
 
-st.markdown("### 1️⃣ Cargar archivo de predicciones")
+st.info("1. Cargar archivo de predicciones")
 
 col1, col2 = st.columns([3, 1])
 
@@ -87,7 +118,7 @@ if st.session_state.pred_analyzer is not None:
     analyzer = st.session_state.pred_analyzer
     
     st.markdown("---")
-    st.markdown("### 2️⃣ Selección de datos para análisis")
+    st.info("2. Selección de datos para análisis")
     
     # Selección de productos
     selected_products = st.multiselect(
@@ -177,11 +208,10 @@ if st.session_state.pred_stats is not None:
     st.markdown("## 📊 Resultados del Análisis")
     
     # Tabs para diferentes visualizaciones
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    tab1, tab2, tab3, tab4 = st.tabs([
         "📊 Comparación Detallada",
         "📈 Diferencias entre Lámparas",
         "📦 Box Plots",
-        "🔍 Scatter Plots",
         "📄 Reporte Completo"
     ])
     
@@ -222,14 +252,6 @@ if st.session_state.pred_stats is not None:
             st.plotly_chart(fig_box, use_container_width=True)
     
     with tab4:
-        st.subheader("Relación entre Parámetros")
-        st.markdown("Scatter plots para visualizar correlaciones entre parámetros")
-        
-        fig_scatter = create_scatter_plots(stats)
-        if fig_scatter:
-            st.plotly_chart(fig_scatter, use_container_width=True)
-    
-    with tab5:
         st.subheader("Informe Completo en Texto")
         st.markdown("Reporte detallado con todas las estadísticas y comparaciones")
         
@@ -289,34 +311,3 @@ if st.session_state.pred_stats is not None:
 
 else:
     st.info("👆 Carga un archivo XML y genera el análisis para ver los resultados")
-    
-    with st.expander("ℹ️ Información de Uso"):
-        st.markdown("""
-        ### Cómo usar Prediction Reports:
-        
-        1. **Cargar Archivo XML**: 
-           - Sube el archivo XML generado por NIR-Online
-           - El sistema extraerá automáticamente productos y lámparas
-        
-        2. **Seleccionar Datos**:
-           - Elige los productos a analizar
-           - Filtra por IDs y lámparas específicas
-           - Genera el análisis estadístico
-        
-        3. **Explorar Resultados**:
-           - **Comparación Detallada**: Medias por producto y parámetro
-           - **Diferencias**: Cambios porcentuales respecto a baseline
-           - **Box Plots**: Distribución completa de mediciones
-           - **Scatter Plots**: Correlaciones entre parámetros
-           - **Reporte**: Informe completo en texto
-        
-        4. **Generar Reportes**:
-           - Descarga el informe en formato TXT
-           - Genera un reporte HTML interactivo con todos los gráficos
-        
-        ### Formato del archivo:
-        - **Tipo**: XML de NIR-Online
-        - **Estructura**: Múltiples worksheets (uno por producto)
-        - **Columnas requeridas**: No, ID, Note, Product, Method, parámetros numéricos
-        """)
-

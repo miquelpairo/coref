@@ -57,24 +57,46 @@ if not check_password():
 
 def main():
     st.title("🎚️ Baseline Offset Adjustment")
-    st.markdown("**Aplicar corrección de offset vertical al baseline**")
+    st.markdown("## Aplicar corrección de offset vertical al baseline")
     
-    # Info inicial
-    st.info("""
-    Esta herramienta permite aplicar una corrección de offset uniforme al baseline,
-    preservando completamente la forma espectral.
-    
-    **Casos de uso:**
-    - Fine-tuning después de validación con estándares ópticos
-    - Corrección de bias sistemático detectado en mediciones
-    - Ajuste manual para minimizar diferencias con equipo de referencia
-    
-    **Ventajas del ajuste por offset:**
-    - ✅ Preserva la forma espectral (no distorsiona)
-    - ✅ Simple y predecible
-    - ✅ Fácil de revertir
-    - ✅ Bajo riesgo de introducir artefactos
-    """)
+    # Información de uso
+    with st.expander("ℹ️ Instrucciones de Uso"):
+        st.markdown("""
+        ### Cómo usar Baseline Offset Adjustment:
+        
+        **1. Cargar Estándares Ópticos:**
+        - Sube dos archivos TSV con mediciones de estándares
+        - **Referencia**: Mediciones con baseline antigua (pre-mantenimiento)
+        - **Actual**: Mediciones con baseline nueva (post-mantenimiento)
+        - Selecciona los estándares a incluir en el cálculo
+        
+        **2. Analizar Offset Global:**
+        - Revisa las métricas de validación del kit completo
+        - Observa el offset global detectado entre referencias
+        - Ajusta el valor de offset en el sidebar según el análisis
+        
+        **3. Cargar Baseline a Ajustar:**
+        - Sube el archivo de baseline (.ref o .csv) que deseas corregir
+        - Visualiza la comparación antes/después del ajuste
+        
+        **4. Aplicar y Exportar:**
+        - Exporta el baseline ajustado en formato .ref o .csv
+        - Los metadatos y cabeceras originales se preservan
+        
+        **5. Generar Informe (Opcional):**
+        - Completa información del servicio (sensor, cliente, técnico)
+        - Descarga informe HTML con análisis completo del ajuste
+        
+        **Ventajas del Ajuste por Offset:**
+        - ✅ Preserva completamente la forma espectral
+        - ✅ Simple, predecible y fácil de revertir
+        - ✅ Bajo riesgo de introducir artefactos
+        
+        **Casos de Uso Apropiados:**
+        - Fine-tuning después de validación con estándares
+        - Corrección de bias sistemático detectado
+        - Alineamiento con equipo de referencia
+        """)
     
     st.divider()
     
@@ -181,12 +203,11 @@ def main():
     # ==========================================
     # SECCIÓN 1: CARGAR TSV Y SELECCIÓN DE ESTÁNDARES
     # ==========================================
-    st.markdown("### 1️⃣ Cargar Estándares Ópticos y Selección")
+    st.markdown("### 1. Cargar Estándares Ópticos y Selección")
     
     standards_loaded = render_standards_upload_and_selection_section()
     
     if not standards_loaded:
-        st.warning("👇 Carga los archivos TSV para continuar")
         return
     
     st.divider()
@@ -194,7 +215,7 @@ def main():
     # ==========================================
     # SECCIÓN 2: ANÁLISIS GLOBAL DEL KIT
     # ==========================================
-    st.markdown("### 2️⃣ Análisis Global del Kit")
+    st.markdown("### 2. Análisis Global del Kit")
     
     render_global_kit_analysis_section(thresholds)
     
@@ -261,9 +282,6 @@ def render_standards_upload_and_selection_section():
     Carga dos archivos TSV con mediciones de estándares ópticos para calcular 
     el offset necesario basado en la comparación espectral.
     
-    **Uso típico:**
-    - Referencia: Mediciones con baseline antigua (antes de mantenimiento)
-    - Actual: Mediciones con baseline nueva (después de mantenimiento)
     """)
     
     col1, col2 = st.columns(2)

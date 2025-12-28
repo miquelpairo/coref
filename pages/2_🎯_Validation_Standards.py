@@ -50,19 +50,40 @@ if not check_password():
 
 def main():
     st.title("🎯 Standard Validation Tool")
-    st.markdown("**Validación automática de estándares ópticos post-mantenimiento**")
+    st.markdown("## Validación automática de estándares ópticos")
     
-    # Info inicial
-    st.info("""
-    Esta herramienta valida que el alineamiento espectral del equipo se mantiene 
-    correcto después de realizar mantenimiento (ej: cambio de lámpara).
-    
-    **Proceso:**
-    1. Carga archivos TSV con mediciones antes y después del mantenimiento
-    2. Selecciona los estándares a validar
-    3. Analiza automáticamente la correlación y diferencias espectrales
-    4. Genera informe detallado con resultados
-    """)
+    # Información de uso
+    with st.expander("ℹ️ Instrucciones de Uso"):
+        st.markdown("""
+        ### Cómo usar Standard Validation Tool:
+        
+        **1. Preparación:**
+        - Realiza mediciones de estándares ópticos ANTES del mantenimiento
+        - Exporta las mediciones como archivo TSV (Referencia)
+        
+        **2. Mantenimiento:**
+        - Realiza el cambio de lámpara u otro mantenimiento
+        - Instala el nuevo baseline corregido
+        
+        **3. Verificación:**
+        - Mide los mismos estándares con el nuevo baseline
+        - Exporta las mediciones como archivo TSV (Post-mantenimiento)
+        
+        **4. Validación Automática:**
+        - Carga ambos archivos TSV en esta herramienta
+        - Selecciona los estándares a validar
+        - Analiza correlación espectral, diferencias y shifts
+        - Genera informe HTML completo con resultados
+        
+        **5. Configuración (Sidebar):**
+        - Ajusta umbrales de validación según tus requisitos
+        - **Por defecto**: Correlación ≥ 0.999, Max Δ ≤ 0.02 AU, RMS ≤ 0.015
+        
+        **Regiones Espectrales Críticas Analizadas:**
+        - **1100-1200 nm**: Enlaces O-H (hidroxilos)
+        - **1400-1500 nm**: Agua / Humedad  
+        - **1600-1700 nm**: Enlaces C-H (grupos metilo)
+        """)
     
     st.divider()
     
@@ -135,9 +156,6 @@ def main():
     st.info("""
     Carga dos archivos TSV con mediciones de estándares ópticos:
 
-    **Uso típico:**
-    - **Referencia**: Mediciones con baseline antigua (antes de mantenimiento)
-    - **Actual**: Mediciones con baseline nueva (después de mantenimiento)
     """)
 
     col1, col2 = st.columns(2)
@@ -162,7 +180,6 @@ def main():
     
     # Área principal
     if not ref_file or not curr_file:
-        st.info("👆 Carga ambos archivos para comenzar")
         
         with st.expander("📖 Guía de Uso", expanded=True):
             st.markdown("""

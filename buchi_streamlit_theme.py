@@ -224,6 +224,96 @@ def apply_buchi_styles() -> None:
         .card-gray h3 {{ color: #546e7a; }}
         .card-lime h3 {{ color: #7CB342; }}
 
+        /* =========================================================
+           MULTISELECT TAGS - Gris claro con texto negro
+           ========================================================= */
+        /* Tags seleccionados */
+        .stMultiSelect [data-baseweb="tag"] {{
+            background-color: #e0e0e0 !important;
+            color: #000000 !important;
+        }}
+        
+        .stMultiSelect [data-baseweb="tag"] span {{
+            color: #000000 !important;
+        }}
+        
+        /* Botón X de cerrar tag */
+        .stMultiSelect [data-baseweb="tag"] svg {{
+            fill: #000000 !important;
+        }}
+        
+        /* Hover en tags */
+        .stMultiSelect [data-baseweb="tag"]:hover {{
+            background-color: #d0d0d0 !important;
+        }}
+        
+        /* =========================================================
+           ENCABEZADOS GLOBALES - ESTANDARIZACIÓN
+           ========================================================= */
+        /* H1 - Título principal */
+        h1 {{
+            font-size: 2.5rem !important;
+            font-weight: 700 !important;
+            color: #093A34 !important;
+            margin-bottom: 0.5rem !important;
+        }}
+        
+        /* H2 - Subtítulos principales */
+        h2 {{
+            font-size: 1.75rem !important;
+            font-weight: 600 !important;
+            color: #093A34 !important;
+            margin-top: 1.5rem !important;
+            margin-bottom: 0.75rem !important;
+        }}
+        
+        /* H3 - Secciones */
+        h3 {{
+            font-size: 1.5rem !important;
+            font-weight: 600 !important;
+            color: #289A93 !important;
+            margin-top: 1rem !important;
+            margin-bottom: 0.5rem !important;
+        }}
+        
+        /* H4 - Subsecciones */
+        h4 {{
+            font-size: 1.25rem !important;
+            font-weight: 500 !important;
+            color: #093A34 !important;
+            margin-top: 0.75rem !important;
+            margin-bottom: 0.5rem !important;
+        }}
+        
+        /* Markdown headers en main content */
+        .main h1 {{
+            font-size: 2.5rem !important;
+            font-weight: 700 !important;
+        }}
+        
+        .main h2 {{
+            font-size: 1.75rem !important;
+            font-weight: 600 !important;
+        }}
+        
+        .main h3 {{
+            font-size: 1.5rem !important;
+            font-weight: 600 !important;
+        }}
+        
+        .main h4 {{
+            font-size: 1.25rem !important;
+            font-weight: 500 !important;
+        }}
+        
+        /* Headers en sidebar - sobrescribir si es necesario */
+        [data-testid="stSidebar"] h1,
+        [data-testid="stSidebar"] h2,
+        [data-testid="stSidebar"] h3,
+        [data-testid="stSidebar"] h4 {{
+            color: #FFFFFF !important;
+        }}
+        
         </style>
         """,
         unsafe_allow_html=True,

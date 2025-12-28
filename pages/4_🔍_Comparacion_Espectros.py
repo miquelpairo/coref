@@ -56,9 +56,41 @@ def main():
     """Función principal de la aplicación."""
     
     st.title("📊 NIR Spectrum Comparison Tool")
-    st.markdown("**Herramienta de comparación de espectros NIR - COREF Suite**")
-    st.divider()
-    
+    st.markdown("## Herramienta de comparación de espectros NIR")
+
+    # Información de uso
+    with st.expander("ℹ️ Instrucciones de Uso"):
+        st.markdown("""
+        ### Cómo usar NIR Spectrum Comparison Tool:
+        
+        **1. Cargar Archivos TSV:**
+        - Sube entre 1 y 10 archivos TSV con datos espectrales NIR
+        - Los archivos deben contener columnas numéricas con datos de absorbancia
+        
+        **2. Seleccionar Mediciones:**
+        - Para cada archivo, marca las filas que quieres comparar
+        - Usa los filtros de búsqueda para encontrar IDs o Notes específicos
+        - **Agrupar réplicas**: Promedia automáticamente mediciones con mismo ID y Note
+        - Presiona **✔️ Confirmar** para activar la selección
+        
+        **3. Modo White Reference:**
+        - Activa umbrales estrictos para validación de referencias blancas
+        - Criterios: RMS < 0.005 AU (excelente), < 0.010 AU (bueno)
+        - Oculta matriz de correlación (no relevante para whites)
+        
+        **4. Explorar Resultados:**
+        - **Overlay**: Visualiza todos los espectros simultáneamente
+        - **Residuales**: Compara contra cualquier espectro de referencia
+        - **Estadísticas**: Métricas clave (media, SD, min, max) por espectro
+        - **Matriz RMS**: Cuantifica diferencias entre todos los pares
+        
+        **Requisitos:**
+        - Mínimo 2 espectros seleccionados
+        - Todos los espectros deben tener el mismo número de canales
+        """)
+
+    st.divider() 
+
     # Sidebar (solo info)
     with st.sidebar:
         st.header("ℹ️ Información")
@@ -75,7 +107,7 @@ def main():
         """)
     
     # Área principal - File uploader
-    st.subheader("📁 Cargar Archivos")
+    st.info("Carga los archivos TSV")
     
     uploaded_files = st.file_uploader(
         "Selecciona archivos TSV",
