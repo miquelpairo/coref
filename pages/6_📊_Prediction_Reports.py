@@ -19,7 +19,7 @@ from utils.prediction_charts import (
     create_detailed_comparison,
     create_box_plots,
 )
-from utils.prediction_reports import generate_html_report, generate_text_report
+from utils.prediction_reports import generate_html_report
 from datetime import datetime
 from buchi_streamlit_theme import apply_buchi_styles
 from auth import check_password
@@ -209,11 +209,10 @@ if st.session_state.pred_stats is not None:
     st.markdown("## 📊 Resultados del Análisis")
     
     # Tabs para diferentes visualizaciones
-    tab1, tab2, tab3, tab4 = st.tabs([
+    tab1, tab2, tab3 = st.tabs([
         "📊 Comparación Detallada",
         "📈 Diferencias entre Lámparas",
         "📦 Box Plots",
-        "📄 Reporte Completo"
     ])
     
     with tab1:
@@ -252,61 +251,94 @@ if st.session_state.pred_stats is not None:
         if fig_box:
             st.plotly_chart(fig_box, use_container_width=True)
     
-    with tab4:
-        st.subheader("Informe Completo en Texto")
-        st.markdown("Reporte detallado con todas las estadísticas y comparaciones")
-        
-        report_text = generate_text_report(stats, analyzer)
-        
-        col1, col2 = st.columns([4, 1])
-        with col1:
-            st.text_area("Reporte:", report_text, height=600, key='text_report_area')
-        
-        with col2:
-            st.download_button(
-                label="💾 Descargar TXT",
-                data=report_text,
-                file_name=f"DIFERENCIAS ENTRE LAMPARAS_informe_nir_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
-                mime="text/plain",
-                key='download_txt'
-            )
-    
+  
     # ==============================================================================
-    # SECCIÓN 4: DESCARGA DE REPORTE HTML
+    # SECCIÓN 4: GENERACIÓN DE INFORME HTML
     # ==============================================================================
     
     st.markdown("---")
-    st.markdown("### 📥 Generar Reporte HTML Completo")
-    st.markdown("Crea un reporte HTML interactivo con todos los gráficos y análisis")
+    st.markdown("### 📥 Generar Informe HTML Completo")
+    st.info("""
+    Completa la información del servicio para generar un informe HTML profesional 
+    con todos los gráficos y análisis estadísticos.
+    """)
     
-    col1, col2, col3 = st.columns([2, 1, 1])
+    st.markdown("#### 📋 Información del Servicio")
+    
+    col1, col2 = st.columns(2)
     
     with col1:
-        # Generar nombre del archivo
-        lamps_str = "_".join(all_lamps[:3])  # Primeras 3 lámparas
-        if len(all_lamps) > 3:
-            lamps_str += f"_and_{len(all_lamps)-3}_more"
+        sensor_serial_input = st.text_input(
+            "Número de Serie del Sensor:",
+            value=analyzer.sensor_serial if analyzer.sensor_serial else "",
+            placeholder="Ej: NIR-2024-001",
+            help="Número de serie único del equipo NIR",
+            key="sensor_serial_input"
+        )
         
-        sensor_serial = analyzer.sensor_serial if analyzer.sensor_serial else "sensor"
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        filename = f"PREDICTIONS_REPORT_{sensor_serial}_{lamps_str}_{timestamp}.html"
-        
-        st.info(f"📄 **Nombre del archivo:** `{filename}`")
+        customer_name = st.text_input(
+            "Cliente:",
+            placeholder="Ej: Universidad de Barcelona",
+            help="Nombre del cliente o institución",
+            key="customer_name_input"
+        )
     
     with col2:
-        if st.button("🔄 Generar HTML", key='generate_html_btn', type="primary"):
-            with st.spinner("Generando reporte HTML..."):
-                html_content = generate_html_report(stats, analyzer, filename)
-                st.session_state.html_report = html_content
-                st.success("✅ HTML generado!")
+        technician_name = st.text_input(
+            "Técnico Responsable:",
+            placeholder="Ej: Juan Pérez",
+            help="Nombre del técnico que realizó el análisis",
+            key="technician_name_input"
+        )
+        
+        service_notes = st.text_area(
+            "Notas del Análisis:",
+            placeholder="Ej: Comparación de lámparas halógenas para validación de calibración...",
+            help="Observaciones relevantes del análisis realizado",
+            height=100,
+            key="service_notes_input"
+        )
     
-    with col3:
-        if 'html_report' in st.session_state:
-            st.download_button(
-                label="⬇️ Descargar HTML",
-                data=st.session_state.html_report,
-                file_name=filename,
-                mime="text/html",
-                key='download_html'
-            )
+    st.markdown("---")
+    
+    # Botón de generación centrado
+    col1, col2, col3 = st.columns([1, 2, 1])
+    
+    with col2:
+        if st.button("📥 Generar Informe HTML", type="primary", use_container_width=True, key="generate_report_btn"):
+            if not sensor_serial_input or not customer_name or not technician_name:
+                st.error("❌ Por favor completa los campos obligatorios: Número de Serie, Cliente y Técnico")
+            else:
+                with st.spinner("⏳ Generando informe completo..."):
+                    try:
+                        # Generar nombre del archivo
+                        lamps_str = "_".join(all_lamps[:3])
+                        if len(all_lamps) > 3:
+                            lamps_str += f"_and_{len(all_lamps)-3}_more"
+                        
+                        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                        filename = f"PREDICTIONS_REPORT_{sensor_serial_input.replace(' ', '_')}_{lamps_str}_{timestamp}.html"
+                        
+                        # Actualizar sensor_serial en analyzer si se proporcionó
+                        if sensor_serial_input:
+                            analyzer.sensor_serial = sensor_serial_input
+                        
+                        html_content = generate_html_report(stats, analyzer, filename)
+                        
+                        st.success("✅ Informe generado correctamente")
+                        
+                        st.download_button(
+                            label="💾 Descargar Informe HTML",
+                            data=html_content,
+                            file_name=filename,
+                            mime="text/html",
+                            use_container_width=True,
+                            key='download_html_final'
+                        )
+                        
+                    except Exception as e:
+                        st.error(f"❌ Error al generar informe: {str(e)}")
+                        with st.expander("🔍 Ver detalles del error"):
+                            import traceback
+                            st.code(traceback.format_exc())
 

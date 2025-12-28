@@ -904,7 +904,7 @@ if uploaded_files:
     # ========================================================================
     # PROCESAMIENTO
     # ========================================================================
-    if st.button("🚀 Procesar y Generar Reportes", type="primary"):
+    if st.button("📥 Procesar y Generar Reportes", type="primary", use_container_width=True, key="process_tsv_btn"):
         results: List[ReportResult] = []
         progress_bar = st.progress(0)
         status_text = st.empty()

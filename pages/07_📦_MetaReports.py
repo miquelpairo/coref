@@ -337,10 +337,10 @@ def main():
     
     st.markdown("---")
     
-    # Botón de generación
+    # Botón de generación centrado
     col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
     with col_btn2:
-        if st.button("🚀 Generar Informe Consolidado", use_container_width=True):
+        if st.button("📥 Generar Informe Consolidado", type="primary", use_container_width=True, key="generate_consolidated_btn"):
             generate_consolidated_report(
                 baseline_html, 
                 validation_html, 

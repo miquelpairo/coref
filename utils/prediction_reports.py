@@ -95,8 +95,8 @@ def calculate_lamp_differences(stats, analyzer):
 
 def generate_differences_section(differences_data, stats, analyzer):
     """
-    Genera HTML para la sección de diferencias por producto con carrusel.
-    Cada producto es un slide del carrusel.
+    Genera HTML para la sección de diferencias por producto con pestañas.
+    Cada producto es una pestaña.
     
     Args:
         differences_data (dict): Datos de diferencias calculadas
@@ -113,34 +113,41 @@ def generate_differences_section(differences_data, stats, analyzer):
             <em>Análisis comparativo detallado entre lámparas para cada producto.</em>
         </p>
         
-        <div id="carousel-differences" class="carousel slide" data-ride="carousel" data-interval="false">
+        <ul class="nav nav-tabs" id="differences-tabs" role="tablist">
     """
     
-    # Indicadores del carrusel
-    num_products = len(differences_data)
-    if num_products > 1:
-        html += '<ol class="carousel-indicators">'
-        for idx in range(num_products):
-            active_class = "active" if idx == 0 else ""
-            html += f'<li data-target="#carousel-differences" data-slide-to="{idx}" class="{active_class}"></li>'
-        html += '</ol>'
+    # Generar pestañas
+    for idx, product in enumerate(differences_data.keys()):
+        active_class = "active" if idx == 0 else ""
+        product_id = product.replace(' ', '-').replace('/', '-')
+        html += f"""
+                <li class="nav-item">
+                    <a class="nav-link {active_class}" id="diff-tab-{product_id}" data-toggle="tab"
+                       href="#diff-content-{product_id}" role="tab">{product}</a>
+                </li>
+        """
     
-    html += '<div class="carousel-inner">'
+    html += """
+            </ul>
+            
+            <div class="tab-content" id="differences-tabs-content">
+    """
     
-    # Cada producto es un slide
-    for product_idx, (product, product_data) in enumerate(differences_data.items()):
-        active_class = "active" if product_idx == 0 else ""
+    # Generar contenido de cada pestaña
+    for idx, (product, product_data) in enumerate(differences_data.items()):
+        active_class = "show active" if idx == 0 else ""
+        product_id = product.replace(' ', '-').replace('/', '-')
         baseline_lamp = product_data['baseline_lamp']
         comparisons = product_data['comparisons']
         
         html += f"""
-            <div class="carousel-item {active_class}">
-                <div class="product-section">
-                    <h3 class="product-title">🔬 {product}</h3>
-                    <p class="text-caption-small">
-                        <strong>Lámpara Baseline:</strong> {baseline_lamp} 
-                        (N = {comparisons[0]['n_baseline'] if comparisons else 'N/A'})
-                    </p>
+                <div class="tab-pane fade {active_class}" id="diff-content-{product_id}" role="tabpanel">
+                    <div class="product-section" style="margin-top: 20px;">
+                        <h3 class="product-title">🔬 {product}</h3>
+                        <p class="text-caption-small">
+                            <strong>Lámpara Baseline:</strong> {baseline_lamp} 
+                            (N = {comparisons[0]['n_baseline'] if comparisons else 'N/A'})
+                        </p>
         """
         
         # Todas las comparaciones de este producto
@@ -184,26 +191,26 @@ def generate_differences_section(differences_data, stats, analyzer):
             ]
             
             html += f"""
-                    <h4 style="margin-top: 20px;">📍 {comp_lamp} vs {baseline_lamp} (N = {n_compared})</h4>
-                    
-                    <div class="table-overflow">
-                        <table class="comparison-table">
-                            <thead>
-                                <tr>
+                        <h4 style="margin-top: 20px;">📍 {comp_lamp} vs {baseline_lamp} (N = {n_compared})</h4>
+                        
+                        <div class="table-overflow">
+                            <table class="comparison-table">
+                                <thead>
+                                    <tr>
             """
             
             for col in columns:
                 align = col.get('align', 'left')
-                html += f'<th style="text-align: {align};">{col["header"]}</th>'
+                html += f'                                        <th style="text-align: {align};">{col["header"]}</th>\n'
             
             html += """
-                                </tr>
-                            </thead>
-                            <tbody>
+                                    </tr>
+                                </thead>
+                                <tbody>
             """
             
             for row in table_data:
-                html += "<tr>"
+                html += "                                    <tr>\n"
                 for col in columns:
                     key = col['key']
                     value = row[key]
@@ -213,175 +220,27 @@ def generate_differences_section(differences_data, stats, analyzer):
                     if 'format' in col and isinstance(value, (int, float)):
                         value = col['format'].format(value)
                     
-                    html += f'<td style="text-align: {align};">{value}</td>'
+                    html += f'                                        <td style="text-align: {align};">{value}</td>\n'
                 
-                html += "</tr>"
+                html += "                                    </tr>\n"
             
             html += """
-                            </tbody>
-                        </table>
-                    </div>
+                                </tbody>
+                            </table>
+                        </div>
             """
         
         html += """
+                    </div>
                 </div>
-            </div>
-        """
-    
-    html += '</div>'  # Cierra carousel-inner
-    
-    # Controles del carrusel (solo si hay más de 1 producto)
-    if num_products > 1:
-        html += """
-            <a class="carousel-control-prev" href="#carousel-differences" role="button" data-slide="prev">
-                <span class="carousel-control-prev-icon"></span>
-            </a>
-            <a class="carousel-control-next" href="#carousel-differences" role="button" data-slide="next">
-                <span class="carousel-control-next-icon"></span>
-            </a>
         """
     
     html += """
+            </div>
         </div>
-    </div>
     """
     
     return html
-
-
-
-def generate_text_report(stats, analyzer):
-    """
-    Generar reporte de texto completo.
-    
-    Args:
-        stats (dict): Estadísticas por producto y lámpara
-        analyzer: Objeto analizador con los datos
-        
-    Returns:
-        str: Reporte en texto plano
-    """
-    report = []
-    report.append("=" * 120)
-    report.append("INFORME COMPARATIVO DE LÁMPARAS NIR")
-    report.append("Análisis de Predicciones - Reporte Completo")
-    report.append("=" * 120)
-    report.append("")
-    report.append(f"Fecha de generación: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
-    
-    if analyzer.sensor_serial:
-        report.append(f"Sensor NIR: {analyzer.sensor_serial}")
-    
-    report.append("")
-    
-    lamps = set()
-    for product_stats in stats.values():
-        lamps.update(product_stats.keys())
-    lamps = sorted(list(lamps))
-    
-    report.append("LÁMPARAS COMPARADAS:")
-    for lamp in lamps:
-        report.append(f"  • {lamp}")
-    report.append("")
-    
-    for product, product_stats in stats.items():
-        report.append("-" * 120)
-        report.append(f"PRODUCTO: {product.upper()}")
-        report.append("-" * 120)
-        report.append("")
-        
-        if product in analyzer.data:
-            df = analyzer.data[product]
-            excluded_cols = ['No', 'ID', 'Note', 'Product', 'Method', 'Unit', 'Begin', 'End', 'Length']
-            if len(df.columns) > 1:
-                excluded_cols.append(df.columns[1])
-            params = [col for col in df.columns if col not in excluded_cols]
-        else:
-            params = set()
-            for lamp_stats in product_stats.values():
-                params.update([k for k in lamp_stats.keys() if k not in ['n', 'note']])
-            params = sorted(list(params))
-        
-        report.append("RESULTADOS DE PREDICCIÓN:")
-        report.append("")
-        
-        for lamp, lamp_stats in product_stats.items():
-            report.append(f"  Lámpara: {lamp} (N={lamp_stats['n']})")
-            report.append("  " + "-" * 100)
-            
-            for param in params:
-                if param in lamp_stats:
-                    mean = lamp_stats[param]['mean']
-                    std = lamp_stats[param]['std']
-                    min_val = lamp_stats[param]['min']
-                    max_val = lamp_stats[param]['max']
-                    report.append(f"    {param:<25} {mean:>10.3f} ± {std:<8.3f}   (min: {min_val:>8.3f}, max: {max_val:>8.3f})")
-            
-            report.append("")
-        
-        if len(lamps) >= 2:
-            report.append("  ANÁLISIS DE DIFERENCIAS:")
-            report.append("")
-            
-            base_lamp = sorted(list(product_stats.keys()))[0]
-            
-            for lamp in sorted(list(product_stats.keys()))[1:]:
-                report.append(f"    {lamp} vs {base_lamp} (baseline):")
-                
-                for param in params:
-                    if param in product_stats[base_lamp] and param in product_stats[lamp]:
-                        base_mean = product_stats[base_lamp][param]['mean']
-                        comp_mean = product_stats[lamp][param]['mean']
-                        diff = comp_mean - base_mean
-                        percent_diff = (diff / base_mean * 100) if base_mean != 0 else 0
-                        
-                        report.append(f"      {param:<25} Δ = {diff:+.3f}  ({percent_diff:+.2f}%)")
-                
-                report.append("")
-        
-        report.append("")
-    
-    report.append("=" * 120)
-    report.append("RESUMEN ESTADÍSTICO GENERAL")
-    report.append("=" * 120)
-    report.append("")
-    
-    for product in stats.keys():
-        report.append(f"Producto: {product}")
-        
-        if product in analyzer.data:
-            df = analyzer.data[product]
-            excluded_cols = ['No', 'ID', 'Note', 'Product', 'Method', 'Unit', 'Begin', 'End', 'Length']
-            if len(df.columns) > 1:
-                excluded_cols.append(df.columns[1])
-            params = [col for col in df.columns if col not in excluded_cols]
-        else:
-            params = list(stats[product][list(stats[product].keys())[0]].keys())
-            params = [p for p in params if p not in ['n', 'note']]
-        
-        for param in params[:5]:
-            report.append(f"  {param}:")
-            
-            values = []
-            for lamp_stats in stats[product].values():
-                if param in lamp_stats:
-                    values.append(lamp_stats[param]['mean'])
-            
-            if values:
-                overall_mean = sum(values) / len(values)
-                overall_std = (sum((x - overall_mean) ** 2 for x in values) / len(values)) ** 0.5
-                overall_range = max(values) - min(values)
-                
-                report.append(f"    Media entre lámparas: {overall_mean:.3f} ± {overall_std:.3f}")
-                report.append(f"    Rango: {overall_range:.3f}")
-        
-        report.append("")
-    
-    report.append("=" * 120)
-    report.append("FIN DEL INFORME")
-    report.append("=" * 120)
-    
-    return "\n".join(report)
 
 
 def sort_params_custom(params: list) -> tuple:
@@ -457,8 +316,7 @@ def generate_html_report(stats, analyzer, filename):
         ("info-general", "Información General"),
         ("statistics", "Estadísticas Detalladas"),
         ("comparison-charts", "Gráficos Comparativos"),
-        ("differences-by-product", "Diferencias por Producto"),
-        ("text-report", "Reporte en Texto")
+        ("differences-by-product", "Diferencias por Producto")
     ]
     
     # Iniciar HTML con template estandarizado (con Bootstrap)
@@ -504,16 +362,40 @@ def generate_html_report(stats, analyzer, filename):
         </div>
     """
     
-    # Estadísticas por producto
+    # Estadísticas por producto - CON PESTAÑAS
     html += """
         <div class="info-box" id="statistics">
             <h2>Estadísticas por Producto y Lámpara</h2>
             <p class="text-caption section-description">
                 <em>Valores promedio y desviación estándar de cada parámetro analítico.</em>
             </p>
+            
+            <ul class="nav nav-tabs" id="stats-tabs" role="tablist">
     """
     
-    for product in products:
+    # Generar pestañas
+    for idx, product in enumerate(products):
+        active_class = "active" if idx == 0 else ""
+        product_id = product.replace(' ', '-').replace('/', '-')
+        html += f"""
+                <li class="nav-item">
+                    <a class="nav-link {active_class}" id="tab-{product_id}" data-toggle="tab"
+                       href="#content-{product_id}" role="tab">{product}</a>
+                </li>
+        """
+    
+    html += """
+            </ul>
+            
+            <div class="tab-content" id="stats-tabs-content">
+    """
+    
+    # Generar contenido de cada pestaña
+    for idx, product in enumerate(products):
+        active_class = "show active" if idx == 0 else ""
+        product_id = product.replace(' ', '-').replace('/', '-')
+        
+        # Obtener parámetros del producto
         if product in analyzer.data:
             df = analyzer.data[product]
             excluded_cols = ['No', 'ID', 'Note', 'Product', 'Method', 'Unit', 'Begin', 'End', 'Length']
@@ -527,55 +409,57 @@ def generate_html_report(stats, analyzer, filename):
             params = sorted(list(params))
         
         html += f"""
-            <h3>{product}</h3>
-            <div class="stats-table-container">
-                <table class="stats-table">
-                    <thead>
-                        <tr>
-                            <th class="sticky-col">Lámpara</th>
-                            <th>N</th>
+                <div class="tab-pane fade {active_class}" id="content-{product_id}" role="tabpanel">
+                    <div class="stats-table-container" style="margin-top: 20px;">
+                        <table class="stats-table">
+                            <thead>
+                                <tr>
+                                    <th class="sticky-col">Lámpara</th>
+                                    <th>N</th>
         """
         
         for param in params:
-            html += f'<th>{param}<br/><span class="text-caption-small">(Media ± SD)</span></th>'
+            html += f'                                    <th>{param}<br/><span class="text-caption-small">(Media ± SD)</span></th>\n'
         
         html += """
-                        </tr>
-                    </thead>
-                    <tbody>
+                                </tr>
+                            </thead>
+                            <tbody>
         """
         
         for lamp, lamp_stats in stats[product].items():
             html += f"""
-                <tr>
-                    <td class="sticky-col">{lamp}</td>
-                    <td>{lamp_stats['n']}</td>
+                                <tr>
+                                    <td class="sticky-col">{lamp}</td>
+                                    <td>{lamp_stats['n']}</td>
             """
             
             for param in params:
                 if param in lamp_stats:
                     mean = lamp_stats[param]['mean']
                     std = lamp_stats[param]['std']
-                    html += f'<td>{mean:.3f} ± {std:.3f}</td>'
+                    html += f'                                    <td>{mean:.3f} ± {std:.3f}</td>\n'
                 else:
-                    html += '<td>-</td>'
+                    html += '                                    <td>-</td>\n'
             
             html += """
-                        </tr>
+                                </tr>
             """
         
         html += """
-                    </tbody>
-                </table>
-            </div>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
         """
     
     html += """
+            </div>
         </div>
     """
     
     # ========================================================================
-    # GRÁFICOS COMPARATIVOS CON CARRUSELES
+    # GRÁFICOS COMPARATIVOS CON PESTAÑAS
     # ========================================================================
     params_ordered = get_params_in_original_order(analyzer, products)
     normal_params, mahalanobis_params = sort_params_custom(params_ordered)
@@ -588,25 +472,33 @@ def generate_html_report(stats, analyzer, filename):
             </p>
     """
 
-    # CARRUSEL 1: PARÁMETROS NORMALES
+    # PESTAÑAS: PARÁMETROS NORMALES
     if normal_params:
         html += """
             <h3>📈 Parámetros Analíticos</h3>
-            <div id="carousel-normal" class="carousel slide" data-ride="carousel" data-interval="false">
-                <ol class="carousel-indicators">
-        """
-        
-        for idx in range(len(normal_params)):
-            active_class = "active" if idx == 0 else ""
-            html += f'                    <li data-target="#carousel-normal" data-slide-to="{idx}" class="{active_class}"></li>\n'
-        
-        html += """
-                </ol>
-                <div class="carousel-inner">
+            
+            <ul class="nav nav-tabs" id="charts-normal-tabs" role="tablist">
         """
         
         for idx, param in enumerate(normal_params):
             active_class = "active" if idx == 0 else ""
+            param_id = param.replace(' ', '-').replace('/', '-')
+            html += f"""
+                <li class="nav-item">
+                    <a class="nav-link {active_class}" id="chart-tab-{param_id}" data-toggle="tab"
+                       href="#chart-content-{param_id}" role="tab">{param}</a>
+                </li>
+            """
+        
+        html += """
+            </ul>
+            
+            <div class="tab-content" id="charts-normal-tabs-content">
+        """
+        
+        for idx, param in enumerate(normal_params):
+            active_class = "show active" if idx == 0 else ""
+            param_id = param.replace(' ', '-').replace('/', '-')
             fig = create_detailed_comparison(stats, param)
             
             if fig:
@@ -617,44 +509,44 @@ def generate_html_report(stats, analyzer, filename):
                 )
                 
                 html += f"""
-                    <div class="carousel-item {active_class}">
-                        <h4 style="text-align: center; margin-bottom: 20px;">{param}</h4>
-                        <div class="plot-container">
-                            {chart_html}
-                        </div>
+                <div class="tab-pane fade {active_class}" id="chart-content-{param_id}" role="tabpanel">
+                    <div class="plot-container" style="margin-top: 20px;">
+                        {chart_html}
                     </div>
+                </div>
                 """
         
         html += """
-                </div>
-                <a class="carousel-control-prev" href="#carousel-normal" role="button" data-slide="prev">
-                    <span class="carousel-control-prev-icon"></span>
-                </a>
-                <a class="carousel-control-next" href="#carousel-normal" role="button" data-slide="next">
-                    <span class="carousel-control-next-icon"></span>
-                </a>
             </div>
         """
 
-    # CARRUSEL 2: MAHALANOBIS
+    # PESTAÑAS: MAHALANOBIS
     if mahalanobis_params:
         html += """
             <h3 style="margin-top: 40px;">📊 Distancia de Mahalanobis</h3>
-            <div id="carousel-mahalanobis" class="carousel slide" data-ride="carousel" data-interval="false">
-                <ol class="carousel-indicators">
-        """
-        
-        for idx in range(len(mahalanobis_params)):
-            active_class = "active" if idx == 0 else ""
-            html += f'                    <li data-target="#carousel-mahalanobis" data-slide-to="{idx}" class="{active_class}"></li>\n'
-        
-        html += """
-                </ol>
-                <div class="carousel-inner">
+            
+            <ul class="nav nav-tabs" id="charts-mahalanobis-tabs" role="tablist">
         """
         
         for idx, param in enumerate(mahalanobis_params):
             active_class = "active" if idx == 0 else ""
+            param_id = param.replace(' ', '-').replace('/', '-')
+            html += f"""
+                <li class="nav-item">
+                    <a class="nav-link {active_class}" id="chart-maha-tab-{param_id}" data-toggle="tab"
+                       href="#chart-maha-content-{param_id}" role="tab">{param}</a>
+                </li>
+            """
+        
+        html += """
+            </ul>
+            
+            <div class="tab-content" id="charts-mahalanobis-tabs-content">
+        """
+        
+        for idx, param in enumerate(mahalanobis_params):
+            active_class = "show active" if idx == 0 else ""
+            param_id = param.replace(' ', '-').replace('/', '-')
             fig = create_detailed_comparison(stats, param)
             
             if fig:
@@ -665,22 +557,14 @@ def generate_html_report(stats, analyzer, filename):
                 )
                 
                 html += f"""
-                    <div class="carousel-item {active_class}">
-                        <h4 style="text-align: center; margin-bottom: 20px;">{param}</h4>
-                        <div class="plot-container">
-                            {chart_html}
-                        </div>
+                <div class="tab-pane fade {active_class}" id="chart-maha-content-{param_id}" role="tabpanel">
+                    <div class="plot-container" style="margin-top: 20px;">
+                        {chart_html}
                     </div>
+                </div>
                 """
         
         html += """
-                </div>
-                <a class="carousel-control-prev" href="#carousel-mahalanobis" role="button" data-slide="prev">
-                    <span class="carousel-control-prev-icon"></span>
-                </a>
-                <a class="carousel-control-next" href="#carousel-mahalanobis" role="button" data-slide="next">
-                    <span class="carousel-control-next-icon"></span>
-                </a>
             </div>
         """
 
@@ -693,31 +577,6 @@ def generate_html_report(stats, analyzer, filename):
     
     if differences_data:
         html += generate_differences_section(differences_data, stats, analyzer)
-    
-    # Reporte de texto
-    text_report = generate_text_report(stats, analyzer)
-    
-    html += f"""
-        <div class="info-box" id="text-report">
-            <h2>Informe Detallado en Texto</h2>
-            <p class="text-caption description-bottom-margin">
-                <em>Reporte completo en formato de texto con análisis estadístico.</em>
-            </p>
-            <pre>{text_report}</pre>
-        </div>
-    """
-    
-    # Script para resize de Plotly en carruseles
-    html += """
-        <script>
-            // Plotly resize on carousel slide
-            $('.carousel').on('slid.bs.carousel', function () {
-                $('.plotly-graph-div').each(function() {
-                    Plotly.relayout(this, { autosize: true });
-                });
-            });
-        </script>
-    """
     
     # Footer
     html += generate_footer()
