@@ -206,6 +206,8 @@ def create_comparison_plots(stats, analyzer):
 def create_detailed_comparison(stats, param='H'):
     """Crear gráfico de comparación detallada por producto"""
     
+    from app_config.plotting import PLOTLY_TEMPLATE
+    
     products = list(stats.keys())
     lamps = set()
     for product_stats in stats.values():
@@ -224,7 +226,6 @@ def create_detailed_comparison(stats, param='H'):
             products_with_data.append(product)
     
     if not products_with_data:
-        st.warning(f"No hay datos disponibles para el parámetro {param}")
         return None
     
     # Calcular valor máximo para ajustar escala Y
@@ -237,12 +238,18 @@ def create_detailed_comparison(stats, param='H'):
     # Número de subplots
     n_products = len(products_with_data)
     
+    # Calcular anchos proporcionales
+    column_widths = [1.0 / n_products] * n_products
+    
     fig = make_subplots(
         rows=1, cols=n_products,
-        subplot_titles=[f"{prod} - {param}" for prod in products_with_data]
+        subplot_titles=[f"{prod}" for prod in products_with_data],
+        column_widths=column_widths,
+        horizontal_spacing=0.02
     )
     
-    colors = px.colors.qualitative.Plotly
+    # Colores BUCHI importados
+    colors = PLOTLY_TEMPLATE['layout']['colorway']
     
     for col_idx, product in enumerate(products_with_data):
         for lamp_idx, lamp in enumerate(lamps):
@@ -263,22 +270,32 @@ def create_detailed_comparison(stats, param='H'):
                         row=1, col=col_idx+1
                     )
         
+        # Eliminar título del eje Y
         fig.update_yaxes(
-            title_text=f"{param} (%)", 
+            title_text="",
             row=1, 
             col=col_idx+1,
             range=[0, max_val * 1.15]
         )
     
+    # Ajustar layout con ancho fijo
     fig.update_layout(
-        height=400,
-        title_text=f"Comparación Detallada: Media y Variabilidad por Lámpara - {param}",
+        width=1150,
+        height=500,
+        autosize=False,
         showlegend=True,
-        barmode='group'
+        barmode='group',
+        margin=dict(l=50, r=50, t=80, b=40),
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1
+        )
     )
     
     return fig
-
 
 def create_box_plots(stats, analyzer):
     """Crear box plots para todos los productos y parámetros"""

@@ -61,6 +61,7 @@ def load_buchi_css() -> str:
         'css/tsv_validation.css',
         'css/prediction_reports.css',
         'css/responsive.css'
+        'css/carousel.css'
     ]
     
     consolidated_css = ""
@@ -454,7 +455,8 @@ def generate_footer(tool_name: str = "NIR ServiceKit") -> str:
 
 
 def start_html_template(title: str, sidebar_html: str = None, 
-                        sidebar_sections: list = None, client_info: dict = None) -> str:
+                        sidebar_sections: list = None, client_info: dict = None,
+                        include_bootstrap: bool = False) -> str:
     """
     Inicia el documento HTML con sidebar y opcionalmente información del cliente.
     
@@ -462,8 +464,8 @@ def start_html_template(title: str, sidebar_html: str = None,
         title: Título del informe
         sidebar_html: HTML del sidebar ya construido (DEPRECATED, usar sidebar_sections)
         sidebar_sections: Lista de tuplas (id, label) para construir el sidebar
-            Ejemplo: [("section1", "Sección 1"), ("section2", "Sección 2")]
         client_info: Dict con información del cliente (opcional)
+        include_bootstrap: Si True, incluye Bootstrap CSS/JS en el head
     
     Returns:
         str: HTML inicial del documento
@@ -475,17 +477,30 @@ def start_html_template(title: str, sidebar_html: str = None,
     
     # Construir sidebar
     if sidebar_sections is not None:
-        # NUEVO: Construir desde lista de secciones (sin parámetros opcionales)
         sidebar_items = []
         for sid, label in sidebar_sections:
             sidebar_items.append(f'            <li><a href="#{sid}">{label}</a></li>')
         sidebar_content = '\n'.join(sidebar_items)
     elif sidebar_html is not None:
-        # LEGACY: Usar HTML proporcionado directamente
         sidebar_content = sidebar_html
     else:
-        # Por defecto, sidebar vacío
         sidebar_content = ""
+    
+    # Bootstrap CDN (opcional)
+    bootstrap_head = ""
+    bootstrap_scripts = ""
+    
+    if include_bootstrap:
+        bootstrap_head = """
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+"""
+        bootstrap_scripts = """
+    <!-- Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+"""
     
     # HTML base
     html = f"""<!DOCTYPE html>
@@ -495,6 +510,7 @@ def start_html_template(title: str, sidebar_html: str = None,
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{title}</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+{bootstrap_head}
     <style>
 {buchi_css}
 {sidebar_css}
@@ -502,6 +518,7 @@ def start_html_template(title: str, sidebar_html: str = None,
     </style>
 </head>
 <body>
+{bootstrap_scripts}
     <div class="sidebar">
         <h2>📋 Índice</h2>
         <ul>
@@ -518,7 +535,6 @@ def start_html_template(title: str, sidebar_html: str = None,
         html += generate_client_info_section(client_info)
     
     return html
-
 
 def calculate_global_metrics(validation_data: List[Dict]) -> Dict:
     """

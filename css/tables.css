@@ -77,10 +77,14 @@ tr:hover {
 .stats-table-container {
   overflow-x: auto;
   max-width: 100%;
+  position: relative;
 }
 
 .stats-table {
   min-width: 800px;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 0;
 }
 
 .stats-table th.sticky-col-lamp,

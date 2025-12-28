@@ -32,6 +32,9 @@ BUCHI_COLORS = {
     'info': '#17a2b8',
     'light': '#f8f9fa',
     'dark': '#343a40',
+    'kashmir_blue': '#4F719A',
+    'sky_blue': '#4DB9D2',
+    'teal_blue': '#289A93',
 }
 
 # ============================================================================
@@ -40,7 +43,14 @@ BUCHI_COLORS = {
 
 PLOTLY_TEMPLATE = {
     'layout': {
-        'colorway': ['#093A34', '#289A93', '#00BFA5', '#FF6B6B', '#4ECDC4'],
+        'colorway': [
+            '#4F719A',  # Kashmir Blue
+            '#4DB9D2',  # Sky Blue
+            '#289A93',  # Teal Blue
+            '#093A34',  # Primary (verde oscuro BUCHI)
+            '#00BFA5',  # Accent
+            '#FF6B6B',  # Rojo (contraste)
+        ],
         'font': {'family': 'Segoe UI, Arial, sans-serif'},
         'plot_bgcolor': 'white',
         'paper_bgcolor': 'white',

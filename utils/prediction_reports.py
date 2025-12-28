@@ -2,6 +2,7 @@
 Prediction Reports - Generación de reportes HTML y texto con estilo COREF Suite
 Optimizado: sin CSS inline, usando report_utils, sidebar estandarizado
 FIXED: Tablas con scroll horizontal + Título "Índice" en sidebar
+NUEVO: Carruseles Bootstrap para gráficos + Orden personalizado de parámetros
 """
 
 from datetime import datetime
@@ -92,13 +93,15 @@ def calculate_lamp_differences(stats, analyzer):
     return differences_by_product
 
 
-def generate_differences_section(differences_data):
+def generate_differences_section(differences_data, stats, analyzer):
     """
-    Genera HTML para la sección de diferencias por producto.
-    Usa generate_evaluated_table() para las tablas de comparación.
+    Genera HTML para la sección de diferencias por producto con carrusel.
+    Cada producto es un slide del carrusel.
     
     Args:
         differences_data (dict): Datos de diferencias calculadas
+        stats (dict): Estadísticas originales
+        analyzer: Objeto analizador
         
     Returns:
         str: HTML de la sección
@@ -109,125 +112,142 @@ def generate_differences_section(differences_data):
         <p class="text-caption section-description">
             <em>Análisis comparativo detallado entre lámparas para cada producto.</em>
         </p>
+        
+        <div id="carousel-differences" class="carousel slide" data-ride="carousel" data-interval="false">
     """
     
-    for product, product_data in differences_data.items():
+    # Indicadores del carrusel
+    num_products = len(differences_data)
+    if num_products > 1:
+        html += '<ol class="carousel-indicators">'
+        for idx in range(num_products):
+            active_class = "active" if idx == 0 else ""
+            html += f'<li data-target="#carousel-differences" data-slide-to="{idx}" class="{active_class}"></li>'
+        html += '</ol>'
+    
+    html += '<div class="carousel-inner">'
+    
+    # Cada producto es un slide
+    for product_idx, (product, product_data) in enumerate(differences_data.items()):
+        active_class = "active" if product_idx == 0 else ""
         baseline_lamp = product_data['baseline_lamp']
         comparisons = product_data['comparisons']
         
         html += f"""
-        <div class="product-section">
-            <h3 class="product-title">🔬 {product}</h3>
-            <p class="text-caption-small">
-                <strong>Lámpara Baseline:</strong> {baseline_lamp} 
-                (N = {comparisons[0]['n_baseline'] if comparisons else 'N/A'})
-            </p>
+            <div class="carousel-item {active_class}">
+                <div class="product-section">
+                    <h3 class="product-title">🔬 {product}</h3>
+                    <p class="text-caption-small">
+                        <strong>Lámpara Baseline:</strong> {baseline_lamp} 
+                        (N = {comparisons[0]['n_baseline'] if comparisons else 'N/A'})
+                    </p>
         """
         
+        # Todas las comparaciones de este producto
         for comparison in comparisons:
             comp_lamp = comparison['lamp']
             n_compared = comparison['n_compared']
             differences = comparison['differences']
             
-            html += f"""
-            <details open>
-                <summary>📍 {comp_lamp} vs {baseline_lamp} (N = {n_compared})</summary>
-                
-                <div class="comparison-container">
-            """
+            # Obtener parámetros ordenados
+            all_params = list(differences.keys())
+            normal_params, mahalanobis_params = sort_params_custom(all_params)
+            ordered_params = normal_params + mahalanobis_params
             
-            # Preparar datos para generate_evaluated_table
-            sorted_params = sorted(
-                differences.items(), 
-                key=lambda x: abs(x[1]['absolute_diff']), 
-                reverse=True
-            )
-            
+            # Preparar datos ordenados para la tabla
             table_data = []
-            for param, diff_data in sorted_params:
-                baseline_val = diff_data['baseline_mean']
-                compared_val = diff_data['compared_mean']
-                abs_diff = diff_data['absolute_diff']
-                percent_diff = diff_data['percent_diff']
-                
-                direction = '↑' if abs_diff > 0 else '↓' if abs_diff < 0 else '='
-                
-                # Determinar evaluación
-                abs_percent = abs(percent_diff)
-                if abs_percent < 2.0:
-                    evaluation = '🟢 Excelente'
-                    eval_color = '#4caf50'
-                elif abs_percent < 5.0:
-                    evaluation = '🟡 Aceptable'
-                    eval_color = '#ffc107'
-                elif abs_percent < 10.0:
-                    evaluation = '🟠 Revisar'
-                    eval_color = '#ff9800'
-                else:
-                    evaluation = '🔴 Significativo'
-                    eval_color = '#f44336'
-                
-                table_data.append({
-                    'param': param,
-                    'baseline': baseline_val,
-                    'compared': compared_val,
-                    'abs_diff': f"{direction} {abs(abs_diff):.3f}",
-                    'percent_diff': abs_percent,  # Para evaluación
-                    'percent_display': f"{abs_diff:+.3f} ({percent_diff:+.2f}%)",
-                    'evaluation': evaluation,
-                    'eval_color': eval_color
-                })
+            for param in ordered_params:
+                if param in differences:
+                    diff_data = differences[param]
+                    baseline_val = diff_data['baseline_mean']
+                    compared_val = diff_data['compared_mean']
+                    abs_diff = diff_data['absolute_diff']
+                    percent_diff = diff_data['percent_diff']
+                    
+                    direction = '↑' if abs_diff > 0 else '↓' if abs_diff < 0 else '='
+                    
+                    table_data.append({
+                        'param': param,
+                        'baseline': baseline_val,
+                        'compared': compared_val,
+                        'abs_diff': f"{direction} {abs(abs_diff):.3f}",
+                        'percent_diff': f"{percent_diff:+.2f}%"
+                    })
             
-            # Definir columnas
+            # Definir columnas (SIN evaluación)
             columns = [
                 {'key': 'param', 'header': 'Parámetro', 'align': 'left'},
                 {'key': 'baseline', 'header': f'{baseline_lamp}<br/><span class="text-caption-small">(Baseline)</span>', 'format': '{:.3f}'},
                 {'key': 'compared', 'header': f'{comp_lamp}<br/><span class="text-caption-small">(Comparada)</span>', 'format': '{:.3f}'},
                 {'key': 'abs_diff', 'header': 'Δ Absoluta', 'align': 'center'},
-                {'key': 'percent_display', 'header': 'Δ Relativa (%)', 'align': 'center'},
-                {'key': 'evaluation', 'header': 'Evaluación', 'align': 'center'}
+                {'key': 'percent_diff', 'header': 'Δ Relativa (%)', 'align': 'center'}
             ]
             
-            # Definir umbrales para colorear filas
-            thresholds = {
-                'excellent': {'max': 2.0, 'class': 'eval-excellent'},
-                'acceptable': {'max': 5.0, 'class': 'eval-acceptable'},
-                'review': {'max': 10.0, 'class': 'eval-review'},
-                'critical': {'class': 'eval-significant'}
-            }
+            html += f"""
+                    <h4 style="margin-top: 20px;">📍 {comp_lamp} vs {baseline_lamp} (N = {n_compared})</h4>
+                    
+                    <div class="table-overflow">
+                        <table class="comparison-table">
+                            <thead>
+                                <tr>
+            """
             
-            # Generar tabla usando función compartida
-            html += generate_evaluated_table(
-                table_data,
-                columns,
-                evaluation_column='percent_diff',
-                evaluation_thresholds=thresholds
-            )
+            for col in columns:
+                align = col.get('align', 'left')
+                html += f'<th style="text-align: {align};">{col["header"]}</th>'
             
-            # Añadir leyenda
             html += """
-                    <div class="comparison-footer">
-                        <strong>📌 Leyenda de Evaluación:</strong>
-                        <ul class="legend-list">
-                            <li><strong>🟢 Excelente:</strong> Δ < 2% - Diferencia despreciable</li>
-                            <li><strong>🟡 Aceptable:</strong> 2% ≤ Δ < 5% - Dentro del rango esperado</li>
-                            <li><strong>🟠 Revisar:</strong> 5% ≤ Δ < 10% - Diferencia notable</li>
-                            <li><strong>🔴 Significativo:</strong> Δ ≥ 10% - Requiere investigación</li>
-                        </ul>
+                                </tr>
+                            </thead>
+                            <tbody>
+            """
+            
+            for row in table_data:
+                html += "<tr>"
+                for col in columns:
+                    key = col['key']
+                    value = row[key]
+                    align = col.get('align', 'left')
+                    
+                    # Formatear si es necesario
+                    if 'format' in col and isinstance(value, (int, float)):
+                        value = col['format'].format(value)
+                    
+                    html += f'<td style="text-align: {align};">{value}</td>'
+                
+                html += "</tr>"
+            
+            html += """
+                            </tbody>
+                        </table>
                     </div>
-                </div>
-            </details>
             """
         
         html += """
-        </div>
+                </div>
+            </div>
+        """
+    
+    html += '</div>'  # Cierra carousel-inner
+    
+    # Controles del carrusel (solo si hay más de 1 producto)
+    if num_products > 1:
+        html += """
+            <a class="carousel-control-prev" href="#carousel-differences" role="button" data-slide="prev">
+                <span class="carousel-control-prev-icon"></span>
+            </a>
+            <a class="carousel-control-next" href="#carousel-differences" role="button" data-slide="next">
+                <span class="carousel-control-next-icon"></span>
+            </a>
         """
     
     html += """
+        </div>
     </div>
     """
     
     return html
+
 
 
 def generate_text_report(stats, analyzer):
@@ -364,6 +384,53 @@ def generate_text_report(stats, analyzer):
     return "\n".join(report)
 
 
+def sort_params_custom(params: list) -> tuple:
+    """
+    Ordena parámetros en dos grupos: normales y Mahalanobis.
+    
+    Args:
+        params: Lista de nombres de parámetros
+        
+    Returns:
+        tuple: (normal_params, mahalanobis_params)
+    """
+    # Orden predefinido para parámetros normales
+    normal_order = [
+        'H', 'PB', 'FB', 'GB', 'Grasa Bruta', 'GT', 'Cz', 
+        'ALM', 'Aw', 'Fosforo', 'Calcio'
+    ]
+    
+    # Orden predefinido para Mahalanobis
+    mahalanobis_order = [
+        'MahalanobisH', 'MahalanobisPB', 'MahalanobisFB', 
+        'MahalanobisGB', 'MahalanobisGT', 'MahalanobisCz', 
+        'MahalanobisALM', 'MahalanobisP', 'MahalanobisCa'
+    ]
+    
+    # Separar en dos grupos
+    normal_params = []
+    mahalanobis_params = []
+    
+    for param in params:
+        if param.startswith('Mahalanobis'):
+            mahalanobis_params.append(param)
+        else:
+            normal_params.append(param)
+    
+    # Función auxiliar para ordenar según lista predefinida
+    def custom_sort(param_list, order_list):
+        # Primero los que están en order_list (en ese orden)
+        ordered = [p for p in order_list if p in param_list]
+        # Luego los que NO están (alfabético)
+        remaining = sorted([p for p in param_list if p not in order_list])
+        return ordered + remaining
+    
+    normal_params = custom_sort(normal_params, normal_order)
+    mahalanobis_params = custom_sort(mahalanobis_params, mahalanobis_order)
+    
+    return normal_params, mahalanobis_params
+
+
 def generate_html_report(stats, analyzer, filename):
     """
     Generar reporte HTML completo con estilo corporativo BUCHI.
@@ -394,13 +461,11 @@ def generate_html_report(stats, analyzer, filename):
         ("text-report", "Reporte en Texto")
     ]
     
-    # ⭐ FIX: Construir sidebar manualmente con título "Índice"
-    sidebar_html = '<h2>📋 Índice</h2>\n'
-
-    # Iniciar HTML con template estandarizado
+    # Iniciar HTML con template estandarizado (con Bootstrap)
     html = start_html_template(
         title="Reporte de Predicciones NIR",
-        sidebar_sections=sections  # ⭐ Usar sidebar_html en lugar de sidebar_sections
+        sidebar_sections=sections,
+        include_bootstrap=True
     )
     
     # Información general
@@ -439,7 +504,7 @@ def generate_html_report(stats, analyzer, filename):
         </div>
     """
     
-    # ⭐ FIX: Estadísticas por producto CON SCROLL HORIZONTAL
+    # Estadísticas por producto
     html += """
         <div class="info-box" id="statistics">
             <h2>Estadísticas por Producto y Lámpara</h2>
@@ -467,8 +532,8 @@ def generate_html_report(stats, analyzer, filename):
                 <table class="stats-table">
                     <thead>
                         <tr>
-                            <th class="sticky-col-lamp">Lámpara</th>
-                            <th class="sticky-col-n">N</th>
+                            <th class="sticky-col">Lámpara</th>
+                            <th>N</th>
         """
         
         for param in params:
@@ -483,8 +548,8 @@ def generate_html_report(stats, analyzer, filename):
         for lamp, lamp_stats in stats[product].items():
             html += f"""
                 <tr>
-                    <td class="sticky-col-lamp">{lamp}</td>
-                    <td class="sticky-col-n">{lamp_stats['n']}</td>
+                    <td class="sticky-col">{lamp}</td>
+                    <td>{lamp_stats['n']}</td>
             """
             
             for param in params:
@@ -509,7 +574,12 @@ def generate_html_report(stats, analyzer, filename):
         </div>
     """
     
-    # Gráficos comparativos
+    # ========================================================================
+    # GRÁFICOS COMPARATIVOS CON CARRUSELES
+    # ========================================================================
+    params_ordered = get_params_in_original_order(analyzer, products)
+    normal_params, mahalanobis_params = sort_params_custom(params_ordered)
+
     html += """
         <div class="info-box" id="comparison-charts">
             <h2>Gráficos Comparativos</h2>
@@ -517,26 +587,103 @@ def generate_html_report(stats, analyzer, filename):
                 <em>Análisis visual de las predicciones NIR entre diferentes lámparas.</em>
             </p>
     """
-    
-    params_ordered = get_params_in_original_order(analyzer, products)
-    
-    for param in params_ordered:
-        fig = create_detailed_comparison(stats, param)
+
+    # CARRUSEL 1: PARÁMETROS NORMALES
+    if normal_params:
+        html += """
+            <h3>📈 Parámetros Analíticos</h3>
+            <div id="carousel-normal" class="carousel slide" data-ride="carousel" data-interval="false">
+                <ol class="carousel-indicators">
+        """
         
-        if fig:
-            chart_html = fig.to_html(
-                include_plotlyjs='cdn',
-                div_id=f"graph_{param.replace(' ', '_')}",
-                config={'displayModeBar': True, 'responsive': True}
-            )
+        for idx in range(len(normal_params)):
+            active_class = "active" if idx == 0 else ""
+            html += f'                    <li data-target="#carousel-normal" data-slide-to="{idx}" class="{active_class}"></li>\n'
+        
+        html += """
+                </ol>
+                <div class="carousel-inner">
+        """
+        
+        for idx, param in enumerate(normal_params):
+            active_class = "active" if idx == 0 else ""
+            fig = create_detailed_comparison(stats, param)
             
-            html += wrap_chart_in_expandable(
-                chart_html,
-                f"Comparación detallada: {param}",
-                f"chart_{param.replace(' ', '_')}",
-                default_open=False
-            )
-    
+            if fig:
+                chart_html = fig.to_html(
+                    include_plotlyjs='cdn' if idx == 0 else False,
+                    div_id=f"graph_{param.replace(' ', '_')}",
+                    config={'displayModeBar': True, 'responsive': True}
+                )
+                
+                html += f"""
+                    <div class="carousel-item {active_class}">
+                        <h4 style="text-align: center; margin-bottom: 20px;">{param}</h4>
+                        <div class="plot-container">
+                            {chart_html}
+                        </div>
+                    </div>
+                """
+        
+        html += """
+                </div>
+                <a class="carousel-control-prev" href="#carousel-normal" role="button" data-slide="prev">
+                    <span class="carousel-control-prev-icon"></span>
+                </a>
+                <a class="carousel-control-next" href="#carousel-normal" role="button" data-slide="next">
+                    <span class="carousel-control-next-icon"></span>
+                </a>
+            </div>
+        """
+
+    # CARRUSEL 2: MAHALANOBIS
+    if mahalanobis_params:
+        html += """
+            <h3 style="margin-top: 40px;">📊 Distancia de Mahalanobis</h3>
+            <div id="carousel-mahalanobis" class="carousel slide" data-ride="carousel" data-interval="false">
+                <ol class="carousel-indicators">
+        """
+        
+        for idx in range(len(mahalanobis_params)):
+            active_class = "active" if idx == 0 else ""
+            html += f'                    <li data-target="#carousel-mahalanobis" data-slide-to="{idx}" class="{active_class}"></li>\n'
+        
+        html += """
+                </ol>
+                <div class="carousel-inner">
+        """
+        
+        for idx, param in enumerate(mahalanobis_params):
+            active_class = "active" if idx == 0 else ""
+            fig = create_detailed_comparison(stats, param)
+            
+            if fig:
+                chart_html = fig.to_html(
+                    include_plotlyjs=False,
+                    div_id=f"graph_{param.replace(' ', '_')}",
+                    config={'displayModeBar': True, 'responsive': True}
+                )
+                
+                html += f"""
+                    <div class="carousel-item {active_class}">
+                        <h4 style="text-align: center; margin-bottom: 20px;">{param}</h4>
+                        <div class="plot-container">
+                            {chart_html}
+                        </div>
+                    </div>
+                """
+        
+        html += """
+                </div>
+                <a class="carousel-control-prev" href="#carousel-mahalanobis" role="button" data-slide="prev">
+                    <span class="carousel-control-prev-icon"></span>
+                </a>
+                <a class="carousel-control-next" href="#carousel-mahalanobis" role="button" data-slide="next">
+                    <span class="carousel-control-next-icon"></span>
+                </a>
+            </div>
+        """
+
     html += """
         </div>
     """
@@ -545,7 +692,7 @@ def generate_html_report(stats, analyzer, filename):
     differences_data = calculate_lamp_differences(stats, analyzer)
     
     if differences_data:
-        html += generate_differences_section(differences_data)
+        html += generate_differences_section(differences_data, stats, analyzer)
     
     # Reporte de texto
     text_report = generate_text_report(stats, analyzer)
@@ -558,6 +705,18 @@ def generate_html_report(stats, analyzer, filename):
             </p>
             <pre>{text_report}</pre>
         </div>
+    """
+    
+    # Script para resize de Plotly en carruseles
+    html += """
+        <script>
+            // Plotly resize on carousel slide
+            $('.carousel').on('slid.bs.carousel', function () {
+                $('.plotly-graph-div').each(function() {
+                    Plotly.relayout(this, { autosize: true });
+                });
+            });
+        </script>
     """
     
     # Footer
