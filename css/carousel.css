@@ -40,7 +40,7 @@
 
 .plot-container {
     width: 100%;
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
     display: flex;            
     justify-content: center;  
@@ -49,6 +49,22 @@
 
 .plot-container > div {
     margin: 0 auto;
+}
+
+/* Forzar responsive en SVGs de Plotly */
+.plot-container .plotly-graph-div {
+    width: 100% !important;
+    margin: 0 auto;
+}
+
+.plot-container .main-svg {
+    width: 100% !important;
+    height: auto !important;
+}
+
+.plot-container .svg-container {
+    width: 100% !important;
+    height: auto !important;
 }
 
 /* Ajustes para sticky columns en tablas */

@@ -277,8 +277,7 @@ def create_layout(title: str, xaxis_title: str, yaxis_title: str) -> Dict:
         "xaxis_title": xaxis_title,
         "yaxis_title": yaxis_title,
         "showlegend": False,
-        "width": 900,
-        "height": 600,
+        "height": 600,  # ✅ MANTENER height
         "dragmode": "zoom",
         "hovermode": "closest",
         "template": "plotly",
@@ -286,6 +285,7 @@ def create_layout(title: str, xaxis_title: str, yaxis_title: str) -> Dict:
         "paper_bgcolor": "white",
         "xaxis": {"gridcolor": "white"},
         "yaxis": {"gridcolor": "white"},
+        "autosize": True,  # ✅ Añadir autosize
     }
 
 
@@ -980,33 +980,17 @@ if uploaded_files:
 
                 st.markdown("---")
 
-            # Individual downloads
+           # Individual downloads
             for r in results:
-                c1, c2, c3 = st.columns([3, 1, 1])
-                with c1:
-                    st.write(f"**{r.name}**")
-                with c2:
-                    st.download_button(
-                        label="⬇️ HTML",
-                        data=r.html,
-                        file_name=f"{r.name}.html",
-                        mime="text/html",
-                        key=f"html_{r.name}",
-                        use_container_width=True,
-                    )
-                with c3:
-                    st.download_button(
-                        label="⬇️ CSV",
-                        data=r.csv.to_csv(sep=";", index=False),
-                        file_name=f"{r.name}_cleaned.csv",
-                        mime="text/csv",
-                        key=f"csv_{r.name}",
-                        use_container_width=True,
-                    )
-
-            # Preview
-            st.markdown("---")
-            if st.checkbox("👀 Vista previa del primer reporte"):
-                st.components.v1.html(results[0].html, height=850, scrolling=True)
+                st.markdown(f"**{r.name}**")
+                st.download_button(
+                    label="💾 Descargar Informe HTML",
+                    data=r.html,
+                    file_name=f"{r.name}.html",
+                    mime="text/html",
+                    key=f"html_{r.name}",
+                )
+                st.markdown("---")
+        
         elif start_date or end_date:
             st.warning("⚠️ No se generaron reportes. Verifica que haya datos en el rango de fechas seleccionado.")
