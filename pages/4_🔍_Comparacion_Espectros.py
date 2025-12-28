@@ -127,7 +127,6 @@ def main():
     st.divider()
     
     if not uploaded_files:
-        st.info("👆 Sube al menos 1 archivo TSV para comenzar")
         st.markdown("""
         ### 🎯 Funcionalidades:
         - **Overlay de espectros**: Visualiza todos los espectros simultáneamente

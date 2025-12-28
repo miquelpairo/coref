@@ -303,7 +303,6 @@ def render_standards_upload_and_selection_section():
         )
     
     if not ref_tsv or not curr_tsv:
-        st.info("👆 Carga ambos archivos TSV para comenzar")
         return False
     
     # Cargar archivos usando funciones compartidas
