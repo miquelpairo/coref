@@ -203,7 +203,7 @@ def main():
     # ==========================================
     # SECCIÓN 1: CARGAR TSV Y SELECCIÓN DE ESTÁNDARES
     # ==========================================
-    st.markdown("### 1. Cargar Estándares Ópticos y Selección")
+    st.markdown("### 📁 Carga y Selección de Estándares Ópticos")
     
     standards_loaded = render_standards_upload_and_selection_section()
     

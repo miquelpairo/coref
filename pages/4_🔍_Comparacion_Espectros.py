@@ -107,6 +107,7 @@ def main():
         """)
     
     # Área principal - File uploader
+    st.markdown("### 📁 Carga y Selección de Espectros")
     st.info("Carga los archivos TSV")
     
     uploaded_files = st.file_uploader(

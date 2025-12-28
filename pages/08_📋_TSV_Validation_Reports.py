@@ -840,6 +840,7 @@ def generate_html_report(df: pd.DataFrame, file_name: str) -> str:
 
 
 st.markdown("---")
+st.markdown("### 📁 Carga de archivos")
 st.info(
     """
 1. **Carga** uno o varios archivos TSV

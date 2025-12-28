@@ -78,6 +78,7 @@ if 'pred_stats' not in st.session_state:
 # SECCIÓN 1: CARGA DE ARCHIVO
 # ==============================================================================
 
+st.markdown("### 📁 Carga de archivos")
 st.info("Carga un archivo XML y genera el análisis para ver los resultados")
 
 col1, col2 = st.columns([3, 1])

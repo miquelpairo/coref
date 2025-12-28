@@ -128,6 +128,7 @@ def main():
     st.markdown("---")
     
     # Sección de carga de archivos
+    st.markdown("### 📁 Carga de archivos")
     st.info(" Carga los informes de baseline adjustement, standards validation y predictions")
     
     col1, col2, col3 = st.columns(3)
