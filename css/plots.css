@@ -7,9 +7,10 @@
 }
 
 .plot-container {
-  display: inline-block;
-  width: 900px;
-  margin-right: 20px;
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
   background-color: #ffffff;
   padding: 15px;
   border-radius: 10px;

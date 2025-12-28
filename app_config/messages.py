@@ -158,13 +158,13 @@ El informe incluirá:
     'alignment_intro': """
 ### ⚙️ Alineamiento de Baseline
 
-Has llegado aquí porque el RMS del White Standard es ≥ 0.002.
+Has llegado aquí porque el RMS del White Standard es ≥ 0.005.
 
 **En este paso:**
 1. Cargas el baseline actual del equipo
-2. Calculamos la corrección necesaria
+2. Calculamos la corrección necesaria respecto al estado de referencia
 3. Exportas el baseline corregido
-4. Lo instalas en el equipo
+4. Lo instalas en el equipo y vuelves a medir la referencia blanca
 5. Vuelves al Paso 4 para validar
     """,
 

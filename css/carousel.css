@@ -1,9 +1,16 @@
 
 
-/* ===== CARRUSELES BOOTSTRAP ===== */
-
+/* ===== CARRUSEL FULL-WIDTH ===== */
 .carousel {
     margin: 20px 0;
+}
+
+.carousel-item {
+    padding: 20px;
+    min-height: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .carousel-control-prev-icon,
@@ -33,16 +40,31 @@
     background-color: #2196f3;
 }
 
+/* ===== FIX: carrusel a ancho completo ===== */
+.carousel .plot-container {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;          /* o 10px si quieres margen interior */
+  background: transparent !important;
+}
+
+.carousel,
+.carousel-inner,
 .carousel-item {
-    padding: 20px;
-    min-height: 650px;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.carousel-item {
+  padding: 0 !important;          /* o 10px si quieres aire */
 }
 
 .plot-container {
     width: 100%;
-    max-width: 1400px;
-    margin: 0 auto;
-    display: flex;            
+    max-width: none;
+    margin: 0 auto;            
     justify-content: center;  
     align-items: center;      
 }
