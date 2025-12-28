@@ -7,6 +7,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
 from .nir_analyzer import get_params_in_original_order
+from app_config.plotting import PLOTLY_TEMPLATE
 
 
 def create_comparison_plots(stats, analyzer):
@@ -128,12 +129,12 @@ def create_comparison_plots(stats, analyzer):
         horizontal_spacing=0.10
     )
     
-    # Colores para cada lámpara
+    # Colores BUCHI
+    buchi_colors = PLOTLY_TEMPLATE['layout']['colorway']
     lamp_colors = {}
-    color_palette = ['#FF6B6B', '#4ECDC4', '#95E1D3']
     
     for idx, lamp in enumerate(comparison_lamps):
-        lamp_colors[lamp] = color_palette[idx] if idx < len(color_palette) else '#95A5A6'
+        lamp_colors[lamp] = buchi_colors[idx % len(buchi_colors)]
     
     for idx, param in enumerate(params_with_data):
         row = idx // n_cols + 1
@@ -150,7 +151,7 @@ def create_comparison_plots(stats, analyzer):
         for lamp_idx, lamp in enumerate(lamps_list):
             if lamp in differences[param]:
                 value = differences[param][lamp]
-                color = lamp_colors.get(lamp, '#95A5A6')
+                color = lamp_colors.get(lamp, buchi_colors[0])
                 
                 fig.add_trace(
                     go.Bar(
@@ -205,8 +206,6 @@ def create_comparison_plots(stats, analyzer):
 
 def create_detailed_comparison(stats, param='H'):
     """Crear gráfico de comparación detallada por producto"""
-    
-    from app_config.plotting import PLOTLY_TEMPLATE
     
     products = list(stats.keys())
     lamps = set()
@@ -297,6 +296,7 @@ def create_detailed_comparison(stats, param='H'):
     
     return fig
 
+
 def create_box_plots(stats, analyzer):
     """Crear box plots para todos los productos y parámetros"""
     
@@ -316,7 +316,9 @@ def create_box_plots(stats, analyzer):
     if not selected_params:
         return None
     
-    colors = px.colors.qualitative.Plotly
+    # Colores BUCHI
+    colors = PLOTLY_TEMPLATE['layout']['colorway']
+    
     lamps = set()
     for product_stats in stats.values():
         lamps.update(product_stats.keys())
@@ -431,7 +433,8 @@ def create_scatter_plots(stats):
         subplot_titles=[f"{prod} - {param_h} vs {param_pb}" for prod in products]
     )
     
-    colors = px.colors.qualitative.Plotly
+    # Colores BUCHI
+    colors = PLOTLY_TEMPLATE['layout']['colorway']
     
     for col_idx, product in enumerate(products):
         for lamp_idx, lamp in enumerate(lamps):
