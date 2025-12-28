@@ -78,7 +78,7 @@ if 'pred_stats' not in st.session_state:
 # SECCIÓN 1: CARGA DE ARCHIVO
 # ==============================================================================
 
-st.info("1. Cargar archivo de predicciones")
+st.info("Carga un archivo XML y genera el análisis para ver los resultados")
 
 col1, col2 = st.columns([3, 1])
 
@@ -309,5 +309,3 @@ if st.session_state.pred_stats is not None:
                 key='download_html'
             )
 
-else:
-    st.info("👆 Carga un archivo XML y genera el análisis para ver los resultados")
