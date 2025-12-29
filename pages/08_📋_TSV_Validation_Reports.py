@@ -125,7 +125,7 @@ def filter_relevant_data(data: List[Dict]) -> List[Dict]:
 
     filtered: List[Dict] = []
     for row in data:
-        new_row = {{}}
+        new_row = {}
         for col in columns_to_keep:
             v = row.get(col, None)
             new_row[col] = v if v not in ("", None) else None
@@ -185,7 +185,7 @@ def reorganize_results_and_reference(data: List[Dict]) -> List[Dict]:
         begin_i = all_cols.index("Begin")
         parameter_cols = all_cols[ref_i + 1 : begin_i]
 
-        new_row: Dict = {{}}
+        new_row: Dict = {}
         for key in all_cols:
             if key in parameter_cols:
                 continue
@@ -216,9 +216,9 @@ def reorganize_results_and_reference(data: List[Dict]) -> List[Dict]:
                 except Exception:
                     res_val_f = None
 
-            new_row[f"Reference {{p}}"] = ref_val_f
-            new_row[f"Result {{p}}"] = res_val_f
-            new_row[f"Residuum {{p}}"] = (res_val_f - ref_val_f) if (ref_val_f is not None and res_val_f is not None) else None
+            new_row[f"Reference {p}"] = ref_val_f
+            new_row[f"Result {p}"] = res_val_f
+            new_row[f"Residuum {p}"] = (res_val_f - ref_val_f) if (ref_val_f is not None and res_val_f is not None) else None
 
         reorganized.append(new_row)
 
@@ -272,7 +272,7 @@ def clean_tsv_file(uploaded_file) -> pd.DataFrame:
 # =============================================================================
 
 def create_layout(title: str, xaxis_title: str, yaxis_title: str) -> Dict:
-    return {{
+    return {
         "title": title,
         "xaxis_title": xaxis_title,
         "yaxis_title": yaxis_title,
@@ -283,10 +283,10 @@ def create_layout(title: str, xaxis_title: str, yaxis_title: str) -> Dict:
         "template": "plotly",
         "plot_bgcolor": "#E5ECF6",
         "paper_bgcolor": "white",
-        "xaxis": {{"gridcolor": "white"}},
-        "yaxis": {{"gridcolor": "white"}},
+        "xaxis": {"gridcolor": "white"},
+        "yaxis": {"gridcolor": "white"},
         "autosize": True, 
-    }}
+    }
 
 
 def plot_comparison(df: pd.DataFrame, result_col: str, reference_col: str, residuum_col: str):
@@ -328,7 +328,7 @@ def plot_comparison(df: pd.DataFrame, result_col: str, reference_col: str, resid
         n = int(len(x))
 
         hovertext = [
-            f"Date: {{date_val}}<br>ID: {{id_val}}<br>Reference: {{x_val:.2f}}<br>Result: {{y_val:.2f}}"
+            f"Date: {date_val}<br>ID: {id_val}<br>Reference: {x_val:.2f}<br>Result: {y_val:.2f}"
             for id_val, date_val, x_val, y_val in zip(hover_id, hover_date, x, y)
         ]
 
@@ -342,7 +342,7 @@ def plot_comparison(df: pd.DataFrame, result_col: str, reference_col: str, resid
 
         # Residuum vs N
         hovertext_res = [
-            f"Date: {{date_val}}<br>ID: {{id_val}}<br>Residuum: {{res_val:.2f}}"
+            f"Date: {date_val}<br>ID: {id_val}<br>Residuum: {res_val:.2f}"
             for id_val, date_val, res_val in zip(hover_id, hover_date, residuum)
         ]
         fig_res = go.Figure(
@@ -358,7 +358,7 @@ def plot_comparison(df: pd.DataFrame, result_col: str, reference_col: str, resid
         return fig_parity, fig_res, fig_hist, r2, rmse, bias, n
 
     except Exception as e:
-        st.error(f"Error generando plots para {{result_col}}: {{e}}")
+        st.error(f"Error generando plots para {result_col}: {e}")
         return None
 
 
@@ -394,14 +394,14 @@ def build_spectra_figure(df: pd.DataFrame) -> Optional[go.Figure]:
                 y=y,
                 mode="lines",
                 showlegend=False,
-                line={{"width": 1}},
+                line={"width": 1},
                 opacity=0.35,
                 hovertemplate=(
-                    f"ID: {{hover_id.iloc[i]}}<br>"
-                    f"Date: {{hover_date.iloc[i]}}<br>"
-                    f"Note: {{hover_note.iloc[i]}}<br>"
-                    "Pixel: %{{x}}<br>"
-                    "Abs: %{{y}}<extra></extra>"
+                    f"ID: {hover_id.iloc[i]}<br>"
+                    f"Date: {hover_date.iloc[i]}<br>"
+                    f"Note: {hover_note.iloc[i]}<br>"
+                    "Pixel: %{x}<br>"
+                    "Abs: %{y}<extra></extra>"
                 ),
             )
         )
@@ -416,8 +416,8 @@ def build_spectra_figure(df: pd.DataFrame) -> Optional[go.Figure]:
         template="plotly",
         plot_bgcolor="#E5ECF6",
         paper_bgcolor="white",
-        xaxis={{"gridcolor": "white"}},
-        yaxis={{"gridcolor": "white"}},
+        xaxis={"gridcolor": "white"},
+        yaxis={"gridcolor": "white"},
     )
     return fig
 
@@ -470,7 +470,7 @@ def generate_html_report(df: pd.DataFrame, file_name: str) -> str:
         if plots:
             valid_params.append((param_name, param_id, plots))
             fig_parity, fig_res, fig_hist, r2, rmse, bias, n = plots
-            summary_data.append({{"Parameter": param_name, "R2": r2, "RMSE": rmse, "BIAS": bias, "N": n}})
+            summary_data.append({"Parameter": param_name, "R2": r2, "RMSE": rmse, "BIAS": bias, "N": n})
 
     # ========================================================================
     # CONSTRUCCIÓN DEL SIDEBAR
@@ -493,8 +493,8 @@ def generate_html_report(df: pd.DataFrame, file_name: str) -> str:
                     <ul style="padding-left: 15px; margin-top: 5px;">
 '''
         for param_name, param_id, _ in valid_params:
-            onclick_code = f"$('#tab-{{param_id}}').tab('show'); document.getElementById('tabs-section').scrollIntoView({{{{behavior: 'smooth'}}}}); return false;"
-            sidebar_items += f'                        <li><a href="#" onclick="{{onclick_code}}">{{param_name}}</a></li>\n'
+            onclick_code = f"$('#tab-{param_id}').tab('show'); document.getElementById('tabs-section').scrollIntoView({{behavior: 'smooth'}}); return false;"
+            sidebar_items += f'                        <li><a href="#" onclick="{onclick_code}">{param_name}</a></li>\n'
         
         sidebar_items += '''
                     </ul>
@@ -525,7 +525,7 @@ def generate_html_report(df: pd.DataFrame, file_name: str) -> str:
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Validation Report - {{file_name}}</title>
+    <title>Validation Report - {file_name}</title>
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
@@ -546,15 +546,15 @@ def generate_html_report(df: pd.DataFrame, file_name: str) -> str:
     <script src="https://cdn.datatables.net/fixedheader/3.1.8/js/dataTables.fixedHeader.min.js"></script>
 
     <style>
-{{buchi_css}}
-{{sidebar_css}}
-{{common_css}}
+{buchi_css}
+{sidebar_css}
+{common_css}
     </style>
 </head>
 <body>
     <!-- SIDEBAR -->
     <div class="sidebar">
-{{sidebar_items}}
+{sidebar_items}
     </div>
 
     <!-- MAIN CONTENT -->
@@ -567,19 +567,19 @@ def generate_html_report(df: pd.DataFrame, file_name: str) -> str:
             <table>
                 <tr>
                     <th>Archivo</th>
-                    <td>{{file_name}}</td>
+                    <td>{file_name}</td>
                 </tr>
                 <tr>
                     <th>Fecha de generación</th>
-                    <td>{{timestamp}}</td>
+                    <td>{timestamp}</td>
                 </tr>
                 <tr>
                     <th>Número de muestras</th>
-                    <td>{{len(df)}}</td>
+                    <td>{len(df)}</td>
                 </tr>
                 <tr>
                     <th>Parámetros analizados</th>
-                    <td>{{len(valid_params)}}</td>
+                    <td>{len(valid_params)}</td>
                 </tr>
             </table>
             <p class="text-caption">
@@ -597,7 +597,7 @@ def generate_html_report(df: pd.DataFrame, file_name: str) -> str:
 """
 
     for row in summary_data:
-        html_content += f"<th>{{row['Parameter']}}</th>"
+        html_content += f"<th>{row['Parameter']}</th>"
 
     html_content += """
                     </tr>
@@ -607,7 +607,7 @@ def generate_html_report(df: pd.DataFrame, file_name: str) -> str:
                         <td><strong>R²</strong></td>
 """
     for row in summary_data:
-        html_content += f"<td>{{row['R2']:.3f}}</td>"
+        html_content += f"<td>{row['R2']:.3f}</td>"
 
     html_content += """
                     </tr>
@@ -615,7 +615,7 @@ def generate_html_report(df: pd.DataFrame, file_name: str) -> str:
                         <td><strong>RMSE</strong></td>
 """
     for row in summary_data:
-        html_content += f"<td>{{row['RMSE']:.3f}}</td>"
+        html_content += f"<td>{row['RMSE']:.3f}</td>"
 
     html_content += """
                     </tr>
@@ -623,7 +623,7 @@ def generate_html_report(df: pd.DataFrame, file_name: str) -> str:
                         <td><strong>BIAS</strong></td>
 """
     for row in summary_data:
-        html_content += f"<td>{{row['BIAS']:.3f}}</td>"
+        html_content += f"<td>{row['BIAS']:.3f}</td>"
 
     html_content += """
                     </tr>
@@ -631,7 +631,7 @@ def generate_html_report(df: pd.DataFrame, file_name: str) -> str:
                         <td><strong>N</strong></td>
 """
     for row in summary_data:
-        html_content += f"<td>{{row['N']}}</td>"
+        html_content += f"<td>{row['N']}</td>"
 
     html_content += """
                     </tr>
@@ -650,7 +650,7 @@ def generate_html_report(df: pd.DataFrame, file_name: str) -> str:
                 <em>Overlay de todos los espectros NIR (columnas #1..#n).</em>
             </p>
             <div class="plot-container">
-                {{spectra_html}}
+                {spectra_html}
             </div>
         </div>
 """
@@ -673,8 +673,8 @@ def generate_html_report(df: pd.DataFrame, file_name: str) -> str:
             first_tab = False
             html_content += f"""
                 <li class="nav-item">
-                    <a class="nav-link {{active_class}}" id="tab-{{param_id}}" data-toggle="tab"
-                       href="#content-{{param_id}}" role="tab">{{param_name}}</a>
+                    <a class="nav-link {active_class}" id="tab-{param_id}" data-toggle="tab"
+                       href="#content-{param_id}" role="tab">{param_name}</a>
                 </li>
 """
 
@@ -695,7 +695,7 @@ def generate_html_report(df: pd.DataFrame, file_name: str) -> str:
             fig_histogram_html = fig_histogram.to_html(full_html=False, include_plotlyjs=False)
 
             html_content += f"""
-                <div class="tab-pane fade {{active_class}}" id="content-{{param_id}}" role="tabpanel">
+                <div class="tab-pane fade {active_class}" id="content-{param_id}" role="tabpanel">
                     <div class="stats-box">
                         <table>
                             <tr>
@@ -705,37 +705,37 @@ def generate_html_report(df: pd.DataFrame, file_name: str) -> str:
                                 <td><strong>N</strong></td>
                             </tr>
                             <tr>
-                                <td>{{r2:.3f}}</td>
-                                <td>{{rmse:.3f}}</td>
-                                <td>{{bias:.3f}}</td>
-                                <td>{{n}}</td>
+                                <td>{r2:.3f}</td>
+                                <td>{rmse:.3f}</td>
+                                <td>{bias:.3f}</td>
+                                <td>{n}</td>
                             </tr>
                         </table>
                     </div>
 
-                    <div id="carousel-{{param_id}}" class="carousel slide" data-ride="carousel" data-interval="false">
+                    <div id="carousel-{param_id}" class="carousel slide" data-ride="carousel" data-interval="false">
                         <ol class="carousel-indicators">
-                            <li data-target="#carousel-{{param_id}}" data-slide-to="0" class="active"></li>
-                            <li data-target="#carousel-{{param_id}}" data-slide-to="1"></li>
-                            <li data-target="#carousel-{{param_id}}" data-slide-to="2"></li>
+                            <li data-target="#carousel-{param_id}" data-slide-to="0" class="active"></li>
+                            <li data-target="#carousel-{param_id}" data-slide-to="1"></li>
+                            <li data-target="#carousel-{param_id}" data-slide-to="2"></li>
                         </ol>
 
                         <div class="carousel-inner">
                             <div class="carousel-item active">
-                                <div class="plot-container">{{fig_parity_html}}</div>
+                                <div class="plot-container">{fig_parity_html}</div>
                             </div>
                             <div class="carousel-item">
-                                <div class="plot-container">{{fig_residuum_html}}</div>
+                                <div class="plot-container">{fig_residuum_html}</div>
                             </div>
                             <div class="carousel-item">
-                                <div class="plot-container">{{fig_histogram_html}}</div>
+                                <div class="plot-container">{fig_histogram_html}</div>
                             </div>
                         </div>
 
-                        <a class="carousel-control-prev" href="#carousel-{{param_id}}" role="button" data-slide="prev">
+                        <a class="carousel-control-prev" href="#carousel-{param_id}" role="button" data-slide="prev">
                             <span class="carousel-control-prev-icon"></span>
                         </a>
-                        <a class="carousel-control-next" href="#carousel-{{param_id}}" role="button" data-slide="next">
+                        <a class="carousel-control-next" href="#carousel-{param_id}" role="button" data-slide="next">
                             <span class="carousel-control-next-icon"></span>
                         </a>
                     </div>
@@ -759,7 +759,7 @@ def generate_html_report(df: pd.DataFrame, file_name: str) -> str:
                     <tr>
 """
     for col in df.columns:
-        html_content += f"<th>{{col}}</th>"
+        html_content += f"<th>{col}</th>"
 
     html_content += """
                     </tr>
@@ -774,7 +774,7 @@ def generate_html_report(df: pd.DataFrame, file_name: str) -> str:
             if pd.isna(v):
                 html_content += "<td></td>"
             else:
-                html_content += f"<td>{{v}}</td>"
+                html_content += f"<td>{v}</td>"
         html_content += "</tr>"
 
     html_content += f"""
@@ -785,8 +785,8 @@ def generate_html_report(df: pd.DataFrame, file_name: str) -> str:
         <!-- FOOTER -->
         <div style="margin-top: 50px; padding-top: 20px; border-top: 2px solid #eee; text-align: center; color: #666; font-size: 12px;">
             <p>Informe generado automáticamente por COREF Suite</p>
-            <p>Fecha: {{timestamp}}</p>
-            <p>© {{year}} BÜCHI Labortechnik AG</p>
+            <p>Fecha: {timestamp}</p>
+            <p>© {year} BÜCHI Labortechnik AG</p>
         </div>
     </div>
 
@@ -857,6 +857,7 @@ def generate_html_report(df: pd.DataFrame, file_name: str) -> str:
     }});
     </script>
 
+
 </body>
 </html>
 """
@@ -887,7 +888,7 @@ uploaded_files = st.file_uploader(
 )
 
 if uploaded_files:
-    st.success(f"✅ {{len(uploaded_files)}} archivo(s) cargado(s)")
+    st.success(f"✅ {len(uploaded_files)} archivo(s) cargado(s)")
     
     # ========================================================================
     # FILTRO POR FECHAS
@@ -922,11 +923,11 @@ if uploaded_files:
     if start_date or end_date:
         filter_info = "🔍 **Filtro activo:** "
         if start_date and end_date:
-            filter_info += f"Desde {{start_date.strftime('%d/%m/%Y')}} hasta {{end_date.strftime('%d/%m/%Y')}}"
+            filter_info += f"Desde {start_date.strftime('%d/%m/%Y')} hasta {end_date.strftime('%d/%m/%Y')}"
         elif start_date:
-            filter_info += f"Desde {{start_date.strftime('%d/%m/%Y')}} en adelante"
+            filter_info += f"Desde {start_date.strftime('%d/%m/%Y')} en adelante"
         elif end_date:
-            filter_info += f"Hasta {{end_date.strftime('%d/%m/%Y')}}"
+            filter_info += f"Hasta {end_date.strftime('%d/%m/%Y')}"
         st.info(filter_info)
     
     st.markdown("---")
@@ -941,7 +942,7 @@ if uploaded_files:
 
         for idx, uploaded_file in enumerate(uploaded_files, start=1):
             file_name = uploaded_file.name.replace(".tsv", "").replace(".txt", "")
-            status_text.text(f"Procesando {{file_name}}...")
+            status_text.text(f"Procesando {file_name}...")
 
             try:
                 # Limpiar datos
@@ -964,23 +965,23 @@ if uploaded_files:
                     rows_after = len(df_filtered)
                     
                     if rows_before != rows_after:
-                        st.info(f"📊 {{file_name}}: {{rows_before}} → {{rows_after}} filas después del filtro de fechas")
+                        st.info(f"📊 {file_name}: {rows_before} → {rows_after} filas después del filtro de fechas")
                     
                     if rows_after == 0:
-                        st.warning(f"⚠️ {{file_name}}: No hay datos en el rango de fechas seleccionado. Se omite este archivo.")
+                        st.warning(f"⚠️ {file_name}: No hay datos en el rango de fechas seleccionado. Se omite este archivo.")
                         continue
                 else:
                     if start_date or end_date:
-                        st.warning(f"⚠️ {{file_name}}: No tiene columna 'Date', se ignora el filtro de fechas.")
+                        st.warning(f"⚠️ {file_name}: No tiene columna 'Date', se ignora el filtro de fechas.")
 
                 # Generar reporte
                 html = generate_html_report(df_filtered, file_name)
 
                 results.append(ReportResult(name=file_name, html=html, csv=df_filtered))
-                st.success(f"✅ {{file_name}} procesado correctamente")
+                st.success(f"✅ {file_name} procesado correctamente")
 
             except Exception as e:
-                st.error(f"❌ Error procesando {{file_name}}: {{e}}")
+                st.error(f"❌ Error procesando {file_name}: {e}")
                 import traceback
                 st.code(traceback.format_exc())
 
@@ -997,8 +998,8 @@ if uploaded_files:
                 zip_buffer = BytesIO()
                 with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
                     for r in results:
-                        zf.writestr(f"{{r.name}}.html", r.html)
-                        zf.writestr(f"{{r.name}}_cleaned.csv", r.csv.to_csv(sep=";", index=False))
+                        zf.writestr(f"{r.name}.html", r.html)
+                        zf.writestr(f"{r.name}_cleaned.csv", r.csv.to_csv(sep=";", index=False))
 
                 st.download_button(
                     label="📦 Descargar todos los reportes (ZIP)",
@@ -1012,13 +1013,13 @@ if uploaded_files:
 
            # Individual downloads
             for r in results:
-                st.markdown(f"**{{r.name}}**")
+                st.markdown(f"**{r.name}**")
                 st.download_button(
                     label="💾 Descargar Informe HTML",
                     data=r.html,
-                    file_name=f"{{r.name}}.html",
+                    file_name=f"{r.name}.html",
                     mime="text/html",
-                    key=f"html_{{r.name}}",
+                    key=f"html_{r.name}",
                 )
                 st.markdown("---")
         
