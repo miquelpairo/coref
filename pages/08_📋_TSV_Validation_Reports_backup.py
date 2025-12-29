@@ -1,7 +1,15 @@
 """
 COREF - TSV Validation Reports
 ==============================
-VERSIÓN OPTIMIZADA: Selección mediante botones + click events
+Genera informes HTML interactivos (Bootstrap + DataTables + Plotly) a partir de TSV
+(export/journal), incluyendo:
+- Limpieza y reorganización tipo Node-RED
+- Parity / Residuum vs N / Histograma por parámetro
+- Summary of statistics
+- NUEVO: Plot de espectros (columnas #1..#n) + Filtro por fechas
+- OPTIMIZADO: Sin tabla de datos (más ligero)
+
+Autor: Miquel
 """
 
 from __future__ import annotations
@@ -12,7 +20,7 @@ import zipfile
 from dataclasses import dataclass
 from datetime import datetime
 from io import BytesIO
-from typing import Dict, List, Optional, Tuple, Set
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -34,7 +42,7 @@ if not check_password():
     st.stop()
 
 st.title("📋 TSV Validation Reports")
-st.markdown("## Generación de informes de validación NIR (TSV) con previsualización y selección de muestras.")
+st.markdown("## Generación de informes de validación NIR (TSV) con gráficos interactivos y espectros.")
 
 # Información de uso
 with st.expander("ℹ️ Instrucciones de Uso"):
@@ -57,41 +65,25 @@ with st.expander("ℹ️ Instrucciones de Uso"):
     - Reorganiza columnas: Reference, Result, Residuum por parámetro
     - Convierte formatos de fecha automáticamente
     
-    **4. Previsualización y Selección (NUEVO):**
-    - Visualiza espectros y gráficos de parámetros
-    - Marca muestras en la tabla para eliminar (checkbox)
-    - Revisa estadísticas y outliers visualmente
-    - Elimina muestras problemáticas antes de generar el reporte
-    
-    **5. Generación de Reportes:**
-    - Presiona **"Generar Informe Final"**
+    **4. Generación de Reportes:**
+    - Presiona **"Procesar y Generar Reportes"**
     - Genera informes HTML interactivos con:
         - Resumen estadístico (R², RMSE, BIAS, N)
         - Gráficos por parámetro (Parity, Residuum vs N, Histograma)
         - Plot de espectros NIR (columnas #1..#n)
         - Sidebar de navegación estilo BUCHI
     
-    **6. Descargar Resultados:**
+    **5. Descargar Resultados:**
     - HTML: Reporte completo interactivo con Plotly
     - ZIP: Descarga todos los reportes si procesas múltiples archivos
     
     **Características:**
     - ✅ Gráficos interactivos con Plotly (zoom, pan, hover)
-    - ✅ Selección mediante tabla interactiva
-    - ✅ Previsualización antes de generar reporte
     - ✅ Diseño corporativo BUCHI con sidebar de navegación
     - ✅ Soporte para múltiples parámetros simultáneos
     - ✅ Vista de espectros completos NIR
+    - ✅ Reporte optimizado y ligero
     """)
-
-
-# =============================================================================
-# SESSION STATE INITIALIZATION
-# =============================================================================
-if 'processed_data' not in st.session_state:
-    st.session_state.processed_data = {}  # {filename: DataFrame}
-if 'samples_to_remove' not in st.session_state:
-    st.session_state.samples_to_remove = {}  # {filename: set(indices)}
 
 
 # =============================================================================
@@ -275,7 +267,7 @@ def clean_tsv_file(uploaded_file) -> pd.DataFrame:
 
 
 # =============================================================================
-# PLOTLY FIGURES - PARA VISUALIZACIÓN (SIN SELECCIÓN)
+# PLOTLY FIGURES
 # =============================================================================
 
 def create_layout(title: str, xaxis_title: str, yaxis_title: str) -> Dict:
@@ -292,210 +284,17 @@ def create_layout(title: str, xaxis_title: str, yaxis_title: str) -> Dict:
         "paper_bgcolor": "white",
         "xaxis": {"gridcolor": "white"},
         "yaxis": {"gridcolor": "white"},
-        "autosize": True,
+        "autosize": True, 
     }
 
 
-def plot_comparison_preview(df: pd.DataFrame, result_col: str, reference_col: str, residuum_col: str, 
-                            removed_indices: Set[int] = None):
+def plot_comparison(df: pd.DataFrame, result_col: str, reference_col: str, residuum_col: str):
     """
-    Genera gráficos de previsualización.
-    Los puntos marcados para eliminar se muestran en rojo.
+    Genera:
+    - Parity plot
+    - Residuum vs N
+    - Histograma residuum
     """
-    if removed_indices is None:
-        removed_indices = set()
-    
-    try:
-        valid_mask = (
-            df[reference_col].notna()
-            & df[result_col].notna()
-            & (df[reference_col] != 0)
-            & (df[result_col] != 0)
-        )
-
-        x = df.loc[valid_mask, reference_col]
-        y = df.loc[valid_mask, result_col]
-
-        residuum_series = pd.to_numeric(df.loc[valid_mask, residuum_col], errors="coerce")
-        aligned_mask = residuum_series.notna()
-
-        x = x.loc[aligned_mask]
-        y = y.loc[aligned_mask]
-        residuum = residuum_series.loc[aligned_mask]
-
-        if len(x) < 2 or len(y) < 2:
-            return None
-
-        # Obtener índices originales
-        original_indices = df.loc[valid_mask].loc[aligned_mask].index.tolist()
-        
-        hover_id = df.loc[valid_mask, "ID"] if "ID" in df.columns else pd.Series(range(len(valid_mask)))
-        hover_date = df.loc[valid_mask, "Date"] if "Date" in df.columns else pd.Series([""] * len(valid_mask))
-        hover_id = hover_id.loc[aligned_mask]
-        hover_date = hover_date.loc[aligned_mask]
-
-        # Separar puntos normales vs marcados para eliminar
-        keep_mask = [idx not in removed_indices for idx in original_indices]
-        remove_mask = [idx in removed_indices for idx in original_indices]
-
-        r2 = float(r2_score(x, y))
-        rmse = float(np.sqrt(mean_squared_error(x, y)))
-        bias = float(np.mean(y - x))
-        n = int(len(x))
-
-        # Parity plot
-        fig_parity = go.Figure()
-        
-        # Puntos normales (azul)
-        if any(keep_mask):
-            hovertext_keep = [
-                f"Index: {idx}<br>Date: {date_val}<br>ID: {id_val}<br>Reference: {x_val:.2f}<br>Result: {y_val:.2f}"
-                for idx, id_val, date_val, x_val, y_val, keep in zip(original_indices, hover_id, hover_date, x, y, keep_mask)
-                if keep
-            ]
-            fig_parity.add_trace(go.Scatter(
-                x=x[[i for i, k in enumerate(keep_mask) if k]],
-                y=y[[i for i, k in enumerate(keep_mask) if k]],
-                mode="markers",
-                marker=dict(color="blue", size=8),
-                hovertext=hovertext_keep,
-                hoverinfo="text",
-                name="Data"
-            ))
-        
-        # Puntos marcados para eliminar (rojo)
-        if any(remove_mask):
-            hovertext_remove = [
-                f"⚠️ MARCADO PARA ELIMINAR<br>Index: {idx}<br>Date: {date_val}<br>ID: {id_val}<br>Reference: {x_val:.2f}<br>Result: {y_val:.2f}"
-                for idx, id_val, date_val, x_val, y_val, remove in zip(original_indices, hover_id, hover_date, x, y, remove_mask)
-                if remove
-            ]
-            fig_parity.add_trace(go.Scatter(
-                x=x[[i for i, r in enumerate(remove_mask) if r]],
-                y=y[[i for i, r in enumerate(remove_mask) if r]],
-                mode="markers",
-                marker=dict(color="red", size=10, symbol="x"),
-                hovertext=hovertext_remove,
-                hoverinfo="text",
-                name="Marked for removal"
-            ))
-        
-        # Líneas de referencia
-        fig_parity.add_trace(go.Scatter(x=x, y=x, mode="lines", line=dict(dash="dash", color="gray"), name="y = x", showlegend=False))
-        fig_parity.add_trace(go.Scatter(x=x, y=x + rmse, mode="lines", line=dict(dash="dash", color="orange"), name="RMSE", showlegend=False))
-        fig_parity.add_trace(go.Scatter(x=x, y=x - rmse, mode="lines", line=dict(dash="dash", color="orange"), showlegend=False))
-        
-        fig_parity.update_layout(**create_layout("Parity Plot", reference_col, result_col))
-
-        # Residuum vs N
-        hovertext_res = [
-            f"Index: {idx}<br>Date: {date_val}<br>ID: {id_val}<br>Residuum: {res_val:.2f}"
-            for idx, id_val, date_val, res_val in zip(original_indices, hover_id, hover_date, residuum)
-        ]
-        
-        colors = ["red" if idx in removed_indices else "blue" for idx in original_indices]
-        
-        fig_res = go.Figure(
-            go.Bar(
-                x=list(range(len(residuum))),
-                y=residuum,
-                hovertext=hovertext_res,
-                hoverinfo="text",
-                name="Residuum",
-                marker=dict(color=colors)
-            )
-        )
-        fig_res.update_layout(**create_layout("Residuum vs N", "N", "Residuum"))
-
-        # Histograma
-        fig_hist = go.Figure()
-        fig_hist.add_trace(go.Histogram(x=residuum, nbinsx=20, marker=dict(color="blue")))
-        fig_hist.update_layout(**create_layout("Residuum Histogram", "Residuum", "Count"))
-
-        return fig_parity, fig_res, fig_hist, r2, rmse, bias, n
-
-    except Exception as e:
-        st.error(f"Error generando plots para {result_col}: {e}")
-        return None
-
-
-def build_spectra_figure_preview(df: pd.DataFrame, removed_indices: Set[int] = None) -> Optional[go.Figure]:
-    if removed_indices is None:
-        removed_indices = set()
-    
-    pixel_cols = [c for c in df.columns if _is_pixel_col(c)]
-    if not pixel_cols:
-        return None
-
-    pixel_cols = sorted(pixel_cols, key=lambda s: int(str(s)[1:]))
-    x = [int(str(c)[1:]) for c in pixel_cols]
-
-    spec = (
-        df[pixel_cols]
-        .replace(",", ".", regex=True)
-        .apply(pd.to_numeric, errors="coerce")
-    )
-
-    hover_id = df["ID"].astype(str) if "ID" in df.columns else pd.Series([str(i) for i in range(len(df))])
-    hover_date = df["Date"].astype(str) if "Date" in df.columns else pd.Series([""] * len(df))
-    hover_note = df["Note"].astype(str) if "Note" in df.columns else pd.Series([""] * len(df))
-
-    fig = go.Figure()
-
-    for i in range(len(df)):
-        y = spec.iloc[i].to_numpy()
-
-        if np.all(np.isnan(y)):
-            continue
-
-        # Color según si está marcado para eliminar
-        color = "red" if i in removed_indices else "blue"
-        opacity = 0.7 if i in removed_indices else 0.35
-        width = 2 if i in removed_indices else 1
-        
-        prefix = "⚠️ MARCADO - " if i in removed_indices else ""
-
-        fig.add_trace(
-            go.Scatter(
-                x=x,
-                y=y,
-                mode="lines",
-                showlegend=False,
-                line={"width": width, "color": color},
-                opacity=opacity,
-                hovertemplate=(
-                    f"{prefix}Index: {i}<br>"
-                    f"ID: {hover_id.iloc[i]}<br>"
-                    f"Date: {hover_date.iloc[i]}<br>"
-                    f"Note: {hover_note.iloc[i]}<br>"
-                    "Pixel: %{x}<br>"
-                    "Abs: %{y}<extra></extra>"
-                )
-            )
-        )
-
-    fig.update_layout(
-        title="Spectra Preview",
-        xaxis_title="Pixel",
-        yaxis_title="Absorbance (AU)",
-        autosize=True,
-        height=700,
-        hovermode="closest",
-        template="plotly",
-        plot_bgcolor="#E5ECF6",
-        paper_bgcolor="white",
-        xaxis={"gridcolor": "white"},
-        yaxis={"gridcolor": "white"}
-    )
-    return fig
-
-
-# =============================================================================
-# HTML REPORT GENERATION (funciones para reporte final)
-# =============================================================================
-
-def plot_comparison_for_report(df: pd.DataFrame, result_col: str, reference_col: str, residuum_col: str):
-    """Versión simple para reportes finales"""
     try:
         valid_mask = (
             df[reference_col].notna()
@@ -562,7 +361,7 @@ def plot_comparison_for_report(df: pd.DataFrame, result_col: str, reference_col:
         return None
 
 
-def build_spectra_figure_for_report(df: pd.DataFrame) -> Optional[go.Figure]:
+def build_spectra_figure(df: pd.DataFrame) -> Optional[go.Figure]:
     pixel_cols = [c for c in df.columns if _is_pixel_col(c)]
     if not pixel_cols:
         return None
@@ -622,6 +421,10 @@ def build_spectra_figure_for_report(df: pd.DataFrame) -> Optional[go.Figure]:
     return fig
 
 
+# =============================================================================
+# HTML REPORT GENERATION
+# =============================================================================
+
 def _safe_html_id(s: str) -> str:
     s = s.strip()
     s = s.replace(" ", "-").replace("/", "-").replace("\\", "-")
@@ -647,7 +450,7 @@ def generate_html_report(df: pd.DataFrame, file_name: str) -> str:
     columns_residuum = [c.replace("Result ", "Residuum ") for c in columns_result]
 
     summary_data: List[Dict] = []
-    fig_spectra = build_spectra_figure_for_report(df)
+    fig_spectra = build_spectra_figure(df)
     plotly_already_included = False
 
     def _fig_html(fig: go.Figure) -> str:
@@ -662,7 +465,7 @@ def generate_html_report(df: pd.DataFrame, file_name: str) -> str:
     for result_col, reference_col, residuum_col in zip(columns_result, columns_reference, columns_residuum):
         param_name = str(result_col).replace("Result ", "")
         param_id = _safe_html_id(param_name)
-        plots = plot_comparison_for_report(df, result_col, reference_col, residuum_col)
+        plots = plot_comparison(df, result_col, reference_col, residuum_col)
         if plots:
             valid_params.append((param_name, param_id, plots))
             fig_parity, fig_res, fig_hist, r2, rmse, bias, n = plots
@@ -946,12 +749,21 @@ def generate_html_report(df: pd.DataFrame, file_name: str) -> str:
 
     <script>
     $(document).ready(function() {{
+        // =========================
+        // FIX Plotly + Carousel + Tabs
+        // =========================
         function forcePlotlyAutosize($root) {{
             $root = $root && $root.length ? $root : $(document);
-            var $plots = $root.find('.carousel-item.active .plotly-graph-div, .tab-pane.active .plotly-graph-div');
+
+            var $plots = $root.find(
+                '.carousel-item.active .plotly-graph-div, ' +
+                '.tab-pane.active .plotly-graph-div'
+            );
+
             $plots.each(function() {{
                 var gd = this;
                 if (!gd) return;
+
                 requestAnimationFrame(function() {{
                     requestAnimationFrame(function() {{
                         try {{ Plotly.Plots.resize(gd); }} catch(e) {{}}
@@ -961,15 +773,18 @@ def generate_html_report(df: pd.DataFrame, file_name: str) -> str:
             }});
         }}
 
+        // 1) Cambio de TAB
         $('a[data-toggle="tab"]').on('shown.bs.tab', function(e) {{
             var target = $(e.target).attr('href');
             forcePlotlyAutosize($(target));
         }});
 
+        // 2) Cambio de SLIDE del carrusel
         $(document).on('slid.bs.carousel', '.carousel', function() {{
             forcePlotlyAutosize($(this));
         }});
 
+        // 3) Primer render
         forcePlotlyAutosize($(document));
     }});
     </script>
@@ -982,11 +797,19 @@ def generate_html_report(df: pd.DataFrame, file_name: str) -> str:
 
 
 # =============================================================================
-# STREAMLIT UI - FILTROS DE FECHA PRIMERO
+# STREAMLIT UI
 # =============================================================================
 
+
 st.markdown("---")
-st.markdown("### 📁 FASE 1: Carga y Filtrado de Archivos")
+st.markdown("### 📁 Carga de archivos")
+st.info(
+    """
+1. **Carga** uno o varios archivos TSV
+2. **Opcionalmente filtra** por rango de fechas
+
+"""
+)
 
 uploaded_files = st.file_uploader(
     "Cargar archivos TSV",
@@ -999,11 +822,10 @@ if uploaded_files:
     st.success(f"✅ {len(uploaded_files)} archivo(s) cargado(s)")
     
     # ========================================================================
-    # FILTROS DE FECHA - PRIMERO, ANTES DE PROCESAR
+    # FILTRO POR FECHAS
     # ========================================================================
     st.markdown("---")
-    st.subheader("📅 1. Filtrado por Fechas (Opcional)")
-    st.info("Define el rango de fechas ANTES de procesar. Esto filtrará los datos desde el inicio.")
+    st.subheader("📅 Filtrado por Fechas (Opcional)")
     
     col1, col2, col3 = st.columns([2, 2, 1])
     
@@ -1023,30 +845,31 @@ if uploaded_files:
     
     with col3:
         st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("🗑️ Limpiar fechas"):
-            st.rerun()
+        clear_dates = st.button("🗑️ Limpiar fechas")
+    
+    if clear_dates:
+        st.rerun()
     
     # Mostrar info del filtro
     if start_date or end_date:
-        filter_info = "🔍 **Filtro de fechas configurado:** "
+        filter_info = "🔍 **Filtro activo:** "
         if start_date and end_date:
             filter_info += f"Desde {start_date.strftime('%d/%m/%Y')} hasta {end_date.strftime('%d/%m/%Y')}"
         elif start_date:
             filter_info += f"Desde {start_date.strftime('%d/%m/%Y')} en adelante"
         elif end_date:
             filter_info += f"Hasta {end_date.strftime('%d/%m/%Y')}"
-        st.success(filter_info)
+        st.info(filter_info)
     
     st.markdown("---")
-    st.subheader("2. Procesar Archivos")
     
-    # Procesamiento con filtros aplicados
-    if st.button("🔄 Procesar Archivos con Filtros", type="primary", use_container_width=True):
+    # ========================================================================
+    # PROCESAMIENTO
+    # ========================================================================
+    if st.button("📥 Procesar y Generar Reportes", type="primary", use_container_width=True, key="process_tsv_btn"):
+        results: List[ReportResult] = []
         progress_bar = st.progress(0)
         status_text = st.empty()
-        
-        st.session_state.processed_data = {}
-        st.session_state.samples_to_remove = {}
 
         for idx, uploaded_file in enumerate(uploaded_files, start=1):
             file_name = uploaded_file.name.replace(".tsv", "").replace(".txt", "")
@@ -1056,7 +879,7 @@ if uploaded_files:
                 # Limpiar datos
                 df_clean = clean_tsv_file(uploaded_file)
                 
-                # APLICAR FILTROS DE FECHA INMEDIATAMENTE
+                # Aplicar filtro de fechas si existe
                 df_filtered = df_clean.copy()
                 rows_before = len(df_filtered)
                 
@@ -1066,256 +889,69 @@ if uploaded_files:
                         df_filtered = df_filtered[df_filtered["Date"] >= start_datetime]
                     
                     if end_date is not None:
+                        # Incluir todo el día final (hasta las 23:59:59)
                         end_datetime = pd.Timestamp(end_date) + pd.Timedelta(days=1) - pd.Timedelta(seconds=1)
                         df_filtered = df_filtered[df_filtered["Date"] <= end_datetime]
                     
                     rows_after = len(df_filtered)
                     
-                    if start_date or end_date:
-                        if rows_before != rows_after:
-                            st.info(f"📊 {file_name}: {rows_before} → {rows_after} muestras después del filtro")
-                        
-                        if rows_after == 0:
-                            st.warning(f"⚠️ {file_name}: No hay datos en el rango de fechas. Se omite.")
-                            continue
+                    if rows_before != rows_after:
+                        st.info(f"📊 {file_name}: {rows_before} → {rows_after} filas después del filtro de fechas")
+                    
+                    if rows_after == 0:
+                        st.warning(f"⚠️ {file_name}: No hay datos en el rango de fechas seleccionado. Se omite este archivo.")
+                        continue
                 else:
                     if start_date or end_date:
-                        st.warning(f"⚠️ {file_name}: No tiene columna 'Date', se ignora el filtro de fechas")
-                
-                # Resetear índices para evitar problemas
-                df_filtered = df_filtered.reset_index(drop=True)
-                
-                # Guardar datos YA FILTRADOS
-                st.session_state.processed_data[file_name] = df_filtered
-                st.session_state.samples_to_remove[file_name] = set()
-                
-                st.success(f"✅ {file_name} procesado ({len(df_filtered)} muestras)")
+                        st.warning(f"⚠️ {file_name}: No tiene columna 'Date', se ignora el filtro de fechas.")
+
+                # Generar reporte
+                html = generate_html_report(df_filtered, file_name)
+
+                results.append(ReportResult(name=file_name, html=html, csv=df_filtered))
+                st.success(f"✅ {file_name} procesado correctamente")
 
             except Exception as e:
-                st.error(f"❌ Error: {file_name}: {e}")
+                st.error(f"❌ Error procesando {file_name}: {e}")
                 import traceback
                 st.code(traceback.format_exc())
 
             progress_bar.progress(idx / len(uploaded_files))
 
-        status_text.text("✅ Procesamiento completado")
+        status_text.text("✅ Todos los archivos procesados")
 
-
-# FASE 2: Previsualización SOBRE DATOS YA FILTRADOS
-if st.session_state.processed_data:
-    st.markdown("---")
-    st.markdown("### 🔍 FASE 2: Previsualización y Selección de Muestras")
-    
-    st.info("Los datos mostrados aquí ya incluyen el filtro de fechas aplicado en la Fase 1.")
-    
-    selected_file = st.selectbox(
-        "Archivo:",
-        options=list(st.session_state.processed_data.keys())
-    )
-    
-    if selected_file:
-        # Datos YA FILTRADOS por fecha
-        df_current = st.session_state.processed_data[selected_file]
-        removed_indices = st.session_state.samples_to_remove.get(selected_file, set())
-        
-        # Estadísticas
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric("📊 Total", len(df_current))
-        with col2:
-            st.metric("🗑️ Marcadas", len(removed_indices))
-        with col3:
-            st.metric("✅ Finales", len(df_current) - len(removed_indices))
-        
-        st.markdown("---")
-        
-        # ESPECTROS
-        with st.expander("📈 Vista de Espectros", expanded=True):
-            fig_spectra = build_spectra_figure_preview(df_current, removed_indices)
-            if fig_spectra:
-                st.plotly_chart(fig_spectra, use_container_width=True)
-            else:
-                st.warning("No hay datos espectrales para mostrar")
-        
-        # GRÁFICOS POR PARÁMETRO
-        with st.expander("📊 Gráficos por Parámetro", expanded=True):
-            columns_result = [c for c in df_current.columns if str(c).startswith("Result ")]
-            
-            if columns_result:
-                param_names = [str(c).replace("Result ", "") for c in columns_result]
-                selected_param = st.selectbox("Parámetro:", param_names)
-                
-                result_col = f"Result {selected_param}"
-                reference_col = f"Reference {selected_param}"
-                residuum_col = f"Residuum {selected_param}"
-                
-                plots = plot_comparison_preview(df_current, result_col, reference_col, residuum_col, removed_indices)
-                
-                if plots:
-                    fig_parity, fig_res, fig_hist, r2, rmse, bias, n = plots
-                    
-                    col1, col2, col3, col4 = st.columns(4)
-                    col1.metric("R²", f"{r2:.3f}")
-                    col2.metric("RMSE", f"{rmse:.3f}")
-                    col3.metric("BIAS", f"{bias:.3f}")
-                    col4.metric("N", n)
-                    
-                    tab1, tab2, tab3 = st.tabs(["Parity", "Residuum", "Histogram"])
-                    
-                    with tab1:
-                        st.plotly_chart(fig_parity, use_container_width=True)
-                    with tab2:
-                        st.plotly_chart(fig_res, use_container_width=True)
-                    with tab3:
-                        st.plotly_chart(fig_hist, use_container_width=True)
-                else:
-                    st.error(f"No se pudieron generar gráficos para {selected_param}. Verifica que haya datos válidos.")
-            else:
-                st.warning("No hay parámetros Result en el archivo")
-        
-        st.markdown("---")
-        
-        # TABLA INTERACTIVA
-        st.subheader("🎯 Selección de Muestras")
-        st.info("✅ Marca las filas que quieras eliminar → Presiona **'Actualizar Selección'** → Revisa los gráficos → Confirma eliminación")
-        
-        # Preparar DataFrame para edición
-        df_for_edit = df_current.copy()
-        df_for_edit.insert(0, 'Eliminar', False)
-        
-        # Marcar las ya seleccionadas
-        for idx in removed_indices:
-            if idx in df_for_edit.index:
-                df_for_edit.at[idx, 'Eliminar'] = True
-        
-        # Seleccionar columnas a mostrar
-        display_cols = ['Eliminar']
-        for col in ['ID', 'Date', 'Note']:
-            if col in df_for_edit.columns:
-                display_cols.append(col)
-        
-        # Añadir columnas Result
-        result_cols = [c for c in df_for_edit.columns if str(c).startswith("Result ")]
-        display_cols.extend(result_cols[:3])  # Primeros 3 parámetros
-        
-        edited_df = st.data_editor(
-            df_for_edit[display_cols],
-            column_config={
-                "Eliminar": st.column_config.CheckboxColumn(
-                    "Eliminar",
-                    help="Marcar para eliminar esta muestra",
-                    default=False,
-                )
-            },
-            disabled=[c for c in display_cols if c != 'Eliminar'],
-            hide_index=False,
-            use_container_width=True,
-            key=f"editor_{selected_file}"
-        )
-        
-        st.markdown("---")
-        
-        # Botones de acción en 3 columnas
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            if st.button("🔄 Actualizar Selección", use_container_width=True, help="Actualiza los gráficos con las muestras marcadas"):
-                # Actualizar selección sin eliminar
-                new_removed = set(edited_df[edited_df['Eliminar']].index.tolist())
-                st.session_state.samples_to_remove[selected_file] = new_removed
-                st.success(f"✅ Selección actualizada: {len(new_removed)} muestras marcadas")
-                st.rerun()
-        
-        with col2:
-            if st.button("🗑️ Confirmar Eliminación", type="primary", use_container_width=True, 
-                        disabled=(len(removed_indices) == 0),
-                        help="Elimina definitivamente las muestras marcadas"):
-                if removed_indices:
-                    # Eliminar del DataFrame y resetear índices
-                    df_updated = df_current.drop(index=list(removed_indices)).reset_index(drop=True)
-                    st.session_state.processed_data[selected_file] = df_updated
-                    st.session_state.samples_to_remove[selected_file] = set()
-                    st.success(f"✅ {len(removed_indices)} muestras eliminadas definitivamente")
-                    st.rerun()
-        
-        with col3:
-            if st.button("↩️ Desmarcar Todas", use_container_width=True,
-                        disabled=(len(removed_indices) == 0),
-                        help="Quita todas las marcas de selección"):
-                st.session_state.samples_to_remove[selected_file] = set()
-                st.rerun()
-        
-        # Mostrar resumen de selección
-        if removed_indices:
-            st.warning(f"⚠️ **{len(removed_indices)} muestras marcadas para eliminar**. Los gráficos arriba muestran estas muestras en rojo.")
-
-
-# FASE 3: Generación (datos ya filtrados y depurados)
-if st.session_state.processed_data:
-    st.markdown("---")
-    st.markdown("### 📥 FASE 3: Generar Reportes Finales")
-    
-    st.info("Los reportes se generarán con los datos actuales (después de filtros de fecha y eliminaciones manuales).")
-    
-    # Resumen
-    st.subheader("📋 Resumen de Archivos")
-    summary_data = []
-    for fname, df in st.session_state.processed_data.items():
-        summary_data.append({
-            "Archivo": fname,
-            "Muestras": len(df),
-            "Parámetros": len([c for c in df.columns if str(c).startswith("Result ")])
-        })
-    
-    st.dataframe(pd.DataFrame(summary_data), use_container_width=True, hide_index=True)
-    
-    st.markdown("---")
-    
-    if st.button("📥 Generar Informes HTML", type="primary", use_container_width=True):
-        results: List[ReportResult] = []
-        progress_bar = st.progress(0)
-        
-        for idx, (file_name, df) in enumerate(st.session_state.processed_data.items(), start=1):
-            try:
-                if len(df) == 0:
-                    st.warning(f"⚠️ {file_name}: No hay datos para generar reporte")
-                    continue
-                
-                html = generate_html_report(df, file_name)
-                results.append(ReportResult(name=file_name, html=html, csv=df))
-                st.success(f"✅ {file_name} ({len(df)} muestras)")
-            except Exception as e:
-                st.error(f"❌ {file_name}: {e}")
-                import traceback
-                st.code(traceback.format_exc())
-            
-            progress_bar.progress(idx / len(st.session_state.processed_data))
-        
         if results:
             st.markdown("---")
-            
+            st.subheader("📥 Descargar reportes")
+
+            # ZIP download if multiple
             if len(results) > 1:
                 zip_buffer = BytesIO()
                 with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
                     for r in results:
                         zf.writestr(f"{r.name}.html", r.html)
-                
+
                 st.download_button(
-                    "📦 Descargar todos los reportes (ZIP)",
+                    label="📦 Descargar todos los reportes (ZIP)",
                     data=zip_buffer.getvalue(),
                     file_name="tsv_validation_reports.zip",
                     mime="application/zip",
-                    use_container_width=True
+                    use_container_width=True,
                 )
+
                 st.markdown("---")
-            
+
+           # Individual downloads
             for r in results:
                 st.markdown(f"**{r.name}**")
                 st.download_button(
-                    "💾 Descargar Informe HTML",
+                    label="💾 Descargar Informe HTML",
                     data=r.html,
                     file_name=f"{r.name}.html",
                     mime="text/html",
-                    key=f"dl_{r.name}"
+                    key=f"html_{r.name}",
                 )
                 st.markdown("---")
+        
+        elif start_date or end_date:
+            st.warning("⚠️ No se generaron reportes. Verifica que haya datos en el rango de fechas seleccionado.")

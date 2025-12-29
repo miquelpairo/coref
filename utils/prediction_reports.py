@@ -3,6 +3,7 @@ Prediction Reports - Generación de reportes HTML y texto con estilo COREF Suite
 Optimizado: sin CSS inline, usando report_utils, sidebar estandarizado
 FIXED: Tablas con scroll horizontal + Título "Índice" en sidebar
 NUEVO: Carruseles Bootstrap para gráficos + Orden personalizado de parámetros
+REORDENADO: Gráficos comparativos antes de estadísticas
 """
 
 from datetime import datetime
@@ -311,11 +312,11 @@ def generate_html_report(stats, analyzer, filename):
     sensor_serial = analyzer.sensor_serial if analyzer.sensor_serial else "N/A"
     timestamp = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
     
-    # Definir secciones del sidebar
+    # Definir secciones del sidebar - ORDEN ACTUALIZADO
     sections = [
         ("info-general", "Información General"),
-        ("statistics", "Estadísticas Detalladas"),
-        ("comparison-charts", "Gráficos Comparativos"),
+        ("comparison-charts", "Gráficos Comparativos"),      # ⬆️ SUBIDO
+        ("statistics", "Estadísticas Detalladas"),           # ⬇️ BAJADO
         ("differences-by-product", "Diferencias por Producto")
     ]
     
@@ -362,104 +363,8 @@ def generate_html_report(stats, analyzer, filename):
         </div>
     """
     
-    # Estadísticas por producto - CON PESTAÑAS
-    html += """
-        <div class="info-box" id="statistics">
-            <h2>Estadísticas por Producto y Lámpara</h2>
-            <p class="text-caption section-description">
-                <em>Valores promedio y desviación estándar de cada parámetro analítico.</em>
-            </p>
-            
-            <ul class="nav nav-tabs" id="stats-tabs" role="tablist">
-    """
-    
-    # Generar pestañas
-    for idx, product in enumerate(products):
-        active_class = "active" if idx == 0 else ""
-        product_id = product.replace(' ', '-').replace('/', '-')
-        html += f"""
-                <li class="nav-item">
-                    <a class="nav-link {active_class}" id="tab-{product_id}" data-toggle="tab"
-                       href="#content-{product_id}" role="tab">{product}</a>
-                </li>
-        """
-    
-    html += """
-            </ul>
-            
-            <div class="tab-content" id="stats-tabs-content">
-    """
-    
-    # Generar contenido de cada pestaña
-    for idx, product in enumerate(products):
-        active_class = "show active" if idx == 0 else ""
-        product_id = product.replace(' ', '-').replace('/', '-')
-        
-        # Obtener parámetros del producto
-        if product in analyzer.data:
-            df = analyzer.data[product]
-            excluded_cols = ['No', 'ID', 'Note', 'Product', 'Method', 'Unit', 'Begin', 'End', 'Length']
-            if len(df.columns) > 1:
-                excluded_cols.append(df.columns[1])
-            params = [col for col in df.columns if col not in excluded_cols]
-        else:
-            params = set()
-            for lamp_stats in stats[product].values():
-                params.update([k for k in lamp_stats.keys() if k not in ['n', 'note']])
-            params = sorted(list(params))
-        
-        html += f"""
-                <div class="tab-pane fade {active_class}" id="content-{product_id}" role="tabpanel">
-                    <div class="stats-table-container" style="margin-top: 20px;">
-                        <table class="stats-table">
-                            <thead>
-                                <tr>
-                                    <th class="sticky-col">Lámpara</th>
-                                    <th>N</th>
-        """
-        
-        for param in params:
-            html += f'                                    <th>{param}<br/><span class="text-caption-small">(Media ± SD)</span></th>\n'
-        
-        html += """
-                                </tr>
-                            </thead>
-                            <tbody>
-        """
-        
-        for lamp, lamp_stats in stats[product].items():
-            html += f"""
-                                <tr>
-                                    <td class="sticky-col">{lamp}</td>
-                                    <td>{lamp_stats['n']}</td>
-            """
-            
-            for param in params:
-                if param in lamp_stats:
-                    mean = lamp_stats[param]['mean']
-                    std = lamp_stats[param]['std']
-                    html += f'                                    <td>{mean:.3f} ± {std:.3f}</td>\n'
-                else:
-                    html += '                                    <td>-</td>\n'
-            
-            html += """
-                                </tr>
-            """
-        
-        html += """
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-        """
-    
-    html += """
-            </div>
-        </div>
-    """
-    
     # ========================================================================
-    # GRÁFICOS COMPARATIVOS CON PESTAÑAS
+    # GRÁFICOS COMPARATIVOS CON PESTAÑAS - AHORA PRIMERO
     # ========================================================================
     params_ordered = get_params_in_original_order(analyzer, products)
     normal_params, mahalanobis_params = sort_params_custom(params_ordered)
@@ -569,6 +474,104 @@ def generate_html_report(stats, analyzer, filename):
         """
 
     html += """
+        </div>
+    """
+    
+    # ========================================================================
+    # ESTADÍSTICAS POR PRODUCTO - AHORA DESPUÉS DE LOS GRÁFICOS
+    # ========================================================================
+    html += """
+        <div class="info-box" id="statistics">
+            <h2>Estadísticas por Producto y Lámpara</h2>
+            <p class="text-caption section-description">
+                <em>Valores promedio y desviación estándar de cada parámetro analítico.</em>
+            </p>
+            
+            <ul class="nav nav-tabs" id="stats-tabs" role="tablist">
+    """
+    
+    # Generar pestañas
+    for idx, product in enumerate(products):
+        active_class = "active" if idx == 0 else ""
+        product_id = product.replace(' ', '-').replace('/', '-')
+        html += f"""
+                <li class="nav-item">
+                    <a class="nav-link {active_class}" id="tab-{product_id}" data-toggle="tab"
+                       href="#content-{product_id}" role="tab">{product}</a>
+                </li>
+        """
+    
+    html += """
+            </ul>
+            
+            <div class="tab-content" id="stats-tabs-content">
+    """
+    
+    # Generar contenido de cada pestaña
+    for idx, product in enumerate(products):
+        active_class = "show active" if idx == 0 else ""
+        product_id = product.replace(' ', '-').replace('/', '-')
+        
+        # Obtener parámetros del producto
+        if product in analyzer.data:
+            df = analyzer.data[product]
+            excluded_cols = ['No', 'ID', 'Note', 'Product', 'Method', 'Unit', 'Begin', 'End', 'Length']
+            if len(df.columns) > 1:
+                excluded_cols.append(df.columns[1])
+            params = [col for col in df.columns if col not in excluded_cols]
+        else:
+            params = set()
+            for lamp_stats in stats[product].values():
+                params.update([k for k in lamp_stats.keys() if k not in ['n', 'note']])
+            params = sorted(list(params))
+        
+        html += f"""
+                <div class="tab-pane fade {active_class}" id="content-{product_id}" role="tabpanel">
+                    <div class="stats-table-container" style="margin-top: 20px;">
+                        <table class="stats-table">
+                            <thead>
+                                <tr>
+                                    <th class="sticky-col">Lámpara</th>
+                                    <th>N</th>
+        """
+        
+        for param in params:
+            html += f'                                    <th>{param}<br/><span class="text-caption-small">(Media ± SD)</span></th>\n'
+        
+        html += """
+                                </tr>
+                            </thead>
+                            <tbody>
+        """
+        
+        for lamp, lamp_stats in stats[product].items():
+            html += f"""
+                                <tr>
+                                    <td class="sticky-col">{lamp}</td>
+                                    <td>{lamp_stats['n']}</td>
+            """
+            
+            for param in params:
+                if param in lamp_stats:
+                    mean = lamp_stats[param]['mean']
+                    std = lamp_stats[param]['std']
+                    html += f'                                    <td>{mean:.3f} ± {std:.3f}</td>\n'
+                else:
+                    html += '                                    <td>-</td>\n'
+            
+            html += """
+                                </tr>
+            """
+        
+        html += """
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+        """
+    
+    html += """
+            </div>
         </div>
     """
     
