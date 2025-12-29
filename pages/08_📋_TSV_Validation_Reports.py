@@ -305,11 +305,6 @@ def plot_comparison_preview(df: pd.DataFrame, result_col: str, reference_col: st
     if removed_indices is None:
         removed_indices = set()
     
-    # DEPURACIÓN: Verificar índices
-    st.write(f"DEBUG - DataFrame index: {list(df.index)[:10]}...")
-    st.write(f"DEBUG - removed_indices: {removed_indices}")
-    st.write(f"DEBUG - DataFrame shape: {df.shape}")
-    
     try:
         valid_mask = (
             df[reference_col].notna()
@@ -334,12 +329,8 @@ def plot_comparison_preview(df: pd.DataFrame, result_col: str, reference_col: st
         # Obtener índices originales DEL DATAFRAME FILTRADO
         original_indices = df.loc[valid_mask].loc[aligned_mask].index.tolist()
         
-        st.write(f"DEBUG - original_indices después de filtrado: {original_indices[:10]}...")
-        
         # CRÍTICO: Solo usar removed_indices que existan en original_indices
         valid_removed_indices = removed_indices.intersection(set(original_indices))
-        
-        st.write(f"DEBUG - valid_removed_indices: {valid_removed_indices}")
         
         hover_id = df.loc[valid_mask, "ID"] if "ID" in df.columns else pd.Series(range(len(valid_mask)))
         hover_date = df.loc[valid_mask, "Date"] if "Date" in df.columns else pd.Series([""] * len(valid_mask))
@@ -436,16 +427,13 @@ def plot_comparison_preview(df: pd.DataFrame, result_col: str, reference_col: st
         st.code(traceback.format_exc())
         return None
 
+
 def build_spectra_figure_preview(df: pd.DataFrame, removed_indices: Set[int] = None) -> Optional[go.Figure]:
     if removed_indices is None:
         removed_indices = set()
     
     # CRÍTICO: Solo usar índices que existan en df
     valid_removed = removed_indices.intersection(set(df.index))
-    
-    st.write(f"DEBUG SPECTRA - df.index: {list(df.index)[:10]}...")
-    st.write(f"DEBUG SPECTRA - removed_indices: {removed_indices}")
-    st.write(f"DEBUG SPECTRA - valid_removed: {valid_removed}")
     
     pixel_cols = [c for c in df.columns if _is_pixel_col(c)]
     if not pixel_cols:
@@ -512,6 +500,8 @@ def build_spectra_figure_preview(df: pd.DataFrame, removed_indices: Set[int] = N
         yaxis={"gridcolor": "white"}
     )
     return fig
+
+
 
 # =============================================================================
 # HTML REPORT GENERATION (funciones para reporte final)
@@ -1169,7 +1159,7 @@ if st.session_state.processed_data:
         st.markdown("---")
         
         # ESPECTROS
-        with st.expander("📈 Vista de Espectros", expanded=False):
+        with st.expander("📈 Vista de Espectros", expanded=True):
             try:
                 fig_spectra = build_spectra_figure_preview(df_current, removed_indices)
                 if fig_spectra:
@@ -1182,7 +1172,7 @@ if st.session_state.processed_data:
                 st.code(traceback.format_exc())
         
         # GRÁFICOS POR PARÁMETRO
-        with st.expander("📊 Gráficos por Parámetro", expanded=False):
+        with st.expander("📊 Gráficos por Parámetro", expanded=True):
             columns_result = [c for c in df_current.columns if str(c).startswith("Result ")]
             
             if columns_result:

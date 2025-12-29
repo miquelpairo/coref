@@ -326,8 +326,11 @@ def plot_comparison_preview(df: pd.DataFrame, result_col: str, reference_col: st
         if len(x) < 2 or len(y) < 2:
             return None
 
-        # Obtener índices originales
+        # Obtener índices originales DEL DATAFRAME FILTRADO
         original_indices = df.loc[valid_mask].loc[aligned_mask].index.tolist()
+        
+        # CRÍTICO: Solo usar removed_indices que existan en original_indices
+        valid_removed_indices = removed_indices.intersection(set(original_indices))
         
         hover_id = df.loc[valid_mask, "ID"] if "ID" in df.columns else pd.Series(range(len(valid_mask)))
         hover_date = df.loc[valid_mask, "Date"] if "Date" in df.columns else pd.Series([""] * len(valid_mask))
@@ -335,8 +338,8 @@ def plot_comparison_preview(df: pd.DataFrame, result_col: str, reference_col: st
         hover_date = hover_date.loc[aligned_mask]
 
         # Separar puntos normales vs marcados para eliminar
-        keep_mask = [idx not in removed_indices for idx in original_indices]
-        remove_mask = [idx in removed_indices for idx in original_indices]
+        keep_mask = [idx not in valid_removed_indices for idx in original_indices]
+        remove_mask = [idx in valid_removed_indices for idx in original_indices]
 
         r2 = float(r2_score(x, y))
         rmse = float(np.sqrt(mean_squared_error(x, y)))
@@ -348,14 +351,16 @@ def plot_comparison_preview(df: pd.DataFrame, result_col: str, reference_col: st
         
         # Puntos normales (azul)
         if any(keep_mask):
+            x_keep = x.iloc[[i for i, k in enumerate(keep_mask) if k]]
+            y_keep = y.iloc[[i for i, k in enumerate(keep_mask) if k]]
             hovertext_keep = [
                 f"Index: {idx}<br>Date: {date_val}<br>ID: {id_val}<br>Reference: {x_val:.2f}<br>Result: {y_val:.2f}"
                 for idx, id_val, date_val, x_val, y_val, keep in zip(original_indices, hover_id, hover_date, x, y, keep_mask)
                 if keep
             ]
             fig_parity.add_trace(go.Scatter(
-                x=x[[i for i, k in enumerate(keep_mask) if k]],
-                y=y[[i for i, k in enumerate(keep_mask) if k]],
+                x=x_keep,
+                y=y_keep,
                 mode="markers",
                 marker=dict(color="blue", size=8),
                 hovertext=hovertext_keep,
@@ -365,14 +370,16 @@ def plot_comparison_preview(df: pd.DataFrame, result_col: str, reference_col: st
         
         # Puntos marcados para eliminar (rojo)
         if any(remove_mask):
+            x_remove = x.iloc[[i for i, r in enumerate(remove_mask) if r]]
+            y_remove = y.iloc[[i for i, r in enumerate(remove_mask) if r]]
             hovertext_remove = [
                 f"⚠️ MARCADO PARA ELIMINAR<br>Index: {idx}<br>Date: {date_val}<br>ID: {id_val}<br>Reference: {x_val:.2f}<br>Result: {y_val:.2f}"
                 for idx, id_val, date_val, x_val, y_val, remove in zip(original_indices, hover_id, hover_date, x, y, remove_mask)
                 if remove
             ]
             fig_parity.add_trace(go.Scatter(
-                x=x[[i for i, r in enumerate(remove_mask) if r]],
-                y=y[[i for i, r in enumerate(remove_mask) if r]],
+                x=x_remove,
+                y=y_remove,
                 mode="markers",
                 marker=dict(color="red", size=10, symbol="x"),
                 hovertext=hovertext_remove,
@@ -393,7 +400,7 @@ def plot_comparison_preview(df: pd.DataFrame, result_col: str, reference_col: st
             for idx, id_val, date_val, res_val in zip(original_indices, hover_id, hover_date, residuum)
         ]
         
-        colors = ["red" if idx in removed_indices else "blue" for idx in original_indices]
+        colors = ["red" if idx in valid_removed_indices else "blue" for idx in original_indices]
         
         fig_res = go.Figure(
             go.Bar(
@@ -415,13 +422,18 @@ def plot_comparison_preview(df: pd.DataFrame, result_col: str, reference_col: st
         return fig_parity, fig_res, fig_hist, r2, rmse, bias, n
 
     except Exception as e:
-        st.error(f"Error generando plots para {result_col}: {e}")
+        st.error(f"Error en plot_comparison_preview: {e}")
+        import traceback
+        st.code(traceback.format_exc())
         return None
 
 
 def build_spectra_figure_preview(df: pd.DataFrame, removed_indices: Set[int] = None) -> Optional[go.Figure]:
     if removed_indices is None:
         removed_indices = set()
+    
+    # CRÍTICO: Solo usar índices que existan en df
+    valid_removed = removed_indices.intersection(set(df.index))
     
     pixel_cols = [c for c in df.columns if _is_pixel_col(c)]
     if not pixel_cols:
@@ -442,18 +454,18 @@ def build_spectra_figure_preview(df: pd.DataFrame, removed_indices: Set[int] = N
 
     fig = go.Figure()
 
-    for i in range(len(df)):
-        y = spec.iloc[i].to_numpy()
+    for i in df.index:  # Usar df.index en lugar de range(len(df))
+        y = spec.loc[i].to_numpy()
 
         if np.all(np.isnan(y)):
             continue
 
         # Color según si está marcado para eliminar
-        color = "red" if i in removed_indices else "blue"
-        opacity = 0.7 if i in removed_indices else 0.35
-        width = 2 if i in removed_indices else 1
+        color = "red" if i in valid_removed else "blue"
+        opacity = 0.7 if i in valid_removed else 0.35
+        width = 2 if i in valid_removed else 1
         
-        prefix = "⚠️ MARCADO - " if i in removed_indices else ""
+        prefix = "⚠️ MARCADO - " if i in valid_removed else ""
 
         fig.add_trace(
             go.Scatter(
@@ -465,9 +477,9 @@ def build_spectra_figure_preview(df: pd.DataFrame, removed_indices: Set[int] = N
                 opacity=opacity,
                 hovertemplate=(
                     f"{prefix}Index: {i}<br>"
-                    f"ID: {hover_id.iloc[i]}<br>"
-                    f"Date: {hover_date.iloc[i]}<br>"
-                    f"Note: {hover_note.iloc[i]}<br>"
+                    f"ID: {hover_id.loc[i]}<br>"
+                    f"Date: {hover_date.loc[i]}<br>"
+                    f"Note: {hover_note.loc[i]}<br>"
                     "Pixel: %{x}<br>"
                     "Abs: %{y}<extra></extra>"
                 )
@@ -488,6 +500,7 @@ def build_spectra_figure_preview(df: pd.DataFrame, removed_indices: Set[int] = N
         yaxis={"gridcolor": "white"}
     )
     return fig
+
 
 
 # =============================================================================
@@ -1046,7 +1059,7 @@ if uploaded_files:
         status_text = st.empty()
         
         st.session_state.processed_data = {}
-        st.session_state.samples_to_remove = {}
+        st.session_state.samples_to_remove = {}  # IMPORTANTE: Resetear selecciones
 
         for idx, uploaded_file in enumerate(uploaded_files, start=1):
             file_name = uploaded_file.name.replace(".tsv", "").replace(".txt", "")
@@ -1082,11 +1095,13 @@ if uploaded_files:
                     if start_date or end_date:
                         st.warning(f"⚠️ {file_name}: No tiene columna 'Date', se ignora el filtro de fechas")
                 
-                # Resetear índices para evitar problemas
+                # Resetear índices para evitar problemas - CRÍTICO
                 df_filtered = df_filtered.reset_index(drop=True)
                 
                 # Guardar datos YA FILTRADOS
                 st.session_state.processed_data[file_name] = df_filtered
+                
+                # CRÍTICO: Inicializar con set vacío para este archivo
                 st.session_state.samples_to_remove[file_name] = set()
                 
                 st.success(f"✅ {file_name} procesado ({len(df_filtered)} muestras)")
@@ -1116,7 +1131,21 @@ if st.session_state.processed_data:
     if selected_file:
         # Datos YA FILTRADOS por fecha
         df_current = st.session_state.processed_data[selected_file]
+        
+        # CRÍTICO: Limpiar índices inválidos
         removed_indices = st.session_state.samples_to_remove.get(selected_file, set())
+        
+        # Filtrar solo índices que existen en df_current
+        valid_removed = {idx for idx in removed_indices if idx in df_current.index}
+        
+        # Si había índices inválidos, actualizar
+        if len(valid_removed) != len(removed_indices):
+            invalid_count = len(removed_indices - valid_removed)
+            st.session_state.samples_to_remove[selected_file] = valid_removed
+            if invalid_count > 0:
+                st.warning(f"⚠️ Se limpiaron {invalid_count} selecciones inválidas de sesiones anteriores")
+        
+        removed_indices = valid_removed
         
         # Estadísticas
         col1, col2, col3 = st.columns(3)
@@ -1131,11 +1160,16 @@ if st.session_state.processed_data:
         
         # ESPECTROS
         with st.expander("📈 Vista de Espectros", expanded=True):
-            fig_spectra = build_spectra_figure_preview(df_current, removed_indices)
-            if fig_spectra:
-                st.plotly_chart(fig_spectra, use_container_width=True)
-            else:
-                st.warning("No hay datos espectrales para mostrar")
+            try:
+                fig_spectra = build_spectra_figure_preview(df_current, removed_indices)
+                if fig_spectra:
+                    st.plotly_chart(fig_spectra, use_container_width=True)
+                else:
+                    st.warning("No hay datos espectrales para mostrar")
+            except Exception as e:
+                st.error(f"Error generando espectros: {e}")
+                import traceback
+                st.code(traceback.format_exc())
         
         # GRÁFICOS POR PARÁMETRO
         with st.expander("📊 Gráficos por Parámetro", expanded=True):
@@ -1149,27 +1183,32 @@ if st.session_state.processed_data:
                 reference_col = f"Reference {selected_param}"
                 residuum_col = f"Residuum {selected_param}"
                 
-                plots = plot_comparison_preview(df_current, result_col, reference_col, residuum_col, removed_indices)
-                
-                if plots:
-                    fig_parity, fig_res, fig_hist, r2, rmse, bias, n = plots
+                try:
+                    plots = plot_comparison_preview(df_current, result_col, reference_col, residuum_col, removed_indices)
                     
-                    col1, col2, col3, col4 = st.columns(4)
-                    col1.metric("R²", f"{r2:.3f}")
-                    col2.metric("RMSE", f"{rmse:.3f}")
-                    col3.metric("BIAS", f"{bias:.3f}")
-                    col4.metric("N", n)
-                    
-                    tab1, tab2, tab3 = st.tabs(["Parity", "Residuum", "Histogram"])
-                    
-                    with tab1:
-                        st.plotly_chart(fig_parity, use_container_width=True)
-                    with tab2:
-                        st.plotly_chart(fig_res, use_container_width=True)
-                    with tab3:
-                        st.plotly_chart(fig_hist, use_container_width=True)
-                else:
-                    st.error(f"No se pudieron generar gráficos para {selected_param}. Verifica que haya datos válidos.")
+                    if plots:
+                        fig_parity, fig_res, fig_hist, r2, rmse, bias, n = plots
+                        
+                        col1, col2, col3, col4 = st.columns(4)
+                        col1.metric("R²", f"{r2:.3f}")
+                        col2.metric("RMSE", f"{rmse:.3f}")
+                        col3.metric("BIAS", f"{bias:.3f}")
+                        col4.metric("N", n)
+                        
+                        tab1, tab2, tab3 = st.tabs(["Parity", "Residuum", "Histogram"])
+                        
+                        with tab1:
+                            st.plotly_chart(fig_parity, use_container_width=True)
+                        with tab2:
+                            st.plotly_chart(fig_res, use_container_width=True)
+                        with tab3:
+                            st.plotly_chart(fig_hist, use_container_width=True)
+                    else:
+                        st.error(f"No se pudieron generar gráficos para {selected_param}. Verifica que haya datos válidos.")
+                except Exception as e:
+                    st.error(f"Error generando gráficos para {selected_param}: {e}")
+                    import traceback
+                    st.code(traceback.format_exc())
             else:
                 st.warning("No hay parámetros Result en el archivo")
         
@@ -1234,6 +1273,7 @@ if st.session_state.processed_data:
                     # Eliminar del DataFrame y resetear índices
                     df_updated = df_current.drop(index=list(removed_indices)).reset_index(drop=True)
                     st.session_state.processed_data[selected_file] = df_updated
+                    # Limpiar selecciones
                     st.session_state.samples_to_remove[selected_file] = set()
                     st.success(f"✅ {len(removed_indices)} muestras eliminadas definitivamente")
                     st.rerun()
@@ -1248,7 +1288,6 @@ if st.session_state.processed_data:
         # Mostrar resumen de selección
         if removed_indices:
             st.warning(f"⚠️ **{len(removed_indices)} muestras marcadas para eliminar**. Los gráficos arriba muestran estas muestras en rojo.")
-
 
 # FASE 3: Generación (datos ya filtrados y depurados)
 if st.session_state.processed_data:
