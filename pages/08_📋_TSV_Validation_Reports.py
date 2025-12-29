@@ -1046,7 +1046,7 @@ if uploaded_files:
         status_text = st.empty()
         
         st.session_state.processed_data = {}
-        st.session_state.samples_to_remove = {}
+        st.session_state.samples_to_remove = {}  # IMPORTANTE: Resetear selecciones
 
         for idx, uploaded_file in enumerate(uploaded_files, start=1):
             file_name = uploaded_file.name.replace(".tsv", "").replace(".txt", "")
@@ -1082,11 +1082,13 @@ if uploaded_files:
                     if start_date or end_date:
                         st.warning(f"⚠️ {file_name}: No tiene columna 'Date', se ignora el filtro de fechas")
                 
-                # Resetear índices para evitar problemas
+                # Resetear índices para evitar problemas - CRÍTICO
                 df_filtered = df_filtered.reset_index(drop=True)
                 
                 # Guardar datos YA FILTRADOS
                 st.session_state.processed_data[file_name] = df_filtered
+                
+                # CRÍTICO: Inicializar con set vacío para este archivo
                 st.session_state.samples_to_remove[file_name] = set()
                 
                 st.success(f"✅ {file_name} procesado ({len(df_filtered)} muestras)")
@@ -1116,7 +1118,20 @@ if st.session_state.processed_data:
     if selected_file:
         # Datos YA FILTRADOS por fecha
         df_current = st.session_state.processed_data[selected_file]
+        
+        # CRÍTICO: Limpiar índices inválidos
         removed_indices = st.session_state.samples_to_remove.get(selected_file, set())
+        
+        # Filtrar solo índices que existen en df_current
+        valid_removed = {idx for idx in removed_indices if idx in df_current.index}
+        
+        # Si había índices inválidos, actualizar
+        if len(valid_removed) != len(removed_indices):
+            st.session_state.samples_to_remove[selected_file] = valid_removed
+            if removed_indices - valid_removed:  # Si se eliminaron algunos
+                st.warning(f"⚠️ Se limpiaron {len(removed_indices - valid_removed)} selecciones inválidas")
+        
+        removed_indices = valid_removed
         
         # Estadísticas
         col1, col2, col3 = st.columns(3)
