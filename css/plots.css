@@ -1,3 +1,4 @@
+
 /* ===== CONTENEDORES DE GRÁFICOS ===== */
 
 .row-wrapper {
@@ -6,14 +7,43 @@
   margin: 20px 0;
 }
 
+/* Contenedor general de plots - aplica a todos los gráficos */
 .plot-container {
   display: block;
   width: 100%;
-  max-width: 100%;
-  margin: 0;
+  max-width: 1400px;  /* Ancho máximo general */
+  margin: 0 auto;     /* Centrado horizontal */
   background-color: #ffffff;
   padding: 15px;
   border-radius: 10px;
+}
+
+/* Contenedor de plots dentro de carousel - ancho completo */
+.carousel .plot-container {
+  max-width: 100% !important;  /* Sin límite de ancho en carousel */
+  padding: 10px !important;
+  margin: 0 !important;
+}
+
+/* Forzar que los divs internos también se centren */
+.plot-container > div {
+  margin: 0 auto;
+}
+
+/* Forzar responsive en SVGs de Plotly */
+.plot-container .plotly-graph-div {
+  width: 100% !important;
+  margin: 0 auto;
+}
+
+.plot-container .main-svg {
+  width: 100% !important;
+  height: auto !important;
+}
+
+.plot-container .svg-container {
+  width: 100% !important;
+  height: auto !important;
 }
 
 /* ===== Caja de estadísticas ===== */
@@ -52,4 +82,28 @@
 
 .metrics-section {
   margin-top: 30px;
+}
+
+/* ===============================
+   FIX Plotly Modebar buttons
+   =============================== */
+
+.plotly .modebar-btn,
+.plotly .modebar-btn:hover,
+.plotly .modebar-btn:focus,
+.plotly .modebar-btn:active {
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* Iconos */
+.plotly .modebar-btn svg {
+    fill: #444 !important;
+}
+
+/* Hover correcto (sutil, no verde) */
+.plotly .modebar-btn:hover svg {
+    fill: #000 !important;
 }

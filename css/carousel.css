@@ -46,7 +46,7 @@
   width: 100% !important;
   max-width: 100% !important;
   margin: 0 !important;
-  padding: 0 !important;          /* o 10px si quieres margen interior */
+  padding: 20px !important;          
   background: transparent !important;
 }
 
@@ -58,36 +58,9 @@
 }
 
 .carousel-item {
-  padding: 0 !important;          /* o 10px si quieres aire */
+  padding: 20px !important;          
 }
 
-.plot-container {
-    width: 100%;
-    max-width: none;
-    margin: 0 auto;            
-    justify-content: center;  
-    align-items: center;      
-}
-
-.plot-container > div {
-    margin: 0 auto;
-}
-
-/* Forzar responsive en SVGs de Plotly */
-.plot-container .plotly-graph-div {
-    width: 100% !important;
-    margin: 0 auto;
-}
-
-.plot-container .main-svg {
-    width: 100% !important;
-    height: auto !important;
-}
-
-.plot-container .svg-container {
-    width: 100% !important;
-    height: auto !important;
-}
 
 /* Ajustes para sticky columns en tablas */
 .stats-table {
