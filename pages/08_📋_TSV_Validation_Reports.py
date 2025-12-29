@@ -305,6 +305,11 @@ def plot_comparison_preview(df: pd.DataFrame, result_col: str, reference_col: st
     if removed_indices is None:
         removed_indices = set()
     
+    # DEPURACIÓN: Verificar índices
+    st.write(f"DEBUG - DataFrame index: {list(df.index)[:10]}...")
+    st.write(f"DEBUG - removed_indices: {removed_indices}")
+    st.write(f"DEBUG - DataFrame shape: {df.shape}")
+    
     try:
         valid_mask = (
             df[reference_col].notna()
@@ -326,8 +331,15 @@ def plot_comparison_preview(df: pd.DataFrame, result_col: str, reference_col: st
         if len(x) < 2 or len(y) < 2:
             return None
 
-        # Obtener índices originales
+        # Obtener índices originales DEL DATAFRAME FILTRADO
         original_indices = df.loc[valid_mask].loc[aligned_mask].index.tolist()
+        
+        st.write(f"DEBUG - original_indices después de filtrado: {original_indices[:10]}...")
+        
+        # CRÍTICO: Solo usar removed_indices que existan en original_indices
+        valid_removed_indices = removed_indices.intersection(set(original_indices))
+        
+        st.write(f"DEBUG - valid_removed_indices: {valid_removed_indices}")
         
         hover_id = df.loc[valid_mask, "ID"] if "ID" in df.columns else pd.Series(range(len(valid_mask)))
         hover_date = df.loc[valid_mask, "Date"] if "Date" in df.columns else pd.Series([""] * len(valid_mask))
@@ -335,8 +347,8 @@ def plot_comparison_preview(df: pd.DataFrame, result_col: str, reference_col: st
         hover_date = hover_date.loc[aligned_mask]
 
         # Separar puntos normales vs marcados para eliminar
-        keep_mask = [idx not in removed_indices for idx in original_indices]
-        remove_mask = [idx in removed_indices for idx in original_indices]
+        keep_mask = [idx not in valid_removed_indices for idx in original_indices]
+        remove_mask = [idx in valid_removed_indices for idx in original_indices]
 
         r2 = float(r2_score(x, y))
         rmse = float(np.sqrt(mean_squared_error(x, y)))
@@ -348,14 +360,16 @@ def plot_comparison_preview(df: pd.DataFrame, result_col: str, reference_col: st
         
         # Puntos normales (azul)
         if any(keep_mask):
+            x_keep = x.iloc[[i for i, k in enumerate(keep_mask) if k]]
+            y_keep = y.iloc[[i for i, k in enumerate(keep_mask) if k]]
             hovertext_keep = [
                 f"Index: {idx}<br>Date: {date_val}<br>ID: {id_val}<br>Reference: {x_val:.2f}<br>Result: {y_val:.2f}"
                 for idx, id_val, date_val, x_val, y_val, keep in zip(original_indices, hover_id, hover_date, x, y, keep_mask)
                 if keep
             ]
             fig_parity.add_trace(go.Scatter(
-                x=x[[i for i, k in enumerate(keep_mask) if k]],
-                y=y[[i for i, k in enumerate(keep_mask) if k]],
+                x=x_keep,
+                y=y_keep,
                 mode="markers",
                 marker=dict(color="blue", size=8),
                 hovertext=hovertext_keep,
@@ -365,14 +379,16 @@ def plot_comparison_preview(df: pd.DataFrame, result_col: str, reference_col: st
         
         # Puntos marcados para eliminar (rojo)
         if any(remove_mask):
+            x_remove = x.iloc[[i for i, r in enumerate(remove_mask) if r]]
+            y_remove = y.iloc[[i for i, r in enumerate(remove_mask) if r]]
             hovertext_remove = [
                 f"⚠️ MARCADO PARA ELIMINAR<br>Index: {idx}<br>Date: {date_val}<br>ID: {id_val}<br>Reference: {x_val:.2f}<br>Result: {y_val:.2f}"
                 for idx, id_val, date_val, x_val, y_val, remove in zip(original_indices, hover_id, hover_date, x, y, remove_mask)
                 if remove
             ]
             fig_parity.add_trace(go.Scatter(
-                x=x[[i for i, r in enumerate(remove_mask) if r]],
-                y=y[[i for i, r in enumerate(remove_mask) if r]],
+                x=x_remove,
+                y=y_remove,
                 mode="markers",
                 marker=dict(color="red", size=10, symbol="x"),
                 hovertext=hovertext_remove,
@@ -393,7 +409,7 @@ def plot_comparison_preview(df: pd.DataFrame, result_col: str, reference_col: st
             for idx, id_val, date_val, res_val in zip(original_indices, hover_id, hover_date, residuum)
         ]
         
-        colors = ["red" if idx in removed_indices else "blue" for idx in original_indices]
+        colors = ["red" if idx in valid_removed_indices else "blue" for idx in original_indices]
         
         fig_res = go.Figure(
             go.Bar(
@@ -415,13 +431,21 @@ def plot_comparison_preview(df: pd.DataFrame, result_col: str, reference_col: st
         return fig_parity, fig_res, fig_hist, r2, rmse, bias, n
 
     except Exception as e:
-        st.error(f"Error generando plots para {result_col}: {e}")
+        st.error(f"Error en plot_comparison_preview: {e}")
+        import traceback
+        st.code(traceback.format_exc())
         return None
-
 
 def build_spectra_figure_preview(df: pd.DataFrame, removed_indices: Set[int] = None) -> Optional[go.Figure]:
     if removed_indices is None:
         removed_indices = set()
+    
+    # CRÍTICO: Solo usar índices que existan en df
+    valid_removed = removed_indices.intersection(set(df.index))
+    
+    st.write(f"DEBUG SPECTRA - df.index: {list(df.index)[:10]}...")
+    st.write(f"DEBUG SPECTRA - removed_indices: {removed_indices}")
+    st.write(f"DEBUG SPECTRA - valid_removed: {valid_removed}")
     
     pixel_cols = [c for c in df.columns if _is_pixel_col(c)]
     if not pixel_cols:
@@ -442,18 +466,18 @@ def build_spectra_figure_preview(df: pd.DataFrame, removed_indices: Set[int] = N
 
     fig = go.Figure()
 
-    for i in range(len(df)):
-        y = spec.iloc[i].to_numpy()
+    for i in df.index:  # Usar df.index en lugar de range(len(df))
+        y = spec.loc[i].to_numpy()
 
         if np.all(np.isnan(y)):
             continue
 
         # Color según si está marcado para eliminar
-        color = "red" if i in removed_indices else "blue"
-        opacity = 0.7 if i in removed_indices else 0.35
-        width = 2 if i in removed_indices else 1
+        color = "red" if i in valid_removed else "blue"
+        opacity = 0.7 if i in valid_removed else 0.35
+        width = 2 if i in valid_removed else 1
         
-        prefix = "⚠️ MARCADO - " if i in removed_indices else ""
+        prefix = "⚠️ MARCADO - " if i in valid_removed else ""
 
         fig.add_trace(
             go.Scatter(
@@ -465,9 +489,9 @@ def build_spectra_figure_preview(df: pd.DataFrame, removed_indices: Set[int] = N
                 opacity=opacity,
                 hovertemplate=(
                     f"{prefix}Index: {i}<br>"
-                    f"ID: {hover_id.iloc[i]}<br>"
-                    f"Date: {hover_date.iloc[i]}<br>"
-                    f"Note: {hover_note.iloc[i]}<br>"
+                    f"ID: {hover_id.loc[i]}<br>"
+                    f"Date: {hover_date.loc[i]}<br>"
+                    f"Note: {hover_note.loc[i]}<br>"
                     "Pixel: %{x}<br>"
                     "Abs: %{y}<extra></extra>"
                 )
@@ -488,7 +512,6 @@ def build_spectra_figure_preview(df: pd.DataFrame, removed_indices: Set[int] = N
         yaxis={"gridcolor": "white"}
     )
     return fig
-
 
 # =============================================================================
 # HTML REPORT GENERATION (funciones para reporte final)
