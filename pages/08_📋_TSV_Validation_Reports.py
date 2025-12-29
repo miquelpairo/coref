@@ -1127,9 +1127,10 @@ if st.session_state.processed_data:
         
         # Si había índices inválidos, actualizar
         if len(valid_removed) != len(removed_indices):
+            invalid_count = len(removed_indices - valid_removed)
             st.session_state.samples_to_remove[selected_file] = valid_removed
-            if removed_indices - valid_removed:  # Si se eliminaron algunos
-                st.warning(f"⚠️ Se limpiaron {len(removed_indices - valid_removed)} selecciones inválidas")
+            if invalid_count > 0:
+                st.warning(f"⚠️ Se limpiaron {invalid_count} selecciones inválidas de sesiones anteriores")
         
         removed_indices = valid_removed
         
@@ -1145,15 +1146,20 @@ if st.session_state.processed_data:
         st.markdown("---")
         
         # ESPECTROS
-        with st.expander("📈 Vista de Espectros", expanded=True):
-            fig_spectra = build_spectra_figure_preview(df_current, removed_indices)
-            if fig_spectra:
-                st.plotly_chart(fig_spectra, use_container_width=True)
-            else:
-                st.warning("No hay datos espectrales para mostrar")
+        with st.expander("📈 Vista de Espectros", expanded=False):
+            try:
+                fig_spectra = build_spectra_figure_preview(df_current, removed_indices)
+                if fig_spectra:
+                    st.plotly_chart(fig_spectra, use_container_width=True)
+                else:
+                    st.warning("No hay datos espectrales para mostrar")
+            except Exception as e:
+                st.error(f"Error generando espectros: {e}")
+                import traceback
+                st.code(traceback.format_exc())
         
         # GRÁFICOS POR PARÁMETRO
-        with st.expander("📊 Gráficos por Parámetro", expanded=True):
+        with st.expander("📊 Gráficos por Parámetro", expanded=False):
             columns_result = [c for c in df_current.columns if str(c).startswith("Result ")]
             
             if columns_result:
@@ -1164,27 +1170,32 @@ if st.session_state.processed_data:
                 reference_col = f"Reference {selected_param}"
                 residuum_col = f"Residuum {selected_param}"
                 
-                plots = plot_comparison_preview(df_current, result_col, reference_col, residuum_col, removed_indices)
-                
-                if plots:
-                    fig_parity, fig_res, fig_hist, r2, rmse, bias, n = plots
+                try:
+                    plots = plot_comparison_preview(df_current, result_col, reference_col, residuum_col, removed_indices)
                     
-                    col1, col2, col3, col4 = st.columns(4)
-                    col1.metric("R²", f"{r2:.3f}")
-                    col2.metric("RMSE", f"{rmse:.3f}")
-                    col3.metric("BIAS", f"{bias:.3f}")
-                    col4.metric("N", n)
-                    
-                    tab1, tab2, tab3 = st.tabs(["Parity", "Residuum", "Histogram"])
-                    
-                    with tab1:
-                        st.plotly_chart(fig_parity, use_container_width=True)
-                    with tab2:
-                        st.plotly_chart(fig_res, use_container_width=True)
-                    with tab3:
-                        st.plotly_chart(fig_hist, use_container_width=True)
-                else:
-                    st.error(f"No se pudieron generar gráficos para {selected_param}. Verifica que haya datos válidos.")
+                    if plots:
+                        fig_parity, fig_res, fig_hist, r2, rmse, bias, n = plots
+                        
+                        col1, col2, col3, col4 = st.columns(4)
+                        col1.metric("R²", f"{r2:.3f}")
+                        col2.metric("RMSE", f"{rmse:.3f}")
+                        col3.metric("BIAS", f"{bias:.3f}")
+                        col4.metric("N", n)
+                        
+                        tab1, tab2, tab3 = st.tabs(["Parity", "Residuum", "Histogram"])
+                        
+                        with tab1:
+                            st.plotly_chart(fig_parity, use_container_width=True)
+                        with tab2:
+                            st.plotly_chart(fig_res, use_container_width=True)
+                        with tab3:
+                            st.plotly_chart(fig_hist, use_container_width=True)
+                    else:
+                        st.error(f"No se pudieron generar gráficos para {selected_param}. Verifica que haya datos válidos.")
+                except Exception as e:
+                    st.error(f"Error generando gráficos para {selected_param}: {e}")
+                    import traceback
+                    st.code(traceback.format_exc())
             else:
                 st.warning("No hay parámetros Result en el archivo")
         
@@ -1249,6 +1260,7 @@ if st.session_state.processed_data:
                     # Eliminar del DataFrame y resetear índices
                     df_updated = df_current.drop(index=list(removed_indices)).reset_index(drop=True)
                     st.session_state.processed_data[selected_file] = df_updated
+                    # Limpiar selecciones
                     st.session_state.samples_to_remove[selected_file] = set()
                     st.success(f"✅ {len(removed_indices)} muestras eliminadas definitivamente")
                     st.rerun()
@@ -1263,7 +1275,6 @@ if st.session_state.processed_data:
         # Mostrar resumen de selección
         if removed_indices:
             st.warning(f"⚠️ **{len(removed_indices)} muestras marcadas para eliminar**. Los gráficos arriba muestran estas muestras en rojo.")
-
 
 # FASE 3: Generación (datos ya filtrados y depurados)
 if st.session_state.processed_data:
