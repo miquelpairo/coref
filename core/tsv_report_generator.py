@@ -644,7 +644,7 @@ def generate_html_report(
         
         html_content += """
         <div class="info-box" id="grupos-legend">
-            <h2>🏷️ Leyenda de Grupos de Muestras</h2>
+            <h2>Leyenda de Grupos de Muestras</h2>
             <p class="text-caption">
                 <em>Las muestras han sido clasificadas en grupos personalizados para su análisis.</em>
             </p>
