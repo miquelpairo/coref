@@ -210,6 +210,7 @@ def delete_zero_rows(data: List[Dict]) -> List[Dict]:
     ACTUALIZADO: Maneja valores con unidades (%, ppm) y patrones inválidos ('-.----').
     """
     out: List[Dict] = []
+    
     for row in data:
         # Verificar que existe columna Result
         if "Result" not in row:
@@ -217,8 +218,12 @@ def delete_zero_rows(data: List[Dict]) -> List[Dict]:
         
         result_val = row.get("Result")
         
-        # Verificar que Result no es None o string vacío
-        if result_val is None or str(result_val).strip() == "":
+        # Verificar que Result no es None
+        if result_val is None:
+            continue
+        
+        # Verificar que Result no es string vacío
+        if str(result_val).strip() == "":
             continue
 
         result_values = str(result_val).split(";")
@@ -236,8 +241,10 @@ def delete_zero_rows(data: List[Dict]) -> List[Dict]:
         # Si todos son cero, saltar esta fila
         all_zeroes = all(v == 0.0 for v in non_none_values)
         
-        if not all_zeroes:
-            out.append(row)
+        if all_zeroes:
+            continue
+        
+        out.append(row)
 
     return out
 
@@ -319,6 +326,9 @@ def clean_tsv_file(uploaded_file) -> pd.DataFrame:
     Pipeline completo de limpieza de TSV.
     ACTUALIZADO: Soporte para múltiples encodings (UTF-8, ISO-8859-1, Latin-1, CP1252)
     """
+    # CRÍTICO: Resetear puntero del archivo
+    uploaded_file.seek(0)
+    
     # Intentar leer con diferentes encodings
     encodings_to_try = ['utf-8', 'ISO-8859-1', 'latin-1', 'cp1252']
     df_raw = None
@@ -326,15 +336,36 @@ def clean_tsv_file(uploaded_file) -> pd.DataFrame:
     
     for encoding in encodings_to_try:
         try:
-            df_raw = pd.read_csv(uploaded_file, delimiter="\t", keep_default_na=False, encoding=encoding)
+            # Resetear puntero antes de cada intento
+            uploaded_file.seek(0)
+            
+            # Intentar primero con configuración estándar
+            df_raw = pd.read_csv(
+                uploaded_file, 
+                delimiter="\t", 
+                keep_default_na=False, 
+                encoding=encoding
+            )
             encoding_used = encoding
-            st.success(f"✅ Archivo leído con encoding: **{encoding}**")
             break
         except UnicodeDecodeError:
             continue
         except Exception as e:
-            st.error(f"❌ Error con encoding {encoding}: {e}")
-            continue
+            # Si falla, intentar con quoting especial para archivos con comillas
+            try:
+                uploaded_file.seek(0)
+                df_raw = pd.read_csv(
+                    uploaded_file, 
+                    delimiter="\t", 
+                    keep_default_na=False, 
+                    encoding=encoding,
+                    doublequote=False,
+                    escapechar='\\'
+                )
+                encoding_used = encoding
+                break
+            except Exception:
+                continue
     
     if df_raw is None:
         raise ValueError("❌ No se pudo leer el archivo con ninguno de los encodings soportados (UTF-8, ISO-8859-1, Latin-1, CP1252)")
@@ -428,10 +459,7 @@ if uploaded_files:
             status_text.text(f"Procesando {file_name}...")
 
             try:
-                with st.spinner(f"Limpiando {file_name}..."):
-                    df_clean = clean_tsv_file(uploaded_file)
-                
-                st.info(f"📋 {file_name}: {len(df_clean)} filas después de limpieza")
+                df_clean = clean_tsv_file(uploaded_file)
                 
                 df_filtered = df_clean.copy()
                 rows_before = len(df_filtered)
