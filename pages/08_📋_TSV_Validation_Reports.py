@@ -415,7 +415,10 @@ if uploaded_files:
             status_text.text(f"Procesando {file_name}...")
 
             try:
-                df_clean = clean_tsv_file(uploaded_file)
+                with st.spinner(f"Limpiando {file_name}..."):
+                    df_clean = clean_tsv_file(uploaded_file)
+                
+                st.info(f"📋 {file_name}: {len(df_clean)} filas después de limpieza")
                 
                 df_filtered = df_clean.copy()
                 rows_before = len(df_filtered)
