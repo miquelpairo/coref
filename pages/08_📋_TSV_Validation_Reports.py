@@ -1,10 +1,7 @@
 """
 COREF - TSV Validation Reports
 ==============================
-Selección desde gráficos con sistema de pendientes anti-rerun
-- Espectros: Click acumulativo (sin lasso)
-- Parity: Click + Lasso/Box opcional
-- Botones duplicados debajo de cada gráfico
+Selección desde gráficos con fallback para cloud
 """
 
 from __future__ import annotations
@@ -57,7 +54,7 @@ with st.expander("ℹ️ Instrucciones de Uso"):
 **2. Filtrar por Fechas (Opcional)**
 
 **3. Previsualización y Selección:**
-- Selección desde gráficos (Espectros: click acumulativo | Parity: click + lasso/box)
+- Selección desde gráficos (Espectros: click | Parity: click + lasso/box)
 - Selección desde tabla interactiva
 - Grupos personalizables con símbolos
 
@@ -258,19 +255,13 @@ def clean_tsv_file(uploaded_file) -> pd.DataFrame:
 # HELPER: EXTRACT ROW INDEX FROM CLICK EVENT (ESPECTROS)
 # =============================================================================
 def _extract_row_index_from_click(fig, event) -> Optional[int]:
-    """
-    Extrae el índice de fila desde un click event.
-    Usa curveNumber para obtener el índice de la línea = muestra completa.
-    """
+    """Extrae el índice de fila desde un click event usando curveNumber."""
     if not event:
         return None
-    
     curve_number = event.get("curveNumber", None)
     if curve_number is None:
         return None
-    
     try:
-        # customdata[0] de cualquier punto de la curva contiene el row index
         trace = fig.data[curve_number]
         customdata = getattr(trace, "customdata", None)
         if customdata is not None and len(customdata) > 0:
@@ -280,7 +271,6 @@ def _extract_row_index_from_click(fig, event) -> Optional[int]:
             return int(cd)
     except Exception:
         pass
-    
     return None
 
 
@@ -291,7 +281,6 @@ def _extract_row_indices_from_events(fig, events) -> List[int]:
     """Extrae índices de fila desde eventos (click o lasso/box select)."""
     if not events:
         return []
-    
     def _coerce(cd):
         if cd is None:
             return None
@@ -301,16 +290,12 @@ def _extract_row_indices_from_events(fig, events) -> List[int]:
             return int(cd)
         except Exception:
             return None
-    
     out: List[int] = []
     for ev in events:
-        # Intentar desde customdata directamente
         idx = _coerce(ev.get("customdata", None))
         if idx is not None:
             out.append(idx)
             continue
-        
-        # Fallback: leer desde trace
         try:
             curve = ev.get("curveNumber", None)
             point = ev.get("pointNumber", None)
@@ -324,8 +309,6 @@ def _extract_row_indices_from_events(fig, events) -> List[int]:
                 out.append(idx)
         except Exception:
             pass
-    
-    # únicos preservando orden
     seen = set()
     uniq = []
     for x in out:
@@ -339,7 +322,6 @@ def _create_event_id(events) -> str:
     """Crea un ID único para un conjunto de eventos."""
     if not events:
         return ""
-    # Usar hash del contenido completo de eventos
     event_str = str([(e.get("curveNumber"), e.get("pointNumber"), e.get("customdata")) for e in events])
     return str(hash(event_str))
 
@@ -486,14 +468,18 @@ if st.session_state.processed_data:
         st.markdown("---")
         
         # =============================================================================
-        # SELECCIÓN DESDE GRÁFICOS - HEADER
+        # ESPECTROS
         # =============================================================================
-        st.subheader("🖱️ Selección desde Gráficos")
+        st.markdown("### 📈 Selección desde Espectros")
         
         if not INTERACTIVE_SELECTION_AVAILABLE:
-            st.warning("⚠️ Instala 'streamlit-plotly-events' para habilitar selección desde gráficos")
-        else:
-            # Mostrar pendientes ARRIBA
+            st.warning("⚠️ Selección interactiva no disponible. Instala: `pip install streamlit-plotly-events`")
+        
+        # Mostrar controles solo si está disponible
+        if INTERACTIVE_SELECTION_AVAILABLE:
+            st.info("💡 Haz **click en cualquier parte del espectro** para seleccionar toda la muestra")
+            
+            # Mostrar pendientes
             pending = st.session_state.pending_selections[selected_file]
             if pending:
                 st.warning(f"⏳ **{len(pending)} acción(es) pendiente(s)**")
@@ -504,86 +490,9 @@ if st.session_state.processed_data:
                             action_txt += f" → {item.get('group', 'none')}"
                         st.write(f"{i+1}. Muestra **{item['idx']}**: {action_txt}")
             
-            # BOTONES DE ACCIÓN ARRIBA
-            b1, b2, b3 = st.columns(3)
-            
-            with b1:
-                if st.button("✅ Aplicar Selecciones", 
-                            use_container_width=True, 
-                            type="primary",
-                            disabled=(len(pending) == 0),
-                            key=f"apply_top_{selected_file}"):
-                    for item in pending:
-                        idx = item['idx']
-                        action = item['action']
-                        if action == "Marcar para Eliminar":
-                            if idx in st.session_state.samples_to_remove[selected_file]:
-                                st.session_state.samples_to_remove[selected_file].remove(idx)
-                            else:
-                                st.session_state.samples_to_remove[selected_file].add(idx)
-                            st.session_state.sample_groups[selected_file].pop(idx, None)
-                        elif action == "Asignar a Grupo":
-                            grp = item.get('group')
-                            if grp and grp != "none":
-                                st.session_state.sample_groups[selected_file][idx] = grp
-                                st.session_state.samples_to_remove[selected_file].discard(idx)
-                    st.session_state.pending_selections[selected_file] = []
-                    st.session_state.last_event_id[selected_file] = ""
-                    st.session_state.editor_version[selected_file] += 1
-                    st.success(f"✅ {len(pending)} acción(es) aplicada(s)")
-                    st.rerun()
-            
-            with b2:
-                if st.button("🗑️ Limpiar Pendientes",
-                            use_container_width=True,
-                            disabled=(len(pending) == 0),
-                            key=f"clear_top_{selected_file}"):
-                    st.session_state.pending_selections[selected_file] = []
-                    st.session_state.last_event_id[selected_file] = ""
-                    st.rerun()
-            
-            with b3:
-                if st.button("🔄 Confirmar Eliminación",
-                            use_container_width=True,
-                            disabled=(len(removed_indices) == 0),
-                            key=f"delete_top_{selected_file}"):
-                    if removed_indices:
-                        old_to_new = {}
-                        sorted_indices = sorted(df_current.index)
-                        removed_sorted = sorted(removed_indices)
-                        new_idx = 0
-                        for old_idx in sorted_indices:
-                            if old_idx not in removed_sorted:
-                                old_to_new[old_idx] = new_idx
-                                new_idx += 1
-                        df_updated = df_current.drop(index=list(removed_indices)).reset_index(drop=True)
-                        new_groups = {}
-                        for old_idx, grp in sample_groups.items():
-                            if old_idx not in removed_indices:
-                                mapped = old_to_new.get(old_idx)
-                                if mapped is not None:
-                                    new_groups[mapped] = grp
-                        st.session_state.processed_data[selected_file] = df_updated
-                        st.session_state.samples_to_remove[selected_file] = set()
-                        st.session_state.sample_groups[selected_file] = new_groups
-                        st.session_state.pending_selections[selected_file] = []
-                        st.session_state.last_event_id[selected_file] = ""
-                        st.session_state.editor_version[selected_file] += 1
-                        st.success(f"✅ {len(removed_indices)} muestras eliminadas")
-                        st.rerun()
-        
-        st.markdown("---")
-        
-        # =============================================================================
-        # ESPECTROS - SIN EXPANDER, CLICK ACUMULATIVO
-        # =============================================================================
-        st.markdown("### 📈 Selección desde Espectros")
-        st.info("💡 Haz **click en cualquier parte del espectro** para seleccionar toda la muestra")
-        
-        if INTERACTIVE_SELECTION_AVAILABLE:
             colA, colB = st.columns([1, 1])
             with colA:
-                spectra_action = st.radio("Acción:", ["Ver Información", "Marcar para Eliminar", "Asignar a Grupo"], key=f"spectra_action_{selected_file}")
+                spectra_action = st.radio("Acción:", ["Marcar para Eliminar", "Asignar a Grupo"], key=f"spectra_action_{selected_file}")
             with colB:
                 if spectra_action == "Asignar a Grupo":
                     spectra_target = st.selectbox("Grupo:", ["Set 1", "Set 2", "Set 3", "Set 4"], key=f"spectra_target_{selected_file}")
@@ -594,19 +503,18 @@ if st.session_state.processed_data:
             fig_spectra = build_spectra_figure_preview(df_current, removed_indices, sample_groups, st.session_state.group_labels, SAMPLE_GROUPS, PIXEL_RE)
             if fig_spectra:
                 if not INTERACTIVE_SELECTION_AVAILABLE:
+                    # Mostrar gráfico normal sin interacción
                     st.plotly_chart(fig_spectra, use_container_width=True)
                 else:
-                    # Solo click, NO lasso/box
                     events = plotly_events(
                         fig_spectra, 
                         click_event=True, 
-                        select_event=False,  # DESACTIVADO para espectros
+                        select_event=False,
                         hover_event=False, 
                         override_height=700, 
                         key=f"spectra_{selected_file}_v{st.session_state.editor_version[selected_file]}"
                     )
                     
-                    # Procesar click SOLO si es nuevo
                     if events:
                         event = events[0]
                         event_id = _create_event_id(events)
@@ -614,31 +522,25 @@ if st.session_state.processed_data:
                         
                         if event_id != last_id:
                             st.session_state.last_event_id[selected_file] = event_id
-                            
-                            # Extraer índice usando curveNumber (toda la línea = muestra completa)
                             clicked_idx = _extract_row_index_from_click(fig_spectra, event)
                             if clicked_idx is not None:
-                                if spectra_action == "Ver Información":
-                                    st.info(f"📍 Muestra **{clicked_idx}** seleccionada")
-                                else:
-                                    # Agregar a pendientes (evitar duplicados)
-                                    new_item = {
-                                        'idx': clicked_idx,
-                                        'action': spectra_action,
-                                        'group': spectra_target if spectra_action == "Asignar a Grupo" else None
-                                    }
-                                    
-                                    pending = st.session_state.pending_selections[selected_file]
-                                    already = any(
-                                        it.get('idx') == new_item['idx'] and 
-                                        it.get('action') == new_item['action'] and 
-                                        it.get('group') == new_item['group']
-                                        for it in pending
-                                    )
-                                    
-                                    if not already:
-                                        pending.append(new_item)
-                                        st.info(f"📍 Muestra {clicked_idx} agregada a pendientes")
+                                new_item = {
+                                    'idx': clicked_idx,
+                                    'action': spectra_action,
+                                    'group': spectra_target if spectra_action == "Asignar a Grupo" else None
+                                }
+                                
+                                pending = st.session_state.pending_selections[selected_file]
+                                already = any(
+                                    it.get('idx') == new_item['idx'] and 
+                                    it.get('action') == new_item['action'] and 
+                                    it.get('group') == new_item['group']
+                                    for it in pending
+                                )
+                                
+                                if not already:
+                                    pending.append(new_item)
+                                    st.info(f"📍 Muestra {clicked_idx} agregada a pendientes")
             else:
                 st.warning("No hay datos espectrales")
         except Exception as e:
@@ -720,7 +622,7 @@ if st.session_state.processed_data:
         st.markdown("---")
         
         # =============================================================================
-        # PARITY - SIN EXPANDER, CON LASSO/BOX OPCIONAL
+        # PARITY
         # =============================================================================
         st.markdown("### 📊 Selección desde Parity")
         
@@ -728,11 +630,27 @@ if st.session_state.processed_data:
         if not columns_result:
             st.warning("No hay parámetros Result")
         else:
+            if not INTERACTIVE_SELECTION_AVAILABLE:
+                st.warning("⚠️ Selección interactiva no disponible. Instala: `pip install streamlit-plotly-events`")
+            
+            # Mostrar controles solo si está disponible
             if INTERACTIVE_SELECTION_AVAILABLE:
                 st.info("💡 Usa **click** para seleccionar puntos individuales o activa **Lasso/Box** para selección múltiple")
+                
+                # Mostrar pendientes
+                pending = st.session_state.pending_selections[selected_file]
+                if pending:
+                    st.warning(f"⏳ **{len(pending)} acción(es) pendiente(s)**")
+                    with st.expander("Ver selecciones pendientes", expanded=False):
+                        for i, item in enumerate(pending):
+                            action_txt = item['action']
+                            if item['action'] == "Asignar a Grupo":
+                                action_txt += f" → {item.get('group', 'none')}"
+                            st.write(f"{i+1}. Muestra **{item['idx']}**: {action_txt}")
+                
                 colA, colB, colC = st.columns([2, 2, 1])
                 with colA:
-                    parity_action = st.radio("Acción:", ["Ver Información", "Marcar para Eliminar", "Asignar a Grupo"], key=f"parity_action_{selected_file}")
+                    parity_action = st.radio("Acción:", ["Marcar para Eliminar", "Asignar a Grupo"], key=f"parity_action_{selected_file}")
                 with colB:
                     if parity_action == "Asignar a Grupo":
                         parity_target = st.selectbox("Grupo:", ["Set 1", "Set 2", "Set 3", "Set 4"], key=f"parity_target_{selected_file}")
@@ -763,22 +681,21 @@ if st.session_state.processed_data:
                     
                     with tab1:
                         if not INTERACTIVE_SELECTION_AVAILABLE:
+                            # Mostrar gráfico normal sin interacción
                             st.plotly_chart(fig_parity, use_container_width=True)
                         else:
-                            # Habilitar lasso/box si está marcado
                             if parity_multi:
                                 fig_parity.update_layout(dragmode="lasso")
                             
                             events = plotly_events(
                                 fig_parity, 
                                 click_event=True, 
-                                select_event=parity_multi,  # Activar según checkbox
+                                select_event=parity_multi,
                                 hover_event=False, 
                                 override_height=600, 
                                 key=f"parity_{selected_file}_{selected_param}_v{st.session_state.editor_version[selected_file]}"
                             )
                             
-                            # Procesar eventos SOLO si son nuevos
                             if events:
                                 event_id = _create_event_id(events)
                                 last_id = st.session_state.last_event_id.get(selected_file, "")
@@ -788,29 +705,25 @@ if st.session_state.processed_data:
                                     
                                     clicked_indices = _extract_row_indices_from_events(fig_parity, events)
                                     if clicked_indices:
-                                        if parity_action == "Ver Información":
-                                            st.info(f"📍 {len(clicked_indices)} muestra(s) seleccionada(s): {clicked_indices}")
-                                        else:
-                                            # Agregar a pendientes (evitar duplicados)
-                                            pending = st.session_state.pending_selections[selected_file]
-                                            for clicked_idx in clicked_indices:
-                                                new_item = {
-                                                    'idx': clicked_idx,
-                                                    'action': parity_action,
-                                                    'group': parity_target if parity_action == "Asignar a Grupo" else None
-                                                }
-                                                
-                                                already = any(
-                                                    it.get('idx') == new_item['idx'] and 
-                                                    it.get('action') == new_item['action'] and 
-                                                    it.get('group') == new_item['group']
-                                                    for it in pending
-                                                )
-                                                
-                                                if not already:
-                                                    pending.append(new_item)
+                                        pending = st.session_state.pending_selections[selected_file]
+                                        for clicked_idx in clicked_indices:
+                                            new_item = {
+                                                'idx': clicked_idx,
+                                                'action': parity_action,
+                                                'group': parity_target if parity_action == "Asignar a Grupo" else None
+                                            }
                                             
-                                            st.info(f"📍 {len(clicked_indices)} muestra(s) agregadas a pendientes")
+                                            already = any(
+                                                it.get('idx') == new_item['idx'] and 
+                                                it.get('action') == new_item['action'] and 
+                                                it.get('group') == new_item['group']
+                                                for it in pending
+                                            )
+                                            
+                                            if not already:
+                                                pending.append(new_item)
+                                        
+                                        st.info(f"📍 {len(clicked_indices)} muestra(s) agregadas a pendientes")
                     
                     with tab2:
                         st.plotly_chart(fig_res, use_container_width=True)
@@ -895,7 +808,7 @@ if st.session_state.processed_data:
         st.markdown("---")
         
         # =============================================================================
-        # TABLA INTERACTIVA - EN EXPANDER
+        # TABLA INTERACTIVA
         # =============================================================================
         st.subheader("🎯 Selección desde Tabla")
         st.info("✅ Marca para **Eliminar** o asigna un **Grupo** → Presiona **'Actualizar Selección'**")
