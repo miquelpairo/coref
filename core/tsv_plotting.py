@@ -1,14 +1,20 @@
 """
-TSV Validation Reports - Plotting Functions (CORREGIDO)
-========================================================
-Funciones para generar gráficos Plotly con soporte de grupos
-- FIX: conversión robusta a numérico en parity (soporta coma decimal)
-- FIX: PIXEL_RE robusto (#123 y 123 por defecto) + parseo de pixel seguro
-- FIX: defensivo si SAMPLE_GROUPS llega None o falta 'none'
-- FIX: return fig (sin typo)
+TSV Validation Reports - Plotting Functions (CLOUD + plotly_events SAFE)
+========================================================================
+Funciones para generar gráficos Plotly con soporte de grupos.
+
+Cambios clave para que NO se queden vacíos con streamlit-plotly-events (Cloud):
+- customdata 100% JSON-safe: SOLO listas/ints/str de Python (NO numpy arrays, NO np.int64)
+- conversión robusta a numérico en parity (soporta coma decimal)
+- PIXEL_RE robusto (#123 y 123 por defecto) + parseo de pixel seguro
+- defensivo si SAMPLE_GROUPS llega None o falta 'none'
+- clickmode "event+select" para facilitar eventos
 """
 
+from __future__ import annotations
+
 from typing import Dict, Set, Optional, Tuple
+
 import numpy as np
 import pandas as pd
 import plotly.graph_objs as go
@@ -51,7 +57,7 @@ def plot_comparison_preview(
     removed_indices: Set[int] = None,
     sample_groups: Dict[int, str] = None,
     group_labels: Dict[str, str] = None,
-    SAMPLE_GROUPS: Dict = None
+    SAMPLE_GROUPS: Dict = None,
 ) -> Optional[Tuple]:
     """
     Genera gráficos de previsualización con grupos.
@@ -70,23 +76,11 @@ def plot_comparison_preview(
 
     try:
         # -------------------------
-        # FIX: convertir a numérico robusto (soporta coma decimal)
+        # Convertir a numérico robusto (soporta coma decimal)
         # -------------------------
-        ref = (
-            df[reference_col]
-            .astype(str)
-            .str.replace(",", ".", regex=False)
-        )
-        res = (
-            df[result_col]
-            .astype(str)
-            .str.replace(",", ".", regex=False)
-        )
-        resid = (
-            df[residuum_col]
-            .astype(str)
-            .str.replace(",", ".", regex=False)
-        )
+        ref = df[reference_col].astype(str).str.replace(",", ".", regex=False)
+        res = df[result_col].astype(str).str.replace(",", ".", regex=False)
+        resid = df[residuum_col].astype(str).str.replace(",", ".", regex=False)
 
         ref = pd.to_numeric(ref, errors="coerce")
         res = pd.to_numeric(res, errors="coerce")
@@ -140,6 +134,12 @@ def plot_comparison_preview(
         # -------------------------
         fig_parity = go.Figure()
 
+        def _make_cd(indices_list: list) -> list:
+            """customdata JSON-safe: [[row_index(int), date(str)], ...]"""
+            row_ids = [int(original_indices[i]) for i in indices_list]
+            dates = [str(hover_date.iloc[i]) for i in indices_list]
+            return [[rid, d] for rid, d in zip(row_ids, dates)]
+
         # Grupos (excluye none)
         for group_name, group_config in SAMPLE_GROUPS.items():
             if group_name == "none":
@@ -152,116 +152,123 @@ def plot_comparison_preview(
             custom_label = group_labels.get(group_name, group_name)
             display_label = f"{group_config.get('emoji','')} {custom_label}".strip()
 
-            x_group = x.iloc[indices]
-            y_group = y.iloc[indices]
+            x_group = pd.to_numeric(x.iloc[indices], errors="coerce").astype(float)
+            y_group = pd.to_numeric(y.iloc[indices], errors="coerce").astype(float)
 
-            # customdata: [row_index, date_str]
-            row_ids = [original_indices[i] for i in indices]
-            dates = [str(hover_date.iloc[i]) for i in indices]
-            cd = np.column_stack([row_ids, dates]).tolist()
+            cd = _make_cd(indices)
 
-            fig_parity.add_trace(go.Scatter(
-                x=x_group,
-                y=y_group,
-                mode="markers",
-                marker=dict(
-                    color=group_config.get("color", "gray"),
-                    size=group_config.get("size", 8),
-                    symbol=group_config.get("symbol", "circle"),
-                ),
-                name=display_label,
-                customdata=cd,
-                hovertemplate=(
-                    f"{display_label}<br>"
-                    "RowIndex: %{customdata[0]}<br>"
-                    "Date: %{customdata[1]}<br>"
-                    "Reference: %{x:.2f}<br>"
-                    "Result: %{y:.2f}<extra></extra>"
-                ),
-            ))
+            fig_parity.add_trace(
+                go.Scatter(
+                    x=x_group,
+                    y=y_group,
+                    mode="markers",
+                    marker=dict(
+                        color=group_config.get("color", "gray"),
+                        size=group_config.get("size", 8),
+                        symbol=group_config.get("symbol", "circle"),
+                    ),
+                    name=display_label,
+                    customdata=cd,
+                    hovertemplate=(
+                        f"{display_label}<br>"
+                        "RowIndex: %{customdata[0]}<br>"
+                        "Date: %{customdata[1]}<br>"
+                        "Reference: %{x:.2f}<br>"
+                        "Result: %{y:.2f}<extra></extra>"
+                    ),
+                )
+            )
 
         # Puntos 'none'
         indices_none = points_by_group.get("none", [])
         if indices_none:
             group_config = SAMPLE_GROUPS["none"]
-            x_group = x.iloc[indices_none]
-            y_group = y.iloc[indices_none]
+            x_group = pd.to_numeric(x.iloc[indices_none], errors="coerce").astype(float)
+            y_group = pd.to_numeric(y.iloc[indices_none], errors="coerce").astype(float)
+            cd = _make_cd(indices_none)
 
-            row_ids = [original_indices[i] for i in indices_none]
-            dates = [str(hover_date.iloc[i]) for i in indices_none]
-            cd = np.column_stack([row_ids, dates]).tolist()
-
-            fig_parity.add_trace(go.Scatter(
-                x=x_group,
-                y=y_group,
-                mode="markers",
-                marker=dict(
-                    color=group_config.get("color", "gray"),
-                    size=group_config.get("size", 8),
-                    symbol=group_config.get("symbol", "circle"),
-                ),
-                name="Sin grupo",
-                showlegend=True,
-                customdata=cd,
-                hovertemplate=(
-                    "Sin grupo<br>"
-                    "RowIndex: %{customdata[0]}<br>"
-                    "Date: %{customdata[1]}<br>"
-                    "Reference: %{x:.2f}<br>"
-                    "Result: %{y:.2f}<extra></extra>"
-                ),
-            ))
+            fig_parity.add_trace(
+                go.Scatter(
+                    x=x_group,
+                    y=y_group,
+                    mode="markers",
+                    marker=dict(
+                        color=group_config.get("color", "gray"),
+                        size=group_config.get("size", 8),
+                        symbol=group_config.get("symbol", "circle"),
+                    ),
+                    name="Sin grupo",
+                    showlegend=True,
+                    customdata=cd,
+                    hovertemplate=(
+                        "Sin grupo<br>"
+                        "RowIndex: %{customdata[0]}<br>"
+                        "Date: %{customdata[1]}<br>"
+                        "Reference: %{x:.2f}<br>"
+                        "Result: %{y:.2f}<extra></extra>"
+                    ),
+                )
+            )
 
         # Puntos para eliminar
         indices_delete = points_by_group.get("delete", [])
         if indices_delete:
-            x_remove = x.iloc[indices_delete]
-            y_remove = y.iloc[indices_delete]
+            x_remove = pd.to_numeric(x.iloc[indices_delete], errors="coerce").astype(float)
+            y_remove = pd.to_numeric(y.iloc[indices_delete], errors="coerce").astype(float)
+            cd = _make_cd(indices_delete)
 
-            row_ids = [original_indices[i] for i in indices_delete]
-            dates = [str(hover_date.iloc[i]) for i in indices_delete]
-            cd = np.column_stack([row_ids, dates]).tolist()
+            fig_parity.add_trace(
+                go.Scatter(
+                    x=x_remove,
+                    y=y_remove,
+                    mode="markers",
+                    marker=dict(color="red", size=10, symbol="x"),
+                    name="❌ Eliminar",
+                    customdata=cd,
+                    hovertemplate=(
+                        "⚠️ MARCADO PARA ELIMINAR<br>"
+                        "RowIndex: %{customdata[0]}<br>"
+                        "Date: %{customdata[1]}<br>"
+                        "Reference: %{x:.2f}<br>"
+                        "Result: %{y:.2f}<extra></extra>"
+                    ),
+                )
+            )
 
-            fig_parity.add_trace(go.Scatter(
-                x=x_remove,
-                y=y_remove,
-                mode="markers",
-                marker=dict(color="red", size=10, symbol="x"),
-                name="❌ Eliminar",
-                customdata=cd,
-                hovertemplate=(
-                    "⚠️ MARCADO PARA ELIMINAR<br>"
-                    "RowIndex: %{customdata[0]}<br>"
-                    "Date: %{customdata[1]}<br>"
-                    "Reference: %{x:.2f}<br>"
-                    "Result: %{y:.2f}<extra></extra>"
-                ),
-            ))
-
-        # Líneas de referencia (usar arrays numéricos)
-        fig_parity.add_trace(go.Scatter(
-            x=x, y=x,
-            mode="lines",
-            line=dict(dash="dash", color="gray"),
-            name="y = x",
-            showlegend=False
-        ))
-        fig_parity.add_trace(go.Scatter(
-            x=x, y=x + rmse,
-            mode="lines",
-            line=dict(dash="dash", color="orange"),
-            name="RMSE+",
-            showlegend=False
-        ))
-        fig_parity.add_trace(go.Scatter(
-            x=x, y=x - rmse,
-            mode="lines",
-            line=dict(dash="dash", color="orange"),
-            name="RMSE-",
-            showlegend=False
-        ))
+        # Líneas de referencia
+        fig_parity.add_trace(
+            go.Scatter(
+                x=x,
+                y=x,
+                mode="lines",
+                line=dict(dash="dash", color="gray"),
+                name="y = x",
+                showlegend=False,
+            )
+        )
+        fig_parity.add_trace(
+            go.Scatter(
+                x=x,
+                y=x + rmse,
+                mode="lines",
+                line=dict(dash="dash", color="orange"),
+                name="RMSE+",
+                showlegend=False,
+            )
+        )
+        fig_parity.add_trace(
+            go.Scatter(
+                x=x,
+                y=x - rmse,
+                mode="lines",
+                line=dict(dash="dash", color="orange"),
+                name="RMSE-",
+                showlegend=False,
+            )
+        )
 
         fig_parity.update_layout(**create_layout("Parity Plot", reference_col, result_col))
+        fig_parity.update_layout(clickmode="event+select")
 
         # -------------------------
         # Residuum vs N - ORDENADO POR FECHA
@@ -296,7 +303,7 @@ def plot_comparison_preview(
                 hovertext=hovertext_res,
                 hoverinfo="text",
                 name="Residuum",
-                marker=dict(color=colors)
+                marker=dict(color=colors),
             )
         )
         fig_res.update_layout(**create_layout("Residuum vs N (ordenado por fecha)", "N", "Residuum"))
@@ -322,13 +329,13 @@ def build_spectra_figure_preview(
     sample_groups: Dict[int, str] = None,
     group_labels: Dict[str, str] = None,
     SAMPLE_GROUPS: Dict = None,
-    PIXEL_RE=None
+    PIXEL_RE=None,
 ) -> Optional[go.Figure]:
     """
     Genera figura de espectros con grupos
-    - FIX: regex robusto por defecto (acepta '#123' y '123')
-    - FIX: parseo de pixel seguro
-    - FIX: defensivo si SAMPLE_GROUPS llega None / falta 'none'
+
+    IMPORTANTE para plotly_events:
+    - customdata debe ser LISTA python (no numpy) para que el componente no falle en Cloud.
     """
     import re
 
@@ -359,7 +366,7 @@ def build_spectra_figure_preview(
         return None
 
     pixel_cols = sorted(pixel_cols, key=_pixnum)
-    x = [_pixnum(c) for c in pixel_cols]
+    x = [_pixnum(c) for c in pixel_cols]  # python ints
 
     spec = (
         df[pixel_cols]
@@ -408,13 +415,13 @@ def build_spectra_figure_preview(
         if show_legend:
             legend_added.add(legend_group)
 
-        # customdata como escalar por punto (compatible con plotly_events)
-        cd = np.full(len(x), int(i))
+        # customdata LIST python por punto (JSON-safe)
+        cd = [int(i)] * len(x)
 
         fig.add_trace(
             go.Scatter(
                 x=x,
-                y=y,
+                y=[float(v) if np.isfinite(v) else None for v in y],  # lista python
                 mode="lines",
                 showlegend=show_legend,
                 legendgroup=legend_group,
@@ -429,7 +436,7 @@ def build_spectra_figure_preview(
                     f"Note: {hover_note.loc[i]}<br>"
                     "Pixel: %{x}<br>"
                     "Abs: %{y}<extra></extra>"
-                )
+                ),
             )
         )
 
@@ -445,6 +452,7 @@ def build_spectra_figure_preview(
         paper_bgcolor="white",
         xaxis={"gridcolor": "white"},
         yaxis={"gridcolor": "white"},
-        showlegend=True
+        showlegend=True,
+        clickmode="event+select",
     )
     return fig
