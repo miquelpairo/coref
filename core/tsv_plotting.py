@@ -2,6 +2,7 @@
 TSV Validation Reports - Plotting Functions
 ============================================
 Funciones para generar gráficos Plotly con soporte de grupos
+ACTUALIZADO: Leyendas en gráfico de espectros
 """
 
 from typing import Dict, Set, Optional, Tuple
@@ -237,7 +238,10 @@ def build_spectra_figure_preview(
     SAMPLE_GROUPS: Dict = None,
     PIXEL_RE = None
 ) -> Optional[go.Figure]:
-    """Genera figura de espectros con grupos"""
+    """
+    Genera figura de espectros con grupos
+    ACTUALIZADO: Muestra leyenda de grupos
+    """
     import re
     
     if removed_indices is None:
@@ -272,6 +276,9 @@ def build_spectra_figure_preview(
     hover_note = df["Note"].astype(str) if "Note" in df.columns else pd.Series([""] * len(df))
 
     fig = go.Figure()
+    
+    # Track which groups have been added to legend
+    legend_added = set()
 
     for i in df.index:
         y = spec.loc[i].to_numpy()
@@ -284,25 +291,37 @@ def build_spectra_figure_preview(
             opacity = 0.7
             width = 2
             prefix = "⚠️ MARCADO - "
+            legend_name = "❌ Eliminar"
+            legend_group = "delete"
         else:
             group = sample_groups.get(i, 'none')
             group_config = SAMPLE_GROUPS[group]
             color = group_config['color']
             opacity = 0.5 if group != 'none' else 0.35
             width = 2 if group != 'none' else 1
+            legend_group = group
             
             if group != 'none':
                 custom_label = group_labels.get(group, group)
                 prefix = f"{group_config['emoji']} {custom_label} - "
+                legend_name = f"{group_config['emoji']} {custom_label}"
             else:
                 prefix = ""
+                legend_name = "Sin grupo"
+        
+        # Show legend only for the first trace of each group
+        show_legend = legend_group not in legend_added
+        if show_legend:
+            legend_added.add(legend_group)
 
         fig.add_trace(
             go.Scatter(
                 x=x,
                 y=y,
                 mode="lines",
-                showlegend=False,
+                showlegend=show_legend,
+                legendgroup=legend_group,
+                name=legend_name,
                 line={"width": width, "color": color},
                 opacity=opacity,
                 hovertemplate=(
@@ -327,6 +346,7 @@ def build_spectra_figure_preview(
         plot_bgcolor="#E5ECF6",
         paper_bgcolor="white",
         xaxis={"gridcolor": "white"},
-        yaxis={"gridcolor": "white"}
+        yaxis={"gridcolor": "white"},
+        showlegend=True
     )
     return fig

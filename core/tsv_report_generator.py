@@ -2,6 +2,7 @@
 TSV Validation Reports - HTML Report Generator
 ===============================================
 Funciones para generar reportes HTML con grupos personalizados
+ACTUALIZADO: Leyendas en gráfico de espectros
 """
 
 from dataclasses import dataclass
@@ -249,7 +250,10 @@ def build_spectra_figure_for_report(
     SAMPLE_GROUPS: Dict = None,
     PIXEL_RE = None
 ) -> Optional[go.Figure]:
-    """Genera espectros para reporte"""
+    """
+    Genera espectros para reporte
+    ACTUALIZADO: Muestra leyenda de grupos
+    """
     if sample_groups is None:
         sample_groups = {}
     if group_labels is None:
@@ -273,6 +277,9 @@ def build_spectra_figure_for_report(
     hover_note = df["Note"].astype(str) if "Note" in df.columns else pd.Series([""] * len(df))
 
     fig = go.Figure()
+    
+    # Track which groups have been added to legend
+    legend_added = set()
 
     for i in range(len(df)):
         y = spec.iloc[i].to_numpy()
@@ -285,19 +292,29 @@ def build_spectra_figure_for_report(
         color = group_config['color']
         opacity = 0.5 if group != 'none' else 0.35
         width = 2 if group != 'none' else 1
+        legend_group = group
 
         if group != 'none':
             custom_label = group_labels.get(group, group)
             prefix = f"{group_config['emoji']} {custom_label} - "
+            legend_name = f"{group_config['emoji']} {custom_label}"
         else:
             prefix = ""
+            legend_name = "Sin set"
+        
+        # Show legend only for the first trace of each group
+        show_legend = legend_group not in legend_added
+        if show_legend:
+            legend_added.add(legend_group)
 
         fig.add_trace(
             go.Scatter(
                 x=x,
                 y=y,
                 mode="lines",
-                showlegend=False,
+                showlegend=show_legend,
+                legendgroup=legend_group,
+                name=legend_name,
                 line={"width": width, "color": color},
                 opacity=opacity,
                 hovertemplate=(
@@ -322,6 +339,7 @@ def build_spectra_figure_for_report(
         paper_bgcolor="white",
         xaxis={"gridcolor": "white"},
         yaxis={"gridcolor": "white"},
+        showlegend=True
     )
     return fig
 
