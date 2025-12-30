@@ -56,7 +56,7 @@ with st.expander("ℹ️ Instrucciones de Uso"):
     **4. Previsualización y Selección:**
     - Personaliza nombres de grupos para tu análisis
     - Marca muestras para eliminar (checkbox "Eliminar")
-    - Asigna muestras a grupos (Grupo 1-4) para seguimiento visual
+    - Asigna muestras a grupos (Set 1-4) para seguimiento visual
     - Los grupos aparecen con símbolos diferentes en los gráficos:
         - 🟩 Cuadrado verde
         - 🔺 Triángulo rojo
@@ -74,7 +74,7 @@ with st.expander("ℹ️ Instrucciones de Uso"):
         - Gráficos por parámetro (Parity, Residuum vs N, Histograma)
         - Plot de espectros NIR (columnas #1..#n)
         - Sidebar de navegación estilo BUCHI
-        - Leyenda de grupos personalizados
+        - Leyenda de grupos personalizados con descripciones
     
     **6. Descargar Resultados:**
     - HTML: Reporte completo interactivo con Plotly
@@ -84,7 +84,7 @@ with st.expander("ℹ️ Instrucciones de Uso"):
     - ✅ Gráficos interactivos con Plotly (zoom, pan, hover)
     - ✅ Selección mediante tabla interactiva
     - ✅ Agrupación de muestras con símbolos visuales
-    - ✅ Etiquetas personalizables para grupos
+    - ✅ Etiquetas y descripciones personalizables para grupos
     - ✅ Grupos incluidos en reportes HTML finales
     - ✅ Previsualización antes de generar reporte
     - ✅ Diseño corporativo BUCHI con sidebar de navegación
@@ -120,6 +120,13 @@ if 'group_labels' not in st.session_state:
         'Set 2': 'Set 2',
         'Set 3': 'Set 3',
         'Set 4': 'Set 4'
+    }
+if 'group_descriptions' not in st.session_state:
+    st.session_state.group_descriptions = {
+        'Set 1': '',
+        'Set 2': '',
+        'Set 3': '',
+        'Set 4': ''
     }
 
 
@@ -454,29 +461,42 @@ if st.session_state.processed_data:
         
         # LEYENDA DE GRUPOS PERSONALIZABLE
         st.subheader("🏷️ Leyenda de Grupos")
-        st.info("Personaliza los nombres de los grupos para tu análisis (ej: 'Outliers', 'Pre-ajuste', 'Validados', etc.)")
-
-        legend_cols = st.columns(4)
+        st.info("Personaliza los nombres y descripciones de los grupos para tu análisis")
 
         group_keys = ['Set 1', 'Set 2', 'Set 3', 'Set 4']
         for idx, group_key in enumerate(group_keys):
-            with legend_cols[idx]:
+            with st.expander(f"{SAMPLE_GROUPS[group_key]['emoji']} {group_key}", expanded=False):
                 group_config = SAMPLE_GROUPS[group_key]
                 
-                st.markdown(f"**{group_config['emoji']} ({group_config['symbol']})**")
+                col1, col2 = st.columns([1, 2])
                 
-                new_label = st.text_input(
-                    "Etiqueta:",
-                    value=st.session_state.group_labels[group_key],
-                    key=f"label_{group_key}",
-                    max_chars=30,
-                    help=f"Nombre personalizado para {group_key}"
-                )
+                with col1:
+                    st.markdown(f"**Símbolo:** {group_config['symbol']}")
+                    new_label = st.text_input(
+                        "Etiqueta:",
+                        value=st.session_state.group_labels[group_key],
+                        key=f"label_{group_key}",
+                        max_chars=30,
+                        help=f"Nombre personalizado para {group_key}"
+                    )
+                    
+                    if new_label != st.session_state.group_labels[group_key]:
+                        st.session_state.group_labels[group_key] = new_label
                 
-                if new_label != st.session_state.group_labels[group_key]:
-                    st.session_state.group_labels[group_key] = new_label
+                with col2:
+                    new_description = st.text_area(
+                        "Descripción:",
+                        value=st.session_state.group_descriptions[group_key],
+                        key=f"desc_{group_key}",
+                        max_chars=200,
+                        height=100,
+                        help=f"Descripción opcional para {group_key}"
+                    )
+                    
+                    if new_description != st.session_state.group_descriptions[group_key]:
+                        st.session_state.group_descriptions[group_key] = new_description
 
-        st.markdown("**Etiquetas actuales:**")
+        st.markdown("**Resumen de etiquetas:**")
         labels_summary = " | ".join([
             f"{SAMPLE_GROUPS[k]['emoji']} **{st.session_state.group_labels[k]}**" 
             for k in group_keys
@@ -694,7 +714,9 @@ if st.session_state.processed_data:
                 sample_groups_file = st.session_state.sample_groups.get(file_name, {})
                 html = generate_html_report(
                     df, file_name, sample_groups_file, 
-                    st.session_state.group_labels, SAMPLE_GROUPS, PIXEL_RE
+                    st.session_state.group_labels,
+                    st.session_state.group_descriptions,
+                    SAMPLE_GROUPS, PIXEL_RE
                 )
                 results.append(ReportResult(name=file_name, html=html, csv=df))
                 st.success(f"✅ {file_name} ({len(df)} muestras)")

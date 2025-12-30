@@ -42,7 +42,6 @@ def create_layout(title: str, xaxis_title: str, yaxis_title: str) -> Dict:
         "xaxis_title": xaxis_title,
         "yaxis_title": yaxis_title,
         "showlegend": True,
-
         "height": 550,
         "dragmode": "zoom",
         "hovermode": "closest",
@@ -52,8 +51,7 @@ def create_layout(title: str, xaxis_title: str, yaxis_title: str) -> Dict:
         "xaxis": {"gridcolor": "white"},
         "yaxis": {"gridcolor": "white"},
         "autosize": True,
-
-        # ✅ Leyenda debajo y centrada
+        # Leyenda debajo y centrada
         "legend": {
             "orientation": "h",
             "x": 0.5,
@@ -61,12 +59,9 @@ def create_layout(title: str, xaxis_title: str, yaxis_title: str) -> Dict:
             "xanchor": "center",
             "yanchor": "top",
         },
-
         # margen inferior suficiente para la leyenda
         "margin": {"l": 60, "r": 40, "t": 80, "b": 140},
     }
-
-
 
 
 def plot_comparison_for_report(
@@ -336,6 +331,7 @@ def generate_html_report(
     file_name: str,
     sample_groups: Dict[int, str] = None,
     group_labels: Dict[str, str] = None,
+    group_descriptions: Dict[str, str] = None,
     SAMPLE_GROUPS: Dict = None,
     PIXEL_RE = None
 ) -> str:
@@ -346,6 +342,8 @@ def generate_html_report(
         sample_groups = {}
     if group_labels is None:
         group_labels = {}
+    if group_descriptions is None:
+        group_descriptions = {}
     
     columns_result = [c for c in df.columns if str(c).startswith("Result ")]
     columns_reference = [c.replace("Result ", "Reference ") for c in columns_result]
@@ -381,9 +379,6 @@ def generate_html_report(
             <li><a href="#summary-stats">Resumen Estadístico</a></li>
     """
     
-    if any(g != 'none' for g in sample_groups.values()):
-        sidebar_items += '<li><a href="#grupos-legend">Leyenda de Grupos</a></li>\n'
-    
     if fig_spectra:
         sidebar_items += '<li><a href="#spectra-section">Espectros</a></li>\n'
     
@@ -403,6 +398,10 @@ def generate_html_report(
                 </details>
             </li>
 '''
+    
+    # Agregar leyenda de grupos al final del sidebar
+    if any(g != 'none' for g in sample_groups.values()):
+        sidebar_items += '<li><a href="#grupos-legend">Leyenda de Grupos</a></li>\n'
     
     sidebar_items += '''
         </ul>
@@ -529,52 +528,6 @@ def generate_html_report(
         </div>
 """
 
-    # LEYENDA DE GRUPOS
-    if any(g != 'none' for g in sample_groups.values()):
-        group_counts = {}
-        for g in sample_groups.values():
-            if g != 'none':
-                group_counts[g] = group_counts.get(g, 0) + 1
-        
-        html_content += """
-        <div class="info-box" id="grupos-legend">
-            <h2>Leyenda de Grupos de Muestras</h2>
-            <p class="text-caption">
-                <em>Las muestras han sido clasificadas en grupos personalizados para su análisis.</em>
-            </p>
-            <table style="width: 100%; margin-top: 15px;">
-                <thead>
-                    <tr>
-                        <th>Símbolo</th>
-                        <th>Grupo</th>
-                        <th>Color</th>
-                        <th>N° Muestras</th>
-                    </tr>
-                </thead>
-                <tbody>
-"""
-        
-        for group_key in ['Set 1', 'Set 2', 'Set 3', 'Set 4']:
-            if group_key in group_counts:
-                group_config = SAMPLE_GROUPS[group_key]
-                custom_label = group_labels.get(group_key, group_key)
-                count = group_counts[group_key]
-                
-                html_content += f"""
-                    <tr>
-                        <td style="text-align: center; font-size: 24px;">{group_config['emoji']}</td>
-                        <td><strong>{custom_label}</strong></td>
-                        <td><span style="display: inline-block; width: 20px; height: 20px; background-color: {group_config['color']}; border: 1px solid #ccc; border-radius: 3px;"></span> {group_config['color']}</td>
-                        <td>{count}</td>
-                    </tr>
-"""
-        
-        html_content += """
-                </tbody>
-            </table>
-        </div>
-"""
-
     # SPECTRA
     if fig_spectra is not None:
         spectra_html = _fig_html(fig_spectra) if not plotly_already_included else fig_spectra.to_html(full_html=False, include_plotlyjs=False)
@@ -679,6 +632,56 @@ def generate_html_report(
 
         html_content += """
             </div>
+        </div>
+"""
+
+    # ===== LEYENDA DE GRUPOS (ÚLTIMO APARTADO) =====
+    if any(g != 'none' for g in sample_groups.values()):
+        group_counts = {}
+        for g in sample_groups.values():
+            if g != 'none':
+                group_counts[g] = group_counts.get(g, 0) + 1
+        
+        html_content += """
+        <div class="info-box" id="grupos-legend">
+            <h2>🏷️ Leyenda de Grupos de Muestras</h2>
+            <p class="text-caption">
+                <em>Las muestras han sido clasificadas en grupos personalizados para su análisis.</em>
+            </p>
+            <table style="width: 100%; margin-top: 15px;">
+                <thead>
+                    <tr>
+                        <th>Símbolo</th>
+                        <th>Grupo</th>
+                        <th>Descripción</th>
+                        <th>Color</th>
+                        <th>N° Muestras</th>
+                    </tr>
+                </thead>
+                <tbody>
+"""
+        
+        for group_key in ['Set 1', 'Set 2', 'Set 3', 'Set 4']:
+            if group_key in group_counts:
+                group_config = SAMPLE_GROUPS[group_key]
+                custom_label = group_labels.get(group_key, group_key)
+                description = group_descriptions.get(group_key, '')
+                description_text = description if description else '<em style="color: #999;">Sin descripción</em>'
+                count = group_counts[group_key]
+                
+                html_content += f"""
+                    <tr>
+                        <td style="text-align: center; font-size: 24px;">{group_config['emoji']}</td>
+                        <td><strong>{custom_label}</strong></td>
+                        <td>{description_text}</td>
+                        <td><span style="display: inline-block; width: 20px; height: 20px; background-color: {group_config['color']}; border: 1px solid #ccc; border-radius: 3px;"></span> {group_config['color']}</td>
+                        <td>{count}</td>
+                    </tr>
+"""
+        
+        html_content += """
+                </tbody>
+            </table>
         </div>
 """
 
