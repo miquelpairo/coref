@@ -1,28 +1,24 @@
 """
 COREF - TSV Validation Reports
 ==============================
-VERSIÓN OPTIMIZADA: Selección mediante botones + click events
+VERSIÓN MODULAR: Código de generación separado en módulos
 """
 
 from __future__ import annotations
 
-import base64
 import re
 import zipfile
-from dataclasses import dataclass
-from datetime import datetime
 from io import BytesIO
-from typing import Dict, List, Optional, Tuple, Set
+from typing import Dict, List
 
-import numpy as np
 import pandas as pd
-import plotly.graph_objs as go
 import streamlit as st
 from dateutil import parser as date_parser
-from sklearn.metrics import mean_squared_error, r2_score
 
 from auth import check_password
 from buchi_streamlit_theme import apply_buchi_styles
+from core.tsv_plotting import plot_comparison_preview, build_spectra_figure_preview
+from core.tsv_report_generator import generate_html_report, ReportResult
 
 
 # =============================================================================
@@ -57,19 +53,28 @@ with st.expander("ℹ️ Instrucciones de Uso"):
     - Reorganiza columnas: Reference, Result, Residuum por parámetro
     - Convierte formatos de fecha automáticamente
     
-    **4. Previsualización y Selección (NUEVO):**
-    - Visualiza espectros y gráficos de parámetros
-    - Marca muestras en la tabla para eliminar (checkbox)
+    **4. Previsualización y Selección:**
+    - Personaliza nombres de grupos para tu análisis
+    - Marca muestras para eliminar (checkbox "Eliminar")
+    - Asigna muestras a grupos (Grupo 1-4) para seguimiento visual
+    - Los grupos aparecen con símbolos diferentes en los gráficos:
+        - 🟩 Cuadrado verde
+        - 🔺 Triángulo rojo
+        - ⭐ Estrella dorada
+        - ➕ Cruz gris
+        - ❌ X roja (eliminar)
     - Revisa estadísticas y outliers visualmente
     - Elimina muestras problemáticas antes de generar el reporte
     
     **5. Generación de Reportes:**
     - Presiona **"Generar Informe Final"**
+    - Los reportes incluyen los grupos marcados con sus etiquetas personalizadas
     - Genera informes HTML interactivos con:
         - Resumen estadístico (R², RMSE, BIAS, N)
         - Gráficos por parámetro (Parity, Residuum vs N, Histograma)
         - Plot de espectros NIR (columnas #1..#n)
         - Sidebar de navegación estilo BUCHI
+        - Leyenda de grupos personalizados
     
     **6. Descargar Resultados:**
     - HTML: Reporte completo interactivo con Plotly
@@ -78,6 +83,9 @@ with st.expander("ℹ️ Instrucciones de Uso"):
     **Características:**
     - ✅ Gráficos interactivos con Plotly (zoom, pan, hover)
     - ✅ Selección mediante tabla interactiva
+    - ✅ Agrupación de muestras con símbolos visuales
+    - ✅ Etiquetas personalizables para grupos
+    - ✅ Grupos incluidos en reportes HTML finales
     - ✅ Previsualización antes de generar reporte
     - ✅ Diseño corporativo BUCHI con sidebar de navegación
     - ✅ Soporte para múltiples parámetros simultáneos
@@ -86,12 +94,33 @@ with st.expander("ℹ️ Instrucciones de Uso"):
 
 
 # =============================================================================
+# SAMPLE GROUPS CONFIGURATION
+# =============================================================================
+SAMPLE_GROUPS = {
+    'none': {'symbol': 'circle', 'color': 'blue', 'size': 8, 'emoji': '🔵'},
+    'Set 1': {'symbol': 'square', 'color': 'green', 'size': 10, 'emoji': '🟩'},
+    'Set 2': {'symbol': 'triangle-up', 'color': 'red', 'size': 10, 'emoji': '🔺'},
+    'Set 3': {'symbol': 'star', 'color': 'gold', 'size': 12, 'emoji': '⭐'},
+    'Set 4': {'symbol': 'cross', 'color': 'grey', 'size': 10, 'emoji': '➕'},
+}
+
+
+# =============================================================================
 # SESSION STATE INITIALIZATION
 # =============================================================================
 if 'processed_data' not in st.session_state:
-    st.session_state.processed_data = {}  # {filename: DataFrame}
+    st.session_state.processed_data = {}
 if 'samples_to_remove' not in st.session_state:
-    st.session_state.samples_to_remove = {}  # {filename: set(indices)}
+    st.session_state.samples_to_remove = {}
+if 'sample_groups' not in st.session_state:
+    st.session_state.sample_groups = {}
+if 'group_labels' not in st.session_state:
+    st.session_state.group_labels = {
+        'Set 1': 'Set 1',
+        'Set 2': 'Set 2',
+        'Set 3': 'Set 3',
+        'Set 4': 'Set 4'
+    }
 
 
 # =============================================================================
@@ -106,25 +135,19 @@ def _is_pixel_col(col: str) -> bool:
 
 
 def filter_relevant_data(data: List[Dict]) -> List[Dict]:
-    """
-    Mantiene:
-    - Todas las columnas de metadata hasta '#X1' (sin incluir)
-    - + columnas espectrales '#1'..'#n' (pixeles), estén donde estén
-    """
+    """Mantiene metadata hasta #X1 + columnas espectrales #1..#n"""
     if not data:
         return []
 
     all_columns = list(data[0].keys())
     stop_column = "#X1"
 
-    # 1) Metadata columns: up to #X1 (excluded)
     base_cols: List[str] = []
     for col in all_columns:
         if col == stop_column:
             break
         base_cols.append(col)
 
-    # 2) Pixel columns: #1..#n
     pixel_cols = [c for c in all_columns if _is_pixel_col(c)]
     pixel_cols = sorted(pixel_cols, key=lambda s: int(str(s)[1:]))
 
@@ -142,9 +165,7 @@ def filter_relevant_data(data: List[Dict]) -> List[Dict]:
 
 
 def delete_zero_rows(data: List[Dict]) -> List[Dict]:
-    """
-    Elimina filas donde 'Result' esté vacío o donde TODOS los valores result sean 0.
-    """
+    """Elimina filas donde Result esté vacío o todos los valores sean 0"""
     out: List[Dict] = []
     for row in data:
         if "Result" not in row or row["Result"] is None:
@@ -172,11 +193,7 @@ def delete_zero_rows(data: List[Dict]) -> List[Dict]:
 
 
 def reorganize_results_and_reference(data: List[Dict]) -> List[Dict]:
-    """
-    Reorganiza a:
-    - columnas no-parámetro (ID, Date, Recipe, Note, etc.)
-    - Reference <param>, Result <param>, Residuum <param>
-    """
+    """Reorganiza a: Reference <param>, Result <param>, Residuum <param>"""
     if not data:
         return []
 
@@ -233,7 +250,7 @@ def reorganize_results_and_reference(data: List[Dict]) -> List[Dict]:
 
 
 def try_parse_date(date_str) -> pd.Timestamp:
-    """Intenta convertir fecha con formatos comunes y fallback a dateutil."""
+    """Intenta convertir fecha con formatos comunes y fallback a dateutil"""
     if pd.isna(date_str) or date_str is None or str(date_str).strip() == "":
         return pd.NaT
 
@@ -253,6 +270,7 @@ def try_parse_date(date_str) -> pd.Timestamp:
 
 
 def clean_tsv_file(uploaded_file) -> pd.DataFrame:
+    """Pipeline completo de limpieza de TSV"""
     df_raw = pd.read_csv(uploaded_file, delimiter="\t", keep_default_na=False)
     data = df_raw.to_dict("records")
 
@@ -275,727 +293,7 @@ def clean_tsv_file(uploaded_file) -> pd.DataFrame:
 
 
 # =============================================================================
-# PLOTLY FIGURES - PARA VISUALIZACIÓN (SIN SELECCIÓN)
-# =============================================================================
-
-def create_layout(title: str, xaxis_title: str, yaxis_title: str) -> Dict:
-    return {
-        "title": title,
-        "xaxis_title": xaxis_title,
-        "yaxis_title": yaxis_title,
-        "showlegend": False,
-        "height": 600,  
-        "dragmode": "zoom",
-        "hovermode": "closest",
-        "template": "plotly",
-        "plot_bgcolor": "#E5ECF6",
-        "paper_bgcolor": "white",
-        "xaxis": {"gridcolor": "white"},
-        "yaxis": {"gridcolor": "white"},
-        "autosize": True,
-    }
-
-
-def plot_comparison_preview(df: pd.DataFrame, result_col: str, reference_col: str, residuum_col: str, 
-                            removed_indices: Set[int] = None):
-    """
-    Genera gráficos de previsualización.
-    Los puntos marcados para eliminar se muestran en rojo.
-    """
-    if removed_indices is None:
-        removed_indices = set()
-    
-    try:
-        valid_mask = (
-            df[reference_col].notna()
-            & df[result_col].notna()
-            & (df[reference_col] != 0)
-            & (df[result_col] != 0)
-        )
-
-        x = df.loc[valid_mask, reference_col]
-        y = df.loc[valid_mask, result_col]
-
-        residuum_series = pd.to_numeric(df.loc[valid_mask, residuum_col], errors="coerce")
-        aligned_mask = residuum_series.notna()
-
-        x = x.loc[aligned_mask]
-        y = y.loc[aligned_mask]
-        residuum = residuum_series.loc[aligned_mask]
-
-        if len(x) < 2 or len(y) < 2:
-            return None
-
-        # Obtener índices originales DEL DATAFRAME FILTRADO
-        original_indices = df.loc[valid_mask].loc[aligned_mask].index.tolist()
-        
-        # CRÍTICO: Solo usar removed_indices que existan en original_indices
-        valid_removed_indices = removed_indices.intersection(set(original_indices))
-        
-        hover_id = df.loc[valid_mask, "ID"] if "ID" in df.columns else pd.Series(range(len(valid_mask)))
-        hover_date = df.loc[valid_mask, "Date"] if "Date" in df.columns else pd.Series([""] * len(valid_mask))
-        hover_id = hover_id.loc[aligned_mask]
-        hover_date = hover_date.loc[aligned_mask]
-
-        # Separar puntos normales vs marcados para eliminar
-        keep_mask = [idx not in valid_removed_indices for idx in original_indices]
-        remove_mask = [idx in valid_removed_indices for idx in original_indices]
-
-        r2 = float(r2_score(x, y))
-        rmse = float(np.sqrt(mean_squared_error(x, y)))
-        bias = float(np.mean(y - x))
-        n = int(len(x))
-
-        # Parity plot
-        fig_parity = go.Figure()
-        
-        # Puntos normales (azul)
-        if any(keep_mask):
-            x_keep = x.iloc[[i for i, k in enumerate(keep_mask) if k]]
-            y_keep = y.iloc[[i for i, k in enumerate(keep_mask) if k]]
-            hovertext_keep = [
-                f"Index: {idx}<br>Date: {date_val}<br>ID: {id_val}<br>Reference: {x_val:.2f}<br>Result: {y_val:.2f}"
-                for idx, id_val, date_val, x_val, y_val, keep in zip(original_indices, hover_id, hover_date, x, y, keep_mask)
-                if keep
-            ]
-            fig_parity.add_trace(go.Scatter(
-                x=x_keep,
-                y=y_keep,
-                mode="markers",
-                marker=dict(color="blue", size=8),
-                hovertext=hovertext_keep,
-                hoverinfo="text",
-                name="Data"
-            ))
-        
-        # Puntos marcados para eliminar (rojo)
-        if any(remove_mask):
-            x_remove = x.iloc[[i for i, r in enumerate(remove_mask) if r]]
-            y_remove = y.iloc[[i for i, r in enumerate(remove_mask) if r]]
-            hovertext_remove = [
-                f"⚠️ MARCADO PARA ELIMINAR<br>Index: {idx}<br>Date: {date_val}<br>ID: {id_val}<br>Reference: {x_val:.2f}<br>Result: {y_val:.2f}"
-                for idx, id_val, date_val, x_val, y_val, remove in zip(original_indices, hover_id, hover_date, x, y, remove_mask)
-                if remove
-            ]
-            fig_parity.add_trace(go.Scatter(
-                x=x_remove,
-                y=y_remove,
-                mode="markers",
-                marker=dict(color="red", size=10, symbol="x"),
-                hovertext=hovertext_remove,
-                hoverinfo="text",
-                name="Marked for removal"
-            ))
-        
-        # Líneas de referencia
-        fig_parity.add_trace(go.Scatter(x=x, y=x, mode="lines", line=dict(dash="dash", color="gray"), name="y = x", showlegend=False))
-        fig_parity.add_trace(go.Scatter(x=x, y=x + rmse, mode="lines", line=dict(dash="dash", color="orange"), name="RMSE", showlegend=False))
-        fig_parity.add_trace(go.Scatter(x=x, y=x - rmse, mode="lines", line=dict(dash="dash", color="orange"), showlegend=False))
-        
-        fig_parity.update_layout(**create_layout("Parity Plot", reference_col, result_col))
-
-        # Residuum vs N
-        hovertext_res = [
-            f"Index: {idx}<br>Date: {date_val}<br>ID: {id_val}<br>Residuum: {res_val:.2f}"
-            for idx, id_val, date_val, res_val in zip(original_indices, hover_id, hover_date, residuum)
-        ]
-        
-        colors = ["red" if idx in valid_removed_indices else "blue" for idx in original_indices]
-        
-        fig_res = go.Figure(
-            go.Bar(
-                x=list(range(len(residuum))),
-                y=residuum,
-                hovertext=hovertext_res,
-                hoverinfo="text",
-                name="Residuum",
-                marker=dict(color=colors)
-            )
-        )
-        fig_res.update_layout(**create_layout("Residuum vs N", "N", "Residuum"))
-
-        # Histograma
-        fig_hist = go.Figure()
-        fig_hist.add_trace(go.Histogram(x=residuum, nbinsx=20, marker=dict(color="blue")))
-        fig_hist.update_layout(**create_layout("Residuum Histogram", "Residuum", "Count"))
-
-        return fig_parity, fig_res, fig_hist, r2, rmse, bias, n
-
-    except Exception as e:
-        st.error(f"Error en plot_comparison_preview: {e}")
-        import traceback
-        st.code(traceback.format_exc())
-        return None
-
-
-def build_spectra_figure_preview(df: pd.DataFrame, removed_indices: Set[int] = None) -> Optional[go.Figure]:
-    if removed_indices is None:
-        removed_indices = set()
-    
-    # CRÍTICO: Solo usar índices que existan en df
-    valid_removed = removed_indices.intersection(set(df.index))
-    
-    pixel_cols = [c for c in df.columns if _is_pixel_col(c)]
-    if not pixel_cols:
-        return None
-
-    pixel_cols = sorted(pixel_cols, key=lambda s: int(str(s)[1:]))
-    x = [int(str(c)[1:]) for c in pixel_cols]
-
-    spec = (
-        df[pixel_cols]
-        .replace(",", ".", regex=True)
-        .apply(pd.to_numeric, errors="coerce")
-    )
-
-    hover_id = df["ID"].astype(str) if "ID" in df.columns else pd.Series([str(i) for i in range(len(df))])
-    hover_date = df["Date"].astype(str) if "Date" in df.columns else pd.Series([""] * len(df))
-    hover_note = df["Note"].astype(str) if "Note" in df.columns else pd.Series([""] * len(df))
-
-    fig = go.Figure()
-
-    for i in df.index:  # Usar df.index en lugar de range(len(df))
-        y = spec.loc[i].to_numpy()
-
-        if np.all(np.isnan(y)):
-            continue
-
-        # Color según si está marcado para eliminar
-        color = "red" if i in valid_removed else "blue"
-        opacity = 0.7 if i in valid_removed else 0.35
-        width = 2 if i in valid_removed else 1
-        
-        prefix = "⚠️ MARCADO - " if i in valid_removed else ""
-
-        fig.add_trace(
-            go.Scatter(
-                x=x,
-                y=y,
-                mode="lines",
-                showlegend=False,
-                line={"width": width, "color": color},
-                opacity=opacity,
-                hovertemplate=(
-                    f"{prefix}Index: {i}<br>"
-                    f"ID: {hover_id.loc[i]}<br>"
-                    f"Date: {hover_date.loc[i]}<br>"
-                    f"Note: {hover_note.loc[i]}<br>"
-                    "Pixel: %{x}<br>"
-                    "Abs: %{y}<extra></extra>"
-                )
-            )
-        )
-
-    fig.update_layout(
-        title="Spectra Preview",
-        xaxis_title="Pixel",
-        yaxis_title="Absorbance (AU)",
-        autosize=True,
-        height=700,
-        hovermode="closest",
-        template="plotly",
-        plot_bgcolor="#E5ECF6",
-        paper_bgcolor="white",
-        xaxis={"gridcolor": "white"},
-        yaxis={"gridcolor": "white"}
-    )
-    return fig
-
-
-
-# =============================================================================
-# HTML REPORT GENERATION (funciones para reporte final)
-# =============================================================================
-
-def plot_comparison_for_report(df: pd.DataFrame, result_col: str, reference_col: str, residuum_col: str):
-    """Versión simple para reportes finales"""
-    try:
-        valid_mask = (
-            df[reference_col].notna()
-            & df[result_col].notna()
-            & (df[reference_col] != 0)
-            & (df[result_col] != 0)
-        )
-
-        x = df.loc[valid_mask, reference_col]
-        y = df.loc[valid_mask, result_col]
-
-        residuum_series = pd.to_numeric(df.loc[valid_mask, residuum_col], errors="coerce")
-        aligned_mask = residuum_series.notna()
-
-        x = x.loc[aligned_mask]
-        y = y.loc[aligned_mask]
-        residuum = residuum_series.loc[aligned_mask]
-
-        if len(x) < 2 or len(y) < 2:
-            return None
-
-        hover_id = df.loc[valid_mask, "ID"] if "ID" in df.columns else pd.Series(range(len(valid_mask)))
-        hover_date = df.loc[valid_mask, "Date"] if "Date" in df.columns else pd.Series([""] * len(valid_mask))
-        hover_id = hover_id.loc[aligned_mask]
-        hover_date = hover_date.loc[aligned_mask]
-
-        r2 = float(r2_score(x, y))
-        rmse = float(np.sqrt(mean_squared_error(x, y)))
-        bias = float(np.mean(y - x))
-        n = int(len(x))
-
-        hovertext = [
-            f"Date: {date_val}<br>ID: {id_val}<br>Reference: {x_val:.2f}<br>Result: {y_val:.2f}"
-            for id_val, date_val, x_val, y_val in zip(hover_id, hover_date, x, y)
-        ]
-
-        # Parity plot
-        fig_parity = go.Figure()
-        fig_parity.add_trace(go.Scatter(x=x, y=y, mode="markers", hovertext=hovertext, hoverinfo="text", name="Data"))
-        fig_parity.add_trace(go.Scatter(x=x, y=x, mode="lines", line=dict(dash="dash", color="gray"), name="y = x"))
-        fig_parity.add_trace(go.Scatter(x=x, y=x + rmse, mode="lines", line=dict(dash="dash", color="red"), name="y = x + RMSE"))
-        fig_parity.add_trace(go.Scatter(x=x, y=x - rmse, mode="lines", line=dict(dash="dash", color="red"), name="y = x - RMSE"))
-        fig_parity.update_layout(**create_layout("Parity Plot", reference_col, result_col))
-
-        # Residuum vs N
-        hovertext_res = [
-            f"Date: {date_val}<br>ID: {id_val}<br>Residuum: {res_val:.2f}"
-            for id_val, date_val, res_val in zip(hover_id, hover_date, residuum)
-        ]
-        fig_res = go.Figure(
-            go.Bar(x=list(range(len(residuum))), y=residuum, hovertext=hovertext_res, hoverinfo="text", name="Residuum")
-        )
-        fig_res.update_layout(**create_layout("Residuum vs N", "N", "Residuum"))
-
-        # Histograma
-        fig_hist = go.Figure()
-        fig_hist.add_trace(go.Histogram(x=residuum, nbinsx=20, marker=dict(color="blue")))
-        fig_hist.update_layout(**create_layout("Residuum Histogram", "Residuum", "Count"))
-
-        return fig_parity, fig_res, fig_hist, r2, rmse, bias, n
-
-    except Exception as e:
-        st.error(f"Error generando plots para {result_col}: {e}")
-        return None
-
-
-def build_spectra_figure_for_report(df: pd.DataFrame) -> Optional[go.Figure]:
-    pixel_cols = [c for c in df.columns if _is_pixel_col(c)]
-    if not pixel_cols:
-        return None
-
-    pixel_cols = sorted(pixel_cols, key=lambda s: int(str(s)[1:]))
-    x = [int(str(c)[1:]) for c in pixel_cols]
-
-    spec = (
-        df[pixel_cols]
-        .replace(",", ".", regex=True)
-        .apply(pd.to_numeric, errors="coerce")
-    )
-
-    hover_id = df["ID"].astype(str) if "ID" in df.columns else pd.Series([str(i) for i in range(len(df))])
-    hover_date = df["Date"].astype(str) if "Date" in df.columns else pd.Series([""] * len(df))
-    hover_note = df["Note"].astype(str) if "Note" in df.columns else pd.Series([""] * len(df))
-
-    fig = go.Figure()
-
-    for i in range(len(df)):
-        y = spec.iloc[i].to_numpy()
-
-        if np.all(np.isnan(y)):
-            continue
-
-        fig.add_trace(
-            go.Scatter(
-                x=x,
-                y=y,
-                mode="lines",
-                showlegend=False,
-                line={"width": 1},
-                opacity=0.35,
-                hovertemplate=(
-                    f"ID: {hover_id.iloc[i]}<br>"
-                    f"Date: {hover_date.iloc[i]}<br>"
-                    f"Note: {hover_note.iloc[i]}<br>"
-                    "Pixel: %{x}<br>"
-                    "Abs: %{y}<extra></extra>"
-                ),
-            )
-        )
-
-    fig.update_layout(
-        title="Spectra",
-        xaxis_title="Pixel",
-        yaxis_title="Absorbance (AU)",
-        autosize=True,
-        height=700,
-        hovermode="closest",
-        template="plotly",
-        plot_bgcolor="#E5ECF6",
-        paper_bgcolor="white",
-        xaxis={"gridcolor": "white"},
-        yaxis={"gridcolor": "white"},
-    )
-    return fig
-
-
-def _safe_html_id(s: str) -> str:
-    s = s.strip()
-    s = s.replace(" ", "-").replace("/", "-").replace("\\", "-")
-    s = re.sub(r"[^a-zA-Z0-9\-_]", "", s)
-    return s or "param"
-
-
-@dataclass
-class ReportResult:
-    name: str
-    html: str
-    csv: pd.DataFrame
-
-
-def generate_html_report(df: pd.DataFrame, file_name: str) -> str:
-    """
-    Genera HTML con Bootstrap tabs + sidebar BUCHI + CSS corporativo.
-    """
-    from core.report_utils import load_buchi_css, get_sidebar_styles, get_common_report_styles
-    
-    columns_result = [c for c in df.columns if str(c).startswith("Result ")]
-    columns_reference = [c.replace("Result ", "Reference ") for c in columns_result]
-    columns_residuum = [c.replace("Result ", "Residuum ") for c in columns_result]
-
-    summary_data: List[Dict] = []
-    fig_spectra = build_spectra_figure_for_report(df)
-    plotly_already_included = False
-
-    def _fig_html(fig: go.Figure) -> str:
-        nonlocal plotly_already_included
-        include_js = "inline" if not plotly_already_included else False
-        html = fig.to_html(full_html=False, include_plotlyjs=include_js)
-        plotly_already_included = True
-        return html
-
-    # Build valid params list
-    valid_params: List[Tuple[str, str, Tuple]] = []
-    for result_col, reference_col, residuum_col in zip(columns_result, columns_reference, columns_residuum):
-        param_name = str(result_col).replace("Result ", "")
-        param_id = _safe_html_id(param_name)
-        plots = plot_comparison_for_report(df, result_col, reference_col, residuum_col)
-        if plots:
-            valid_params.append((param_name, param_id, plots))
-            fig_parity, fig_res, fig_hist, r2, rmse, bias, n = plots
-            summary_data.append({"Parameter": param_name, "R2": r2, "RMSE": rmse, "BIAS": bias, "N": n})
-
-    # ========================================================================
-    # CONSTRUCCIÓN DEL SIDEBAR
-    # ========================================================================
-    sidebar_items = """
-        <h2>📋 Índice</h2>
-        <ul>
-            <li><a href="#info-general">Información General</a></li>
-            <li><a href="#summary-stats">Resumen Estadístico</a></li>
-    """
-    
-    if fig_spectra:
-        sidebar_items += '<li><a href="#spectra-section">Espectros</a></li>\n'
-    
-    if valid_params:
-        sidebar_items += '''
-            <li>
-                <details class="sidebar-menu-details">
-                    <summary>Análisis por Parámetro</summary>
-                    <ul style="padding-left: 15px; margin-top: 5px;">
-'''
-        for param_name, param_id, _ in valid_params:
-            onclick_code = f"$('#tab-{param_id}').tab('show'); document.getElementById('tabs-section').scrollIntoView({{behavior: 'smooth'}}); return false;"
-            sidebar_items += f'                        <li><a href="#" onclick="{onclick_code}">{param_name}</a></li>\n'
-        
-        sidebar_items += '''
-                    </ul>
-                </details>
-            </li>
-'''
-    
-    sidebar_items += '''
-        </ul>
-'''
-
-    # ========================================================================
-    # CARGAR CSS BUCHI
-    # ========================================================================
-    buchi_css = load_buchi_css()
-    sidebar_css = get_sidebar_styles()
-    common_css = get_common_report_styles()
-
-    # ========================================================================
-    # HTML COMPLETO
-    # ========================================================================
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    year = datetime.now().year
-    
-    html_content = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Validation Report - {file_name}</title>
-
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
-    <style>
-{buchi_css}
-{sidebar_css}
-{common_css}
-    </style>
-</head>
-<body>
-    <!-- SIDEBAR -->
-    <div class="sidebar">
-{sidebar_items}
-    </div>
-
-    <!-- MAIN CONTENT -->
-    <div class="main-content">
-        <h1>Validation Report</h1>
-        
-        <!-- INFO GENERAL -->
-        <div class="info-box" id="info-general">
-            <h2>Información General</h2>
-            <table>
-                <tr>
-                    <th>Archivo</th>
-                    <td>{file_name}</td>
-                </tr>
-                <tr>
-                    <th>Fecha de generación</th>
-                    <td>{timestamp}</td>
-                </tr>
-                <tr>
-                    <th>Número de muestras</th>
-                    <td>{len(df)}</td>
-                </tr>
-                <tr>
-                    <th>Parámetros analizados</th>
-                    <td>{len(valid_params)}</td>
-                </tr>
-            </table>
-            <p class="text-caption">
-                <em>Este informe analiza valores predichos vs referencia usando métricas estadísticas (R², RMSE, BIAS).</em>
-            </p>
-        </div>
-
-        <!-- SUMMARY STATS -->
-        <div class="info-box" id="summary-stats">
-            <h2>Resumen Estadístico</h2>
-            <table class="summary-table">
-                <thead>
-                    <tr>
-                        <th>Parámetro</th>
-"""
-
-    for row in summary_data:
-        html_content += f"<th>{row['Parameter']}</th>"
-
-    html_content += """
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td><strong>R²</strong></td>
-"""
-    for row in summary_data:
-        html_content += f"<td>{row['R2']:.3f}</td>"
-
-    html_content += """
-                    </tr>
-                    <tr>
-                        <td><strong>RMSE</strong></td>
-"""
-    for row in summary_data:
-        html_content += f"<td>{row['RMSE']:.3f}</td>"
-
-    html_content += """
-                    </tr>
-                    <tr>
-                        <td><strong>BIAS</strong></td>
-"""
-    for row in summary_data:
-        html_content += f"<td>{row['BIAS']:.3f}</td>"
-
-    html_content += """
-                    </tr>
-                    <tr>
-                        <td><strong>N</strong></td>
-"""
-    for row in summary_data:
-        html_content += f"<td>{row['N']}</td>"
-
-    html_content += """
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-"""
-
-    # SPECTRA
-    if fig_spectra is not None:
-        spectra_html = _fig_html(fig_spectra) if not plotly_already_included else fig_spectra.to_html(full_html=False, include_plotlyjs=False)
-        html_content += f"""
-        <div class="info-box" id="spectra-section">
-            <h2>Espectros</h2>
-            <p class="text-caption">
-                <em>Overlay de todos los espectros NIR (columnas #1..#n).</em>
-            </p>
-            <div class="plot-container">
-                {spectra_html}
-            </div>
-        </div>
-"""
-
-    # TABS POR PARÁMETRO
-    if valid_params:
-        html_content += """
-        <div class="info-box" id="tabs-section">
-            <h2>Análisis por Parámetro</h2>
-            <p class="text-caption">
-                <em>Gráficos interactivos (Parity, Residuum vs N, Histograma) para cada parámetro.</em>
-            </p>
-            
-            <ul class="nav nav-tabs" id="myTab" role="tablist">
-"""
-
-        first_tab = True
-        for param_name, param_id, _ in valid_params:
-            active_class = "active" if first_tab else ""
-            first_tab = False
-            html_content += f"""
-                <li class="nav-item">
-                    <a class="nav-link {active_class}" id="tab-{param_id}" data-toggle="tab"
-                       href="#content-{param_id}" role="tab">{param_name}</a>
-                </li>
-"""
-
-        html_content += """
-            </ul>
-            
-            <div class="tab-content" id="myTabContent">
-"""
-
-        first_tab = True
-        for param_name, param_id, plots in valid_params:
-            fig_parity, fig_residuum, fig_histogram, r2, rmse, bias, n = plots
-            active_class = "show active" if first_tab else ""
-            first_tab = False
-
-            fig_parity_html = _fig_html(fig_parity) if not plotly_already_included else fig_parity.to_html(full_html=False, include_plotlyjs=False)
-            fig_residuum_html = fig_residuum.to_html(full_html=False, include_plotlyjs=False)
-            fig_histogram_html = fig_histogram.to_html(full_html=False, include_plotlyjs=False)
-
-            html_content += f"""
-                <div class="tab-pane fade {active_class}" id="content-{param_id}" role="tabpanel">
-                    <div class="stats-box">
-                        <table>
-                            <tr>
-                                <td><strong>R²</strong></td>
-                                <td><strong>RMSE</strong></td>
-                                <td><strong>BIAS</strong></td>
-                                <td><strong>N</strong></td>
-                            </tr>
-                            <tr>
-                                <td>{r2:.3f}</td>
-                                <td>{rmse:.3f}</td>
-                                <td>{bias:.3f}</td>
-                                <td>{n}</td>
-                            </tr>
-                        </table>
-                    </div>
-
-                    <div id="carousel-{param_id}" class="carousel slide" data-ride="carousel" data-interval="false">
-                        <ol class="carousel-indicators">
-                            <li data-target="#carousel-{param_id}" data-slide-to="0" class="active"></li>
-                            <li data-target="#carousel-{param_id}" data-slide-to="1"></li>
-                            <li data-target="#carousel-{param_id}" data-slide-to="2"></li>
-                        </ol>
-
-                        <div class="carousel-inner">
-                            <div class="carousel-item active">
-                                <div class="plot-container">{fig_parity_html}</div>
-                            </div>
-                            <div class="carousel-item">
-                                <div class="plot-container">{fig_residuum_html}</div>
-                            </div>
-                            <div class="carousel-item">
-                                <div class="plot-container">{fig_histogram_html}</div>
-                            </div>
-                        </div>
-
-                        <a class="carousel-control-prev" href="#carousel-{param_id}" role="button" data-slide="prev">
-                            <span class="carousel-control-prev-icon"></span>
-                        </a>
-                        <a class="carousel-control-next" href="#carousel-{param_id}" role="button" data-slide="next">
-                            <span class="carousel-control-next-icon"></span>
-                        </a>
-                    </div>
-                </div>
-"""
-
-        html_content += """
-            </div>
-        </div>
-"""
-
-    # FOOTER
-    html_content += f"""
-        <!-- FOOTER -->
-        <div style="margin-top: 50px; padding-top: 20px; border-top: 2px solid #eee; text-align: center; color: #666; font-size: 12px;">
-            <p>Informe generado automáticamente por COREF Suite</p>
-            <p>Fecha: {timestamp}</p>
-            <p>© {year} BÜCHI Labortechnik AG</p>
-        </div>
-    </div>
-
-    <script>
-    $(document).ready(function() {{
-        function forcePlotlyAutosize($root) {{
-            $root = $root && $root.length ? $root : $(document);
-            var $plots = $root.find('.carousel-item.active .plotly-graph-div, .tab-pane.active .plotly-graph-div');
-            $plots.each(function() {{
-                var gd = this;
-                if (!gd) return;
-                requestAnimationFrame(function() {{
-                    requestAnimationFrame(function() {{
-                        try {{ Plotly.Plots.resize(gd); }} catch(e) {{}}
-                        try {{ Plotly.relayout(gd, {{ autosize: true }}); }} catch(e) {{}}
-                    }});
-                }});
-            }});
-        }}
-
-        $('a[data-toggle="tab"]').on('shown.bs.tab', function(e) {{
-            var target = $(e.target).attr('href');
-            forcePlotlyAutosize($(target));
-        }});
-
-        $(document).on('slid.bs.carousel', '.carousel', function() {{
-            forcePlotlyAutosize($(this));
-        }});
-
-        forcePlotlyAutosize($(document));
-    }});
-    </script>
-
-</body>
-</html>
-"""
-
-    return html_content
-
-
-# =============================================================================
-# STREAMLIT UI - FILTROS DE FECHA PRIMERO
+# STREAMLIT UI - FASE 1: CARGA Y FILTRADO
 # =============================================================================
 
 st.markdown("---")
@@ -1011,9 +309,6 @@ uploaded_files = st.file_uploader(
 if uploaded_files:
     st.success(f"✅ {len(uploaded_files)} archivo(s) cargado(s)")
     
-    # ========================================================================
-    # FILTROS DE FECHA - PRIMERO, ANTES DE PROCESAR
-    # ========================================================================
     st.markdown("---")
     st.subheader("📅 1. Filtrado por Fechas (Opcional)")
     st.info("Define el rango de fechas ANTES de procesar. Esto filtrará los datos desde el inicio.")
@@ -1039,7 +334,6 @@ if uploaded_files:
         if st.button("🗑️ Limpiar fechas"):
             st.rerun()
     
-    # Mostrar info del filtro
     if start_date or end_date:
         filter_info = "🔍 **Filtro de fechas configurado:** "
         if start_date and end_date:
@@ -1053,23 +347,21 @@ if uploaded_files:
     st.markdown("---")
     st.subheader("2. Procesar Archivos")
     
-    # Procesamiento con filtros aplicados
     if st.button("🔄 Procesar Archivos con Filtros", type="primary", use_container_width=True):
         progress_bar = st.progress(0)
         status_text = st.empty()
         
         st.session_state.processed_data = {}
-        st.session_state.samples_to_remove = {}  # IMPORTANTE: Resetear selecciones
+        st.session_state.samples_to_remove = {}
+        st.session_state.sample_groups = {}
 
         for idx, uploaded_file in enumerate(uploaded_files, start=1):
             file_name = uploaded_file.name.replace(".tsv", "").replace(".txt", "")
             status_text.text(f"Procesando {file_name}...")
 
             try:
-                # Limpiar datos
                 df_clean = clean_tsv_file(uploaded_file)
                 
-                # APLICAR FILTROS DE FECHA INMEDIATAMENTE
                 df_filtered = df_clean.copy()
                 rows_before = len(df_filtered)
                 
@@ -1095,14 +387,11 @@ if uploaded_files:
                     if start_date or end_date:
                         st.warning(f"⚠️ {file_name}: No tiene columna 'Date', se ignora el filtro de fechas")
                 
-                # Resetear índices para evitar problemas - CRÍTICO
                 df_filtered = df_filtered.reset_index(drop=True)
                 
-                # Guardar datos YA FILTRADOS
                 st.session_state.processed_data[file_name] = df_filtered
-                
-                # CRÍTICO: Inicializar con set vacío para este archivo
                 st.session_state.samples_to_remove[file_name] = set()
+                st.session_state.sample_groups[file_name] = {}
                 
                 st.success(f"✅ {file_name} procesado ({len(df_filtered)} muestras)")
 
@@ -1116,7 +405,10 @@ if uploaded_files:
         status_text.text("✅ Procesamiento completado")
 
 
-# FASE 2: Previsualización SOBRE DATOS YA FILTRADOS
+# =============================================================================
+# FASE 2: PREVISUALIZACIÓN Y SELECCIÓN
+# =============================================================================
+
 if st.session_state.processed_data:
     st.markdown("---")
     st.markdown("### 🔍 FASE 2: Previsualización y Selección de Muestras")
@@ -1129,39 +421,77 @@ if st.session_state.processed_data:
     )
     
     if selected_file:
-        # Datos YA FILTRADOS por fecha
         df_current = st.session_state.processed_data[selected_file]
         
-        # CRÍTICO: Limpiar índices inválidos
         removed_indices = st.session_state.samples_to_remove.get(selected_file, set())
+        sample_groups = st.session_state.sample_groups.get(selected_file, {})
         
-        # Filtrar solo índices que existen en df_current
+        # Limpiar índices inválidos
         valid_removed = {idx for idx in removed_indices if idx in df_current.index}
+        valid_groups = {idx: grp for idx, grp in sample_groups.items() if idx in df_current.index}
         
-        # Si había índices inválidos, actualizar
         if len(valid_removed) != len(removed_indices):
-            invalid_count = len(removed_indices - valid_removed)
             st.session_state.samples_to_remove[selected_file] = valid_removed
-            if invalid_count > 0:
-                st.warning(f"⚠️ Se limpiaron {invalid_count} selecciones inválidas de sesiones anteriores")
+        if len(valid_groups) != len(sample_groups):
+            st.session_state.sample_groups[selected_file] = valid_groups
         
         removed_indices = valid_removed
+        sample_groups = valid_groups
         
         # Estadísticas
-        col1, col2, col3 = st.columns(3)
+        col1, col2, col3, col4 = st.columns(4)
         with col1:
             st.metric("📊 Total", len(df_current))
         with col2:
-            st.metric("🗑️ Marcadas", len(removed_indices))
+            st.metric("🗑️ Eliminar", len(removed_indices))
         with col3:
+            grouped_count = sum(1 for g in sample_groups.values() if g != 'none')
+            st.metric("🏷️ Agrupadas", grouped_count)
+        with col4:
             st.metric("✅ Finales", len(df_current) - len(removed_indices))
+        
+        st.markdown("---")
+        
+        # LEYENDA DE GRUPOS PERSONALIZABLE
+        st.subheader("🏷️ Leyenda de Grupos")
+        st.info("Personaliza los nombres de los grupos para tu análisis (ej: 'Outliers', 'Pre-ajuste', 'Validados', etc.)")
+
+        legend_cols = st.columns(4)
+
+        group_keys = ['Set 1', 'Set 2', 'Set 3', 'Set 4']
+        for idx, group_key in enumerate(group_keys):
+            with legend_cols[idx]:
+                group_config = SAMPLE_GROUPS[group_key]
+                
+                st.markdown(f"**{group_config['emoji']} ({group_config['symbol']})**")
+                
+                new_label = st.text_input(
+                    "Etiqueta:",
+                    value=st.session_state.group_labels[group_key],
+                    key=f"label_{group_key}",
+                    max_chars=30,
+                    help=f"Nombre personalizado para {group_key}"
+                )
+                
+                if new_label != st.session_state.group_labels[group_key]:
+                    st.session_state.group_labels[group_key] = new_label
+
+        st.markdown("**Etiquetas actuales:**")
+        labels_summary = " | ".join([
+            f"{SAMPLE_GROUPS[k]['emoji']} **{st.session_state.group_labels[k]}**" 
+            for k in group_keys
+        ])
+        st.markdown(labels_summary)
         
         st.markdown("---")
         
         # ESPECTROS
         with st.expander("📈 Vista de Espectros", expanded=True):
             try:
-                fig_spectra = build_spectra_figure_preview(df_current, removed_indices)
+                fig_spectra = build_spectra_figure_preview(
+                    df_current, removed_indices, sample_groups, 
+                    st.session_state.group_labels, SAMPLE_GROUPS, PIXEL_RE
+                )
                 if fig_spectra:
                     st.plotly_chart(fig_spectra, use_container_width=True)
                 else:
@@ -1184,7 +514,10 @@ if st.session_state.processed_data:
                 residuum_col = f"Residuum {selected_param}"
                 
                 try:
-                    plots = plot_comparison_preview(df_current, result_col, reference_col, residuum_col, removed_indices)
+                    plots = plot_comparison_preview(
+                        df_current, result_col, reference_col, residuum_col,
+                        removed_indices, sample_groups, st.session_state.group_labels, SAMPLE_GROUPS
+                    )
                     
                     if plots:
                         fig_parity, fig_res, fig_hist, r2, rmse, bias, n = plots
@@ -1204,9 +537,9 @@ if st.session_state.processed_data:
                         with tab3:
                             st.plotly_chart(fig_hist, use_container_width=True)
                     else:
-                        st.error(f"No se pudieron generar gráficos para {selected_param}. Verifica que haya datos válidos.")
+                        st.error(f"No se pudieron generar gráficos para {selected_param}.")
                 except Exception as e:
-                    st.error(f"Error generando gráficos para {selected_param}: {e}")
+                    st.error(f"Error generando gráficos: {e}")
                     import traceback
                     st.code(traceback.format_exc())
             else:
@@ -1216,26 +549,27 @@ if st.session_state.processed_data:
         
         # TABLA INTERACTIVA
         st.subheader("🎯 Selección de Muestras")
-        st.info("✅ Marca las filas que quieras eliminar → Presiona **'Actualizar Selección'** → Revisa los gráficos → Confirma eliminación")
+        st.info("✅ Marca para **Eliminar** o asigna un **Grupo** → Presiona **'Actualizar Selección'** → Revisa los gráficos")
         
-        # Preparar DataFrame para edición
         df_for_edit = df_current.copy()
+        df_for_edit.insert(0, 'Grupo', 'none')
         df_for_edit.insert(0, 'Eliminar', False)
         
-        # Marcar las ya seleccionadas
         for idx in removed_indices:
             if idx in df_for_edit.index:
                 df_for_edit.at[idx, 'Eliminar'] = True
         
-        # Seleccionar columnas a mostrar
-        display_cols = ['Eliminar']
+        for idx, group in sample_groups.items():
+            if idx in df_for_edit.index:
+                df_for_edit.at[idx, 'Grupo'] = group
+        
+        display_cols = ['Eliminar', 'Grupo']
         for col in ['ID', 'Date', 'Note']:
             if col in df_for_edit.columns:
                 display_cols.append(col)
         
-        # Añadir columnas Result
         result_cols = [c for c in df_for_edit.columns if str(c).startswith("Result ")]
-        display_cols.extend(result_cols[:3])  # Primeros 3 parámetros
+        display_cols.extend(result_cols[:3])
         
         edited_df = st.data_editor(
             df_for_edit[display_cols],
@@ -1244,9 +578,15 @@ if st.session_state.processed_data:
                     "Eliminar",
                     help="Marcar para eliminar esta muestra",
                     default=False,
+                ),
+                "Grupo": st.column_config.SelectboxColumn(
+                    "Grupo",
+                    help="Asignar muestra a un grupo de seguimiento",
+                    options=['none', 'Set 1', 'Set 2', 'Set 3', 'Set 4'],
+                    default='none',
                 )
             },
-            disabled=[c for c in display_cols if c != 'Eliminar'],
+            disabled=[c for c in display_cols if c not in ['Eliminar', 'Grupo']],
             hide_index=False,
             use_container_width=True,
             key=f"editor_{selected_file}"
@@ -1254,55 +594,86 @@ if st.session_state.processed_data:
         
         st.markdown("---")
         
-        # Botones de acción en 3 columnas
-        col1, col2, col3 = st.columns(3)
+        # BOTONES DE ACCIÓN
+        col1, col2, col3, col4 = st.columns(4)
         
         with col1:
-            if st.button("🔄 Actualizar Selección", use_container_width=True, help="Actualiza los gráficos con las muestras marcadas"):
-                # Actualizar selección sin eliminar
+            if st.button("🔄 Actualizar Selección", use_container_width=True):
                 new_removed = set(edited_df[edited_df['Eliminar']].index.tolist())
+                new_groups = {}
+                for idx in edited_df.index:
+                    group_val = edited_df.at[idx, 'Grupo']
+                    if group_val != 'none':
+                        new_groups[idx] = group_val
+                
                 st.session_state.samples_to_remove[selected_file] = new_removed
-                st.success(f"✅ Selección actualizada: {len(new_removed)} muestras marcadas")
+                st.session_state.sample_groups[selected_file] = new_groups
+                
+                st.success(f"✅ Actualizado: {len(new_removed)} para eliminar, {len(new_groups)} agrupadas")
                 st.rerun()
         
         with col2:
             if st.button("🗑️ Confirmar Eliminación", type="primary", use_container_width=True, 
-                        disabled=(len(removed_indices) == 0),
-                        help="Elimina definitivamente las muestras marcadas"):
+                        disabled=(len(removed_indices) == 0)):
                 if removed_indices:
-                    # Eliminar del DataFrame y resetear índices
                     df_updated = df_current.drop(index=list(removed_indices)).reset_index(drop=True)
                     st.session_state.processed_data[selected_file] = df_updated
-                    # Limpiar selecciones
                     st.session_state.samples_to_remove[selected_file] = set()
-                    st.success(f"✅ {len(removed_indices)} muestras eliminadas definitivamente")
+                    new_groups = {idx: grp for idx, grp in sample_groups.items() if idx not in removed_indices}
+                    st.session_state.sample_groups[selected_file] = new_groups
+                    st.success(f"✅ {len(removed_indices)} muestras eliminadas")
                     st.rerun()
         
         with col3:
-            if st.button("↩️ Desmarcar Todas", use_container_width=True,
-                        disabled=(len(removed_indices) == 0),
-                        help="Quita todas las marcas de selección"):
+            if st.button("↩️ Limpiar Todo", use_container_width=True,
+                        disabled=(len(removed_indices) == 0 and len(sample_groups) == 0)):
                 st.session_state.samples_to_remove[selected_file] = set()
+                st.session_state.sample_groups[selected_file] = {}
                 st.rerun()
         
-        # Mostrar resumen de selección
-        if removed_indices:
-            st.warning(f"⚠️ **{len(removed_indices)} muestras marcadas para eliminar**. Los gráficos arriba muestran estas muestras en rojo.")
+        with col4:
+            if st.button("🔄 Limpiar Grupos", use_container_width=True,
+                        disabled=(len(sample_groups) == 0)):
+                st.session_state.sample_groups[selected_file] = {}
+                st.rerun()
+        
+        # RESUMEN
+        if removed_indices or sample_groups:
+            summary_parts = []
+            if removed_indices:
+                summary_parts.append(f"**{len(removed_indices)} marcadas para eliminar (X roja)**")
+            if sample_groups:
+                group_counts = {}
+                for g in sample_groups.values():
+                    group_counts[g] = group_counts.get(g, 0) + 1
+                for group_key, count in group_counts.items():
+                    label = st.session_state.group_labels.get(group_key, group_key)
+                    emoji = SAMPLE_GROUPS[group_key]['emoji']
+                    summary_parts.append(f"**{count} en {emoji} {label}**")
+            
+            st.info("📊 " + " | ".join(summary_parts))
 
-# FASE 3: Generación (datos ya filtrados y depurados)
+
+# =============================================================================
+# FASE 3: GENERACIÓN DE REPORTES
+# =============================================================================
+
 if st.session_state.processed_data:
     st.markdown("---")
     st.markdown("### 📥 FASE 3: Generar Reportes Finales")
     
-    st.info("Los reportes se generarán con los datos actuales (después de filtros de fecha y eliminaciones manuales).")
+    st.info("Los reportes incluirán los grupos personalizados que hayas configurado.")
     
-    # Resumen
     st.subheader("📋 Resumen de Archivos")
     summary_data = []
     for fname, df in st.session_state.processed_data.items():
+        sample_groups_file = st.session_state.sample_groups.get(fname, {})
+        grouped_count = sum(1 for g in sample_groups_file.values() if g != 'none')
+        
         summary_data.append({
             "Archivo": fname,
             "Muestras": len(df),
+            "Agrupadas": grouped_count,
             "Parámetros": len([c for c in df.columns if str(c).startswith("Result ")])
         })
     
@@ -1320,7 +691,11 @@ if st.session_state.processed_data:
                     st.warning(f"⚠️ {file_name}: No hay datos para generar reporte")
                     continue
                 
-                html = generate_html_report(df, file_name)
+                sample_groups_file = st.session_state.sample_groups.get(file_name, {})
+                html = generate_html_report(
+                    df, file_name, sample_groups_file, 
+                    st.session_state.group_labels, SAMPLE_GROUPS, PIXEL_RE
+                )
                 results.append(ReportResult(name=file_name, html=html, csv=df))
                 st.success(f"✅ {file_name} ({len(df)} muestras)")
             except Exception as e:
