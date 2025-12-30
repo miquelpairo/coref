@@ -42,7 +42,7 @@ with st.expander("ℹ️ Instrucciones de Uso"):
     - Sube uno o varios archivos TSV (export/journal de NIR-Online)
     - Los archivos pueden estar en formato estándar o journal
     - Soporta carga múltiple para procesamiento batch
-    - **NUEVO**: Soporte para archivos Journal con encoding ISO-8859-1
+    - Soporte para archivos Journal con encoding ISO-8859-1
     
     **2. Filtrar por Fechas (Opcional):**
     - Define rango de fechas para filtrar las mediciones
@@ -93,7 +93,7 @@ with st.expander("ℹ️ Instrucciones de Uso"):
     - ✅ Diseño corporativo BUCHI con sidebar de navegación
     - ✅ Soporte para múltiples parámetros simultáneos
     - ✅ Vista de espectros completos NIR
-    - ✅ **NUEVO**: Soporte para archivos Journal (ISO-8859-1, unidades)
+    - ✅ Soporte para archivos Journal (ISO-8859-1, unidades)
     """)
 
 
