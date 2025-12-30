@@ -1001,73 +1001,73 @@ if st.session_state.processed_data:
                 key=f"editor_{selected_file}_v{st.session_state.editor_version[selected_file]}"
             )
 
-        # BOTONES DEBAJO DE TABLA
-        st.markdown("---")
-        c1, c2, c3, c4 = st.columns(4)
+            # BOTONES DEBAJO DE TABLA
+            st.markdown("---")
+            c1, c2, c3, c4 = st.columns(4)
 
-        with c1:
-            if st.button("🔄 Actualizar Selección", use_container_width=True, type="primary"):
-                new_removed = set()
-                new_groups = {}
-                for idx_ in edited_df.index:
-                    if bool(edited_df.at[idx_, "Eliminar"]):
-                        new_removed.add(idx_)
-                    grp_val = edited_df.at[idx_, "Grupo"]
-                    if grp_val != "none":
-                        new_groups[idx_] = grp_val
-                st.session_state.samples_to_remove[selected_file] = new_removed
-                st.session_state.sample_groups[selected_file] = new_groups
-                st.session_state.editor_version[selected_file] += 1
-                st.success(f"✅ Actualizado: {len(new_removed)} eliminar, {len(new_groups)} agrupadas")
-                st.rerun()
-
-        with c2:
-            if st.button("🗑️ Confirmar Eliminación", use_container_width=True, disabled=(len(removed_indices) == 0)):
-                if removed_indices:
-                    old_to_new = {}
-                    sorted_indices = sorted(df_current.index)
-                    removed_sorted = sorted(removed_indices)
-                    new_idx = 0
-                    for old_idx in sorted_indices:
-                        if old_idx not in removed_sorted:
-                            old_to_new[old_idx] = new_idx
-                            new_idx += 1
-                    df_updated = df_current.drop(index=list(removed_indices)).reset_index(drop=True)
+            with c1:
+                if st.button("🔄 Actualizar Selección", use_container_width=True, type="primary"):
+                    new_removed = set()
                     new_groups = {}
-                    for old_idx, grp in sample_groups.items():
-                        if old_idx not in removed_indices:
-                            mapped = old_to_new.get(old_idx)
-                            if mapped is not None:
-                                new_groups[mapped] = grp
-                    st.session_state.processed_data[selected_file] = df_updated
-                    st.session_state.samples_to_remove[selected_file] = set()
+                    for idx_ in edited_df.index:
+                        if bool(edited_df.at[idx_, "Eliminar"]):
+                            new_removed.add(idx_)
+                        grp_val = edited_df.at[idx_, "Grupo"]
+                        if grp_val != "none":
+                            new_groups[idx_] = grp_val
+                    st.session_state.samples_to_remove[selected_file] = new_removed
                     st.session_state.sample_groups[selected_file] = new_groups
+                    st.session_state.editor_version[selected_file] += 1
+                    st.success(f"✅ Actualizado: {len(new_removed)} eliminar, {len(new_groups)} agrupadas")
+                    st.rerun()
+
+            with c2:
+                if st.button("🗑️ Confirmar Eliminación", use_container_width=True, disabled=(len(removed_indices) == 0)):
+                    if removed_indices:
+                        old_to_new = {}
+                        sorted_indices = sorted(df_current.index)
+                        removed_sorted = sorted(removed_indices)
+                        new_idx = 0
+                        for old_idx in sorted_indices:
+                            if old_idx not in removed_sorted:
+                                old_to_new[old_idx] = new_idx
+                                new_idx += 1
+                        df_updated = df_current.drop(index=list(removed_indices)).reset_index(drop=True)
+                        new_groups = {}
+                        for old_idx, grp in sample_groups.items():
+                            if old_idx not in removed_indices:
+                                mapped = old_to_new.get(old_idx)
+                                if mapped is not None:
+                                    new_groups[mapped] = grp
+                        st.session_state.processed_data[selected_file] = df_updated
+                        st.session_state.samples_to_remove[selected_file] = set()
+                        st.session_state.sample_groups[selected_file] = new_groups
+                        st.session_state.pending_selections[selected_file] = []
+                        st.session_state.last_event_id[selected_file]["spectra"] = ""
+                        st.session_state.last_event_id[selected_file]["parity"] = ""
+                        st.session_state.editor_version[selected_file] += 1
+                        st.success(f"✅ {len(removed_indices)} muestras eliminadas")
+                        st.rerun()
+
+            with c3:
+                if st.button(
+                    "↩️ Limpiar Todo",
+                    use_container_width=True,
+                    disabled=(len(removed_indices) == 0 and len(sample_groups) == 0)
+                ):
+                    st.session_state.samples_to_remove[selected_file] = set()
+                    st.session_state.sample_groups[selected_file] = {}
                     st.session_state.pending_selections[selected_file] = []
                     st.session_state.last_event_id[selected_file]["spectra"] = ""
                     st.session_state.last_event_id[selected_file]["parity"] = ""
                     st.session_state.editor_version[selected_file] += 1
-                    st.success(f"✅ {len(removed_indices)} muestras eliminadas")
                     st.rerun()
 
-        with c3:
-            if st.button(
-                "↩️ Limpiar Todo",
-                use_container_width=True,
-                disabled=(len(removed_indices) == 0 and len(sample_groups) == 0)
-            ):
-                st.session_state.samples_to_remove[selected_file] = set()
-                st.session_state.sample_groups[selected_file] = {}
-                st.session_state.pending_selections[selected_file] = []
-                st.session_state.last_event_id[selected_file]["spectra"] = ""
-                st.session_state.last_event_id[selected_file]["parity"] = ""
-                st.session_state.editor_version[selected_file] += 1
-                st.rerun()
-
-        with c4:
-            if st.button("🔄 Limpiar Grupos", use_container_width=True, disabled=(len(sample_groups) == 0)):
-                st.session_state.sample_groups[selected_file] = {}
-                st.session_state.editor_version[selected_file] += 1
-                st.rerun()
+            with c4:
+                if st.button("🔄 Limpiar Grupos", use_container_width=True, disabled=(len(sample_groups) == 0)):
+                    st.session_state.sample_groups[selected_file] = {}
+                    st.session_state.editor_version[selected_file] += 1
+                    st.rerun()
 
         if removed_indices or sample_groups:
             summary_parts = []
