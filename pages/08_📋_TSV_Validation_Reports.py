@@ -2,6 +2,7 @@
 COREF - TSV Validation Reports
 ==============================
 VERSIÓN MODULAR: Código de generación separado en módulos
+ACTUALIZACIÓN: Soporte para archivos Journal (ISO-8859-1, valores con unidades)
 """
 
 from __future__ import annotations
@@ -41,6 +42,7 @@ with st.expander("ℹ️ Instrucciones de Uso"):
     - Sube uno o varios archivos TSV (export/journal de NIR-Online)
     - Los archivos pueden estar en formato estándar o journal
     - Soporta carga múltiple para procesamiento batch
+    - **NUEVO**: Soporte para archivos Journal con encoding ISO-8859-1
     
     **2. Filtrar por Fechas (Opcional):**
     - Define rango de fechas para filtrar las mediciones
@@ -50,6 +52,7 @@ with st.expander("ℹ️ Instrucciones de Uso"):
     **3. Procesamiento Automático:**
     - La herramienta limpia y reorganiza los datos (tipo Node-RED)
     - Elimina filas con todos los resultados en cero
+    - **NUEVO**: Limpia valores con unidades (%, ppm) automáticamente
     - Reorganiza columnas: Reference, Result, Residuum por parámetro
     - Convierte formatos de fecha automáticamente
     
@@ -90,6 +93,7 @@ with st.expander("ℹ️ Instrucciones de Uso"):
     - ✅ Diseño corporativo BUCHI con sidebar de navegación
     - ✅ Soporte para múltiples parámetros simultáneos
     - ✅ Vista de espectros completos NIR
+    - ✅ **NUEVO**: Soporte para archivos Journal (ISO-8859-1, unidades)
     """)
 
 
@@ -143,6 +147,28 @@ def _is_pixel_col(col: str) -> bool:
     return bool(PIXEL_RE.fullmatch(str(col)))
 
 
+def clean_value(v: str) -> float:
+    """
+    Limpia un valor removiendo unidades comunes y convirtiendo a float.
+    Maneja valores con: %, ppm, comas decimales, guiones, NA, etc.
+    """
+    if not v or v in ("", "-", "NA", "NaN", "nan"):
+        return None
+    
+    # Remover unidades comunes (%, ppm, etc.)
+    v = str(v).strip()
+    v = v.replace('%', '').replace('ppm', '').replace(',', '.')
+    v = v.strip()
+    
+    if v in ("", "-", "NA", "NaN", "nan"):
+        return None
+    
+    try:
+        return float(v)
+    except Exception:
+        return None
+
+
 def filter_relevant_data(data: List[Dict]) -> List[Dict]:
     """Mantiene metadata hasta #X1 + columnas espectrales #1..#n"""
     if not data:
@@ -174,27 +200,29 @@ def filter_relevant_data(data: List[Dict]) -> List[Dict]:
 
 
 def delete_zero_rows(data: List[Dict]) -> List[Dict]:
-    """Elimina filas donde Result esté vacío o todos los valores sean 0"""
+    """
+    Elimina filas donde Result esté vacío o todos los valores sean 0.
+    ACTUALIZADO: Maneja valores con unidades (%, ppm) correctamente.
+    """
     out: List[Dict] = []
     for row in data:
         if "Result" not in row or row["Result"] is None:
             continue
 
         result_values = str(row["Result"]).split(";")
-        all_zeroes = True
-        for v in result_values:
-            v = v.strip().replace(",", ".")
-            if v in ("", "-", "NA", "NaN"):
-                all_zeroes = False
-                break
-            try:
-                if float(v) != 0.0:
-                    all_zeroes = False
-                    break
-            except Exception:
-                all_zeroes = False
-                break
-
+        
+        # Limpiar cada valor y verificar si todos son cero
+        cleaned_values = [clean_value(v) for v in result_values]
+        
+        # Filtrar None y verificar si hay algún valor no-cero
+        non_none_values = [v for v in cleaned_values if v is not None]
+        
+        # Si no hay valores válidos o todos son cero, saltar esta fila
+        if not non_none_values:
+            continue
+        
+        all_zeroes = all(v == 0.0 for v in non_none_values)
+        
         if not all_zeroes:
             out.append(row)
 
@@ -232,22 +260,17 @@ def reorganize_results_and_reference(data: List[Dict]) -> List[Dict]:
 
         for idx, p in enumerate(parameter_cols):
             ref_val = row.get(p)
+            
+            # Limpiar valor de referencia
             if ref_val is not None and ref_val != "":
-                ref_val = str(ref_val).replace(",", ".")
-                try:
-                    ref_val_f = float(ref_val) if ref_val not in ("-", "NA") else None
-                except Exception:
-                    ref_val_f = None
+                ref_val_f = clean_value(ref_val)
             else:
                 ref_val_f = None
 
+            # Limpiar valor de resultado
             res_val_f = None
             if idx < len(result_values):
-                rv = result_values[idx].replace(",", ".")
-                try:
-                    res_val_f = float(rv) if rv not in ("", "-", "NA") else None
-                except Exception:
-                    res_val_f = None
+                res_val_f = clean_value(result_values[idx])
 
             new_row[f"Reference {p}"] = ref_val_f
             new_row[f"Result {p}"] = res_val_f
@@ -264,7 +287,7 @@ def try_parse_date(date_str) -> pd.Timestamp:
         return pd.NaT
 
     s = str(date_str).strip()
-    fmts = ["%d/%m/%Y", "%m/%d/%Y", "%Y-%m-%d", "%d-%m-%Y", "%m-%d-%Y"]
+    fmts = ["%d/%m/%Y", "%m/%d/%Y", "%Y-%m-%d", "%d-%m-%Y", "%m-%d-%Y", "%Y-%m-%d %H:%M:%S"]
 
     for fmt in fmts:
         try:
@@ -279,25 +302,29 @@ def try_parse_date(date_str) -> pd.Timestamp:
 
 
 def clean_tsv_file(uploaded_file) -> pd.DataFrame:
-    """Pipeline completo de limpieza de TSV con soporte multi-encoding"""
-    
+    """
+    Pipeline completo de limpieza de TSV.
+    ACTUALIZADO: Soporte para múltiples encodings (UTF-8, ISO-8859-1, Latin-1, CP1252)
+    """
     # Intentar leer con diferentes encodings
     encodings_to_try = ['utf-8', 'ISO-8859-1', 'latin-1', 'cp1252']
     df_raw = None
+    encoding_used = None
     
     for encoding in encodings_to_try:
         try:
             df_raw = pd.read_csv(uploaded_file, delimiter="\t", keep_default_na=False, encoding=encoding)
-            st.info(f"✓ Archivo leído con encoding: {encoding}")
+            encoding_used = encoding
+            st.success(f"✅ Archivo leído con encoding: **{encoding}**")
             break
         except UnicodeDecodeError:
             continue
         except Exception as e:
-            st.error(f"Error con encoding {encoding}: {e}")
+            st.error(f"❌ Error con encoding {encoding}: {e}")
             continue
     
     if df_raw is None:
-        raise ValueError("No se pudo leer el archivo con ninguno de los encodings soportados")
+        raise ValueError("❌ No se pudo leer el archivo con ninguno de los encodings soportados (UTF-8, ISO-8859-1, Latin-1, CP1252)")
     
     data = df_raw.to_dict("records")
 
@@ -318,6 +345,7 @@ def clean_tsv_file(uploaded_file) -> pd.DataFrame:
 
     return df
 
+
 # =============================================================================
 # STREAMLIT UI - FASE 1: CARGA Y FILTRADO
 # =============================================================================
@@ -329,7 +357,7 @@ uploaded_files = st.file_uploader(
     "Cargar archivos TSV",
     type=["tsv", "txt"],
     accept_multiple_files=True,
-    help="Selecciona uno o varios archivos TSV para procesar",
+    help="Selecciona uno o varios archivos TSV para procesar (Standard o Journal)",
 )
 
 if uploaded_files:
