@@ -128,6 +128,8 @@ if 'group_descriptions' not in st.session_state:
         'Set 3': '',
         'Set 4': ''
     }
+if 'editor_version' not in st.session_state:
+    st.session_state.editor_version = {}
 
 
 # =============================================================================
@@ -361,6 +363,7 @@ if uploaded_files:
         st.session_state.processed_data = {}
         st.session_state.samples_to_remove = {}
         st.session_state.sample_groups = {}
+        st.session_state.editor_version = {}
 
         for idx, uploaded_file in enumerate(uploaded_files, start=1):
             file_name = uploaded_file.name.replace(".tsv", "").replace(".txt", "")
@@ -399,6 +402,7 @@ if uploaded_files:
                 st.session_state.processed_data[file_name] = df_filtered
                 st.session_state.samples_to_remove[file_name] = set()
                 st.session_state.sample_groups[file_name] = {}
+                st.session_state.editor_version[file_name] = 0
                 
                 st.success(f"✅ {file_name} procesado ({len(df_filtered)} muestras)")
 
@@ -428,6 +432,10 @@ if st.session_state.processed_data:
     )
     
     if selected_file:
+        # Inicializar editor_version para este archivo si no existe
+        if selected_file not in st.session_state.editor_version:
+            st.session_state.editor_version[selected_file] = 0
+        
         df_current = st.session_state.processed_data[selected_file]
         
         removed_indices = st.session_state.samples_to_remove.get(selected_file, set())
@@ -609,7 +617,7 @@ if st.session_state.processed_data:
             disabled=[c for c in display_cols if c not in ['Eliminar', 'Grupo']],
             hide_index=False,
             use_container_width=True,
-            key=f"editor_{selected_file}"
+            key=f"editor_{selected_file}_v{st.session_state.editor_version[selected_file]}"
         )
         
         st.markdown("---")
@@ -618,29 +626,65 @@ if st.session_state.processed_data:
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
-            if st.button("🔄 Actualizar Selección", use_container_width=True):
-                new_removed = set(edited_df[edited_df['Eliminar']].index.tolist())
+            if st.button("🔄 Actualizar Selección", use_container_width=True, type="primary"):
+                # Forzar captura de cambios del editor
+                new_removed = set()
                 new_groups = {}
+                
                 for idx in edited_df.index:
+                    # Capturar eliminaciones
+                    if edited_df.at[idx, 'Eliminar']:
+                        new_removed.add(idx)
+                    
+                    # Capturar grupos
                     group_val = edited_df.at[idx, 'Grupo']
                     if group_val != 'none':
                         new_groups[idx] = group_val
                 
+                # Actualizar session state
                 st.session_state.samples_to_remove[selected_file] = new_removed
                 st.session_state.sample_groups[selected_file] = new_groups
+                
+                # Incrementar versión del editor para forzar re-render
+                st.session_state.editor_version[selected_file] += 1
                 
                 st.success(f"✅ Actualizado: {len(new_removed)} para eliminar, {len(new_groups)} agrupadas")
                 st.rerun()
         
         with col2:
-            if st.button("🗑️ Confirmar Eliminación", type="primary", use_container_width=True, 
+            if st.button("🗑️ Confirmar Eliminación", use_container_width=True, 
                         disabled=(len(removed_indices) == 0)):
                 if removed_indices:
+                    # Crear mapeo de índices antiguos a nuevos
+                    old_to_new = {}
+                    sorted_indices = sorted(df_current.index)
+                    removed_sorted = sorted(removed_indices)
+                    
+                    new_idx = 0
+                    for old_idx in sorted_indices:
+                        if old_idx not in removed_sorted:
+                            old_to_new[old_idx] = new_idx
+                            new_idx += 1
+                    
+                    # Eliminar filas
                     df_updated = df_current.drop(index=list(removed_indices)).reset_index(drop=True)
+                    
+                    # Remapear sample_groups a nuevos índices
+                    new_groups = {}
+                    for old_idx, grp in sample_groups.items():
+                        if old_idx not in removed_indices:
+                            new_idx_mapped = old_to_new.get(old_idx)
+                            if new_idx_mapped is not None:
+                                new_groups[new_idx_mapped] = grp
+                    
+                    # Actualizar session state
                     st.session_state.processed_data[selected_file] = df_updated
                     st.session_state.samples_to_remove[selected_file] = set()
-                    new_groups = {idx: grp for idx, grp in sample_groups.items() if idx not in removed_indices}
                     st.session_state.sample_groups[selected_file] = new_groups
+                    
+                    # Incrementar versión del editor
+                    st.session_state.editor_version[selected_file] += 1
+                    
                     st.success(f"✅ {len(removed_indices)} muestras eliminadas")
                     st.rerun()
         
@@ -649,12 +693,14 @@ if st.session_state.processed_data:
                         disabled=(len(removed_indices) == 0 and len(sample_groups) == 0)):
                 st.session_state.samples_to_remove[selected_file] = set()
                 st.session_state.sample_groups[selected_file] = {}
+                st.session_state.editor_version[selected_file] += 1
                 st.rerun()
         
         with col4:
             if st.button("🔄 Limpiar Grupos", use_container_width=True,
                         disabled=(len(sample_groups) == 0)):
                 st.session_state.sample_groups[selected_file] = {}
+                st.session_state.editor_version[selected_file] += 1
                 st.rerun()
         
         # RESUMEN
