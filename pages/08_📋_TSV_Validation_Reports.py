@@ -279,8 +279,26 @@ def try_parse_date(date_str) -> pd.Timestamp:
 
 
 def clean_tsv_file(uploaded_file) -> pd.DataFrame:
-    """Pipeline completo de limpieza de TSV"""
-    df_raw = pd.read_csv(uploaded_file, delimiter="\t", keep_default_na=False)
+    """Pipeline completo de limpieza de TSV con soporte multi-encoding"""
+    
+    # Intentar leer con diferentes encodings
+    encodings_to_try = ['utf-8', 'ISO-8859-1', 'latin-1', 'cp1252']
+    df_raw = None
+    
+    for encoding in encodings_to_try:
+        try:
+            df_raw = pd.read_csv(uploaded_file, delimiter="\t", keep_default_na=False, encoding=encoding)
+            st.info(f"✓ Archivo leído con encoding: {encoding}")
+            break
+        except UnicodeDecodeError:
+            continue
+        except Exception as e:
+            st.error(f"Error con encoding {encoding}: {e}")
+            continue
+    
+    if df_raw is None:
+        raise ValueError("No se pudo leer el archivo con ninguno de los encodings soportados")
+    
     data = df_raw.to_dict("records")
 
     data = filter_relevant_data(data)
@@ -299,7 +317,6 @@ def clean_tsv_file(uploaded_file) -> pd.DataFrame:
         df["Date"] = df["Date"].apply(try_parse_date)
 
     return df
-
 
 # =============================================================================
 # STREAMLIT UI - FASE 1: CARGA Y FILTRADO
