@@ -157,6 +157,11 @@ def clean_value(v: str) -> float:
     
     # Remover unidades comunes (%, ppm, etc.)
     v = str(v).strip()
+    
+    # Detectar patrones inválidos como '-.----' o '-.---' (valores no disponibles)
+    if v.startswith('-.') or v.startswith('-.-'):
+        return None
+    
     v = v.replace('%', '').replace('ppm', '').replace(',', '.')
     v = v.strip()
     
@@ -202,14 +207,21 @@ def filter_relevant_data(data: List[Dict]) -> List[Dict]:
 def delete_zero_rows(data: List[Dict]) -> List[Dict]:
     """
     Elimina filas donde Result esté vacío o todos los valores sean 0.
-    ACTUALIZADO: Maneja valores con unidades (%, ppm) correctamente.
+    ACTUALIZADO: Maneja valores con unidades (%, ppm) y patrones inválidos ('-.----').
     """
     out: List[Dict] = []
     for row in data:
-        if "Result" not in row or row["Result"] is None:
+        # Verificar que existe columna Result
+        if "Result" not in row:
+            continue
+        
+        result_val = row.get("Result")
+        
+        # Verificar que Result no es None o string vacío
+        if result_val is None or str(result_val).strip() == "":
             continue
 
-        result_values = str(row["Result"]).split(";")
+        result_values = str(result_val).split(";")
         
         # Limpiar cada valor y verificar si todos son cero
         cleaned_values = [clean_value(v) for v in result_values]
@@ -217,10 +229,11 @@ def delete_zero_rows(data: List[Dict]) -> List[Dict]:
         # Filtrar None y verificar si hay algún valor no-cero
         non_none_values = [v for v in cleaned_values if v is not None]
         
-        # Si no hay valores válidos o todos son cero, saltar esta fila
+        # Si no hay valores válidos, saltar esta fila
         if not non_none_values:
             continue
         
+        # Si todos son cero, saltar esta fila
         all_zeroes = all(v == 0.0 for v in non_none_values)
         
         if not all_zeroes:
