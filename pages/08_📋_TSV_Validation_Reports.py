@@ -8,7 +8,11 @@ FIXES IMPORTANTES (plotly_events):
 - extractor de espectros: usa pointNumber (antes cogías customdata[0] y fallaba)
 - last_event_id separado por gráfico (spectra/parity) para evitar colisiones
 - PIXEL_RE más robusto: acepta #123 y 123 (por si algún TSV viene sin #)
-- limpia el “typo” del final (había texto suelto tras st.markdown("---"))
+- limpia el "typo" del final (había texto suelto tras st.markdown("---"))
+
+MEJORAS UI:
+- st.toast() para feedback inmediato al hacer click (sin re-render molesto)
+- st.success() con resumen después de aplicar selecciones
 """
 
 from __future__ import annotations
@@ -95,6 +99,9 @@ st.session_state.setdefault("pending_selections", {})
 # FIX: last_event_id separado por gráfico para evitar colisiones spectra/parity
 # estructura: last_event_id[file] = {"spectra": "...", "parity": "..."}
 st.session_state.setdefault("last_event_id", {})
+
+# NUEVO: Guardar resumen de última aplicación para mostrar después del rerun
+st.session_state.setdefault("last_apply_summary", {})
 
 
 # =============================================================================
@@ -439,6 +446,7 @@ if uploaded_files:
         st.session_state.editor_version = {}
         st.session_state.pending_selections = {}
         st.session_state.last_event_id = {}
+        st.session_state.last_apply_summary = {}
 
         for idx, uploaded_file in enumerate(uploaded_files, start=1):
             file_name = uploaded_file.name.replace(".tsv", "").replace(".txt", "")
@@ -527,6 +535,21 @@ if st.session_state.processed_data:
         grouped_count = sum(1 for g in sample_groups.values() if g != "none")
         col3.metric("🏷️ Agrupadas", grouped_count)
         col4.metric("✅ Finales", len(df_current) - len(removed_indices))
+
+        # NUEVO: Mostrar resumen de última aplicación (después de las métricas)
+        if selected_file in st.session_state.last_apply_summary:
+            summary = st.session_state.last_apply_summary[selected_file]
+            parts = []
+            if summary['eliminar'] > 0:
+                parts.append(f"{summary['eliminar']} para eliminar")
+            if summary['grupos'] > 0:
+                parts.append(f"{summary['grupos']} a grupos")
+            
+            if parts:
+                st.success(f"✅ Última actualización: {summary['count']} acciones aplicadas ({', '.join(parts)})")
+            
+            # Limpiar para que no se muestre en el siguiente rerun por otro motivo
+            del st.session_state.last_apply_summary[selected_file]
 
         st.markdown("---")
 
@@ -646,7 +669,8 @@ if st.session_state.processed_data:
 
                                 if not already:
                                     pending.append(new_item)
-                                    st.info(f"📍 Muestra {clicked_idx} agregada a pendientes")
+                                    # NUEVO: Toast en vez de st.info (sin re-render molesto)
+                                    st.toast(f"✅ Muestra {clicked_idx} agregada ({len(pending)} pendientes)", icon="📍")
             else:
                 st.warning("No hay datos espectrales")
 
@@ -686,10 +710,16 @@ if st.session_state.processed_data:
                                 st.session_state.sample_groups[selected_file][idx] = grp
                                 st.session_state.samples_to_remove[selected_file].discard(idx)
 
+                    # NUEVO: Guardar resumen para mostrar después del rerun
+                    st.session_state.last_apply_summary[selected_file] = {
+                        'count': len(pending),
+                        'eliminar': sum(1 for p in pending if p['action'] == 'Marcar para Eliminar'),
+                        'grupos': sum(1 for p in pending if p['action'] == 'Asignar a Grupo')
+                    }
+
                     st.session_state.pending_selections[selected_file] = []
                     st.session_state.last_event_id[selected_file]["spectra"] = ""
                     st.session_state.editor_version[selected_file] += 1
-                    st.success("✅ Acciones aplicadas")
                     st.rerun()
 
             with b2:
@@ -784,7 +814,7 @@ if st.session_state.processed_data:
                             key=f"parity_target_{selected_file}"
                         )
                 with colC:
-                    parity_multi = st.checkbox("Lasso/Box", value=False, key=f"parity_multi_{selected_file}")
+                    parity_multi = st.checkbox("Lasso/Box", value=True, key=f"parity_multi_{selected_file}")
 
             param_names = [str(c).replace("Result ", "") for c in columns_result]
             selected_param = st.selectbox("Parámetro:", param_names, key=f"param_{selected_file}")
@@ -861,7 +891,8 @@ if st.session_state.processed_data:
                                             if not already:
                                                 pending.append(new_item)
 
-                                        st.info(f"📍 {len(clicked_indices)} muestra(s) agregadas a pendientes")
+                                        # NUEVO: Toast en vez de st.info (sin re-render molesto)
+                                        st.toast(f"✅ {len(clicked_indices)} muestra(s) agregadas ({len(pending)} pendientes)", icon="📍")
 
                     with tab2:
                         st.plotly_chart(fig_res, use_container_width=True)
@@ -904,10 +935,16 @@ if st.session_state.processed_data:
                                     st.session_state.sample_groups[selected_file][idx] = grp
                                     st.session_state.samples_to_remove[selected_file].discard(idx)
 
+                        # NUEVO: Guardar resumen para mostrar después del rerun
+                        st.session_state.last_apply_summary[selected_file] = {
+                            'count': len(pending),
+                            'eliminar': sum(1 for p in pending if p['action'] == 'Marcar para Eliminar'),
+                            'grupos': sum(1 for p in pending if p['action'] == 'Asignar a Grupo')
+                        }
+
                         st.session_state.pending_selections[selected_file] = []
                         st.session_state.last_event_id[selected_file]["parity"] = ""
                         st.session_state.editor_version[selected_file] += 1
-                        st.success("✅ Acciones aplicadas")
                         st.rerun()
 
                 with b2:
