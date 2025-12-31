@@ -13,6 +13,8 @@ FIXES IMPORTANTES (plotly_events):
 MEJORAS UI:
 - st.toast() para feedback inmediato al hacer click (sin re-render molesto)
 - st.success() con resumen después de aplicar selecciones
+- Lasso/Box habilitado para espectros (agrupa por row_index único)
+- FIX: Extractor específico para espectros con lasso/box (customdata es int, no lista)
 """
 
 from __future__ import annotations
@@ -65,7 +67,7 @@ with st.expander("ℹ️ Instrucciones de Uso"):
 **2. Filtrar por Fechas (Opcional)**
 
 **3. Previsualización y Selección:**
-- Selección desde gráficos (Espectros: click | Parity: click + lasso/box)
+- Selección desde gráficos (Espectros: click + lasso/box | Parity: click + lasso/box)
 - Selección desde tabla interactiva
 - Grupos personalizables con símbolos
 
@@ -335,6 +337,61 @@ def _extract_row_index_from_click(fig, event) -> Optional[int]:
 
 
 # =============================================================================
+# HELPER: EXTRACT ROW INDICES FROM SPECTRA EVENTS (LASSO/BOX)
+# =============================================================================
+def _extract_row_indices_from_spectra_events(fig, events) -> List[int]:
+    """
+    Extrae índices de fila desde eventos de espectros (lasso/box).
+    En espectros, customdata es un int directo (no lista como en parity).
+    """
+    if not events:
+        return []
+
+    def _coerce(cd):
+        if cd is None:
+            return None
+        # En espectros customdata es int directo
+        try:
+            return int(cd)
+        except Exception:
+            return None
+
+    out: List[int] = []
+    for ev in events:
+        # Intentar extraer directamente de customdata
+        idx = _coerce(ev.get("customdata", None))
+        if idx is not None:
+            out.append(idx)
+            continue
+
+        # Fallback: leer desde la traza usando curveNumber/pointNumber
+        try:
+            curve = ev.get("curveNumber", None)
+            point = ev.get("pointNumber", None)
+            if curve is None or point is None:
+                continue
+            trace_cd = getattr(fig.data[curve], "customdata", None)
+            if trace_cd is None:
+                continue
+
+            idx = _coerce(trace_cd[point])
+            if idx is not None:
+                out.append(idx)
+        except Exception:
+            pass
+
+    # Eliminar duplicados preservando orden
+    seen = set()
+    uniq: List[int] = []
+    for x in out:
+        if x not in seen:
+            uniq.append(x)
+            seen.add(x)
+    
+    return uniq
+
+
+# =============================================================================
 # HELPER: EXTRACT ROW INDICES FROM EVENTS (PARITY - LASSO/BOX)
 # =============================================================================
 def _extract_row_indices_from_events(fig, events) -> List[int]:
@@ -592,9 +649,10 @@ if st.session_state.processed_data:
         # Defaults para evitar NameError si no hay plotly_events
         spectra_action = "Marcar para Eliminar"
         spectra_target = None
+        spectra_multi = False
 
         if INTERACTIVE_SELECTION_AVAILABLE:
-            st.info("💡 Haz **click en cualquier parte del espectro** para seleccionar toda la muestra")
+            st.info("💡 Haz **click** para seleccionar espectros individuales o activa **Lasso/Box** para selección múltiple")
 
             pending = st.session_state.pending_selections[selected_file]
             if pending:
@@ -606,7 +664,8 @@ if st.session_state.processed_data:
                             action_txt += f" → {item.get('group', 'none')}"
                         st.write(f"{i+1}. Muestra **{item['idx']}**: {action_txt}")
 
-            colA, colB = st.columns([1, 1])
+            # NUEVO: 3 columnas para incluir checkbox Lasso/Box
+            colA, colB, colC = st.columns([2, 2, 1])
             with colA:
                 spectra_action = st.radio(
                     "Acción:",
@@ -620,6 +679,8 @@ if st.session_state.processed_data:
                         ["Set 1", "Set 2", "Set 3", "Set 4"],
                         key=f"spectra_target_{selected_file}"
                     )
+            with colC:
+                spectra_multi = st.checkbox("Lasso/Box", value=False, key=f"spectra_multi_{selected_file}")
 
         try:
             fig_spectra = build_spectra_figure_preview(
@@ -635,10 +696,14 @@ if st.session_state.processed_data:
                 if not INTERACTIVE_SELECTION_AVAILABLE:
                     st.plotly_chart(fig_spectra, use_container_width=True)
                 else:
+                    # NUEVO: Activar dragmode lasso si está habilitado
+                    if spectra_multi:
+                        fig_spectra.update_layout(dragmode="lasso")
+
                     events = plotly_events(
                         fig_spectra,
                         click_event=True,
-                        select_event=False,
+                        select_event=spectra_multi,  # NUEVO: Condicional según checkbox
                         hover_event=False,
                         override_height=700,
                         key=f"spectra_{selected_file}_v{st.session_state.editor_version[selected_file]}"
@@ -651,26 +716,36 @@ if st.session_state.processed_data:
                         if event_id != last_id:
                             st.session_state.last_event_id[selected_file]["spectra"] = event_id
 
-                            clicked_idx = _extract_row_index_from_click(fig_spectra, events[0])
-                            if clicked_idx is not None:
-                                new_item = {
-                                    "idx": clicked_idx,
-                                    "action": spectra_action,
-                                    "group": spectra_target if spectra_action == "Asignar a Grupo" else None
-                                }
+                            # NUEVO: Si es lasso/box, extraer múltiples índices únicos con función específica
+                            if spectra_multi:
+                                clicked_indices = _extract_row_indices_from_spectra_events(fig_spectra, events)
+                            else:
+                                # Si es click simple, extraer un solo índice
+                                single_idx = _extract_row_index_from_click(fig_spectra, events[0])
+                                clicked_indices = [single_idx] if single_idx is not None else []
 
+                            if clicked_indices:
                                 pending = st.session_state.pending_selections[selected_file]
-                                already = any(
-                                    it.get("idx") == new_item["idx"]
-                                    and it.get("action") == new_item["action"]
-                                    and it.get("group") == new_item["group"]
-                                    for it in pending
-                                )
+                                
+                                for clicked_idx in clicked_indices:
+                                    new_item = {
+                                        "idx": clicked_idx,
+                                        "action": spectra_action,
+                                        "group": spectra_target if spectra_action == "Asignar a Grupo" else None
+                                    }
 
-                                if not already:
-                                    pending.append(new_item)
-                                    # NUEVO: Toast en vez de st.info (sin re-render molesto)
-                                    st.toast(f"✅ Muestra {clicked_idx} agregada ({len(pending)} pendientes)", icon="📍")
+                                    already = any(
+                                        it.get("idx") == new_item["idx"]
+                                        and it.get("action") == new_item["action"]
+                                        and it.get("group") == new_item["group"]
+                                        for it in pending
+                                    )
+
+                                    if not already:
+                                        pending.append(new_item)
+
+                                # NUEVO: Toast con múltiples muestras
+                                st.toast(f"✅ {len(clicked_indices)} muestra(s) agregadas ({len(pending)} pendientes)", icon="📍")
             else:
                 st.warning("No hay datos espectrales")
 
@@ -814,6 +889,7 @@ if st.session_state.processed_data:
                             key=f"parity_target_{selected_file}"
                         )
                 with colC:
+                    # MODIFICADO: value=True para activar lasso por defecto
                     parity_multi = st.checkbox("Lasso/Box", value=True, key=f"parity_multi_{selected_file}")
 
             param_names = [str(c).replace("Result ", "") for c in columns_result]

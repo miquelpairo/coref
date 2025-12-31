@@ -4,11 +4,13 @@ TSV Validation Reports - Plotting Functions (CLOUD + plotly_events SAFE)
 - customdata 100% JSON-safe (Python ints/str, no numpy)
 - parity: x/y también 100% Python lists (evita Series/np types que rompen plotly_events)
 - spectra: idem
+- FIX CRÍTICO: Lasso/Box en espectros -> Plotly selecciona PUNTOS; con mode="lines" no suele haber selección.
+  => usamos "lines+markers" con markers casi invisibles (size pequeño + opacity muy baja)
 """
 
 from __future__ import annotations
 
-from typing import Dict, Set, Optional, Tuple
+from typing import Dict, Set, Optional, Tuple, List
 
 import numpy as np
 import pandas as pd
@@ -76,19 +78,19 @@ def plot_comparison_preview(
         if len(x_s) < 2:
             return None
 
-        original_indices = df.loc[valid_mask].index.tolist()
+        original_indices: List[int] = [int(i) for i in df.loc[valid_mask].index.tolist()]
         valid_removed_indices = removed_indices.intersection(set(original_indices))
 
         # hover aligned
         if "ID" in df.columns:
-            hover_id = df.loc[valid_mask, "ID"].astype(str)
+            hover_id = df.loc[valid_mask, "ID"].astype(str).reset_index(drop=True)
         else:
-            hover_id = pd.Series([str(i) for i in original_indices], index=x_s.index)
+            hover_id = pd.Series([str(i) for i in original_indices])
 
         if "Date" in df.columns:
-            hover_date = df.loc[valid_mask, "Date"].astype(str)
+            hover_date = df.loc[valid_mask, "Date"].astype(str).reset_index(drop=True)
         else:
-            hover_date = pd.Series([""] * len(x_s), index=x_s.index)
+            hover_date = pd.Series([""] * len(x_s))
 
         # métricas (forzamos float Python)
         r2 = float(r2_score(x_s, y_s))
@@ -142,25 +144,27 @@ def plot_comparison_preview(
             xg, yg = _xy_from_positions(pos)
             cd = _make_cd(pos)
 
-            fig_parity.add_trace(go.Scatter(
-                x=xg,
-                y=yg,
-                mode="markers",
-                marker=dict(
-                    color=group_config.get("color", "gray"),
-                    size=group_config.get("size", 8),
-                    symbol=group_config.get("symbol", "circle"),
-                ),
-                name=display_label,
-                customdata=cd,
-                hovertemplate=(
-                    f"{display_label}<br>"
-                    "RowIndex: %{customdata[0]}<br>"
-                    "Date: %{customdata[1]}<br>"
-                    "Reference: %{x:.2f}<br>"
-                    "Result: %{y:.2f}<extra></extra>"
-                ),
-            ))
+            fig_parity.add_trace(
+                go.Scatter(
+                    x=xg,
+                    y=yg,
+                    mode="markers",
+                    marker=dict(
+                        color=group_config.get("color", "gray"),
+                        size=group_config.get("size", 8),
+                        symbol=group_config.get("symbol", "circle"),
+                    ),
+                    name=display_label,
+                    customdata=cd,
+                    hovertemplate=(
+                        f"{display_label}<br>"
+                        "RowIndex: %{customdata[0]}<br>"
+                        "Date: %{customdata[1]}<br>"
+                        "Reference: %{x:.2f}<br>"
+                        "Result: %{y:.2f}<extra></extra>"
+                    ),
+                )
+            )
 
         # none
         pos_none = points_by_group.get("none", [])
@@ -169,26 +173,28 @@ def plot_comparison_preview(
             xg, yg = _xy_from_positions(pos_none)
             cd = _make_cd(pos_none)
 
-            fig_parity.add_trace(go.Scatter(
-                x=xg,
-                y=yg,
-                mode="markers",
-                marker=dict(
-                    color=cfg.get("color", "gray"),
-                    size=cfg.get("size", 8),
-                    symbol=cfg.get("symbol", "circle"),
-                ),
-                name="Sin grupo",
-                showlegend=True,
-                customdata=cd,
-                hovertemplate=(
-                    "Sin grupo<br>"
-                    "RowIndex: %{customdata[0]}<br>"
-                    "Date: %{customdata[1]}<br>"
-                    "Reference: %{x:.2f}<br>"
-                    "Result: %{y:.2f}<extra></extra>"
-                ),
-            ))
+            fig_parity.add_trace(
+                go.Scatter(
+                    x=xg,
+                    y=yg,
+                    mode="markers",
+                    marker=dict(
+                        color=cfg.get("color", "gray"),
+                        size=cfg.get("size", 8),
+                        symbol=cfg.get("symbol", "circle"),
+                    ),
+                    name="Sin grupo",
+                    showlegend=True,
+                    customdata=cd,
+                    hovertemplate=(
+                        "Sin grupo<br>"
+                        "RowIndex: %{customdata[0]}<br>"
+                        "Date: %{customdata[1]}<br>"
+                        "Reference: %{x:.2f}<br>"
+                        "Result: %{y:.2f}<extra></extra>"
+                    ),
+                )
+            )
 
         # delete
         pos_del = points_by_group.get("delete", [])
@@ -196,47 +202,55 @@ def plot_comparison_preview(
             xd, yd = _xy_from_positions(pos_del)
             cd = _make_cd(pos_del)
 
-            fig_parity.add_trace(go.Scatter(
-                x=xd,
-                y=yd,
-                mode="markers",
-                marker=dict(color="red", size=10, symbol="x"),
-                name="❌ Eliminar",
-                customdata=cd,
-                hovertemplate=(
-                    "⚠️ MARCADO PARA ELIMINAR<br>"
-                    "RowIndex: %{customdata[0]}<br>"
-                    "Date: %{customdata[1]}<br>"
-                    "Reference: %{x:.2f}<br>"
-                    "Result: %{y:.2f}<extra></extra>"
-                ),
-            ))
+            fig_parity.add_trace(
+                go.Scatter(
+                    x=xd,
+                    y=yd,
+                    mode="markers",
+                    marker=dict(color="red", size=10, symbol="x"),
+                    name="❌ Eliminar",
+                    customdata=cd,
+                    hovertemplate=(
+                        "⚠️ MARCADO PARA ELIMINAR<br>"
+                        "RowIndex: %{customdata[0]}<br>"
+                        "Date: %{customdata[1]}<br>"
+                        "Reference: %{x:.2f}<br>"
+                        "Result: %{y:.2f}<extra></extra>"
+                    ),
+                )
+            )
 
         # líneas de referencia (listas Python)
-        fig_parity.add_trace(go.Scatter(
-            x=x_all,
-            y=x_all,
-            mode="lines",
-            line=dict(dash="dash", color="gray"),
-            name="y = x",
-            showlegend=False
-        ))
-        fig_parity.add_trace(go.Scatter(
-            x=x_all,
-            y=[v + rmse for v in x_all],
-            mode="lines",
-            line=dict(dash="dash", color="orange"),
-            name="RMSE+",
-            showlegend=False
-        ))
-        fig_parity.add_trace(go.Scatter(
-            x=x_all,
-            y=[v - rmse for v in x_all],
-            mode="lines",
-            line=dict(dash="dash", color="orange"),
-            name="RMSE-",
-            showlegend=False
-        ))
+        fig_parity.add_trace(
+            go.Scatter(
+                x=x_all,
+                y=x_all,
+                mode="lines",
+                line=dict(dash="dash", color="gray"),
+                name="y = x",
+                showlegend=False,
+            )
+        )
+        fig_parity.add_trace(
+            go.Scatter(
+                x=x_all,
+                y=[v + rmse for v in x_all],
+                mode="lines",
+                line=dict(dash="dash", color="orange"),
+                name="RMSE+",
+                showlegend=False,
+            )
+        )
+        fig_parity.add_trace(
+            go.Scatter(
+                x=x_all,
+                y=[v - rmse for v in x_all],
+                mode="lines",
+                line=dict(dash="dash", color="orange"),
+                name="RMSE-",
+                showlegend=False,
+            )
+        )
 
         fig_parity.update_layout(**create_layout("Parity Plot", reference_col, result_col))
         fig_parity.update_layout(clickmode="event+select")
@@ -244,10 +258,10 @@ def plot_comparison_preview(
         # -------------------------
         # Residuum vs N (ordenado por fecha)
         # -------------------------
-        # Para residuum no usamos plotly_events, pero lo dejamos consistente
         if "Date" in df.columns:
-            date_col = df.loc[valid_mask, "Date"].astype(str)
-            sort_idx = date_col.argsort()
+            # argsort devuelve numpy => convertir a lista de ints python
+            date_col = df.loc[valid_mask, "Date"].astype(str).reset_index(drop=True)
+            sort_idx = [int(i) for i in np.argsort(date_col.to_numpy())]
 
             residuum_sorted = [residuum_all[i] for i in sort_idx]
             hover_id_sorted = [str(hover_id.iloc[i]) for i in sort_idx]
@@ -273,14 +287,16 @@ def plot_comparison_preview(
                 cfg = SAMPLE_GROUPS.get(g, SAMPLE_GROUPS["none"])
                 colors.append(cfg.get("color", "gray"))
 
-        fig_res = go.Figure(go.Bar(
-            x=list(range(len(residuum_sorted))),
-            y=residuum_sorted,
-            hovertext=hovertext_res,
-            hoverinfo="text",
-            name="Residuum",
-            marker=dict(color=colors)
-        ))
+        fig_res = go.Figure(
+            go.Bar(
+                x=list(range(len(residuum_sorted))),
+                y=residuum_sorted,
+                hovertext=hovertext_res,
+                hoverinfo="text",
+                name="Residuum",
+                marker=dict(color=colors),
+            )
+        )
         fig_res.update_layout(**create_layout("Residuum vs N (ordenado por fecha)", "N", "Residuum"))
 
         # histograma
@@ -380,28 +396,36 @@ def build_spectra_figure_preview(
         if show_legend:
             legend_added.add(legend_group)
 
-        cd = [int(i)] * len(x)  # JSON-safe list
-        y = [float(v) if np.isfinite(v) else None for v in y_np]  # list python
+        # JSON-safe list por punto (int Python)
+        cd = [int(i)] * len(x)
 
-        fig.add_trace(go.Scatter(
-            x=x,
-            y=y,
-            mode="lines",
-            showlegend=show_legend,
-            legendgroup=legend_group,
-            name=legend_name,
-            line={"width": width, "color": color},
-            opacity=opacity,
-            customdata=cd,
-            hovertemplate=(
-                f"{prefix}RowIndex: %{{customdata}}<br>"
-                f"ID: {hover_id.loc[i]}<br>"
-                f"Date: {hover_date.loc[i]}<br>"
-                f"Note: {hover_note.loc[i]}<br>"
-                "Pixel: %{x}<br>"
-                "Abs: %{y}<extra></extra>"
-            ),
-        ))
+        # y como lista Python
+        y = [float(v) if np.isfinite(v) else None for v in y_np]
+
+        # FIX LASSO/BOX: necesitas "puntos" seleccionables
+        # -> lines+markers con marker casi invisible
+        fig.add_trace(
+            go.Scatter(
+                x=x,
+                y=y,
+                mode="lines+markers",
+                showlegend=show_legend,
+                legendgroup=legend_group,
+                name=legend_name,
+                line={"width": width, "color": color},
+                marker={"size": 3, "opacity": 0.01},  # clave para selección sin ensuciar
+                opacity=opacity,
+                customdata=cd,
+                hovertemplate=(
+                    f"{prefix}RowIndex: %{{customdata}}<br>"
+                    f"ID: {hover_id.loc[i]}<br>"
+                    f"Date: {hover_date.loc[i]}<br>"
+                    f"Note: {hover_note.loc[i]}<br>"
+                    "Pixel: %{x}<br>"
+                    "Abs: %{y}<extra></extra>"
+                ),
+            )
+        )
 
     fig.update_layout(
         title="Spectra Preview",
