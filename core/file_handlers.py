@@ -6,6 +6,7 @@ import numpy as np
 import io
 import json
 from datetime import datetime
+from typing import List, Optional, Tuple
 from app_config import DEFAULT_CSV_METADATA
 from bs4 import BeautifulSoup
 import xml.etree.ElementTree as ET
@@ -504,3 +505,146 @@ def export_xml_file(data_dict, root_tag='root'):
     tree.write(xml_bytes, encoding='utf-8', xml_declaration=True)
     
     return xml_bytes.getvalue().decode('utf-8')
+
+
+# =============================================================================
+# NUEVAS FUNCIONES PARA TSV VALIDATION REPORTS
+# =============================================================================
+
+def load_multiple_tsv_files(uploaded_files) -> Tuple[dict, List[str]]:
+    """
+    Carga múltiples archivos TSV y retorna un diccionario con los DataFrames.
+    
+    Args:
+        uploaded_files: Lista de archivos subidos por Streamlit
+        
+    Returns:
+        tuple: (data_dict, errors) donde:
+            - data_dict: {filename: DataFrame}
+            - errors: Lista de mensajes de error para archivos que fallaron
+    """
+    data_dict = {}
+    errors = []
+    
+    for uploaded_file in uploaded_files:
+        file_name = uploaded_file.name.replace(".tsv", "").replace(".txt", "")
+        
+        try:
+            df = load_tsv_file(uploaded_file)
+            data_dict[file_name] = df
+        except Exception as e:
+            errors.append(f"{file_name}: {str(e)}")
+    
+    return data_dict, errors
+
+
+def export_dataframe_to_tsv(df: pd.DataFrame) -> str:
+    """
+    Exporta un DataFrame a formato TSV.
+    
+    Args:
+        df: DataFrame a exportar
+        
+    Returns:
+        str: Contenido TSV como string
+    """
+    tsv_buffer = io.StringIO()
+    df.to_csv(tsv_buffer, sep='\t', index=False)
+    return tsv_buffer.getvalue()
+
+
+def export_dataframe_to_csv(df: pd.DataFrame) -> str:
+    """
+    Exporta un DataFrame a formato CSV.
+    
+    Args:
+        df: DataFrame a exportar
+        
+    Returns:
+        str: Contenido CSV como string
+    """
+    csv_buffer = io.StringIO()
+    df.to_csv(csv_buffer, index=False)
+    return csv_buffer.getvalue()
+
+
+def create_download_filename(base_name: str, extension: str, 
+                            add_timestamp: bool = True) -> str:
+    """
+    Crea un nombre de archivo para descarga con timestamp opcional.
+    
+    Args:
+        base_name: Nombre base del archivo
+        extension: Extensión (con o sin punto)
+        add_timestamp: Si añadir timestamp al nombre
+        
+    Returns:
+        str: Nombre completo del archivo
+    """
+    if not extension.startswith('.'):
+        extension = f'.{extension}'
+    
+    if add_timestamp:
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        return f"{base_name}_{timestamp}{extension}"
+    else:
+        return f"{base_name}{extension}"
+
+
+def validate_tsv_structure(df: pd.DataFrame) -> Tuple[bool, Optional[str]]:
+    """
+    Valida que un DataFrame TSV tenga la estructura esperada.
+    
+    Args:
+        df: DataFrame a validar
+        
+    Returns:
+        tuple: (is_valid, error_message)
+    """
+    # Verificar que no esté vacío
+    if df.empty:
+        return False, "El archivo está vacío"
+    
+    # Verificar columnas mínimas esperadas
+    required_cols = ["ID"]  # Al menos debe tener ID
+    missing_cols = [col for col in required_cols if col not in df.columns]
+    
+    if missing_cols:
+        return False, f"Faltan columnas requeridas: {', '.join(missing_cols)}"
+    
+    # Verificar que haya columnas espectrales
+    spectral_cols = get_spectral_columns(df)
+    if not spectral_cols:
+        return False, "No se encontraron columnas espectrales (#1, #2, ...)"
+    
+    return True, None
+
+
+def extract_file_metadata(df: pd.DataFrame) -> dict:
+    """
+    Extrae metadatos básicos de un DataFrame TSV.
+    
+    Args:
+        df: DataFrame procesado
+        
+    Returns:
+        dict: Diccionario con metadatos
+    """
+    metadata = {
+        'n_samples': len(df),
+        'n_columns': len(df.columns),
+        'has_date': 'Date' in df.columns,
+        'has_id': 'ID' in df.columns,
+        'spectral_columns': len(get_spectral_columns(df)),
+        'parameter_columns': len([c for c in df.columns if str(c).startswith('Result ')]),
+    }
+    
+    if 'Date' in df.columns:
+        valid_dates = df['Date'].dropna()
+        if len(valid_dates) > 0:
+            metadata['date_range'] = {
+                'start': valid_dates.min(),
+                'end': valid_dates.max()
+            }
+    
+    return metadata

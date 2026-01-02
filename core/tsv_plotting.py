@@ -348,8 +348,9 @@ def build_spectra_figure_preview(
         return None
 
     pixel_cols = sorted(pixel_cols, key=_pixnum)
-    x = [_pixnum(c) for c in pixel_cols]  # python ints
+    x_full = [_pixnum(c) for c in pixel_cols]  # python ints
 
+    # Matriz espectral (igual que ya tenías)
     spec = (
         df[pixel_cols]
         .astype(str)
@@ -360,6 +361,17 @@ def build_spectra_figure_preview(
     hover_id = df["ID"].astype(str) if "ID" in df.columns else pd.Series([str(i) for i in df.index], index=df.index)
     hover_date = df["Date"].astype(str) if "Date" in df.columns else pd.Series([""] * len(df), index=df.index)
     hover_note = df["Note"].astype(str) if "Note" in df.columns else pd.Series([""] * len(df), index=df.index)
+
+    # ✅ STRIDE AUTO: optimiza rendimiento
+    n_spec = int(len(df))
+    if n_spec <= 250:
+        stride = 6   # 300-600 px -> 50-100 puntos seleccionables por espectro
+    elif n_spec <= 600:
+        stride = 10
+    else:
+        stride = 15  # casos de 1000 espectros
+
+    x_sel = x_full[::stride]  # puntos para selección
 
     fig = go.Figure()
     legend_added = set()
@@ -396,26 +408,39 @@ def build_spectra_figure_preview(
         if show_legend:
             legend_added.add(legend_group)
 
-        # JSON-safe list por punto (int Python)
-        cd = [int(i)] * len(x)
-
         # y como lista Python
-        y = [float(v) if np.isfinite(v) else None for v in y_np]
+        y_full = [float(v) if np.isfinite(v) else None for v in y_np]
+        y_sel = y_full[::stride]
 
-        # FIX LASSO/BOX: necesitas "puntos" seleccionables
-        # -> lines+markers con marker casi invisible
+        # 1) ✅ LÍNEA COMPLETA (barata, sin markers)
         fig.add_trace(
             go.Scatter(
-                x=x,
-                y=y,
-                mode="lines+markers",
+                x=x_full,
+                y=y_full,
+                mode="lines",
                 showlegend=show_legend,
                 legendgroup=legend_group,
                 name=legend_name,
                 line={"width": width, "color": color},
-                marker={"size": 3, "opacity": 0.01},  # clave para selección sin ensuciar
                 opacity=opacity,
-                customdata=cd,
+                hoverinfo="skip",   # reduce peso
+            )
+        )
+
+        # 2) ✅ MARKERS DOWN-SAMPLED (solo para selección)
+        # customdata SOLO aquí, y 1 por punto
+        cd_sel = [int(i)] * len(x_sel)
+
+        fig.add_trace(
+            go.Scatter(
+                x=x_sel,
+                y=y_sel,
+                mode="markers",
+                showlegend=False,
+                legendgroup=legend_group,
+                marker={"size": 6, "opacity": 0.01},  # seleccionable pero invisible
+                opacity=1.0,
+                customdata=cd_sel,
                 hovertemplate=(
                     f"{prefix}RowIndex: %{{customdata}}<br>"
                     f"ID: {hover_id.loc[i]}<br>"
