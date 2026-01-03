@@ -456,3 +456,257 @@ def extract_parameter_names(df: pd.DataFrame) -> List[str]:
     """
     result_cols = get_parameter_columns(df, "Result ")
     return [str(c).replace("Result ", "") for c in result_cols]
+
+# Añadir a tsv_processing.py
+
+def extract_dates_from_tsv(uploaded_file, encodings: Optional[List[str]] = None) -> pd.Series:
+    """
+    Extrae solo la columna Date de un TSV de forma rápida (sin procesar todo).
+    
+    Args:
+        uploaded_file: Archivo TSV subido
+        encodings: Lista de encodings a probar (opcional)
+        
+    Returns:
+        Serie de pandas con las fechas como strings
+    """
+    if encodings is None:
+        encodings = ["utf-8", "ISO-8859-1", "latin-1", "cp1252"]
+    
+    for enc in encodings:
+        try:
+            uploaded_file.seek(0)
+            df = pd.read_csv(
+                uploaded_file,
+                sep="\t",
+                usecols=["Date"],
+                dtype={"Date": "string"},
+                encoding=enc,
+                keep_default_na=False,
+            )
+            return df["Date"]
+        except Exception:
+            continue
+    
+    return pd.Series([], dtype="string")
+
+
+def parse_date_series(date_series: pd.Series) -> pd.Series:
+    """
+    Convierte una serie de strings de fechas a timestamps.
+    
+    Args:
+        date_series: Serie con fechas como strings
+        
+    Returns:
+        Serie de pandas Timestamps
+    """
+    if date_series is None or date_series.empty:
+        return pd.to_datetime([], errors="coerce")
+    
+    date_series = date_series.astype("string").str.strip()
+    date_series = date_series[date_series != ""]
+    
+    return pd.to_datetime(date_series, errors="coerce", dayfirst=True)
+
+
+def build_samples_by_month_dataframe(uploaded_files: list) -> Optional[pd.DataFrame]:
+    """
+    Construye DataFrame con nº de muestras por mes y archivo.
+    
+    Args:
+        uploaded_files: Lista de archivos TSV subidos
+        
+    Returns:
+        DataFrame con columnas: Mes, Muestras, Archivo
+    """
+    rows = []
+    
+    for uf in uploaded_files:
+        file_name = uf.name.replace(".tsv", "").replace(".txt", "")
+        dates_raw = extract_dates_from_tsv(uf)
+        dates = parse_date_series(dates_raw).dropna()
+        
+        if dates.empty:
+            continue
+        
+        tmp = (
+            dates
+            .dt.to_period("M")
+            .value_counts()
+            .sort_index()
+            .rename("count")
+            .reset_index()
+        )
+        tmp.columns = ["Mes", "Muestras"]
+        tmp["Archivo"] = file_name
+        tmp["Mes"] = tmp["Mes"].dt.to_timestamp()
+        
+        rows.append(tmp)
+    
+    if rows:
+        return pd.concat(rows, ignore_index=True)
+    
+    return None
+
+# Al final del archivo tsv_processing.py, añadir:
+
+# =============================================================================
+# ANÁLISIS DE FECHAS PARA PREVIEW
+# =============================================================================
+
+def extract_dates_from_tsv_fast(uploaded_file, encodings: Optional[List[str]] = None) -> pd.Series:
+    """
+    Extrae solo la columna Date de un TSV de forma rápida (sin procesar todo el archivo).
+    Útil para preview antes de procesamiento completo.
+    
+    Args:
+        uploaded_file: Archivo TSV subido
+        encodings: Lista de encodings a probar (opcional)
+        
+    Returns:
+        Serie de pandas con las fechas como strings
+    """
+    if encodings is None:
+        encodings = ["utf-8", "ISO-8859-1", "latin-1", "cp1252"]
+    
+    for enc in encodings:
+        try:
+            uploaded_file.seek(0)
+            df = pd.read_csv(
+                uploaded_file,
+                sep="\t",
+                usecols=["Date"],
+                dtype={"Date": "string"},
+                encoding=enc,
+                keep_default_na=False,
+            )
+            return df["Date"]
+        except Exception:
+            continue
+    
+    return pd.Series([], dtype="string")
+
+
+def parse_date_series(date_series: pd.Series) -> pd.Series:
+    """
+    Convierte una serie de strings de fechas a timestamps.
+    Limpia valores vacíos y parsea con dayfirst=True.
+    
+    Args:
+        date_series: Serie con fechas como strings
+        
+    Returns:
+        Serie de pandas Timestamps
+    """
+    if date_series is None or date_series.empty:
+        return pd.to_datetime([], errors="coerce")
+    
+    date_series = date_series.astype("string").str.strip()
+    date_series = date_series[date_series != ""]
+    
+    return pd.to_datetime(date_series, errors="coerce", dayfirst=True)
+
+
+def build_samples_by_month_dataframe(uploaded_files: list) -> Optional[pd.DataFrame]:
+    """
+    Construye DataFrame con nº de muestras por mes y archivo.
+    Usa lectura rápida de fechas sin procesar todo el TSV.
+    
+    Args:
+        uploaded_files: Lista de archivos TSV subidos
+        
+    Returns:
+        DataFrame con columnas: Mes, Muestras, Archivo o None si no hay datos
+    """
+    rows = []
+    
+    for uf in uploaded_files:
+        file_name = uf.name.replace(".tsv", "").replace(".txt", "")
+        
+        # Usar las funciones locales del módulo
+        dates_raw = extract_dates_from_tsv_fast(uf)
+        dates = parse_date_series(dates_raw).dropna()
+        
+        if dates.empty:
+            continue
+        
+        # Agrupar por mes
+        tmp = (
+            dates
+            .dt.to_period("M")
+            .value_counts()
+            .sort_index()
+            .rename("count")
+            .reset_index()
+        )
+        tmp.columns = ["Mes", "Muestras"]
+        tmp["Archivo"] = file_name
+        tmp["Mes"] = tmp["Mes"].dt.to_timestamp()
+        
+        rows.append(tmp)
+    
+    if rows:
+        return pd.concat(rows, ignore_index=True)
+    
+    return None
+
+def parse_date_series(date_series: pd.Series) -> pd.Series:
+    """
+    Convierte una serie de strings de fechas a timestamps.
+    Limpia valores vacíos y parsea con dayfirst=True.
+    
+    Args:
+        date_series: Serie con fechas como strings
+        
+    Returns:
+        Serie de pandas Timestamps
+    """
+    if date_series is None or date_series.empty:
+        return pd.to_datetime([], errors="coerce")
+    
+    date_series = date_series.astype("string").str.strip()
+    date_series = date_series[date_series != ""]
+    
+    return pd.to_datetime(date_series, errors="coerce", dayfirst=True)
+
+
+def build_samples_by_month_dataframe(uploaded_files: list) -> Optional[pd.DataFrame]:
+    """
+    Construye DataFrame con nº de muestras por mes y archivo.
+    Usa lectura rápida de fechas sin procesar todo el TSV.
+    
+    Args:
+        uploaded_files: Lista de archivos TSV subidos
+        
+    Returns:
+        DataFrame con columnas: Mes, Muestras, Archivo o None si no hay datos
+    """
+    rows = []
+    
+    for uf in uploaded_files:
+        file_name = uf.name.replace(".tsv", "").replace(".txt", "")
+        dates_raw = extract_dates_from_tsv_fast(uf)
+        dates = parse_date_series(dates_raw).dropna()
+        
+        if dates.empty:
+            continue
+        
+        tmp = (
+            dates
+            .dt.to_period("M")
+            .value_counts()
+            .sort_index()
+            .rename("count")
+            .reset_index()
+        )
+        tmp.columns = ["Mes", "Muestras"]
+        tmp["Archivo"] = file_name
+        tmp["Mes"] = tmp["Mes"].dt.to_timestamp()
+        
+        rows.append(tmp)
+    
+    if rows:
+        return pd.concat(rows, ignore_index=True)
+    
+    return None

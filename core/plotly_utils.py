@@ -566,3 +566,35 @@ def create_residuum_histogram(df: pd.DataFrame,
     )
     
     return fig
+
+# Añadir a plotly_utils.py
+
+def create_samples_by_month_chart(df: pd.DataFrame) -> go.Figure:
+    """
+    Crea gráfico de barras agrupadas por archivo mostrando muestras por mes.
+    
+    Args:
+        df: DataFrame con columnas: Mes, Muestras, Archivo
+        
+    Returns:
+        Figura de Plotly
+    """
+    fig = go.Figure()
+    
+    for fname, group_df in df.groupby("Archivo"):
+        fig.add_bar(
+            x=group_df["Mes"],
+            y=group_df["Muestras"],
+            name=fname,
+        )
+    
+    fig.update_layout(
+        barmode="group",
+        height=400,
+        title="Nº de muestras por mes (por archivo)",
+        xaxis_title="Mes",
+        yaxis_title="Nº de muestras",
+        template="plotly_white",
+    )
+    
+    return fig

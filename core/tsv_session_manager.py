@@ -612,3 +612,71 @@ def get_file_statistics(file_name: str) -> Dict[str, int]:
         "agrupadas": grouped_count,
         "finales": len(df) - len(removed)
     }
+# Añadir al final de tsv_session_manager.py
+
+def get_group_display_name(group_key: str, sample_groups_config: dict) -> str:
+    """
+    Obtiene el nombre display de un grupo (emoji + label).
+    
+    Args:
+        group_key: Clave interna del grupo ("Set 1", "Set 2", etc.)
+        sample_groups_config: Configuración de grupos con emojis
+        
+    Returns:
+        String formateado para mostrar al usuario
+    """
+    if not group_key or group_key == "none":
+        return "Sin grupo"
+    
+    emoji = sample_groups_config.get(group_key, {}).get("emoji", "")
+    label = get_group_label(group_key)
+    return f"{emoji} {label}".strip()
+
+
+def get_group_display_name_with_key(group_key: str, sample_groups_config: dict) -> str:
+    """
+    Obtiene nombre display con clave interna visible: "emoji label (Set X)".
+    """
+    emoji = sample_groups_config.get(group_key, {}).get("emoji", "")
+    label = get_group_label(group_key)
+    return f"{emoji} {label} ({group_key})".strip()
+
+
+def display_to_group_key(display_value: str, group_keys: list, sample_groups_config: dict) -> str:
+    """
+    Convierte nombre display a clave interna.
+    
+    Args:
+        display_value: Nombre mostrado al usuario
+        group_keys: Lista de claves válidas ["Set 1", "Set 2", ...]
+        sample_groups_config: Configuración de grupos
+        
+    Returns:
+        Clave interna correspondiente
+    """
+    if display_value == "Sin grupo":
+        return "none"
+    
+    # Crear mapping
+    mapping = {}
+    for g in group_keys:
+        emoji = sample_groups_config.get(g, {}).get("emoji", "")
+        label = get_group_label(g)
+        display = f"{emoji} {label}".strip()
+        mapping[display] = g
+    
+    return mapping.get(display_value, "Set 1")
+
+
+def get_group_options_display(group_keys: list, sample_groups_config: dict) -> list:
+    """
+    Obtiene lista de opciones display para selectbox (sin "Sin grupo").
+    """
+    return [get_group_display_name(g, sample_groups_config) for g in group_keys]
+
+
+def get_group_options_display_with_none(group_keys: list, sample_groups_config: dict) -> list:
+    """
+    Obtiene lista de opciones display para tabla (incluye "Sin grupo").
+    """
+    return ["Sin grupo"] + get_group_options_display(group_keys, sample_groups_config)

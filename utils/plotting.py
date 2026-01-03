@@ -395,3 +395,4 @@ def plot_corrected_spectra_comparison(df_ref, df_corrected, spectral_cols,
     )
     
     return fig
+

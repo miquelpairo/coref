@@ -7,13 +7,7 @@ Refactorizado para usar módulos especializados:
 - tsv_session_manager: Gestión del estado de sesión
 - tsv_processing: Limpieza y procesamiento de TSV
 - selection_utils: Extracción de eventos de gráficos
-- filehandlers: Carga de archivos
-
-FIX UI (labels de grupo):
-- En los selectbox de selección (Espectros/Parity) y en la tabla, se muestran los nombres
-  personalizados definidos por el usuario (group_labels), pero se sigue guardando internamente
-  "Set 1..Set 4" para no romper nada.
-- En la leyenda de grupos, se muestra: "Etiqueta (Set X)".
+- plotly_utils: Gráficos y visualizaciones
 """
 
 from __future__ import annotations
@@ -24,7 +18,6 @@ from typing import List
 
 import pandas as pd
 import streamlit as st
-import plotly.graph_objs as go
 
 from auth import check_password
 from buchi_streamlit_theme import apply_buchi_styles
@@ -56,14 +49,23 @@ from core.tsv_session_manager import (
     update_group_description,
     get_group_label,
     get_group_description,
+    # NUEVAS FUNCIONES DE DISPLAY
+    get_group_display_name,
+    get_group_display_name_with_key,
+    display_to_group_key,
+    get_group_options_display,
+    get_group_options_display_with_none,
 )
 from core.tsv_processing import (
     clean_tsv_file,
-    get_spectral_columns,
     get_parameter_columns,
     extract_parameter_names,
     PIXEL_RE,
+    extract_dates_from_tsv_fast,
+    parse_date_series,
+    build_samples_by_month_dataframe,
 )
+from core.plotly_utils import create_samples_by_month_chart
 from core.selection_utils import (
     create_event_id,
     extract_row_index_from_click,
@@ -73,7 +75,6 @@ from core.selection_utils import (
 
 try:
     from streamlit_plotly_events import plotly_events
-
     INTERACTIVE_SELECTION_AVAILABLE = True
 except Exception:
     plotly_events = None
@@ -96,8 +97,7 @@ st.markdown("## Generación de informes de validación NIR (TSV) con previsualiz
 # INFO / HELP
 # =============================================================================
 with st.expander("ℹ️ Instrucciones de Uso"):
-    st.markdown(
-        """
+    st.markdown("""
 ### Cómo usar TSV Validation Reports:
 
 **1. Cargar Archivos TSV:**
@@ -112,8 +112,7 @@ with st.expander("ℹ️ Instrucciones de Uso"):
 - Grupos personalizables con símbolos
 
 **4. Generación de Reportes HTML**
-"""
-    )
+""")
 
 
 # =============================================================================
@@ -129,70 +128,6 @@ SAMPLE_GROUPS = {
 
 GROUP_KEYS = ["Set 1", "Set 2", "Set 3", "Set 4"]
 
-
-# =============================================================================
-# HELPERS (GROUP DISPLAY)
-# =============================================================================
-def group_display_name(group_key: str) -> str:
-    """Texto visible al usuario (emoji + label). Mantiene clave interna Set 1..4."""
-    emoji = SAMPLE_GROUPS.get(group_key, {}).get("emoji", "")
-    label = get_group_label(group_key)
-    return f"{emoji} {label}".strip()
-
-
-def group_display_name_with_key(group_key: str) -> str:
-    """Visible: etiqueta + (Set X)."""
-    emoji = SAMPLE_GROUPS.get(group_key, {}).get("emoji", "")
-    label = get_group_label(group_key)
-    return f"{emoji} {label} ({group_key})".strip()
-
-
-def group_options_display() -> List[str]:
-    return [group_display_name(g) for g in GROUP_KEYS]
-
-
-def display_to_group_key(display_value: str) -> str:
-    """Mapeador display -> key interna."""
-    mapping = {group_display_name(g): g for g in GROUP_KEYS}
-    return mapping.get(display_value, "Set 1")
-
-
-def group_key_to_display(group_key: str) -> str:
-    """Key interna -> display (sin (Set X), para dropdowns de selección)."""
-    if not group_key or group_key == "none":
-        return "Sin grupo"
-    return group_display_name(group_key)
-
-
-def group_options_display_table() -> List[str]:
-    """Opciones para tabla (incluye Sin grupo)."""
-    return ["Sin grupo"] + [group_display_name(g) for g in GROUP_KEYS]
-
-def _read_dates_fast(uploaded_file) -> pd.Series:
-    encodings = ["utf-8", "ISO-8859-1", "latin-1", "cp1252"]
-    for enc in encodings:
-        try:
-            uploaded_file.seek(0)
-            df = pd.read_csv(
-                uploaded_file,
-                sep="\t",
-                usecols=["Date"],
-                dtype={"Date": "string"},
-                encoding=enc,
-                keep_default_na=False,
-            )
-            return df["Date"]
-        except Exception:
-            continue
-    return pd.Series([], dtype="string")
-
-
-def _parse_dates(s: pd.Series) -> pd.Series:
-    if s is None or s.empty:
-        return pd.to_datetime([], errors="coerce")
-    s = s.astype("string").str.strip()
-    s = s[s != ""]
-    return pd.to_datetime(s, errors="coerce", dayfirst=True)
 
 # =============================================================================
 # SESSION STATE INITIALIZATION
@@ -217,136 +152,117 @@ if uploaded_files:
     st.success(f"✅ {len(uploaded_files)} archivo(s) cargado(s)")
     st.markdown("---")
 
-# =============================================================================
-# PREVIEW: Nº DE MUESTRAS POR MES Y ARCHIVO (ANTES DEL FILTRO)
-# =============================================================================
-with st.expander("📊 Preview: nº de muestras por mes y archivo (antes del filtro)", expanded=True):
+    # =============================================================================
+    # PREVIEW: Nº DE MUESTRAS POR MES Y ARCHIVO (ANTES DEL FILTRO)
+    # =============================================================================
+    with st.expander("📊 Preview: nº de muestras por mes y archivo (antes del filtro)", expanded=True):
+        df_preview = build_samples_by_month_dataframe(uploaded_files)
+        
+        if df_preview is not None:
+            fig = create_samples_by_month_chart(df_preview)
+            st.plotly_chart(fig, use_container_width=True)
+            st.caption("Datos brutos, antes de aplicar filtros de fecha.")
+        else:
+            st.info("No se encontraron fechas válidas en los archivos cargados.")
+        
+        st.subheader("📅 1. Filtrado por Fechas (Opcional)")
+        st.info("Define el rango de fechas ANTES de procesar.")
 
-    rows = []
+        col1, col2, col3 = st.columns([2, 2, 1])
+        with col1:
+            start_date = st.date_input("Fecha de inicio", value=None)
+        with col2:
+            end_date = st.date_input("Fecha de fin", value=None)
+        with col3:
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("🗑️ Limpiar fechas"):
+                st.rerun()
 
-    for uf in uploaded_files:
-        file_name = uf.name.replace(".tsv", "").replace(".txt", "")
-        dates_raw = _read_dates_fast(uf)
-        dates = _parse_dates(dates_raw).dropna()
+        if start_date or end_date:
+            filter_info = "🔍 **Filtro de fechas configurado:** "
+            if start_date and end_date:
+                filter_info += f"Desde {start_date.strftime('%d/%m/%Y')} hasta {end_date.strftime('%d/%m/%Y')}"
+            elif start_date:
+                filter_info += f"Desde {start_date.strftime('%d/%m/%Y')} en adelante"
+            elif end_date:
+                filter_info += f"Hasta {end_date.strftime('%d/%m/%Y')}"
+            st.success(filter_info)
 
-        if dates.empty:
-            continue
+        st.markdown("---")
+        st.subheader("2. Procesar Archivos")
 
-        tmp = (
-            dates
-            .dt.to_period("M")
-            .value_counts()
-            .sort_index()
-            .rename("count")
-            .reset_index()
-        )
-        tmp.columns = ["Mes", "Muestras"]
-        tmp["Archivo"] = file_name
-        tmp["Mes"] = tmp["Mes"].dt.to_timestamp()
+        if st.button("🔄 Procesar Archivos con Filtros", type="primary", use_container_width=True):
+            progress_bar = st.progress(0.0)
+            status_text = st.empty()
 
-        rows.append(tmp)
+            for idx, uploaded_file in enumerate(uploaded_files, start=1):
+                file_name = uploaded_file.name.replace(".tsv", "").replace(".txt", "")
+                status_text.text(f"Procesando {file_name}...")
 
-    if rows:
-        df_plot = pd.concat(rows, ignore_index=True)
+                try:
+                    df_clean = clean_tsv_file(uploaded_file)
+                    df_filtered = df_clean.copy()
 
-        fig = go.Figure()
+                    rows_before = len(df_filtered)
+                    
+                    # APLICAR FILTRADO DE FECHAS
+                    if "Date" in df_filtered.columns:
+                        # Asegurar que Date está en formato Timestamp
+                        df_filtered["Date"] = pd.to_datetime(df_filtered["Date"], errors="coerce")
+                        
+                        # Contar cuántas fechas válidas hay
+                        valid_dates_before = df_filtered["Date"].notna().sum()
+                        
+                        if start_date is not None or end_date is not None:
+                            # Crear máscaras de filtrado
+                            mask = pd.Series([True] * len(df_filtered), index=df_filtered.index)
+                            
+                            if start_date is not None:
+                                start_datetime = pd.Timestamp(start_date).normalize()  # 00:00:00
+                                mask = mask & (df_filtered["Date"] >= start_datetime)
+                            
+                            if end_date is not None:
+                                # Incluir todo el día final (hasta 23:59:59)
+                                end_datetime = pd.Timestamp(end_date).normalize() + pd.Timedelta(days=1) - pd.Timedelta(seconds=1)
+                                mask = mask & (df_filtered["Date"] <= end_datetime)
+                            
+                            # Aplicar filtro
+                            df_filtered = df_filtered[mask]
+                            
+                            rows_after = len(df_filtered)
+                            
+                            if rows_before != rows_after:
+                                st.info(f"📊 {file_name}: {rows_before} → {rows_after} muestras (filtro de fechas aplicado)")
+                            
+                            if rows_after == 0:
+                                st.warning(f"⚠️ {file_name}: No hay datos en el rango. Se omite.")
+                                continue
+                        
+                        # Si no hay fechas válidas y se pidió filtro
+                        elif valid_dates_before == 0 and (start_date or end_date):
+                            st.warning(f"⚠️ {file_name}: No tiene fechas válidas para filtrar")
+                    
+                    else:
+                        # No tiene columna Date
+                        if start_date or end_date:
+                            st.warning(f"⚠️ {file_name}: No tiene columna 'Date', no se puede filtrar por fechas")
 
-        for fname, g in df_plot.groupby("Archivo"):
-            fig.add_bar(
-                x=g["Mes"],
-                y=g["Muestras"],
-                name=fname,
-            )
+                    # Resetear índices para consistencia
+                    df_filtered = df_filtered.reset_index(drop=True)
 
-        fig.update_layout(
-            barmode="group",   # columnas por archivo
-            height=400,
-            title="Nº de muestras por mes (por archivo)",
-            xaxis_title="Mes",
-            yaxis_title="Nº de muestras",
-            template="plotly",
-        )
+                    # Usar función del session manager
+                    add_processed_file(file_name, df_filtered)
 
-        st.plotly_chart(fig, use_container_width=True)
-        st.caption("Datos brutos, antes de aplicar filtros de fecha.")
-    else:
-        st.info("No se encontraron fechas válidas en los archivos cargados.")
-    
-    st.subheader("📅 1. Filtrado por Fechas (Opcional)")
-    st.info("Define el rango de fechas ANTES de procesar.")
+                    st.success(f"✅ {file_name} procesado ({len(df_filtered)} muestras)")
 
-    col1, col2, col3 = st.columns([2, 2, 1])
-    with col1:
-        start_date = st.date_input("Fecha de inicio", value=None)
-    with col2:
-        end_date = st.date_input("Fecha de fin", value=None)
-    with col3:
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("🗑️ Limpiar fechas"):
-            st.rerun()
+                except Exception as e:
+                    st.error(f"❌ Error: {file_name}: {e}")
+                    import traceback
+                    st.code(traceback.format_exc())
 
-    if start_date or end_date:
-        filter_info = "🔍 **Filtro de fechas configurado:** "
-        if start_date and end_date:
-            filter_info += f"Desde {start_date.strftime('%d/%m/%Y')} hasta {end_date.strftime('%d/%m/%Y')}"
-        elif start_date:
-            filter_info += f"Desde {start_date.strftime('%d/%m/%Y')} en adelante"
-        elif end_date:
-            filter_info += f"Hasta {end_date.strftime('%d/%m/%Y')}"
-        st.success(filter_info)
+                progress_bar.progress(idx / float(len(uploaded_files)))
 
-    st.markdown("---")
-    st.subheader("2. Procesar Archivos")
-
-    if st.button("🔄 Procesar Archivos con Filtros", type="primary", use_container_width=True):
-        progress_bar = st.progress(0.0)
-        status_text = st.empty()
-
-        for idx, uploaded_file in enumerate(uploaded_files, start=1):
-            file_name = uploaded_file.name.replace(".tsv", "").replace(".txt", "")
-            status_text.text(f"Procesando {file_name}...")
-
-            try:
-                df_clean = clean_tsv_file(uploaded_file)
-                df_filtered = df_clean.copy()
-
-                rows_before = len(df_filtered)
-                if "Date" in df_filtered.columns:
-                    if start_date is not None:
-                        start_datetime = pd.Timestamp(start_date)
-                        df_filtered = df_filtered[df_filtered["Date"] >= start_datetime]
-                    if end_date is not None:
-                        end_datetime = pd.Timestamp(end_date) + pd.Timedelta(days=1) - pd.Timedelta(seconds=1)
-                        df_filtered = df_filtered[df_filtered["Date"] <= end_datetime]
-
-                    rows_after = len(df_filtered)
-                    if start_date or end_date:
-                        if rows_before != rows_after:
-                            st.info(f"📊 {file_name}: {rows_before} → {rows_after} muestras")
-                        if rows_after == 0:
-                            st.warning(f"⚠️ {file_name}: No hay datos en el rango. Se omite.")
-                            continue
-                else:
-                    if start_date or end_date:
-                        st.warning(f"⚠️ {file_name}: No tiene columna 'Date'")
-
-                # Resetear índices para consistencia
-                df_filtered = df_filtered.reset_index(drop=True)
-
-                # Usar función del session manager
-                add_processed_file(file_name, df_filtered)
-
-                st.success(f"✅ {file_name} procesado ({len(df_filtered)} muestras)")
-
-            except Exception as e:
-                st.error(f"❌ Error: {file_name}: {e}")
-                import traceback
-
-                st.code(traceback.format_exc())
-
-            progress_bar.progress(idx / float(len(uploaded_files)))
-
-        status_text.text("✅ Procesamiento completado")
+            status_text.text("✅ Procesamiento completado")
 
 
 # =============================================================================
@@ -392,8 +308,7 @@ if has_processed_data():
         # LEYENDA DE GRUPOS
         st.subheader("🏷️ Leyenda de Grupos")
         for group_key in GROUP_KEYS:
-            # ✅ aquí: etiqueta + (Set X)
-            with st.expander(group_display_name_with_key(group_key), expanded=False):
+            with st.expander(get_group_display_name_with_key(group_key, SAMPLE_GROUPS), expanded=False):
                 c1, c2 = st.columns([1, 2])
                 with c1:
                     new_label = st.text_input(
@@ -439,7 +354,8 @@ if has_processed_data():
                     for i, item in enumerate(pending):
                         action_txt = item["action"]
                         if item["action"] == "Asignar a Grupo":
-                            action_txt += f" → {group_display_name(item.get('group', 'Set 1'))}"
+                            group_key = item.get('group', 'Set 1')
+                            action_txt += f" → {get_group_display_name(group_key, SAMPLE_GROUPS)}"
                         st.write(f"{i+1}. Muestra **{item['idx']}**: {action_txt}")
 
             colA, colB, colC = st.columns([2, 2, 1])
@@ -451,9 +367,9 @@ if has_processed_data():
                 )
             with colB:
                 if spectra_action == "Asignar a Grupo":
-                    options_disp = group_options_display()
+                    options_disp = get_group_options_display(GROUP_KEYS, SAMPLE_GROUPS)
                     current_key = st.session_state.get(f"spectra_target_{selected_file}", "Set 1")
-                    current_disp = group_display_name(current_key) if current_key in GROUP_KEYS else options_disp[0]
+                    current_disp = get_group_display_name(current_key, SAMPLE_GROUPS) if current_key in GROUP_KEYS else options_disp[0]
 
                     spectra_target_disp = st.selectbox(
                         "Grupo:",
@@ -461,7 +377,7 @@ if has_processed_data():
                         index=options_disp.index(current_disp) if current_disp in options_disp else 0,
                         key=f"spectra_target_disp_{selected_file}",
                     )
-                    spectra_target = display_to_group_key(spectra_target_disp)
+                    spectra_target = display_to_group_key(spectra_target_disp, GROUP_KEYS, SAMPLE_GROUPS)
                     st.session_state[f"spectra_target_{selected_file}"] = spectra_target
 
             with colC:
@@ -519,7 +435,7 @@ if has_processed_data():
 
                                 if spectra_action == "Asignar a Grupo" and spectra_target:
                                     st.toast(
-                                        f"➕ {len(clicked_indices)} muestra(s) a pendientes → grupo: {group_display_name(spectra_target)} ({pending_count} pendientes)",
+                                        f"➕ {len(clicked_indices)} muestra(s) a pendientes → grupo: {get_group_display_name(spectra_target, SAMPLE_GROUPS)} ({pending_count} pendientes)",
                                         icon="📍",
                                     )
                                 else:
@@ -533,7 +449,6 @@ if has_processed_data():
         except Exception as e:
             st.error(f"Error: {e}")
             import traceback
-
             st.code(traceback.format_exc())
 
         # BOTONES DEBAJO DE ESPECTROS
@@ -560,15 +475,9 @@ if has_processed_data():
                     key=f"clear_spectra_{selected_file}",
                 ):
                     n_cleared = clear_pending_selections(selected_file)
-
-                    # Evita reenganche del último evento
                     update_last_event_id(selected_file, "spectra", "")
                     update_last_event_id(selected_file, "parity", "")
-
-                    st.toast(
-                        f"🧹 {n_cleared} acción(es) eliminada(s) de pendientes",
-                        icon="🗑️",
-                    )
+                    st.toast(f"🧹 {n_cleared} acción(es) eliminada(s) de pendientes", icon="🗑️")
                     st.rerun()
 
             with b3:
@@ -585,7 +494,7 @@ if has_processed_data():
         st.markdown("---")
 
         # =============================================================================
-        # PARITY
+        # PARITY (idéntica estructura a espectros)
         # =============================================================================
         st.markdown("### 📊 Selección desde Parity")
 
@@ -610,7 +519,8 @@ if has_processed_data():
                         for i, item in enumerate(pending):
                             action_txt = item["action"]
                             if item["action"] == "Asignar a Grupo":
-                                action_txt += f" → {group_display_name(item.get('group', 'Set 1'))}"
+                                group_key = item.get('group', 'Set 1')
+                                action_txt += f" → {get_group_display_name(group_key, SAMPLE_GROUPS)}"
                             st.write(f"{i+1}. Muestra **{item['idx']}**: {action_txt}")
 
                 colA, colB, colC = st.columns([2, 2, 1])
@@ -622,9 +532,9 @@ if has_processed_data():
                     )
                 with colB:
                     if parity_action == "Asignar a Grupo":
-                        options_disp = group_options_display()
+                        options_disp = get_group_options_display(GROUP_KEYS, SAMPLE_GROUPS)
                         current_key = st.session_state.get(f"parity_target_{selected_file}", "Set 1")
-                        current_disp = group_display_name(current_key) if current_key in GROUP_KEYS else options_disp[0]
+                        current_disp = get_group_display_name(current_key, SAMPLE_GROUPS) if current_key in GROUP_KEYS else options_disp[0]
 
                         parity_target_disp = st.selectbox(
                             "Grupo:",
@@ -632,7 +542,7 @@ if has_processed_data():
                             index=options_disp.index(current_disp) if current_disp in options_disp else 0,
                             key=f"parity_target_disp_{selected_file}",
                         )
-                        parity_target = display_to_group_key(parity_target_disp)
+                        parity_target = display_to_group_key(parity_target_disp, GROUP_KEYS, SAMPLE_GROUPS)
                         st.session_state[f"parity_target_{selected_file}"] = parity_target
 
                 with colC:
@@ -706,7 +616,7 @@ if has_processed_data():
 
                                         if parity_action == "Asignar a Grupo" and parity_target:
                                             st.toast(
-                                                f"➕ {len(clicked_indices)} muestra(s) a pendientes → grupo: {group_display_name(parity_target)} ({pending_count} pendientes)",
+                                                f"➕ {len(clicked_indices)} muestra(s) a pendientes → grupo: {get_group_display_name(parity_target, SAMPLE_GROUPS)} ({pending_count} pendientes)",
                                                 icon="📍",
                                             )
                                         else:
@@ -723,10 +633,9 @@ if has_processed_data():
             except Exception as e:
                 st.error(f"Error: {e}")
                 import traceback
-
                 st.code(traceback.format_exc())
 
-            # BOTONES DEBAJO DE PARITY
+            # BOTONES DEBAJO DE PARITY (idénticos a espectros)
             if INTERACTIVE_SELECTION_AVAILABLE:
                 st.markdown("---")
                 b1, b2, b3 = st.columns(3)
@@ -750,14 +659,9 @@ if has_processed_data():
                         key=f"clear_parity_{selected_file}",
                     ):
                         n_cleared = clear_pending_selections(selected_file)
-
                         update_last_event_id(selected_file, "parity", "")
                         update_last_event_id(selected_file, "spectra", "")
-
-                        st.toast(
-                            f"🧹 {n_cleared} acción(es) eliminada(s) de pendientes",
-                            icon="🗑️",
-                        )
+                        st.toast(f"🧹 {n_cleared} acción(es) eliminada(s) de pendientes", icon="🗑️")
                         st.rerun()
 
                 with b3:
@@ -774,14 +678,14 @@ if has_processed_data():
         st.markdown("---")
 
         # =============================================================================
-        # TABLA INTERACTIVA (PATCH SIN format_func)
+        # TABLA INTERACTIVA
         # =============================================================================
         st.subheader("🎯 Selección desde Tabla")
         st.info("✅ Marca para **Eliminar** o asigna un **Grupo** → Presiona **'Actualizar Selección'**")
 
         df_for_edit = df_current.copy()
 
-        # Interno (lo que espera el session_manager)
+        # Columnas internas
         df_for_edit.insert(0, "Grupo", "none")
         df_for_edit.insert(0, "Eliminar", False)
 
@@ -793,11 +697,14 @@ if has_processed_data():
             if idx_ in df_for_edit.index:
                 df_for_edit.at[idx_, "Grupo"] = grp_
 
-        # Visible y editable
+        # Columna visible con labels
         df_for_edit.insert(1, "Grupo (Etiqueta)", "Sin grupo")
         for idx_ in df_for_edit.index:
             g = df_for_edit.at[idx_, "Grupo"]
-            df_for_edit.at[idx_, "Grupo (Etiqueta)"] = group_key_to_display(g)
+            if not g or g == "none":
+                df_for_edit.at[idx_, "Grupo (Etiqueta)"] = "Sin grupo"
+            else:
+                df_for_edit.at[idx_, "Grupo (Etiqueta)"] = get_group_display_name(g, SAMPLE_GROUPS)
 
         display_cols = ["Eliminar", "Grupo (Etiqueta)"]
         for col in ["ID", "Date", "Note"]:
@@ -814,7 +721,7 @@ if has_processed_data():
                     "Eliminar": st.column_config.CheckboxColumn("Eliminar", default=False),
                     "Grupo (Etiqueta)": st.column_config.SelectboxColumn(
                         "Grupo",
-                        options=group_options_display_table(),
+                        options=get_group_options_display_with_none(GROUP_KEYS, SAMPLE_GROUPS),
                         default="Sin grupo",
                     ),
                 },
@@ -829,7 +736,7 @@ if has_processed_data():
 
             with c1:
                 if st.button("🔄 Actualizar Selección", use_container_width=True, type="primary"):
-                    # Convertimos display -> key interna y llamamos al session_manager
+                    # Convertir display -> key interna
                     tmp = pd.DataFrame(index=edited_df.index)
                     tmp["Eliminar"] = edited_df["Eliminar"].astype(bool)
 
@@ -839,7 +746,7 @@ if has_processed_data():
                         if disp == "Sin grupo":
                             mapped[idx_] = "none"
                         else:
-                            mapped[idx_] = display_to_group_key(disp)
+                            mapped[idx_] = display_to_group_key(disp, GROUP_KEYS, SAMPLE_GROUPS)
                     tmp["Grupo"] = pd.Series(mapped)
 
                     update_groups_from_editor(selected_file, tmp)
@@ -868,6 +775,7 @@ if has_processed_data():
                     clear_all_groups(selected_file)
                     st.rerun()
 
+        # Resumen visual
         if removed_indices or sample_groups:
             summary_parts = []
             if removed_indices:
@@ -895,14 +803,12 @@ if has_processed_data():
     for fname in get_processed_files():
         stats = get_file_statistics(fname)
         df = st.session_state.processed_data[fname]
-        summary_data.append(
-            {
-                "Archivo": fname,
-                "Muestras": stats["total"],
-                "Agrupadas": stats["agrupadas"],
-                "Parámetros": len(get_parameter_columns(df, "Result ")),
-            }
-        )
+        summary_data.append({
+            "Archivo": fname,
+            "Muestras": stats["total"],
+            "Agrupadas": stats["agrupadas"],
+            "Parámetros": len(get_parameter_columns(df, "Result ")),
+        })
     st.dataframe(pd.DataFrame(summary_data), use_container_width=True, hide_index=True)
 
     st.markdown("---")
