@@ -138,14 +138,14 @@ def add_pending_selection(file_name: str, idx: int, action: str, group: Optional
         st.session_state.pending_selections[file_name] = pending
 
 
-def clear_pending_selections(file_name: str):
+def clear_pending_selections(file_name: str) -> int:
     """
-    Limpia todas las selecciones pendientes de un archivo.
-    
-    Args:
-        file_name: Nombre del archivo
+    Limpia todas las selecciones pendientes de un archivo y devuelve cuántas se borraron.
     """
+    pending = st.session_state.pending_selections.get(file_name, [])
+    n = len(pending) if pending else 0
     st.session_state.pending_selections[file_name] = []
+    return n
 
 
 def get_pending_selections(file_name: str) -> List[Dict]:

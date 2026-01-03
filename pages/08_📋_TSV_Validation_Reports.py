@@ -8,6 +8,12 @@ Refactorizado para usar módulos especializados:
 - tsv_processing: Limpieza y procesamiento de TSV
 - selection_utils: Extracción de eventos de gráficos
 - filehandlers: Carga de archivos
+
+FIX UI (labels de grupo):
+- En los selectbox de selección (Espectros/Parity) y en la tabla, se muestran los nombres
+  personalizados definidos por el usuario (group_labels), pero se sigue guardando internamente
+  "Set 1..Set 4" para no romper nada.
+- En la leyenda de grupos, se muestra: "Etiqueta (Set X)".
 """
 
 from __future__ import annotations
@@ -18,6 +24,7 @@ from typing import List
 
 import pandas as pd
 import streamlit as st
+import plotly.graph_objs as go
 
 from auth import check_password
 from buchi_streamlit_theme import apply_buchi_styles
@@ -42,31 +49,31 @@ from core.tsv_session_manager import (
     clear_all_groups,
     clean_invalid_indices,
     get_file_statistics,
-    increment_editor_version,
     get_editor_version,
     update_last_event_id,
     get_last_event_id,
     update_group_label,
     update_group_description,
     get_group_label,
-    get_group_description
+    get_group_description,
 )
 from core.tsv_processing import (
     clean_tsv_file,
     get_spectral_columns,
     get_parameter_columns,
     extract_parameter_names,
-    PIXEL_RE
+    PIXEL_RE,
 )
 from core.selection_utils import (
     create_event_id,
     extract_row_index_from_click,
     extract_row_indices_from_spectra_events,
-    extract_row_indices_from_parity_events
+    extract_row_indices_from_parity_events,
 )
 
 try:
     from streamlit_plotly_events import plotly_events
+
     INTERACTIVE_SELECTION_AVAILABLE = True
 except Exception:
     plotly_events = None
@@ -89,7 +96,8 @@ st.markdown("## Generación de informes de validación NIR (TSV) con previsualiz
 # INFO / HELP
 # =============================================================================
 with st.expander("ℹ️ Instrucciones de Uso"):
-    st.markdown("""
+    st.markdown(
+        """
 ### Cómo usar TSV Validation Reports:
 
 **1. Cargar Archivos TSV:**
@@ -104,7 +112,8 @@ with st.expander("ℹ️ Instrucciones de Uso"):
 - Grupos personalizables con símbolos
 
 **4. Generación de Reportes HTML**
-""")
+"""
+    )
 
 
 # =============================================================================
@@ -118,6 +127,72 @@ SAMPLE_GROUPS = {
     "Set 4": {"symbol": "cross", "color": "grey", "size": 10, "emoji": "➕"},
 }
 
+GROUP_KEYS = ["Set 1", "Set 2", "Set 3", "Set 4"]
+
+
+# =============================================================================
+# HELPERS (GROUP DISPLAY)
+# =============================================================================
+def group_display_name(group_key: str) -> str:
+    """Texto visible al usuario (emoji + label). Mantiene clave interna Set 1..4."""
+    emoji = SAMPLE_GROUPS.get(group_key, {}).get("emoji", "")
+    label = get_group_label(group_key)
+    return f"{emoji} {label}".strip()
+
+
+def group_display_name_with_key(group_key: str) -> str:
+    """Visible: etiqueta + (Set X)."""
+    emoji = SAMPLE_GROUPS.get(group_key, {}).get("emoji", "")
+    label = get_group_label(group_key)
+    return f"{emoji} {label} ({group_key})".strip()
+
+
+def group_options_display() -> List[str]:
+    return [group_display_name(g) for g in GROUP_KEYS]
+
+
+def display_to_group_key(display_value: str) -> str:
+    """Mapeador display -> key interna."""
+    mapping = {group_display_name(g): g for g in GROUP_KEYS}
+    return mapping.get(display_value, "Set 1")
+
+
+def group_key_to_display(group_key: str) -> str:
+    """Key interna -> display (sin (Set X), para dropdowns de selección)."""
+    if not group_key or group_key == "none":
+        return "Sin grupo"
+    return group_display_name(group_key)
+
+
+def group_options_display_table() -> List[str]:
+    """Opciones para tabla (incluye Sin grupo)."""
+    return ["Sin grupo"] + [group_display_name(g) for g in GROUP_KEYS]
+
+def _read_dates_fast(uploaded_file) -> pd.Series:
+    encodings = ["utf-8", "ISO-8859-1", "latin-1", "cp1252"]
+    for enc in encodings:
+        try:
+            uploaded_file.seek(0)
+            df = pd.read_csv(
+                uploaded_file,
+                sep="\t",
+                usecols=["Date"],
+                dtype={"Date": "string"},
+                encoding=enc,
+                keep_default_na=False,
+            )
+            return df["Date"]
+        except Exception:
+            continue
+    return pd.Series([], dtype="string")
+
+
+def _parse_dates(s: pd.Series) -> pd.Series:
+    if s is None or s.empty:
+        return pd.to_datetime([], errors="coerce")
+    s = s.astype("string").str.strip()
+    s = s[s != ""]
+    return pd.to_datetime(s, errors="coerce", dayfirst=True)
 
 # =============================================================================
 # SESSION STATE INITIALIZATION
@@ -141,6 +216,62 @@ uploaded_files = st.file_uploader(
 if uploaded_files:
     st.success(f"✅ {len(uploaded_files)} archivo(s) cargado(s)")
     st.markdown("---")
+
+# =============================================================================
+# PREVIEW: Nº DE MUESTRAS POR MES Y ARCHIVO (ANTES DEL FILTRO)
+# =============================================================================
+with st.expander("📊 Preview: nº de muestras por mes y archivo (antes del filtro)", expanded=True):
+
+    rows = []
+
+    for uf in uploaded_files:
+        file_name = uf.name.replace(".tsv", "").replace(".txt", "")
+        dates_raw = _read_dates_fast(uf)
+        dates = _parse_dates(dates_raw).dropna()
+
+        if dates.empty:
+            continue
+
+        tmp = (
+            dates
+            .dt.to_period("M")
+            .value_counts()
+            .sort_index()
+            .rename("count")
+            .reset_index()
+        )
+        tmp.columns = ["Mes", "Muestras"]
+        tmp["Archivo"] = file_name
+        tmp["Mes"] = tmp["Mes"].dt.to_timestamp()
+
+        rows.append(tmp)
+
+    if rows:
+        df_plot = pd.concat(rows, ignore_index=True)
+
+        fig = go.Figure()
+
+        for fname, g in df_plot.groupby("Archivo"):
+            fig.add_bar(
+                x=g["Mes"],
+                y=g["Muestras"],
+                name=fname,
+            )
+
+        fig.update_layout(
+            barmode="group",   # columnas por archivo
+            height=400,
+            title="Nº de muestras por mes (por archivo)",
+            xaxis_title="Mes",
+            yaxis_title="Nº de muestras",
+            template="plotly",
+        )
+
+        st.plotly_chart(fig, use_container_width=True)
+        st.caption("Datos brutos, antes de aplicar filtros de fecha.")
+    else:
+        st.info("No se encontraron fechas válidas en los archivos cargados.")
+    
     st.subheader("📅 1. Filtrado por Fechas (Opcional)")
     st.info("Define el rango de fechas ANTES de procesar.")
 
@@ -210,6 +341,7 @@ if uploaded_files:
             except Exception as e:
                 st.error(f"❌ Error: {file_name}: {e}")
                 import traceback
+
                 st.code(traceback.format_exc())
 
             progress_bar.progress(idx / float(len(uploaded_files)))
@@ -228,30 +360,30 @@ if has_processed_data():
 
     if selected_file:
         df_current = st.session_state.processed_data[selected_file]
-        
+
         # Limpiar índices inválidos
         clean_invalid_indices(selected_file)
-        
+
         removed_indices = get_samples_to_remove(selected_file)
         sample_groups = get_sample_groups(selected_file)
 
         # Estadísticas
         stats = get_file_statistics(selected_file)
         col1, col2, col3, col4 = st.columns(4)
-        col1.metric("📊 Total", stats['total'])
-        col2.metric("🗑️ Eliminar", stats['eliminar'])
-        col3.metric("🏷️ Agrupadas", stats['agrupadas'])
-        col4.metric("✅ Finales", stats['finales'])
+        col1.metric("📊 Total", stats["total"])
+        col2.metric("🗑️ Eliminar", stats["eliminar"])
+        col3.metric("🏷️ Agrupadas", stats["agrupadas"])
+        col4.metric("✅ Finales", stats["finales"])
 
         # Mostrar resumen de última aplicación
         summary = get_apply_summary(selected_file)
         if summary:
             parts = []
-            if summary['eliminar'] > 0:
+            if summary["eliminar"] > 0:
                 parts.append(f"{summary['eliminar']} para eliminar")
-            if summary['grupos'] > 0:
+            if summary["grupos"] > 0:
                 parts.append(f"{summary['grupos']} a grupos")
-            
+
             if parts:
                 st.success(f"✅ Última actualización: {summary['count']} acciones aplicadas ({', '.join(parts)})")
 
@@ -259,16 +391,16 @@ if has_processed_data():
 
         # LEYENDA DE GRUPOS
         st.subheader("🏷️ Leyenda de Grupos")
-        group_keys = ["Set 1", "Set 2", "Set 3", "Set 4"]
-        for group_key in group_keys:
-            with st.expander(f"{SAMPLE_GROUPS[group_key]['emoji']} {group_key}", expanded=False):
+        for group_key in GROUP_KEYS:
+            # ✅ aquí: etiqueta + (Set X)
+            with st.expander(group_display_name_with_key(group_key), expanded=False):
                 c1, c2 = st.columns([1, 2])
                 with c1:
                     new_label = st.text_input(
                         "Etiqueta:",
                         value=get_group_label(group_key),
                         key=f"label_{selected_file}_{group_key}",
-                        max_chars=30
+                        max_chars=30,
                     )
                     if new_label != get_group_label(group_key):
                         update_group_label(group_key, new_label)
@@ -278,7 +410,7 @@ if has_processed_data():
                         value=get_group_description(group_key),
                         key=f"desc_{selected_file}_{group_key}",
                         max_chars=200,
-                        height=100
+                        height=100,
                     )
                     if new_desc != get_group_description(group_key):
                         update_group_description(group_key, new_desc)
@@ -307,7 +439,7 @@ if has_processed_data():
                     for i, item in enumerate(pending):
                         action_txt = item["action"]
                         if item["action"] == "Asignar a Grupo":
-                            action_txt += f" → {item.get('group', 'none')}"
+                            action_txt += f" → {group_display_name(item.get('group', 'Set 1'))}"
                         st.write(f"{i+1}. Muestra **{item['idx']}**: {action_txt}")
 
             colA, colB, colC = st.columns([2, 2, 1])
@@ -315,15 +447,23 @@ if has_processed_data():
                 spectra_action = st.radio(
                     "Acción:",
                     ["Marcar para Eliminar", "Asignar a Grupo"],
-                    key=f"spectra_action_{selected_file}"
+                    key=f"spectra_action_{selected_file}",
                 )
             with colB:
                 if spectra_action == "Asignar a Grupo":
-                    spectra_target = st.selectbox(
+                    options_disp = group_options_display()
+                    current_key = st.session_state.get(f"spectra_target_{selected_file}", "Set 1")
+                    current_disp = group_display_name(current_key) if current_key in GROUP_KEYS else options_disp[0]
+
+                    spectra_target_disp = st.selectbox(
                         "Grupo:",
-                        ["Set 1", "Set 2", "Set 3", "Set 4"],
-                        key=f"spectra_target_{selected_file}"
+                        options_disp,
+                        index=options_disp.index(current_disp) if current_disp in options_disp else 0,
+                        key=f"spectra_target_disp_{selected_file}",
                     )
+                    spectra_target = display_to_group_key(spectra_target_disp)
+                    st.session_state[f"spectra_target_{selected_file}"] = spectra_target
+
             with colC:
                 spectra_multi = st.checkbox("Lasso/Box", value=False, key=f"spectra_multi_{selected_file}")
 
@@ -334,7 +474,7 @@ if has_processed_data():
                 sample_groups,
                 st.session_state.group_labels,
                 SAMPLE_GROUPS,
-                PIXEL_RE
+                PIXEL_RE,
             )
 
             if fig_spectra:
@@ -350,7 +490,7 @@ if has_processed_data():
                         select_event=spectra_multi,
                         hover_event=False,
                         override_height=700,
-                        key=f"spectra_{selected_file}_v{get_editor_version(selected_file)}"
+                        key=f"spectra_{selected_file}_v{get_editor_version(selected_file)}",
                     )
 
                     if events:
@@ -372,17 +512,28 @@ if has_processed_data():
                                         selected_file,
                                         clicked_idx,
                                         spectra_action,
-                                        spectra_target if spectra_action == "Asignar a Grupo" else None
+                                        spectra_target if spectra_action == "Asignar a Grupo" else None,
                                     )
 
                                 pending_count = len(get_pending_selections(selected_file))
-                                st.toast(f"✅ {len(clicked_indices)} muestra(s) agregadas ({pending_count} pendientes)", icon="📍")
+
+                                if spectra_action == "Asignar a Grupo" and spectra_target:
+                                    st.toast(
+                                        f"➕ {len(clicked_indices)} muestra(s) a pendientes → grupo: {group_display_name(spectra_target)} ({pending_count} pendientes)",
+                                        icon="📍",
+                                    )
+                                else:
+                                    st.toast(
+                                        f"➕ {len(clicked_indices)} muestra(s) a pendientes → acción: Eliminar ({pending_count} pendientes)",
+                                        icon="📍",
+                                    )
             else:
                 st.warning("No hay datos espectrales")
 
         except Exception as e:
             st.error(f"Error: {e}")
             import traceback
+
             st.code(traceback.format_exc())
 
         # BOTONES DEBAJO DE ESPECTROS
@@ -396,7 +547,7 @@ if has_processed_data():
                     use_container_width=True,
                     type="primary",
                     disabled=not has_pending_selections(selected_file),
-                    key=f"apply_spectra_{selected_file}"
+                    key=f"apply_spectra_{selected_file}",
                 ):
                     apply_pending_selections(selected_file)
                     st.rerun()
@@ -406,10 +557,18 @@ if has_processed_data():
                     "🗑️ Limpiar Pendientes",
                     use_container_width=True,
                     disabled=not has_pending_selections(selected_file),
-                    key=f"clear_spectra_{selected_file}"
+                    key=f"clear_spectra_{selected_file}",
                 ):
-                    clear_pending_selections(selected_file)
+                    n_cleared = clear_pending_selections(selected_file)
+
+                    # Evita reenganche del último evento
                     update_last_event_id(selected_file, "spectra", "")
+                    update_last_event_id(selected_file, "parity", "")
+
+                    st.toast(
+                        f"🧹 {n_cleared} acción(es) eliminada(s) de pendientes",
+                        icon="🗑️",
+                    )
                     st.rerun()
 
             with b3:
@@ -417,7 +576,7 @@ if has_processed_data():
                     "🔄 Confirmar Eliminación",
                     use_container_width=True,
                     disabled=(len(removed_indices) == 0),
-                    key=f"delete_spectra_{selected_file}"
+                    key=f"delete_spectra_{selected_file}",
                 ):
                     deleted_count = confirm_sample_deletion(selected_file)
                     st.success(f"✅ {deleted_count} muestras eliminadas")
@@ -451,7 +610,7 @@ if has_processed_data():
                         for i, item in enumerate(pending):
                             action_txt = item["action"]
                             if item["action"] == "Asignar a Grupo":
-                                action_txt += f" → {item.get('group', 'none')}"
+                                action_txt += f" → {group_display_name(item.get('group', 'Set 1'))}"
                             st.write(f"{i+1}. Muestra **{item['idx']}**: {action_txt}")
 
                 colA, colB, colC = st.columns([2, 2, 1])
@@ -459,15 +618,23 @@ if has_processed_data():
                     parity_action = st.radio(
                         "Acción:",
                         ["Marcar para Eliminar", "Asignar a Grupo"],
-                        key=f"parity_action_{selected_file}"
+                        key=f"parity_action_{selected_file}",
                     )
                 with colB:
                     if parity_action == "Asignar a Grupo":
-                        parity_target = st.selectbox(
+                        options_disp = group_options_display()
+                        current_key = st.session_state.get(f"parity_target_{selected_file}", "Set 1")
+                        current_disp = group_display_name(current_key) if current_key in GROUP_KEYS else options_disp[0]
+
+                        parity_target_disp = st.selectbox(
                             "Grupo:",
-                            ["Set 1", "Set 2", "Set 3", "Set 4"],
-                            key=f"parity_target_{selected_file}"
+                            options_disp,
+                            index=options_disp.index(current_disp) if current_disp in options_disp else 0,
+                            key=f"parity_target_disp_{selected_file}",
                         )
+                        parity_target = display_to_group_key(parity_target_disp)
+                        st.session_state[f"parity_target_{selected_file}"] = parity_target
+
                 with colC:
                     parity_multi = st.checkbox("Lasso/Box", value=True, key=f"parity_multi_{selected_file}")
 
@@ -486,7 +653,7 @@ if has_processed_data():
                     removed_indices,
                     sample_groups,
                     st.session_state.group_labels,
-                    SAMPLE_GROUPS
+                    SAMPLE_GROUPS,
                 )
 
                 if not plots:
@@ -515,7 +682,7 @@ if has_processed_data():
                                 select_event=parity_multi,
                                 hover_event=False,
                                 override_height=600,
-                                key=f"parity_{selected_file}_{selected_param}_v{get_editor_version(selected_file)}"
+                                key=f"parity_{selected_file}_{selected_param}_v{get_editor_version(selected_file)}",
                             )
 
                             if events:
@@ -532,11 +699,21 @@ if has_processed_data():
                                                 selected_file,
                                                 clicked_idx,
                                                 parity_action,
-                                                parity_target if parity_action == "Asignar a Grupo" else None
+                                                parity_target if parity_action == "Asignar a Grupo" else None,
                                             )
 
                                         pending_count = len(get_pending_selections(selected_file))
-                                        st.toast(f"✅ {len(clicked_indices)} muestra(s) agregadas ({pending_count} pendientes)", icon="📍")
+
+                                        if parity_action == "Asignar a Grupo" and parity_target:
+                                            st.toast(
+                                                f"➕ {len(clicked_indices)} muestra(s) a pendientes → grupo: {group_display_name(parity_target)} ({pending_count} pendientes)",
+                                                icon="📍",
+                                            )
+                                        else:
+                                            st.toast(
+                                                f"➕ {len(clicked_indices)} muestra(s) a pendientes → acción: Eliminar ({pending_count} pendientes)",
+                                                icon="📍",
+                                            )
 
                     with tab2:
                         st.plotly_chart(fig_res, use_container_width=True)
@@ -546,6 +723,7 @@ if has_processed_data():
             except Exception as e:
                 st.error(f"Error: {e}")
                 import traceback
+
                 st.code(traceback.format_exc())
 
             # BOTONES DEBAJO DE PARITY
@@ -559,7 +737,7 @@ if has_processed_data():
                         use_container_width=True,
                         type="primary",
                         disabled=not has_pending_selections(selected_file),
-                        key=f"apply_parity_{selected_file}"
+                        key=f"apply_parity_{selected_file}",
                     ):
                         apply_pending_selections(selected_file)
                         st.rerun()
@@ -569,10 +747,17 @@ if has_processed_data():
                         "🗑️ Limpiar Pendientes",
                         use_container_width=True,
                         disabled=not has_pending_selections(selected_file),
-                        key=f"clear_parity_{selected_file}"
+                        key=f"clear_parity_{selected_file}",
                     ):
-                        clear_pending_selections(selected_file)
+                        n_cleared = clear_pending_selections(selected_file)
+
                         update_last_event_id(selected_file, "parity", "")
+                        update_last_event_id(selected_file, "spectra", "")
+
+                        st.toast(
+                            f"🧹 {n_cleared} acción(es) eliminada(s) de pendientes",
+                            icon="🗑️",
+                        )
                         st.rerun()
 
                 with b3:
@@ -580,7 +765,7 @@ if has_processed_data():
                         "🔄 Confirmar Eliminación",
                         use_container_width=True,
                         disabled=(len(removed_indices) == 0),
-                        key=f"delete_parity_{selected_file}"
+                        key=f"delete_parity_{selected_file}",
                     ):
                         deleted_count = confirm_sample_deletion(selected_file)
                         st.success(f"✅ {deleted_count} muestras eliminadas")
@@ -589,12 +774,14 @@ if has_processed_data():
         st.markdown("---")
 
         # =============================================================================
-        # TABLA INTERACTIVA
+        # TABLA INTERACTIVA (PATCH SIN format_func)
         # =============================================================================
         st.subheader("🎯 Selección desde Tabla")
         st.info("✅ Marca para **Eliminar** o asigna un **Grupo** → Presiona **'Actualizar Selección'**")
 
         df_for_edit = df_current.copy()
+
+        # Interno (lo que espera el session_manager)
         df_for_edit.insert(0, "Grupo", "none")
         df_for_edit.insert(0, "Eliminar", False)
 
@@ -606,7 +793,13 @@ if has_processed_data():
             if idx_ in df_for_edit.index:
                 df_for_edit.at[idx_, "Grupo"] = grp_
 
-        display_cols = ["Eliminar", "Grupo"]
+        # Visible y editable
+        df_for_edit.insert(1, "Grupo (Etiqueta)", "Sin grupo")
+        for idx_ in df_for_edit.index:
+            g = df_for_edit.at[idx_, "Grupo"]
+            df_for_edit.at[idx_, "Grupo (Etiqueta)"] = group_key_to_display(g)
+
+        display_cols = ["Eliminar", "Grupo (Etiqueta)"]
         for col in ["ID", "Date", "Note"]:
             if col in df_for_edit.columns:
                 display_cols.append(col)
@@ -619,25 +812,38 @@ if has_processed_data():
                 df_for_edit[display_cols],
                 column_config={
                     "Eliminar": st.column_config.CheckboxColumn("Eliminar", default=False),
-                    "Grupo": st.column_config.SelectboxColumn(
+                    "Grupo (Etiqueta)": st.column_config.SelectboxColumn(
                         "Grupo",
-                        options=["none", "Set 1", "Set 2", "Set 3", "Set 4"],
-                        default="none"
+                        options=group_options_display_table(),
+                        default="Sin grupo",
                     ),
                 },
-                disabled=[c for c in display_cols if c not in ["Eliminar", "Grupo"]],
+                disabled=[c for c in display_cols if c not in ["Eliminar", "Grupo (Etiqueta)"]],
                 hide_index=False,
                 use_container_width=True,
-                key=f"editor_{selected_file}_v{get_editor_version(selected_file)}"
+                key=f"editor_{selected_file}_v{get_editor_version(selected_file)}",
             )
 
-            # BOTONES DEBAJO DE TABLA
             st.markdown("---")
             c1, c2, c3, c4 = st.columns(4)
 
             with c1:
                 if st.button("🔄 Actualizar Selección", use_container_width=True, type="primary"):
-                    update_groups_from_editor(selected_file, edited_df)
+                    # Convertimos display -> key interna y llamamos al session_manager
+                    tmp = pd.DataFrame(index=edited_df.index)
+                    tmp["Eliminar"] = edited_df["Eliminar"].astype(bool)
+
+                    mapped = {}
+                    for idx_ in edited_df.index:
+                        disp = str(edited_df.at[idx_, "Grupo (Etiqueta)"])
+                        if disp == "Sin grupo":
+                            mapped[idx_] = "none"
+                        else:
+                            mapped[idx_] = display_to_group_key(disp)
+                    tmp["Grupo"] = pd.Series(mapped)
+
+                    update_groups_from_editor(selected_file, tmp)
+
                     stats = get_file_statistics(selected_file)
                     st.success(f"✅ Actualizado: {stats['eliminar']} eliminar, {stats['agrupadas']} agrupadas")
                     st.rerun()
@@ -652,7 +858,7 @@ if has_processed_data():
                 if st.button(
                     "↩️ Limpiar Todo",
                     use_container_width=True,
-                    disabled=(len(removed_indices) == 0 and len(sample_groups) == 0)
+                    disabled=(len(removed_indices) == 0 and len(sample_groups) == 0),
                 ):
                     clear_all_selections(selected_file)
                     st.rerun()
@@ -689,12 +895,14 @@ if has_processed_data():
     for fname in get_processed_files():
         stats = get_file_statistics(fname)
         df = st.session_state.processed_data[fname]
-        summary_data.append({
-            "Archivo": fname,
-            "Muestras": stats['total'],
-            "Agrupadas": stats['agrupadas'],
-            "Parámetros": len(get_parameter_columns(df, "Result "))
-        })
+        summary_data.append(
+            {
+                "Archivo": fname,
+                "Muestras": stats["total"],
+                "Agrupadas": stats["agrupadas"],
+                "Parámetros": len(get_parameter_columns(df, "Result ")),
+            }
+        )
     st.dataframe(pd.DataFrame(summary_data), use_container_width=True, hide_index=True)
 
     st.markdown("---")
@@ -705,7 +913,7 @@ if has_processed_data():
         for idx, file_name in enumerate(get_processed_files(), start=1):
             try:
                 df = st.session_state.processed_data[file_name]
-                
+
                 if len(df) == 0:
                     st.warning(f"⚠️ {file_name}: No hay datos")
                     continue
@@ -719,7 +927,7 @@ if has_processed_data():
                     st.session_state.group_labels,
                     st.session_state.group_descriptions,
                     SAMPLE_GROUPS,
-                    PIXEL_RE
+                    PIXEL_RE,
                 )
 
                 results.append(ReportResult(name=file_name, html=html, csv=df))
@@ -743,7 +951,7 @@ if has_processed_data():
                     data=zip_buffer.getvalue(),
                     file_name="reports.zip",
                     mime="application/zip",
-                    use_container_width=True
+                    use_container_width=True,
                 )
                 st.markdown("---")
 
@@ -754,6 +962,6 @@ if has_processed_data():
                     data=r.html,
                     file_name=f"{r.name}.html",
                     mime="text/html",
-                    key=f"dl_{r.name}"
+                    key=f"dl_{r.name}",
                 )
                 st.markdown("---")
