@@ -88,6 +88,9 @@ class ReportConsolidatorV2:
                 self.predictions_html
             ))
         
+        # Añadir sección "Acerca de Este Informe" al final
+        sections_html.append(self._generate_about_section())
+        
         # Cargar CSS (todo desde archivo)
         buchi_css = load_buchi_css()
         
@@ -223,54 +226,6 @@ class ReportConsolidatorV2:
             </div>
             """
         
-        descripcion = """
-        <details open style="margin-top: 25px;">
-            <summary style="cursor: pointer; padding: 20px; background-color: #ffffff; border-radius: 8px; border: 1px solid #dee2e6; list-style: none; user-select: none;">
-                <span style="font-size: 1.2em; font-weight: bold; color: #000000;">📖 Acerca de Este Informe</span>
-                <span style="float: right; color: #6c757d;">▶</span>
-            </summary>
-            
-            <div style="padding: 25px; background-color: #ffffff; border-radius: 0 0 8px 8px; border: 1px solid #dee2e6; border-top: none; margin-top: -1px;">
-                <p style="line-height: 1.6; margin-bottom: 20px; color: #333;">
-                    Este informe consolida los resultados de los procedimientos de mantenimiento preventivo y validación 
-                    realizados en el espectrómetro NIR.
-                </p>
-                
-                <div style="margin-top: 25px;">
-                    <h4 style="color: #000000; margin-bottom: 15px;">🔧 Procedimientos Incluidos:</h4>
-                    
-                    <div style="margin-bottom: 20px; padding-left: 15px;">
-                        <strong style="color: #64B445; font-size: 1.05em;">📐 Baseline Adjustment</strong>
-                        <p style="margin: 8px 0 0 20px; line-height: 1.6; color: #444;">
-                            Corrección del baseline tras cambio de lámpara usando el White Standard Reference.
-                        </p>
-                    </div>
-                    
-                    <div style="margin-bottom: 20px; padding-left: 15px;">
-                        <strong style="color: #289A93; font-size: 1.05em;">✅ Validación Óptica</strong>
-                        <p style="margin: 8px 0 0 20px; line-height: 1.6; color: #444;">
-                            Verificación de alineación óptica mediante kit de standards certificados.
-                        </p>
-                    </div>
-                    
-                    <div style="margin-bottom: 20px; padding-left: 15px;">
-                        <strong style="color: #2196f3; font-size: 1.05em;">🔬 Predicciones</strong>
-                        <p style="margin: 8px 0 0 20px; line-height: 1.6; color: #444;">
-                            Análisis comparativo de predicciones entre diferentes lámparas.
-                        </p>
-                    </div>
-                </div>
-                
-                <div style="margin-top: 25px; padding: 15px; background-color: #f8f9fa; border-radius: 5px;">
-                    <p style="margin: 0; color: #6c757d; font-size: 0.95em;">
-                        <strong>💡 Uso:</strong> Expanda cada sección para ver resúmenes. 
-                        Use "📄 Abrir Informe Completo" para gráficos interactivos.
-                    </p>
-                </div>
-            </div>
-        </details>
-        """
-        
         return f"""
         <div style="background-color: #f8f9fa; padding: 30px; border-radius: 10px; margin-bottom: 30px; border: 1px solid #ddd;">
             <h1 style="margin: 0; color: #000000;">Informe Consolidado de Mantenimiento Preventivo NIR</h1>
@@ -278,7 +233,57 @@ class ReportConsolidatorV2:
             {contexto_section}
             {notas_section}
         </div>
-        {descripcion}
+        """
+    
+    def _generate_about_section(self) -> str:
+        """Genera la sección 'Acerca de Este Informe'"""
+        return """
+        <div class="consolidator-section" id="about">
+            <details open>
+                <summary class="consolidator-section-header">
+                    <h2>📖 Acerca de Este Informe</h2>
+                </summary>
+                
+                <div class="consolidator-parsed-content">
+                    <p style="line-height: 1.6; margin-bottom: 20px; color: #333;">
+                        Este informe consolida los resultados de los procedimientos de mantenimiento preventivo y validación 
+                        realizados en el espectrómetro NIR.
+                    </p>
+                    
+                    <div style="margin-top: 25px;">
+                        <h3 style="color: #000000; margin-bottom: 15px;">🔧 Procedimientos Incluidos:</h3>
+                        
+                        <div style="margin-bottom: 20px; padding-left: 15px;">
+                            <strong style="color: #64B445; font-size: 1.05em;">📐 Baseline Adjustment</strong>
+                            <p style="margin: 8px 0 0 20px; line-height: 1.6; color: #444;">
+                                Corrección del baseline tras cambio de lámpara usando el White Standard Reference.
+                            </p>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px; padding-left: 15px;">
+                            <strong style="color: #289A93; font-size: 1.05em;">✅ Validación Óptica</strong>
+                            <p style="margin: 8px 0 0 20px; line-height: 1.6; color: #444;">
+                                Verificación de alineación óptica mediante kit de standards certificados.
+                            </p>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px; padding-left: 15px;">
+                            <strong style="color: #2196f3; font-size: 1.05em;">🔬 Predicciones</strong>
+                            <p style="margin: 8px 0 0 20px; line-height: 1.6; color: #444;">
+                                Análisis comparativo de predicciones entre diferentes lámparas.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 25px; padding: 15px; background-color: #f8f9fa; border-radius: 5px;">
+                        <p style="margin: 0; color: #6c757d; font-size: 0.95em;">
+                            <strong>💡 Uso:</strong> Expanda cada sección para ver resúmenes. 
+                            Use "📄 Abrir Informe Completo" para gráficos interactivos.
+                        </p>
+                    </div>
+                </div>
+            </details>
+        </div>
         """
     
     def _determine_global_status(self) -> str:
@@ -461,36 +466,84 @@ class ReportConsolidatorV2:
         """Genera resumen parseado de predicciones"""
         info_general = self.predictions_data.get('info_general', {})
         
-        lamparas_html = ""
-        if info_general.get('Lámparas'):
-            lamparas_items = ''.join([f"<li>{lamp}</li>" for lamp in info_general['Lámparas']])
-            lamparas_html = f"""
-            <div style="margin-top: 15px;">
-                <strong>Lámparas Comparadas:</strong>
-                <ul style="margin-top: 10px;">{lamparas_items}</ul>
+        productos_lista = info_general.get('Productos', [])
+        lamparas = info_general.get('Lámparas', [])
+        
+        # Información general
+        general_table = f"""
+        <h3>📊 Información General</h3>
+        <p class="consolidator-description"><em>Resumen del análisis NIR.</em></p>
+        <table>
+            <tr><td><strong>Sensor NIR</strong></td><td>{info_general.get('Sensor NIR', 'N/A')}</td></tr>
+            <tr><td><strong>Fecha</strong></td><td>{info_general.get('Fecha del Reporte', 'N/A')}</td></tr>
+            <tr><td><strong>Productos Analizados</strong></td><td>{len(productos_lista)}</td></tr>
+            <tr><td><strong>Lámparas Comparadas</strong></td><td>{len(lamparas)}</td></tr>
+        </table>
+        """
+        
+        # Lista de productos
+        productos_html = ""
+        if productos_lista:
+            productos_items = ''.join([f"<li><strong>{prod}</strong></li>" for prod in productos_lista])
+            productos_html = f"""
+            <div style="margin-top: 20px;">
+                <h4 style="margin-bottom: 10px;">📦 Productos Analizados:</h4>
+                <ul style="margin-top: 5px; line-height: 1.8;">{productos_items}</ul>
             </div>
             """
+        
+        # Lista de lámparas
+        lamparas_html = ""
+        if lamparas:
+            lamparas_items = ''.join([f"<li><strong>{lamp}</strong></li>" for lamp in lamparas])
+            lamparas_html = f"""
+            <div style="margin-top: 20px;">
+                <h4 style="margin-bottom: 10px;">💡 Lámparas Comparadas:</h4>
+                <ul style="margin-top: 5px; line-height: 1.8;">{lamparas_items}</ul>
+            </div>
+            """
+        
+        # Tabla comparativa resumida (opcional - primeras muestras)
+        comparative_html = ""
+        productos_parseados = self.predictions_data.get('productos', [])
+        if productos_parseados and len(productos_parseados) > 0:
+            # Mostrar resumen del primer producto como ejemplo
+            primer_producto = productos_parseados[0]
+            if primer_producto.get('lamparas'):
+                sample_rows = []
+                for lamp_data in primer_producto['lamparas'][:3]:  # Primeras 3 lámparas
+                    lampara_nombre = lamp_data.get('Lámpara', 'N/A')
+                    n_muestras = lamp_data.get('N', 'N/A')
+                    sample_rows.append(f"""
+                        <tr>
+                            <td>{lampara_nombre}</td>
+                            <td>{n_muestras}</td>
+                        </tr>
+                    """)
+                
+                if sample_rows:
+                    comparative_html = f"""
+                    <div style="margin-top: 25px;">
+                        <h4 style="margin-bottom: 10px;">🔬 Ejemplo - {primer_producto['nombre']}:</h4>
+                        <table>
+                            <tr><th>Lámpara</th><th>Muestras (N)</th></tr>
+                            {''.join(sample_rows)}
+                        </table>
+                        <p style="margin-top: 10px; color: #666; font-size: 0.95em;">
+                            <em>Abra el informe completo para ver todos los productos y parámetros.</em>
+                        </p>
+                    </div>
+                    """
         
         charts_note = """
         <div class="consolidator-charts-note">
             <p style="margin: 0; color: #1976d2;">
-                <strong>📈 Ver Completo:</strong> Abra el informe para estadísticas y gráficos comparativos.
+                <strong>📈 Ver Completo:</strong> Abra el informe para estadísticas detalladas y gráficos comparativos por producto y parámetro.
             </p>
         </div>
         """
         
-        return f"""
-            <h3>📊 Información General</h3>
-            <p class="consolidator-description"><em>Resumen del análisis NIR.</em></p>
-            <table>
-                <tr><td><strong>Sensor NIR</strong></td><td>{info_general.get('Sensor NIR', 'N/A')}</td></tr>
-                <tr><td><strong>Fecha</strong></td><td>{info_general.get('Fecha del Reporte', 'N/A')}</td></tr>
-                <tr><td><strong>Productos</strong></td><td>{info_general.get('Productos Analizados', 'N/A')}</td></tr>
-                <tr><td><strong>Lámparas</strong></td><td>{info_general.get('Lámparas Comparadas', 'N/A')}</td></tr>
-            </table>
-            {lamparas_html}
-            {charts_note}
-        """
+        return f"{general_table}{productos_html}{lamparas_html}{comparative_html}{charts_note}"
     
     def _generate_index(self) -> str:
         """Genera items del índice lateral"""
@@ -501,6 +554,8 @@ class ReportConsolidatorV2:
             items.append('            <li><a href="#validation">✅ Validación Óptica</a></li>')
         if self.predictions_html:
             items.append('            <li><a href="#predictions">🔬 Predicciones</a></li>')
+        # Siempre añadir "Acerca de" al final
+        items.append('            <li><a href="#about">📖 Acerca de Este Informe</a></li>')
         return '\n'.join(items)
     
     def _generate_collapsible_section(self, section_id: str, title: str, 

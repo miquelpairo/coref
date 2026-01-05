@@ -6,6 +6,7 @@ import streamlit as st
 from datetime import datetime
 import sys
 from pathlib import Path
+import pandas as pd
 
 # Añadir path de módulos
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -48,50 +49,315 @@ def extract_service_info(baseline_html=None, validation_html=None, predictions_h
             parser = BaselineParser(baseline_html)
             parser.parse()
             baseline_info = parser.data.get('info_cliente', {})
-            info['sensor_id'] = baseline_info.get('ID del Sensor', '')
-            info['fecha'] = baseline_info.get('Fecha del Informe', '')
-            info['tecnico'] = baseline_info.get('Técnico', '')
-            info['cliente'] = baseline_info.get('Cliente', baseline_info.get('Empresa', ''))
+            
+            info['sensor_id'] = (baseline_info.get('N/S Sensor', '') or 
+                                baseline_info.get('N/S sensor', '') or
+                                baseline_info.get('N/S del Sensor', '') or
+                                baseline_info.get('ID del Sensor', '') or
+                                baseline_info.get('Sensor ID', '') or
+                                baseline_info.get('Número de Serie', ''))
+            
+            info['fecha'] = (baseline_info.get('Fecha del Proceso', '') or
+                           baseline_info.get('Fecha del Informe', '') or 
+                           baseline_info.get('Fecha', '') or
+                           baseline_info.get('Fecha del Servicio', ''))
+            
+            if info['fecha'] and ' ' in info['fecha']:
+                info['fecha'] = info['fecha'].split(' ')[0]
+            
+            info['tecnico'] = (baseline_info.get('Técnico', '') or 
+                             baseline_info.get('Técnico Responsable', ''))
+            
+            info['cliente'] = (baseline_info.get('Cliente', '') or 
+                             baseline_info.get('Empresa', ''))
+            
             info['ubicacion'] = baseline_info.get('Ubicación', '')
-            info['modelo'] = baseline_info.get('Modelo', '')
-        except Exception:
-            pass
+            
+            info['modelo'] = (baseline_info.get('Modelo', '') or 
+                            baseline_info.get('Modelo del Equipo', ''))
+            
+        except Exception as e:
+            print(f"Error parsing baseline: {e}")
     
     # Si falta info, intentar con validación
-    if validation_html and not info['sensor_id']:
+    if validation_html:
         try:
             parser = ValidationParser(validation_html)
             parser.parse()
             val_info = parser.data.get('info_servicio', {})
+            
             if not info['sensor_id']:
-                info['sensor_id'] = val_info.get('ID del Sensor', '')
+                info['sensor_id'] = (val_info.get('N/S Sensor', '') or
+                                   val_info.get('N/S sensor', '') or
+                                   val_info.get('ID del Sensor', '') or 
+                                   val_info.get('Sensor ID', ''))
             if not info['fecha']:
-                info['fecha'] = val_info.get('Fecha del Informe', '')
+                info['fecha'] = (val_info.get('Fecha del Proceso', '') or
+                               val_info.get('Fecha del Informe', '') or 
+                               val_info.get('Fecha', ''))
+                if info['fecha'] and ' ' in info['fecha']:
+                    info['fecha'] = info['fecha'].split(' ')[0]
+                    
             if not info['cliente']:
                 info['cliente'] = val_info.get('Cliente', '')
             if not info['modelo']:
-                info['modelo'] = val_info.get('Modelo del Equipo', '')
-        except Exception:
-            pass
+                info['modelo'] = (val_info.get('Modelo del Equipo', '') or 
+                                val_info.get('Modelo', ''))
+            if not info['tecnico']:
+                info['tecnico'] = val_info.get('Técnico', '')
+            if not info['ubicacion']:
+                info['ubicacion'] = val_info.get('Ubicación', '')
+                
+        except Exception as e:
+            print(f"Error parsing validation: {e}")
     
     # Si aún falta info, intentar con predicciones
-    if predictions_html and not info['sensor_id']:
+    if predictions_html:
         try:
             parser = PredictionsParser(predictions_html)
             parser.parse()
             pred_info = parser.data.get('info_general', {})
+            
             if not info['sensor_id']:
-                info['sensor_id'] = pred_info.get('Sensor NIR', '')
+                info['sensor_id'] = (pred_info.get('N/S Sensor', '') or
+                                   pred_info.get('N/S sensor', '') or
+                                   pred_info.get('Sensor NIR', '') or 
+                                   pred_info.get('ID del Sensor', ''))
             if not info['fecha']:
-                info['fecha'] = pred_info.get('Fecha del Reporte', '')
-        except Exception:
-            pass
+                info['fecha'] = (pred_info.get('Fecha del Proceso', '') or
+                               pred_info.get('Fecha del Reporte', '') or 
+                               pred_info.get('Fecha', ''))
+                if info['fecha'] and ' ' in info['fecha']:
+                    info['fecha'] = info['fecha'].split(' ')[0]
+                    
+            if not info['cliente']:
+                info['cliente'] = pred_info.get('Cliente', '')
+            
+            # ⭐ EXTRAER LÁMPARAS DE PREDICTIONS
+            lamparas = pred_info.get('Lámparas', [])
+            if lamparas:
+                if len(lamparas) >= 1 and not info['lampara_referencia']:
+                    info['lampara_referencia'] = lamparas[0]
+                if len(lamparas) >= 2 and not info['lampara_nueva']:
+                    info['lampara_nueva'] = lamparas[1]
+                
+        except Exception as e:
+            print(f"Error parsing predictions: {e}")
     
     # Si no hay fecha, usar fecha actual
     if not info['fecha']:
         info['fecha'] = datetime.now().strftime('%Y-%m-%d')
     
     return info
+
+
+def show_baseline_preview(baseline_data: dict):
+    """Muestra preview del baseline adjustment"""
+    
+    verificacion = baseline_data.get('verificacion', {})
+    
+    if verificacion.get('metricas'):
+        st.markdown("**📊 Métricas de Verificación Post-Ajuste:**")
+        
+        # Mostrar métricas en columnas
+        metric_cols = st.columns(len(verificacion['metricas']))
+        for idx, (key, value) in enumerate(verificacion['metricas'].items()):
+            with metric_cols[idx]:
+                st.metric(key, value)
+        
+        st.markdown("---")
+        
+        estado = verificacion.get('estado', 'UNKNOWN')
+        conclusion = verificacion.get('conclusion', '')
+        
+        status_map = {
+            'EXCELENTE': ('success', '✅'),
+            'BUENO': ('success', '✅'),
+            'ACEPTABLE': ('warning', '⚠️'),
+            'REQUIERE REVISIÓN': ('error', '❌'),
+            'UNKNOWN': ('info', 'ℹ️')
+        }
+        
+        status_type, icon = status_map.get(estado, ('info', 'ℹ️'))
+        
+        st.markdown(f"**Conclusión: {estado}**")
+        if status_type == 'success':
+            st.success(f"{icon} {conclusion}")
+        elif status_type == 'warning':
+            st.warning(f"{icon} {conclusion}")
+        elif status_type == 'error':
+            st.error(f"{icon} {conclusion}")
+        else:
+            st.info(f"{icon} {conclusion}")
+    else:
+        st.info("No hay datos de verificación disponibles")
+
+
+def show_validation_preview(validation_data: dict):
+    """Muestra preview de validación óptica"""
+    
+    # Resumen ejecutivo
+    exec_summary = validation_data.get('resumen_ejecutivo', {})
+    if exec_summary.get('metricas'):
+        st.markdown("**📊 Resumen Ejecutivo:**")
+        cols = st.columns(len(exec_summary['metricas']))
+        for idx, (key, value) in enumerate(exec_summary['metricas'].items()):
+            with cols[idx]:
+                st.metric(key, value)
+        
+        st.markdown("---")
+    
+    # Criterios de validación
+    criterios = validation_data.get('criterios_validacion', {})
+    if criterios.get('criterios'):
+        st.markdown("**📋 Criterios de Validación:**")
+        
+        criterios_data = []
+        for criterio in criterios['criterios']:
+            criterios_data.append({
+                'Parámetro': criterio['parametro'],
+                'Umbral': criterio['umbral'],
+                'Descripción': criterio['descripcion']
+            })
+        
+        df_criterios = pd.DataFrame(criterios_data)
+        st.dataframe(df_criterios, use_container_width=True, hide_index=True)
+        
+        st.markdown("---")
+    
+    # Estadísticas globales
+    global_stats = validation_data.get('estadisticas_globales', {})
+    if global_stats.get('metricas_agregadas'):
+        st.markdown("**📊 Estadísticas Globales:**")
+        
+        stats_data = []
+        for metric_data in global_stats.get('metricas_agregadas', []):
+            stats_data.append({
+                'Métrica': metric_data['metrica'],
+                'Mínimo': metric_data['minimo'],
+                'Máximo': metric_data['maximo'],
+                'Media': metric_data['media'],
+                'Desv. Est.': metric_data['desv_est']
+            })
+        
+        df_stats = pd.DataFrame(stats_data)
+        st.dataframe(df_stats, use_container_width=True, hide_index=True)
+        
+        st.markdown("---")
+    
+    # Resultados detallados
+    detailed = validation_data.get('resultados_detallados', [])
+    if detailed:
+        st.markdown("**🔬 Resultados por Estándar:**")
+        
+        df_data = []
+        for result in detailed:
+            status_icon = {
+                'ok': '✅',
+                'warning': '⚠️',
+                'fail': '❌'
+            }.get(result['estado'].lower(), 'ℹ️')
+            
+            df_data.append({
+                'Estándar': result['estandar'],
+                'Correlación': result['correlacion'],
+                'Max Δ': result['max_diff'],
+                'RMS': result['rms'],
+                'Estado': f"{status_icon} {result['estado']}"
+            })
+        
+        df = pd.DataFrame(df_data)
+        st.dataframe(df, use_container_width=True, hide_index=True)
+
+
+def show_predictions_preview(predictions_data: dict):
+    """Muestra preview de predicciones"""
+    
+    info_general = predictions_data.get('info_general', {})
+    
+    st.markdown("**📊 Información General:**")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.metric("Sensor NIR", info_general.get('Sensor NIR', 'N/A'))
+        st.metric("Fecha", info_general.get('Fecha del Reporte', 'N/A'))
+    
+    with col2:
+        productos = info_general.get('Productos', [])
+        lamparas = info_general.get('Lámparas', [])
+        st.metric("Productos Analizados", len(productos))
+        st.metric("Lámparas Comparadas", len(lamparas))
+    
+    st.markdown("---")
+    
+    # Mostrar listas
+    col_list1, col_list2 = st.columns(2)
+    
+    with col_list1:
+        if productos:
+            st.markdown("**📦 Productos:**")
+            for producto in productos:
+                st.markdown(f"- {producto}")
+    
+    with col_list2:
+        if lamparas:
+            st.markdown("**💡 Lámparas:**")
+            for lampara in lamparas:
+                st.markdown(f"- {lampara}")
+
+
+def show_reports_preview(baseline_html, validation_html, predictions_html):
+    """Muestra preview consolidado de todos los informes en expandables"""
+    st.markdown("---")
+    st.markdown("### 📊 Vista Previa de Información Extraída")
+    
+    # Contar informes
+    files_loaded = sum([
+        baseline_html is not None,
+        validation_html is not None,
+        predictions_html is not None
+    ])
+    
+    if files_loaded == 0:
+        return
+    
+    # Parsear los informes
+    baseline_data = None
+    validation_data = None
+    predictions_data = None
+    
+    try:
+        if baseline_html:
+            with st.spinner("Analizando Baseline..."):
+                parser = BaselineParser(baseline_html)
+                baseline_data = parser.parse()
+        
+        if validation_html:
+            with st.spinner("Analizando Validación..."):
+                parser = ValidationParser(validation_html)
+                validation_data = parser.parse()
+        
+        if predictions_html:
+            with st.spinner("Analizando Predicciones..."):
+                parser = PredictionsParser(predictions_html)
+                predictions_data = parser.parse()
+    except Exception as e:
+        st.error(f"Error al analizar informes: {e}")
+        return
+    
+    # Mostrar cada informe en su propio expandable
+    if baseline_data:
+        with st.expander("📐 **Baseline Adjustment**", expanded=True):
+            show_baseline_preview(baseline_data)
+    
+    if validation_data:
+        with st.expander("✅ **Validación Óptica**", expanded=True):
+            show_validation_preview(validation_data)
+    
+    if predictions_data:
+        with st.expander("🔬 **Predicciones con Muestras Reales**", expanded=True):
+            show_predictions_preview(predictions_data)
 
 
 def main():
@@ -113,9 +379,10 @@ def main():
         
         **Proceso:**
         1. Sube al menos 1 archivo HTML (puedes subir 2 o 3)
-        2. Revisa y edita la información del servicio extraída automáticamente
-        3. Haz clic en "Generar Informe Consolidado"
-        4. Descarga el informe final en formato HTML
+        2. Revisa la vista previa de información extraída
+        3. Edita la información del servicio si es necesario
+        4. Haz clic en "Generar Informe Consolidado"
+        5. Descarga el informe final en formato HTML
         
         **El informe consolidado incluye:**
         - ✅ Resumen ejecutivo con estado global
@@ -129,7 +396,7 @@ def main():
     
     # Sección de carga de archivos
     st.markdown("### 📁 Carga de archivos")
-    st.info(" Carga los informes de baseline adjustement, standards validation y predictions")
+    st.info("📌 Carga los informes de baseline adjustment, standards validation y predictions")
     
     col1, col2, col3 = st.columns(3)
     
@@ -190,24 +457,50 @@ def main():
     validation_html = validation_file.read().decode('utf-8') if validation_file else None
     predictions_html = predictions_file.read().decode('utf-8') if predictions_file else None
     
-    # Extraer información de servicio automáticamente
-    if 'consolidator_service_info' not in st.session_state:
-        st.session_state.consolidator_service_info = extract_service_info(
-            baseline_html, validation_html, predictions_html
-        )
+    # FORZAR re-extracción cuando cambian los archivos
+    # Crear una clave única basada en los archivos cargados
+    current_files_key = f"{baseline_file.name if baseline_file else ''}_" \
+                       f"{validation_file.name if validation_file else ''}_" \
+                       f"{predictions_file.name if predictions_file else ''}"
+    
+    # Si es la primera vez O los archivos han cambiado, extraer info
+    if ('consolidator_files_key' not in st.session_state or 
+        st.session_state.consolidator_files_key != current_files_key):
+        
+        with st.spinner("🔍 Extrayendo información de los archivos..."):
+            st.session_state.consolidator_files_key = current_files_key
+            st.session_state.consolidator_service_info = extract_service_info(
+                baseline_html, validation_html, predictions_html
+            )
+        st.success("✅ Información extraída automáticamente")
+    
+    # 🆕 PREVIEW DE INFORMES
+    show_reports_preview(baseline_html, validation_html, predictions_html)
+    
+    st.markdown("---")
     
     # Formulario editable de información de servicio
     st.markdown("### 📋 Información del Servicio")
-    st.markdown("*Los datos se extraen automáticamente de los informes. Puedes editarlos antes de generar el consolidado.*")
+    
+    col_extract1, col_extract2 = st.columns([3, 1])
+    with col_extract1:
+        st.markdown("*Los datos se extraen automáticamente. Puedes editarlos antes de generar el consolidado.*")
+    with col_extract2:
+        if st.button("🔄 Re-extraer", help="Volver a extraer datos de los archivos"):
+            with st.spinner("🔍 Re-extrayendo información..."):
+                st.session_state.consolidator_service_info = extract_service_info(
+                    baseline_html, validation_html, predictions_html
+                )
+            st.rerun()
     
     with st.form("service_info_form"):
         col1, col2 = st.columns(2)
         
         with col1:
             sensor_id = st.text_input(
-                "ID del Sensor",
+                "N/S Sensor",
                 value=st.session_state.consolidator_service_info.get('sensor_id', ''),
-                help="Identificador único del sensor NIR"
+                help="Número de serie del sensor NIR"
             )
             fecha = st.text_input(
                 "Fecha del Servicio",

@@ -227,7 +227,8 @@ class BaselineParser:
             self.parse()
         
         summary = {
-            'sensor_id': self.data.get('info_cliente', {}).get('ID del Sensor', 'N/A'),
+            'sensor_id': (self.data.get('info_cliente', {}).get('N/S sensor', '') or 
+                        self.data.get('info_cliente', {}).get('ID del Sensor', 'N/A')),  # <-- CAMBIAR AQUÍ
             'fecha': self.data.get('info_cliente', {}).get('Fecha', 'N/A'),
             'configuracion': self.data.get('detalles_proceso', {}).get('Configuración', 'N/A'),
             'correccion_maxima': self.data.get('estadisticas_correccion', {}).get('Corrección Máxima', 'N/A'),

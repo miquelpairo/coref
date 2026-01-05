@@ -28,6 +28,7 @@ class PredictionsParser:
         # Buscar info-box con información general
         info_box = self.soup.find('div', class_='info-box')
         if info_box:
+            # Extraer info-items (los conteos)
             info_items = info_box.find_all('div', class_='info-item')
             for item in info_items:
                 label = item.find('span', class_='info-label')
@@ -38,11 +39,25 @@ class PredictionsParser:
                     label_text = label_text.replace(':', '').strip()
                     info[label_text] = value.get_text(strip=True)
             
-            # Extraer lista de lámparas
-            lamparas_ul = info_box.find('ul')
-            if lamparas_ul:
-                lamparas = [li.get_text(strip=True) for li in lamparas_ul.find_all('li')]
-                info['Lámparas'] = lamparas
+            # ⭐ NUEVO: Extraer tabla con listas de productos y lámparas
+            table = info_box.find('table')
+            if table:
+                for row in table.find_all('tr'):
+                    th = row.find('th')
+                    td = row.find('td')
+                    if th and td:
+                        key = th.get_text(strip=True)
+                        value_text = td.get_text(strip=True)
+                        
+                        # Convertir texto separado por comas en lista
+                        if key == 'Productos':
+                            # "Soja, Maiz, TrigoTriti, Colza, Cerdos" -> ['Soja', 'Maiz', ...]
+                            productos_list = [p.strip() for p in value_text.split(',')]
+                            info['Productos'] = productos_list
+                        elif key == 'Lámparas':
+                            # "L1.2 BL, L1.3 BL" -> ['L1.2 BL', 'L1.3 BL']
+                            lamparas_list = [l.strip() for l in value_text.split(',')]
+                            info['Lámparas'] = lamparas_list
         
         return info
     
@@ -67,13 +82,16 @@ class PredictionsParser:
             
             # Extraer headers (parámetros)
             headers = []
-            header_row = table.find('thead').find('tr')
-            for th in header_row.find_all('th'):
-                # Extraer texto del header y subheader si existe
-                text = th.get_text(separator='|', strip=True)
-                # Limpiar formato
-                text = text.replace('(Media ± SD)', '').strip()
-                headers.append(text)
+            thead = table.find('thead')
+            if thead:
+                header_row = thead.find('tr')
+                if header_row:
+                    for th in header_row.find_all('th'):
+                        # Extraer texto del header y subheader si existe
+                        text = th.get_text(separator='|', strip=True)
+                        # Limpiar formato
+                        text = text.replace('(Media ± SD)', '').strip()
+                        headers.append(text)
             
             # Extraer datos por lámpara
             lamparas_data = []
@@ -92,7 +110,7 @@ class PredictionsParser:
             
             productos.append({
                 'nombre': producto_nombre,
-                'parametros': headers[2:],  # Skip Lámpara y N
+                'parametros': headers[2:] if len(headers) > 2 else [],  # Skip Lámpara y N
                 'lamparas': lamparas_data
             })
         
@@ -134,7 +152,7 @@ class PredictionsParser:
             'productos_analizados': info_general.get('Productos Analizados', 'N/A'),
             'lamparas_comparadas': info_general.get('Lámparas Comparadas', 'N/A'),
             'lista_lamparas': info_general.get('Lámparas', []),
-            'lista_productos': [p['nombre'] for p in productos],
+            'lista_productos': info_general.get('Productos', []),  # ⭐ CAMBIADO: Usar la lista extraída
             'variabilidad': variabilidad_info,
             'estado_global': self._determine_status()
         }
