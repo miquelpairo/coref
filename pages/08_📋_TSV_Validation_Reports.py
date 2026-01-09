@@ -8,6 +8,7 @@ Refactorizado para usar módulos especializados:
 - tsv_processing: Limpieza y procesamiento de TSV
 - selection_utils: Extracción de eventos de gráficos
 - plotly_utils: Gráficos y visualizaciones
+- tsv_statistics: Cálculo de estadísticas por grupo
 """
 
 from __future__ import annotations
@@ -45,12 +46,12 @@ from core.tsv_session_manager import (
     increment_editor_version,
     update_last_event_id,
     get_last_event_id,
-    clear_last_event_ids,  # ✅ NUEVO
+    clear_last_event_ids,
     update_group_label,
     update_group_description,
     get_group_label,
     get_group_description,
-    # Display helpers (los tienes en tu manager)
+    # Display helpers
     get_group_display_name,
     get_group_display_name_with_key,
     display_to_group_key,
@@ -69,6 +70,13 @@ from core.selection_utils import (
     extract_row_index_from_click,
     extract_row_indices_from_spectra_events,
     extract_row_indices_from_parity_events,
+)
+from core.tsv_statistics import (
+    calculate_group_statistics,
+    calculate_all_groups_statistics,
+    get_statistics_summary,
+    get_active_groups,
+    count_samples_per_group,
 )
 
 try:
@@ -111,7 +119,10 @@ with st.expander("ℹ️ Instrucciones de Uso"):
 - Selección desde tabla (checkboxes → añadir a pendientes → aplicar)
 - Grupos personalizables (se guarda Set 1..4 internamente, pero se muestra la etiqueta del usuario)
 
-**4. Generación de Reportes HTML**
+**4. Estadísticas por Grupo**
+- Visualiza R², RMSE, BIAS y N para cada grupo de validación
+
+**5. Generación de Reportes HTML**
 """
     )
 
@@ -207,7 +218,7 @@ if uploaded_files:
                 rows_before = len(df_filtered)
 
                 # -----------------------------
-                # APLICAR FILTRADO DE FECHAS (FIX)
+                # APLICAR FILTRADO DE FECHAS
                 # -----------------------------
                 if start_date is not None or end_date is not None:
                     if "Date" not in df_filtered.columns:
@@ -272,7 +283,7 @@ if has_processed_data():
     if selected_file:
         df_current = st.session_state.processed_data[selected_file]
 
-        # Limpieza defensiva (por si hubo cambios/filtrados/eliminación)
+        # Limpieza defensiva
         clean_invalid_indices(selected_file)
 
         removed_indices = get_samples_to_remove(selected_file)
@@ -475,7 +486,7 @@ if has_processed_data():
                     key=f"clear_spectra_{selected_file}",
                 ):
                     n_cleared = clear_pending_selections(selected_file)
-                    clear_last_event_ids(selected_file)  # ✅
+                    clear_last_event_ids(selected_file)
                     st.toast(f"🧹 {n_cleared} acción(es) eliminada(s) de pendientes", icon="🗑️")
                     st.rerun()
 
@@ -659,7 +670,7 @@ if has_processed_data():
                         key=f"clear_parity_{selected_file}",
                     ):
                         n_cleared = clear_pending_selections(selected_file)
-                        clear_last_event_ids(selected_file)  # ✅
+                        clear_last_event_ids(selected_file)
                         st.toast(f"🧹 {n_cleared} acción(es) eliminada(s) de pendientes", icon="🗑️")
                         st.rerun()
 
@@ -677,7 +688,7 @@ if has_processed_data():
         st.markdown("---")
 
         # =============================================================================
-        # TABLA INTERACTIVA (NUEVO FLUJO)
+        # TABLA INTERACTIVA
         # =============================================================================
         st.subheader("🎯 Selección desde Tabla")
         st.info("💡 **Nuevo flujo:** Marca checkboxes → Elige acción → Añade a pendientes → Aplica")
@@ -802,7 +813,6 @@ if has_processed_data():
                             icon="📍",
                         )
 
-                    # ⭐ UX: limpiar checkboxes -> re-render del editor (cambia key)
                     increment_editor_version(selected_file)
                     st.rerun()
 
@@ -824,7 +834,7 @@ if has_processed_data():
                     help="Limpia la lista de acciones pendientes",
                 ):
                     n_cleared = clear_pending_selections(selected_file)
-                    clear_last_event_ids(selected_file)  # ✅
+                    clear_last_event_ids(selected_file)
                     st.toast(f"🧹 {n_cleared} acción(es) eliminada(s) de pendientes", icon="🗑️")
                     st.rerun()
 
@@ -847,7 +857,7 @@ if has_processed_data():
                     help="Limpia todas las marcas y grupos",
                 ):
                     clear_all_selections(selected_file)
-                    clear_last_event_ids(selected_file)  # ✅ (extra defensivo)
+                    clear_last_event_ids(selected_file)
                     st.rerun()
 
         # Resumen visual
@@ -865,6 +875,93 @@ if has_processed_data():
                     emoji = SAMPLE_GROUPS[group_key]["emoji"]
                     summary_parts.append(f"**{count} en {emoji} {label}**")
             st.info("📊 " + " | ".join(summary_parts))
+
+        # =============================================================================
+        # ✨ NUEVA SECCIÓN: ESTADÍSTICAS POR GRUPO
+        # =============================================================================
+        st.markdown("---")
+        st.markdown("### 📊 Estadísticas por Grupo")
+
+        # Verificar si hay grupos asignados
+        active_groups = get_active_groups(sample_groups, removed_indices)
+
+        if not active_groups:
+            st.info("ℹ️ No hay muestras asignadas a grupos todavía. Asigna muestras a grupos para ver sus estadísticas.")
+        else:
+            param_names = extract_parameter_names(df_current)
+
+            if not param_names:
+                st.warning("⚠️ No hay parámetros disponibles para mostrar estadísticas")
+            else:
+                # Selector de parámetro para estadísticas
+                stats_param = st.selectbox(
+                    "Selecciona parámetro para estadísticas:",
+                    param_names,
+                    key=f"stats_param_{selected_file}",
+                    help="Elige el parámetro para el cual mostrar estadísticas por grupo"
+                )
+
+                st.markdown("---")
+
+                # Calcular estadísticas para todos los grupos
+                all_group_stats = calculate_all_groups_statistics(
+                    df_current,
+                    stats_param,
+                    removed_indices,
+                    sample_groups,
+                    GROUP_KEYS
+                )
+
+                # Contar muestras por grupo
+                group_sample_counts = count_samples_per_group(sample_groups, removed_indices, GROUP_KEYS)
+
+                # Mostrar estadísticas de cada grupo activo en expandibles
+                for group_key in GROUP_KEYS:
+                    if group_key not in active_groups:
+                        continue
+
+                    n_samples = group_sample_counts.get(group_key, 0)
+
+                    if n_samples == 0:
+                        continue
+
+                    display_name = get_group_display_name_with_key(group_key, SAMPLE_GROUPS)
+                    stats = all_group_stats.get(group_key)
+
+                    with st.expander(f"{display_name} ({n_samples} muestras)", expanded=True):
+                        if stats is None:
+                            st.warning(f"⚠️ No hay suficientes datos válidos para calcular estadísticas (mínimo 2 muestras con valores válidos)")
+                        else:
+                            # Mostrar métricas en columnas
+                            col1, col2, col3, col4 = st.columns(4)
+                            col1.metric("R²", f"{stats['r2']:.4f}")
+                            col2.metric("RMSE", f"{stats['rmse']:.3f}")
+                            col3.metric("BIAS", f"{stats['bias']:.3f}")
+                            col4.metric("N", stats['n'])
+
+                            # Mostrar descripción del grupo si existe
+                            desc = get_group_description(group_key)
+                            if desc:
+                                st.caption(f"📝 {desc}")
+
+                # Tabla resumen comparativa (opcional)
+                st.markdown("---")
+                st.subheader("📋 Resumen Comparativo")
+
+                summary_df = get_statistics_summary(
+                    all_group_stats,
+                    st.session_state.group_labels,
+                    SAMPLE_GROUPS
+                )
+
+                if not summary_df.empty:
+                    st.dataframe(
+                        summary_df,
+                        use_container_width=True,
+                        hide_index=True
+                    )
+                else:
+                    st.info("No hay estadísticas disponibles para mostrar")
 
 
 # =============================================================================

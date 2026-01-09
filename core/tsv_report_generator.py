@@ -2,7 +2,7 @@
 TSV Validation Reports - HTML Report Generator
 ===============================================
 Funciones para generar reportes HTML con grupos personalizados
-ACTUALIZADO: Leyendas en gráfico de espectros
+ACTUALIZADO: Leyendas en gráfico de espectros + Estadísticas por Grupo
 """
 
 from dataclasses import dataclass
@@ -16,6 +16,7 @@ import numpy as np
 from sklearn.metrics import mean_squared_error, r2_score
 
 from core.report_utils import load_buchi_css, get_sidebar_styles, get_common_report_styles
+from core.tsv_statistics import calculate_all_groups_statistics
 
 
 @dataclass
@@ -354,7 +355,7 @@ def generate_html_report(
     PIXEL_RE = None
 ) -> str:
     """
-    Genera HTML con Bootstrap tabs + sidebar BUCHI + CSS corporativo + GRUPOS.
+    Genera HTML con Bootstrap tabs + sidebar BUCHI + CSS corporativo + GRUPOS + ESTADÍSTICAS POR GRUPO.
     """
     if sample_groups is None:
         sample_groups = {}
@@ -389,6 +390,9 @@ def generate_html_report(
             fig_parity, fig_res, fig_hist, r2, rmse, bias, n = plots
             summary_data.append({"Parameter": param_name, "R2": r2, "RMSE": rmse, "BIAS": bias, "N": n})
 
+    # Verificar si hay grupos asignados
+    has_groups = any(g != 'none' for g in sample_groups.values())
+
     # Construcción del SIDEBAR
     sidebar_items = """
         <h2>📋 Índice</h2>
@@ -417,9 +421,9 @@ def generate_html_report(
             </li>
 '''
     
-    # Agregar leyenda de grupos al final del sidebar
-    if any(g != 'none' for g in sample_groups.values()):
-        sidebar_items += '<li><a href="#grupos-legend">Leyenda de Grupos</a></li>\n'
+    # Agregar sección de grupos al sidebar si existen
+    if has_groups:
+        sidebar_items += '<li><a href="#grupos-section">Grupos</a></li>\n'
     
     sidebar_items += '''
         </ul>
@@ -653,20 +657,24 @@ def generate_html_report(
         </div>
 """
 
-    # ===== LEYENDA DE GRUPOS (ÚLTIMO APARTADO) =====
-    if any(g != 'none' for g in sample_groups.values()):
+    # ===== SECCIÓN DE GRUPOS (LEYENDA + ESTADÍSTICAS) =====
+    if has_groups:
+        # Contar muestras por grupo
         group_counts = {}
         for g in sample_groups.values():
             if g != 'none':
                 group_counts[g] = group_counts.get(g, 0) + 1
         
         html_content += """
-        <div class="info-box" id="grupos-legend">
-            <h2>Leyenda de Grupos de Muestras</h2>
+        <div class="info-box" id="grupos-section">
+            <h2>Grupos</h2>
             <p class="text-caption">
                 <em>Las muestras han sido clasificadas en grupos personalizados para su análisis.</em>
             </p>
-            <table style="width: 100%; margin-top: 15px;">
+            
+            <!-- TABLA DE LEYENDA -->
+            <h3 style="margin-top: 30px; margin-bottom: 15px;">Leyenda de Grupos</h3>
+            <table style="width: 100%;">
                 <thead>
                     <tr>
                         <th>Símbolo</th>
@@ -700,6 +708,74 @@ def generate_html_report(
         html_content += """
                 </tbody>
             </table>
+"""
+
+        # ===== TABLA DE ESTADÍSTICAS POR GRUPO =====
+        if valid_params:
+            html_content += """
+            <h3 style="margin-top: 40px; margin-bottom: 15px;">Estadísticas por Grupo</h3>
+            <p class="text-caption">
+                <em>Métricas de rendimiento (R², RMSE, BIAS, N) para cada grupo de validación por parámetro.</em>
+            </p>
+"""
+            
+            # Calcular índices de muestras eliminadas (removed_indices)
+            # En el reporte HTML no tenemos muestras "eliminadas", todas las del df están presentes
+            removed_indices = set()
+            
+            # Crear una tabla por cada parámetro
+            for param_name, param_id, _ in valid_params:
+                # Calcular estadísticas de todos los grupos para este parámetro
+                all_stats = calculate_all_groups_statistics(
+                    df,
+                    param_name,
+                    removed_indices,
+                    sample_groups,
+                    ['Set 1', 'Set 2', 'Set 3', 'Set 4']
+                )
+                
+                # Filtrar solo grupos con datos
+                groups_with_stats = {k: v for k, v in all_stats.items() if v is not None and k in group_counts}
+                
+                if groups_with_stats:
+                    html_content += f"""
+            <h4 style="margin-top: 25px; color: #0051a5;">{param_name}</h4>
+            <table style="width: 100%; margin-top: 10px;">
+                <thead>
+                    <tr>
+                        <th>Grupo</th>
+                        <th>R²</th>
+                        <th>RMSE</th>
+                        <th>BIAS</th>
+                        <th>N</th>
+                    </tr>
+                </thead>
+                <tbody>
+"""
+                    
+                    for group_key in ['Set 1', 'Set 2', 'Set 3', 'Set 4']:
+                        if group_key in groups_with_stats:
+                            stats = groups_with_stats[group_key]
+                            group_config = SAMPLE_GROUPS[group_key]
+                            custom_label = group_labels.get(group_key, group_key)
+                            display_name = f"{group_config['emoji']} {custom_label}"
+                            
+                            html_content += f"""
+                    <tr>
+                        <td><strong>{display_name}</strong></td>
+                        <td>{stats['r2']:.4f}</td>
+                        <td>{stats['rmse']:.3f}</td>
+                        <td>{stats['bias']:.3f}</td>
+                        <td>{stats['n']}</td>
+                    </tr>
+"""
+                    
+                    html_content += """
+                </tbody>
+            </table>
+"""
+        
+        html_content += """
         </div>
 """
 
