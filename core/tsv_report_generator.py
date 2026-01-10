@@ -2,13 +2,14 @@
 TSV Validation Reports - HTML Report Generator
 ===============================================
 Funciones para generar reportes HTML con grupos personalizados
-ACTUALIZADO: Leyendas en gráfico de espectros + Estadísticas por Grupo
+ACTUALIZADO: Leyendas en gráfico de espectros + Estadísticas por Grupo + Filtro Visual por Año/Mes/ID/Note
 """
 
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple
 import re
+import json
 
 import pandas as pd
 import plotly.graph_objs as go
@@ -355,7 +356,7 @@ def generate_html_report(
     PIXEL_RE = None
 ) -> str:
     """
-    Genera HTML con Bootstrap tabs + sidebar BUCHI + CSS corporativo + GRUPOS + ESTADÍSTICAS POR GRUPO.
+    Genera HTML con Bootstrap tabs + sidebar BUCHI + CSS corporativo + GRUPOS + ESTADÍSTICAS POR GRUPO + FILTRO VISUAL (Año/Mes/ID/Note).
     """
     if sample_groups is None:
         sample_groups = {}
@@ -392,6 +393,24 @@ def generate_html_report(
 
     # Verificar si hay grupos asignados
     has_groups = any(g != 'none' for g in sample_groups.values())
+    
+    # Extraer años y meses disponibles
+    available_years = []
+    available_months = list(range(1, 13))
+    if 'Date' in df.columns:
+        df_temp = df.copy()
+        df_temp['Date'] = pd.to_datetime(df_temp['Date'], errors='coerce')
+        available_years = sorted(df_temp['Date'].dt.year.dropna().unique().astype(int).tolist())
+
+    # Embed full data as JSON for filtering
+    df_export = df.copy()
+    if 'Date' in df_export.columns:
+        df_export['Date'] = pd.to_datetime(df_export['Date'], errors='coerce').dt.strftime('%Y-%m-%d')
+    full_data_json = df_export.to_json(orient='records')
+    
+    # Convert sample_groups keys to strings for JSON (numpy.int64 -> int -> str)
+    sample_groups_json = {str(int(k)) if isinstance(k, (int, np.integer)) else str(k): v 
+                          for k, v in sample_groups.items()}
 
     # Construcción del SIDEBAR
     sidebar_items = """
@@ -428,6 +447,51 @@ def generate_html_report(
     sidebar_items += '''
         </ul>
 '''
+    
+    # Agregar filtro visual al sidebar
+    if available_years:
+        sidebar_items += '''
+        <div style="padding: 20px; border-top: 2px solid rgba(255,255,255,0.1); margin-top: 20px;">
+            <details class="sidebar-menu-details">
+                <summary style="cursor: pointer; font-weight: bold; color: white; padding: 8px 0; user-select: none; list-style: none;">
+                    📅 Filtro Visual
+                </summary>
+                <div style="margin-top: 10px;">
+                    <p style="color: rgba(255,255,255,0.7); font-size: 0.85rem; margin-bottom: 10px;">Solo afecta visualización</p>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <label style="color: white; font-size: 0.9rem; display: block; margin-bottom: 8px;">📅 Años</label>
+                        <div id="yearFilters" style="display: flex; flex-direction: column; gap: 5px;"></div>
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <label style="color: white; font-size: 0.9rem; display: block; margin-bottom: 8px;">📆 Meses (vacío = todos)</label>
+                        <div id="monthFilters" style="display: flex; flex-direction: column; gap: 5px; max-height: 150px; overflow-y: auto;"></div>
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <label style="color: white; font-size: 0.9rem; display: block; margin-bottom: 8px;">🔍 ID (contains)</label>
+                        <input type="text" id="idFilter" placeholder="e.g., 'ABC123'" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <label style="color: white; font-size: 0.9rem; display: block; margin-bottom: 8px;">📝 Note (contains)</label>
+                        <input type="text" id="noteFilter" placeholder="e.g., 'validation'" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">
+                    </div>
+                    
+                    <button onclick="applyVisualFilter()" style="background: #28a745; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: bold; width: 100%; margin-bottom: 10px; transition: all 0.2s;">
+                        🔄 Aplicar Filtros
+                    </button>
+                    
+                    <button onclick="resetVisualFilter()" style="background: #666; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-size: 13px; width: 100%;">
+                        ↩️ Resetear
+                    </button>
+                    
+                    <p id="filterIndicator" style="color: rgba(255,255,255,0.8); font-size: 0.85rem; margin-top: 10px; text-align: center;"></p>
+                </div>
+            </details>
+        </div>
+'''
 
     # Cargar CSS BUCHI
     buchi_css = load_buchi_css()
@@ -459,6 +523,45 @@ def generate_html_report(
 {buchi_css}
 {sidebar_css}
 {common_css}
+
+        /* Scrollbar sutil para filtros */
+        #monthFilters::-webkit-scrollbar {{
+            width: 6px;
+        }}
+        
+        #monthFilters::-webkit-scrollbar-track {{
+            background: transparent;
+        }}
+        
+        #monthFilters::-webkit-scrollbar-thumb {{
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }}
+        
+        #monthFilters::-webkit-scrollbar-thumb:hover {{
+            background-color: rgba(255, 255, 255, 0.5);
+        }}
+        
+        /* Estilos para checkboxes de filtro */
+        .filter-checkbox-label {{
+            display: flex;
+            align-items: center;
+            color: white;
+            font-size: 0.85rem;
+            cursor: pointer;
+            padding: 3px 5px;
+            border-radius: 3px;
+            transition: background-color 0.2s;
+        }}
+        
+        .filter-checkbox-label:hover {{
+            background-color: rgba(255, 255, 255, 0.1);
+        }}
+        
+        .filter-checkbox-label input {{
+            margin-right: 8px;
+            cursor: pointer;
+        }}
     </style>
 </head>
 <body>
@@ -789,8 +892,376 @@ def generate_html_report(
         </div>
     </div>
 
-    <script>
+<script>
+    // Embedded data
+    const fullData = {full_data_json};
+    const availableYears = {json.dumps(available_years)};
+    const availableMonths = {json.dumps(available_months)};
+    const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const sampleGroups = {json.dumps(sample_groups_json)};
+    const groupLabels = {json.dumps(group_labels)};
+    const SAMPLE_GROUPS = {json.dumps(SAMPLE_GROUPS)};
+    
+    let filteredData = [...fullData];
+    
+    // Initialize filters
+    function initializeFilters() {{
+        const yearContainer = document.getElementById('yearFilters');
+        availableYears.forEach(year => {{
+            const label = document.createElement('label');
+            label.className = 'filter-checkbox-label';
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.value = year;
+            checkbox.checked = true;
+            checkbox.className = 'year-filter';
+            label.appendChild(checkbox);
+            label.appendChild(document.createTextNode(' ' + year));
+            yearContainer.appendChild(label);
+        }});
+        
+        const monthContainer = document.getElementById('monthFilters');
+        availableMonths.forEach(month => {{
+            const label = document.createElement('label');
+            label.className = 'filter-checkbox-label';
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.value = month;
+            checkbox.checked = false;
+            checkbox.className = 'month-filter';
+            label.appendChild(checkbox);
+            label.appendChild(document.createTextNode(' ' + monthNames[month - 1]));
+            monthContainer.appendChild(label);
+        }});
+        
+        updateFilterIndicator();
+    }}
+    
+    function applyVisualFilter() {{
+        const selectedYears = Array.from(document.querySelectorAll('.year-filter:checked')).map(cb => parseInt(cb.value));
+        const selectedMonths = Array.from(document.querySelectorAll('.month-filter:checked')).map(cb => parseInt(cb.value));
+        const idFilterText = document.getElementById('idFilter').value.toLowerCase();
+        const noteFilterText = document.getElementById('noteFilter').value.toLowerCase();
+        
+        filteredData = fullData.filter(row => {{
+            // Date filters
+            if (row.Date) {{
+                const date = new Date(row.Date);
+                const year = date.getFullYear();
+                const month = date.getMonth() + 1;
+                
+                if (selectedYears.length > 0 && !selectedYears.includes(year)) return false;
+                if (selectedMonths.length > 0 && !selectedMonths.includes(month)) return false;
+            }}
+            
+            // ID filter
+            if (idFilterText && row.ID) {{
+                if (!String(row.ID).toLowerCase().includes(idFilterText)) return false;
+            }}
+            
+            // Note filter
+            if (noteFilterText && row.Note) {{
+                if (!String(row.Note).toLowerCase().includes(noteFilterText)) return false;
+            }}
+            
+            return true;
+        }});
+        
+        updateFilterIndicator();
+        updateAllPlots();
+        
+        // Scroll to top to see changes
+        window.scrollTo({{ top: 0, behavior: 'smooth' }});
+    }}
+    
+    function resetVisualFilter() {{
+        document.querySelectorAll('.year-filter').forEach(cb => cb.checked = true);
+        document.querySelectorAll('.month-filter').forEach(cb => cb.checked = false);
+        document.getElementById('idFilter').value = '';
+        document.getElementById('noteFilter').value = '';
+        filteredData = [...fullData];
+        updateFilterIndicator();
+        updateAllPlots();
+    }}
+    
+    function updateFilterIndicator() {{
+        const total = fullData.length;
+        const filtered = filteredData.length;
+        const indicator = document.getElementById('filterIndicator');
+        
+        if (total === filtered) {{
+            indicator.textContent = `📊 ${{total}} muestras`;
+        }} else {{
+            indicator.textContent = `📊 ${{filtered}}/${{total}} muestras (filtro activo)`;
+        }}
+    }}
+    
+    function updateAllPlots() {{
+        // Update spectra if exists
+        updateSpectraPlot();
+        
+        // Update all parameter plots
+        {json.dumps([param_id for _, param_id, _ in valid_params])}.forEach(paramId => {{
+            updateParameterPlots(paramId);
+        }});
+    }}
+    
+    function updateSpectraPlot() {{
+        // Find spectra plot div
+        const spectraDiv = document.querySelector('#spectra-section .plotly-graph-div');
+        if (!spectraDiv) return;
+        
+        // Get pixel columns (assuming #1, #2, etc.)
+        const pixelCols = Object.keys(filteredData[0] || {{}}).filter(col => /^#\\d+$/.test(col)).sort((a, b) => {{
+            return parseInt(a.slice(1)) - parseInt(b.slice(1));
+        }});
+        
+        if (pixelCols.length === 0) return;
+        
+        const xValues = pixelCols.map(col => parseInt(col.slice(1)));
+        const traces = [];
+        const legendAdded = new Set();
+        
+        filteredData.forEach((row, idx) => {{
+            const yValues = pixelCols.map(col => parseFloat(row[col]));
+            if (yValues.every(v => isNaN(v))) return;
+            
+            const group = sampleGroups[idx.toString()] || 'none';
+            const groupConfig = SAMPLE_GROUPS[group];
+            const color = groupConfig.color;
+            const opacity = group !== 'none' ? 0.5 : 0.35;
+            const width = group !== 'none' ? 2 : 1;
+            
+            let legendName, prefix;
+            if (group !== 'none') {{
+                const customLabel = groupLabels[group] || group;
+                legendName = `${{groupConfig.emoji}} ${{customLabel}}`;
+                prefix = `${{legendName}} - `;
+            }} else {{
+                legendName = 'Sin set';
+                prefix = '';
+            }}
+            
+            const showLegend = !legendAdded.has(group);
+            if (showLegend) legendAdded.add(group);
+            
+            traces.push({{
+                x: xValues,
+                y: yValues,
+                mode: 'lines',
+                showlegend: showLegend,
+                legendgroup: group,
+                name: legendName,
+                line: {{ width: width, color: color }},
+                opacity: opacity,
+                hovertemplate: `${{prefix}}ID: ${{row.ID || idx}}<br>Date: ${{row.Date || ''}}<br>Note: ${{row.Note || ''}}<br>Pixel: %{{x}}<br>Abs: %{{y}}<extra></extra>`
+            }});
+        }});
+        
+        const layout = {{
+            title: 'Spectra',
+            xaxis: {{ title: 'Pixel', gridcolor: 'white' }},
+            yaxis: {{ title: 'Absorbance (AU)', gridcolor: 'white' }},
+            autosize: true,
+            height: 700,
+            hovermode: 'closest',
+            template: 'plotly',
+            plot_bgcolor: '#E5ECF6',
+            paper_bgcolor: 'white',
+            showlegend: true
+        }};
+        
+        Plotly.react(spectraDiv, traces, layout);
+    }}
+    
+    function updateParameterPlots(paramId) {{
+        // Find the carousel for this parameter
+        const carouselDiv = document.querySelector(`#carousel-${{paramId}}`);
+        if (!carouselDiv) return;
+        
+        // Find the parity plot (first carousel item)
+        const parityDiv = carouselDiv.querySelector('.carousel-item:first-child .plotly-graph-div');
+        if (!parityDiv) return;
+        
+        // Get the parameter name from the tab
+        const tabElement = document.querySelector(`#tab-${{paramId}}`);
+        if (!tabElement) return;
+        const paramName = tabElement.textContent.trim();
+        
+        // Column names
+        const resultCol = `Result ${{paramName}}`;
+        const referenceCol = `Reference ${{paramName}}`;
+        const residuumCol = `Residuum ${{paramName}}`;
+        
+        // Filter data and extract valid points
+        const validPoints = [];
+        filteredData.forEach((row, idx) => {{
+            const refVal = parseFloat(row[referenceCol]);
+            const resVal = parseFloat(row[resultCol]);
+            const residVal = parseFloat(row[residuumCol]);
+            
+            if (!isNaN(refVal) && !isNaN(resVal) && !isNaN(residVal) && 
+                refVal !== 0 && resVal !== 0) {{
+                validPoints.push({{
+                    idx: idx,
+                    ref: refVal,
+                    res: resVal,
+                    residuum: residVal,
+                    id: row.ID || idx,
+                    date: row.Date || '',
+                    note: row.Note || '',
+                    group: sampleGroups[idx.toString()] || 'none'
+                }});
+            }}
+        }});
+        
+        if (validPoints.length < 2) return;
+        
+        // Group points by group
+        const pointsByGroup = {{}};
+        Object.keys(SAMPLE_GROUPS).forEach(g => pointsByGroup[g] = []);
+        
+        validPoints.forEach(point => {{
+            pointsByGroup[point.group].push(point);
+        }});
+        
+        // Calculate R², RMSE, BIAS
+        const xVals = validPoints.map(p => p.ref);
+        const yVals = validPoints.map(p => p.res);
+        const n = xVals.length;
+        
+        const xMean = xVals.reduce((a, b) => a + b, 0) / n;
+        const yMean = yVals.reduce((a, b) => a + b, 0) / n;
+        
+        const ssRes = validPoints.reduce((sum, p) => sum + Math.pow(p.res - p.ref, 2), 0);
+        const ssTot = yVals.reduce((sum, y) => sum + Math.pow(y - yMean, 2), 0);
+        const r2 = 1 - (ssRes / ssTot);
+        
+        const rmse = Math.sqrt(ssRes / n);
+        const bias = (yVals.reduce((a, b) => a + b, 0) - xVals.reduce((a, b) => a + b, 0)) / n;
+        
+        // Create parity plot traces
+        const traces = [];
+        
+        // Add group traces (excluding 'none')
+        Object.keys(SAMPLE_GROUPS).forEach(groupName => {{
+            if (groupName === 'none') return;
+            
+            const points = pointsByGroup[groupName];
+            if (points.length === 0) return;
+            
+            const groupConfig = SAMPLE_GROUPS[groupName];
+            const customLabel = groupLabels[groupName] || groupName;
+            const displayLabel = `${{groupConfig.emoji}} ${{customLabel}}`;
+            
+            traces.push({{
+                x: points.map(p => p.ref),
+                y: points.map(p => p.res),
+                mode: 'markers',
+                marker: {{
+                    color: groupConfig.color,
+                    size: groupConfig.size,
+                    symbol: groupConfig.symbol
+                }},
+                hovertemplate: points.map(p => 
+                    `${{displayLabel}}<br>Date: ${{p.date}}<br>ID: ${{p.id}}<br>Reference: ${{p.ref.toFixed(2)}}<br>Result: ${{p.res.toFixed(2)}}<extra></extra>`
+                ),
+                name: displayLabel,
+                showlegend: true
+            }});
+        }});
+        
+        // Add 'none' group
+        const nonePoints = pointsByGroup['none'];
+        if (nonePoints.length > 0) {{
+            const groupConfig = SAMPLE_GROUPS['none'];
+            traces.push({{
+                x: nonePoints.map(p => p.ref),
+                y: nonePoints.map(p => p.res),
+                mode: 'markers',
+                marker: {{
+                    color: groupConfig.color,
+                    size: groupConfig.size,
+                    symbol: groupConfig.symbol
+                }},
+                hovertemplate: nonePoints.map(p => 
+                    `Date: ${{p.date}}<br>ID: ${{p.id}}<br>Reference: ${{p.ref.toFixed(2)}}<br>Result: ${{p.res.toFixed(2)}}<extra></extra>`
+                ),
+                name: 'Sin set',
+                showlegend: true
+            }});
+        }}
+        
+        // Add reference lines
+        const minVal = Math.min(...xVals);
+        const maxVal = Math.max(...xVals);
+        
+        // y = x line
+        traces.push({{
+            x: [minVal, maxVal],
+            y: [minVal, maxVal],
+            mode: 'lines',
+            line: {{ dash: 'dash', color: 'gray' }},
+            name: 'y = x',
+            showlegend: false
+        }});
+        
+        // RMSE lines
+        traces.push({{
+            x: [minVal, maxVal],
+            y: [minVal + rmse, maxVal + rmse],
+            mode: 'lines',
+            line: {{ dash: 'dash', color: 'red' }},
+            name: 'RMSE',
+            showlegend: false
+        }});
+        
+        traces.push({{
+            x: [minVal, maxVal],
+            y: [minVal - rmse, maxVal - rmse],
+            mode: 'lines',
+            line: {{ dash: 'dash', color: 'red' }},
+            showlegend: false
+        }});
+        
+        // Update layout
+        const layout = {{
+            title: 'Parity Plot',
+            xaxis: {{ title: referenceCol, gridcolor: 'white' }},
+            yaxis: {{ title: resultCol, gridcolor: 'white' }},
+            showlegend: true,
+            height: 550,
+            dragmode: 'zoom',
+            hovermode: 'closest',
+            template: 'plotly',
+            plot_bgcolor: '#E5ECF6',
+            paper_bgcolor: 'white',
+            autosize: true,
+            legend: {{
+                orientation: 'h',
+                x: 0.5,
+                y: -0.25,
+                xanchor: 'center',
+                yanchor: 'top'
+            }},
+            margin: {{ l: 60, r: 40, t: 80, b: 140 }}
+        }};
+        
+        Plotly.react(parityDiv, traces, layout);
+        
+        // Update stats box
+        const statsBox = carouselDiv.closest('.tab-pane').querySelector('.stats-box table');
+        if (statsBox) {{
+            statsBox.querySelector('tr:nth-child(2) td:nth-child(1)').textContent = r2.toFixed(3);
+            statsBox.querySelector('tr:nth-child(2) td:nth-child(2)').textContent = rmse.toFixed(3);
+            statsBox.querySelector('tr:nth-child(2) td:nth-child(3)').textContent = bias.toFixed(3);
+            statsBox.querySelector('tr:nth-child(2) td:nth-child(4)').textContent = n;
+        }}
+    }}
+    
     $(document).ready(function() {{
+        initializeFilters();
+        
         function forcePlotlyAutosize($root) {{
             $root = $root && $root.length ? $root : $(document);
             var $plots = $root.find('.carousel-item.active .plotly-graph-div, .tab-pane.active .plotly-graph-div');
@@ -817,7 +1288,7 @@ def generate_html_report(
 
         forcePlotlyAutosize($(document));
     }});
-    </script>
+</script>
 
 </body>
 </html>

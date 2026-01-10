@@ -89,6 +89,61 @@ except Exception:
 
 
 # =============================================================================
+# HELPER: Apply Visual Filter
+# =============================================================================
+def apply_visual_filter(df: pd.DataFrame, selected_file: str) -> pd.DataFrame:
+    """
+    Aplica filtro visual (solo para visualización, no modifica df original)
+    Retorna df filtrado manteniendo índices originales
+    """
+    # Get filter settings for current file
+    filter_years = st.session_state.visual_filter_years.get(selected_file, [])
+    filter_months = st.session_state.visual_filter_months.get(selected_file, [])
+    filter_id = st.session_state.get('visual_filter_id', {}).get(selected_file, "")
+    filter_note = st.session_state.get('visual_filter_note', {}).get(selected_file, "")
+    
+    # If no filters active, return original
+    if not filter_years and not filter_months and not filter_id and not filter_note:
+        return df
+    
+    df_temp = df.copy()
+    mask = pd.Series(True, index=df_temp.index)
+    
+    # Date filters
+    if 'Date' in df_temp.columns and (filter_years or filter_months):
+        df_temp['Date'] = pd.to_datetime(df_temp['Date'], errors='coerce')
+        
+        if filter_years:
+            mask &= df_temp['Date'].dt.year.isin(filter_years)
+        
+        if filter_months:
+            mask &= df_temp['Date'].dt.month.isin(filter_months)
+    
+    # ID filter
+    if filter_id and 'ID' in df.columns:
+        mask &= df['ID'].astype(str).str.contains(filter_id, case=False, na=False)
+    
+    # Note filter
+    if filter_note and 'Note' in df.columns:
+        mask &= df['Note'].astype(str).str.contains(filter_note, case=False, na=False)
+    
+    return df[mask]
+
+
+def get_filter_indicator(df_original: pd.DataFrame, df_filtered: pd.DataFrame) -> str:
+    """
+    Retorna string indicador del estado del filtro visual
+    """
+    total = len(df_original)
+    filtered = len(df_filtered)
+    
+    if total == filtered:
+        return f"📊 Mostrando {total} muestras"
+    else:
+        return f"📊 Mostrando {filtered}/{total} muestras (filtro activo)"
+
+
+# =============================================================================
 # STREAMLIT PAGE SETUP
 # =============================================================================
 apply_buchi_styles()
@@ -115,6 +170,7 @@ with st.expander("ℹ️ Instrucciones de Uso"):
 **2. Filtrar por Fechas (Opcional)**
 
 **3. Previsualización y Selección**
+- Filtro visual por año/mes/ID/Note en sidebar (solo afecta visualización)
 - Selección desde gráficos (Espectros: click + lasso/box | Parity: click + lasso/box)
 - Selección desde tabla (checkboxes → añadir a pendientes → aplicar)
 - Grupos personalizables (se guarda Set 1..4 internamente, pero se muestra la etiqueta del usuario)
@@ -144,6 +200,16 @@ GROUP_KEYS = ["Set 1", "Set 2", "Set 3", "Set 4"]
 # SESSION STATE INITIALIZATION
 # =============================================================================
 initialize_tsv_session_state()
+
+# Initialize visual filter state
+if 'visual_filter_years' not in st.session_state:
+    st.session_state.visual_filter_years = {}
+if 'visual_filter_months' not in st.session_state:
+    st.session_state.visual_filter_months = {}
+if 'visual_filter_id' not in st.session_state:
+    st.session_state.visual_filter_id = {}
+if 'visual_filter_note' not in st.session_state:
+    st.session_state.visual_filter_note = {}
 
 
 # =============================================================================
@@ -289,13 +355,93 @@ if has_processed_data():
         removed_indices = get_samples_to_remove(selected_file)
         sample_groups = get_sample_groups(selected_file)
 
-        # Estadísticas
+        # =============================================================================
+        # SIDEBAR: FILTRO VISUAL
+        # =============================================================================
+        with st.sidebar:
+            st.markdown("### 📅 Filtro Visual")
+            st.caption("Solo afecta visualización, no modifica datos")
+            
+            # Extract available years and months from data
+            if 'Date' in df_current.columns:
+                df_temp = df_current.copy()
+                df_temp['Date'] = pd.to_datetime(df_temp['Date'], errors='coerce')
+                available_years = sorted(df_temp['Date'].dt.year.dropna().unique().astype(int).tolist())
+                available_months = list(range(1, 13))
+                month_names = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+                              'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+                
+                # Initialize filter for this file if not exists
+                if selected_file not in st.session_state.visual_filter_years:
+                    st.session_state.visual_filter_years[selected_file] = []
+                if selected_file not in st.session_state.visual_filter_months:
+                    st.session_state.visual_filter_months[selected_file] = []
+                if selected_file not in st.session_state.visual_filter_id:
+                    st.session_state.visual_filter_id[selected_file] = ""
+                if selected_file not in st.session_state.visual_filter_note:
+                    st.session_state.visual_filter_note[selected_file] = ""
+                
+                # Year selector
+                filter_years = st.multiselect(
+                    "📅 Años",
+                    available_years,
+                    default=st.session_state.visual_filter_years[selected_file],
+                    key=f"visual_years_{selected_file}"
+                )
+                st.session_state.visual_filter_years[selected_file] = filter_years
+                
+                # Month selector
+                filter_months = st.multiselect(
+                    "📆 Meses (vacío = todos)",
+                    available_months,
+                    default=st.session_state.visual_filter_months[selected_file],
+                    format_func=lambda x: month_names[x-1],
+                    key=f"visual_months_{selected_file}"
+                )
+                st.session_state.visual_filter_months[selected_file] = filter_months
+                
+                # ID filter
+                filter_id = st.text_input(
+                    "🔍 ID (contains)",
+                    value=st.session_state.visual_filter_id[selected_file],
+                    placeholder="e.g., 'ABC123'",
+                    key=f"visual_id_{selected_file}"
+                )
+                st.session_state.visual_filter_id[selected_file] = filter_id
+                
+                # Note filter
+                filter_note = st.text_input(
+                    "📝 Note (contains)",
+                    value=st.session_state.visual_filter_note[selected_file],
+                    placeholder="e.g., 'validation'",
+                    key=f"visual_note_{selected_file}"
+                )
+                st.session_state.visual_filter_note[selected_file] = filter_note
+                
+                # Reset button
+                if st.button("🔄 Resetear Filtro", use_container_width=True):
+                    st.session_state.visual_filter_years[selected_file] = []
+                    st.session_state.visual_filter_months[selected_file] = []
+                    st.session_state.visual_filter_id[selected_file] = ""
+                    st.session_state.visual_filter_note[selected_file] = ""
+                    st.rerun()
+            else:
+                st.info("No hay columna Date disponible")
+
+        # Apply visual filter
+        df_filtered = apply_visual_filter(df_current, selected_file)
+        filter_indicator = get_filter_indicator(df_current, df_filtered)
+
+        # Estadísticas (sobre datos ORIGINALES, no filtrados)
         stats = get_file_statistics(selected_file)
         col1, col2, col3, col4 = st.columns(4)
         col1.metric("📊 Total", stats["total"])
         col2.metric("🗑️ Eliminar", stats["eliminar"])
         col3.metric("🏷️ Agrupadas", stats["agrupadas"])
         col4.metric("✅ Finales", stats["finales"])
+        
+        # Filter indicator
+        st.info(filter_indicator)
 
         # Resumen de última aplicación
         summary = get_apply_summary(selected_file)
@@ -395,8 +541,9 @@ if has_processed_data():
                 spectra_multi = st.checkbox("Lasso/Box", value=False, key=f"spectra_multi_{selected_file}")
 
         try:
+            # Build spectra figure with FILTERED data for visualization
             fig_spectra = build_spectra_figure_preview(
-                df_current,
+                df_filtered,  # Use filtered data for visualization
                 removed_indices,
                 sample_groups,
                 st.session_state.group_labels,
@@ -433,8 +580,15 @@ if has_processed_data():
                                 single_idx = extract_row_index_from_click(fig_spectra, events[0])
                                 clicked_indices = [single_idx] if single_idx is not None else []
 
-                            if clicked_indices:
-                                for clicked_idx in clicked_indices:
+                            # Map filtered indices back to original df_current indices
+                            original_clicked_indices = []
+                            for idx in clicked_indices:
+                                if idx < len(df_filtered):
+                                    original_idx = df_filtered.index[idx]
+                                    original_clicked_indices.append(original_idx)
+
+                            if original_clicked_indices:
+                                for clicked_idx in original_clicked_indices:
                                     add_pending_selection(
                                         selected_file,
                                         clicked_idx,
@@ -445,12 +599,12 @@ if has_processed_data():
                                 pending_count = len(get_pending_selections(selected_file))
                                 if spectra_action == "Asignar a Grupo" and spectra_target:
                                     st.toast(
-                                        f"➕ {len(clicked_indices)} muestra(s) a pendientes → grupo: {get_group_display_name(spectra_target, SAMPLE_GROUPS)} ({pending_count} pendientes)",
+                                        f"➕ {len(original_clicked_indices)} muestra(s) a pendientes → grupo: {get_group_display_name(spectra_target, SAMPLE_GROUPS)} ({pending_count} pendientes)",
                                         icon="📍",
                                     )
                                 else:
                                     st.toast(
-                                        f"➕ {len(clicked_indices)} muestra(s) a pendientes → acción: Eliminar ({pending_count} pendientes)",
+                                        f"➕ {len(original_clicked_indices)} muestra(s) a pendientes → acción: Eliminar ({pending_count} pendientes)",
                                         icon="📍",
                                     )
             else:
@@ -566,8 +720,9 @@ if has_processed_data():
             residuum_col = f"Residuum {selected_param}"
 
             try:
+                # Plot comparison with FILTERED data for visualization
                 plots = plot_comparison_preview(
-                    df_current,
+                    df_filtered,  # Use filtered data for visualization
                     result_col,
                     reference_col,
                     residuum_col,
@@ -614,8 +769,16 @@ if has_processed_data():
                                     update_last_event_id(selected_file, "parity", event_id)
 
                                     clicked_indices = extract_row_indices_from_parity_events(fig_parity, events)
-                                    if clicked_indices:
-                                        for clicked_idx in clicked_indices:
+                                    
+                                    # Map filtered indices back to original df_current indices
+                                    original_clicked_indices = []
+                                    for idx in clicked_indices:
+                                        if idx < len(df_filtered):
+                                            original_idx = df_filtered.index[idx]
+                                            original_clicked_indices.append(original_idx)
+                                    
+                                    if original_clicked_indices:
+                                        for clicked_idx in original_clicked_indices:
                                             add_pending_selection(
                                                 selected_file,
                                                 clicked_idx,
@@ -626,12 +789,12 @@ if has_processed_data():
                                         pending_count = len(get_pending_selections(selected_file))
                                         if parity_action == "Asignar a Grupo" and parity_target:
                                             st.toast(
-                                                f"➕ {len(clicked_indices)} muestra(s) a pendientes → grupo: {get_group_display_name(parity_target, SAMPLE_GROUPS)} ({pending_count} pendientes)",
+                                                f"➕ {len(original_clicked_indices)} muestra(s) a pendientes → grupo: {get_group_display_name(parity_target, SAMPLE_GROUPS)} ({pending_count} pendientes)",
                                                 icon="📍",
                                             )
                                         else:
                                             st.toast(
-                                                f"➕ {len(clicked_indices)} muestra(s) a pendientes → acción: Eliminar ({pending_count} pendientes)",
+                                                f"➕ {len(original_clicked_indices)} muestra(s) a pendientes → acción: Eliminar ({pending_count} pendientes)",
                                                 icon="📍",
                                             )
 
@@ -733,7 +896,8 @@ if has_processed_data():
 
         st.markdown("---")
 
-        df_for_edit = df_current.copy()
+        # Use FILTERED data for table display
+        df_for_edit = df_filtered.copy()
 
         df_for_edit.insert(0, "☑️ Seleccionar", False)
         df_for_edit.insert(1, "Estado Actual", "Normal")
@@ -790,7 +954,11 @@ if has_processed_data():
                     disabled=(n_selected == 0),
                     help="Añade las muestras seleccionadas a la lista de acciones pendientes",
                 ):
-                    selected_indices = edited_df.index[edited_df["☑️ Seleccionar"] == True].tolist()
+                    # Get selected indices (these are from df_filtered, need to map to df_current)
+                    selected_indices_filtered = edited_df.index[edited_df["☑️ Seleccionar"] == True].tolist()
+                    
+                    # Map back to original indices
+                    selected_indices = [df_filtered.index[i] for i in selected_indices_filtered if i < len(df_filtered)]
 
                     for idx_ in selected_indices:
                         add_pending_selection(
@@ -903,9 +1071,9 @@ if has_processed_data():
 
                 st.markdown("---")
 
-                # Calcular estadísticas para todos los grupos
+                # Calcular estadísticas para todos los grupos (ALWAYS on FULL df_current)
                 all_group_stats = calculate_all_groups_statistics(
-                    df_current,
+                    df_current,  # Use full data for statistics
                     stats_param,
                     removed_indices,
                     sample_groups,
