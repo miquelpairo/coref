@@ -443,7 +443,9 @@ def generate_html_report(
     # Agregar sección de grupos al sidebar si existen
     if has_groups:
         sidebar_items += '<li><a href="#grupos-section">Grupos</a></li>\n'
-    
+
+    sidebar_items += '<li><a href="#table-section">Tabla de muestras</a></li>\n'
+
     sidebar_items += '''
         </ul>
 '''
@@ -519,6 +521,10 @@ def generate_html_report(
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
+    <!-- DataTables -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+    
     <style>
 {buchi_css}
 {sidebar_css}
@@ -882,6 +888,25 @@ def generate_html_report(
         </div>
 """
 
+    # ==============================
+    # TABLA DE MUESTRAS (REPORT)
+    # ==============================
+    html_content += """
+    <div class="info-box" id="table-section">
+    <h2>Tabla de muestras</h2>
+    <p class="text-caption"><em>Tabla interactiva (ordenable). Se actualiza al aplicar el filtro visual del sidebar.</em></p>
+
+    <div style="margin-bottom: 10px;">
+        <span id="tableIndicator" class="text-caption"></span>
+    </div>
+
+    <div style="overflow-x:auto;">
+        <table id="samplesTable" class="display" style="width:100%"></table>
+    </div>
+    </div>
+    """
+
+
     # FOOTER
     html_content += f"""
         <!-- FOOTER -->
@@ -894,7 +919,7 @@ def generate_html_report(
 
 <script>
     // Embedded data
-    const fullData = {full_data_json};
+    const fullData = JSON.parse({json.dumps(full_data_json)});
     const availableYears = {json.dumps(available_years)};
     const availableMonths = {json.dumps(available_months)};
     const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
@@ -902,6 +927,7 @@ def generate_html_report(
     const groupLabels = {json.dumps(group_labels)};
     const SAMPLE_GROUPS = {json.dumps(SAMPLE_GROUPS)};
     
+    fullData.forEach((row, i) => {{ row.__idx = i; }});
     let filteredData = [...fullData];
     
     // Initialize filters
@@ -940,39 +966,44 @@ def generate_html_report(
     function applyVisualFilter() {{
         const selectedYears = Array.from(document.querySelectorAll('.year-filter:checked')).map(cb => parseInt(cb.value));
         const selectedMonths = Array.from(document.querySelectorAll('.month-filter:checked')).map(cb => parseInt(cb.value));
-        const idFilterText = document.getElementById('idFilter').value.toLowerCase();
-        const noteFilterText = document.getElementById('noteFilter').value.toLowerCase();
-        
+
+        const idFilterText = (document.getElementById('idFilter').value || "").trim().toLowerCase();
+        const noteFilterText = (document.getElementById('noteFilter').value || "").trim().toLowerCase();
+
         filteredData = fullData.filter(row => {{
             // Date filters
             if (row.Date) {{
                 const date = new Date(row.Date);
                 const year = date.getFullYear();
                 const month = date.getMonth() + 1;
-                
+
                 if (selectedYears.length > 0 && !selectedYears.includes(year)) return false;
                 if (selectedMonths.length > 0 && !selectedMonths.includes(month)) return false;
             }}
-            
-            // ID filter
-            if (idFilterText && row.ID) {{
-                if (!String(row.ID).toLowerCase().includes(idFilterText)) return false;
+
+            // ID filter (ID siempre tiene valor, pero lo dejamos robusto)
+            if (idFilterText) {{
+                const idVal = String(row.ID ?? "").toLowerCase();
+                if (!idVal.includes(idFilterText)) return false;
             }}
-            
-            // Note filter
-            if (noteFilterText && row.Note) {{
-                if (!String(row.Note).toLowerCase().includes(noteFilterText)) return false;
+
+            // Note filter (estricto: si hay filtro y Note está vacío => fuera)
+            if (noteFilterText) {{
+                const noteVal = String(row.Note ?? "").toLowerCase();
+                if (!noteVal.includes(noteFilterText)) return false;
             }}
-            
+
             return true;
         }});
-        
+
         updateFilterIndicator();
         updateAllPlots();
-        
+        renderSamplesTable();
+
         // Scroll to top to see changes
         window.scrollTo({{ top: 0, behavior: 'smooth' }});
     }}
+
     
     function resetVisualFilter() {{
         document.querySelectorAll('.year-filter').forEach(cb => cb.checked = true);
@@ -982,6 +1013,7 @@ def generate_html_report(
         filteredData = [...fullData];
         updateFilterIndicator();
         updateAllPlots();
+        renderSamplesTable();
     }}
     
     function updateFilterIndicator() {{
@@ -999,11 +1031,13 @@ def generate_html_report(
     function updateAllPlots() {{
         // Update spectra if exists
         updateSpectraPlot();
-        
-        // Update all parameter plots
-        {json.dumps([param_id for _, param_id, _ in valid_params])}.forEach(paramId => {{
-            updateParameterPlots(paramId);
-        }});
+
+        // Actualiza SOLO el tab activo (evita intentar actualizar tabs que aún no han renderizado Plotly)
+        const activeTab = document.querySelector('a.nav-link.active[id^="tab-"]');
+        if (!activeTab) return;
+
+        const activeParamId = activeTab.id.replace('tab-', '');
+        updateParameterPlots(activeParamId);
     }}
     
     function updateSpectraPlot() {{
@@ -1026,7 +1060,8 @@ def generate_html_report(
             const yValues = pixelCols.map(col => parseFloat(row[col]));
             if (yValues.every(v => isNaN(v))) return;
             
-            const group = sampleGroups[idx.toString()] || 'none';
+            const originalIdx = row.__idx;
+            const group = sampleGroups[String(originalIdx)] || 'none';
             const groupConfig = SAMPLE_GROUPS[group];
             const color = groupConfig.color;
             const opacity = group !== 'none' ? 0.5 : 0.35;
@@ -1096,6 +1131,8 @@ def generate_html_report(
         // Filter data and extract valid points
         const validPoints = [];
         filteredData.forEach((row, idx) => {{
+            const originalIdx = row.__idx;
+
             const refVal = parseFloat(row[referenceCol]);
             const resVal = parseFloat(row[resultCol]);
             const residVal = parseFloat(row[residuumCol]);
@@ -1103,14 +1140,14 @@ def generate_html_report(
             if (!isNaN(refVal) && !isNaN(resVal) && !isNaN(residVal) && 
                 refVal !== 0 && resVal !== 0) {{
                 validPoints.push({{
-                    idx: idx,
+                    idx: originalIdx,
                     ref: refVal,
                     res: resVal,
                     residuum: residVal,
-                    id: row.ID || idx,
+                    id: row.ID || originalIdx,
                     date: row.Date || '',
                     note: row.Note || '',
-                    group: sampleGroups[idx.toString()] || 'none'
+                    group: sampleGroups[String(originalIdx)] || 'none'
                 }});
             }}
         }});
@@ -1259,15 +1296,113 @@ def generate_html_report(
         }}
     }}
     
+    let samplesTable = null;
+
+    function getTableColumns() {{
+        if (!fullData || fullData.length === 0) return [];
+
+        const base = ["Row", "Estado", "Grupo", "ID", "Date", "Note"];
+        const keys = Object.keys(fullData[0] || {{}}).filter(k => k !== "__idx");
+        const resultCols = keys.filter(k => k.startsWith("Result ")).slice(0, 3);
+
+        const cols = [...base, ...resultCols];
+
+        // DataTables columns config
+        return cols.map(c => ({{ title: c, data: c }}));
+    }}
+
+    function buildTableRow(row) {{
+        const idx = row.__idx; // índice original
+        const computed = buildRowComputed(idx, row);
+
+        // Columnas base
+        const out = {{
+            Row: computed.Row,
+            Estado: computed.Estado,
+            Grupo: computed.Grupo,
+            ID: computed.ID,
+            Date: computed.Date,
+            Note: computed.Note
+        }};
+
+        // Añade hasta 3 Result cols
+        const keys = Object.keys(fullData[0] || {{}}).filter(k => k !== "__idx");
+        const resultCols = keys.filter(k => k.startsWith("Result ")).slice(0, 3);
+        resultCols.forEach(k => {{
+            out[k] = row[k] ?? "";
+        }});
+
+        return out;
+    }}
+    
+    function buildRowComputed(idx, row) {{
+        const groupKey = sampleGroups[String(idx)] || "none";
+        let estado = "Normal";
+        let grupo = "Sin set";
+
+        if (groupKey && groupKey !== "none") {{
+            const gl = groupLabels[groupKey] || groupKey;
+            const emoji = (SAMPLE_GROUPS[groupKey] && SAMPLE_GROUPS[groupKey].emoji) ? SAMPLE_GROUPS[groupKey].emoji : "";
+            grupo = `${{emoji}} ${{gl}}`.trim();
+            estado = "Agrupada";
+        }}
+
+        return {{
+            Row: idx,
+            Estado: estado,
+            Grupo: grupo,
+            ID: row.ID ?? "",
+            Date: row.Date ?? "",
+            Note: row.Note ?? ""
+        }};
+    }}
+
+    function renderSamplesTable() {{
+        const cols = getTableColumns();
+        const tableEl = document.getElementById("samplesTable");
+        if (!tableEl) return;
+
+        const rows = filteredData.map(r => buildTableRow(r));
+
+        if (!samplesTable) {{
+            samplesTable = $("#samplesTable").DataTable({{
+                data: rows,
+                columns: cols,
+                order: [[0, "asc"]],
+                pageLength: 25,
+                lengthMenu: [10, 25, 50, 100],
+                deferRender: true,
+                destroy: true
+            }});
+        }} else {{
+            samplesTable.clear();
+            samplesTable.rows.add(rows);
+            samplesTable.draw(false);
+        }}
+
+        const ti = document.getElementById("tableIndicator");
+        if (ti) {{
+            ti.textContent = `📋 Mostrando ${{filteredData.length}}/${{fullData.length}} muestras`;
+        }}
+    }}
+
+
+
     $(document).ready(function() {{
         initializeFilters();
-        
+        renderSamplesTable();
+
         function forcePlotlyAutosize($root) {{
             $root = $root && $root.length ? $root : $(document);
-            var $plots = $root.find('.carousel-item.active .plotly-graph-div, .tab-pane.active .plotly-graph-div');
+            var $plots = $root.find(
+                '.carousel-item.active .plotly-graph-div, ' +
+                '.tab-pane.active .plotly-graph-div'
+            );
+
             $plots.each(function() {{
                 var gd = this;
                 if (!gd) return;
+
                 requestAnimationFrame(function() {{
                     requestAnimationFrame(function() {{
                         try {{ Plotly.Plots.resize(gd); }} catch(e) {{}}
@@ -1277,15 +1412,36 @@ def generate_html_report(
             }});
         }}
 
+        // ─────────────────────────────────────────────
+        // TAB CHANGE → reaplicar filtro + resize plots
+        // ─────────────────────────────────────────────
         $('a[data-toggle="tab"]').on('shown.bs.tab', function(e) {{
+            var tabId = e.target && e.target.id ? e.target.id : '';
+            if (tabId.startsWith('tab-')) {{
+                var paramId = tabId.replace('tab-', '');
+                updateParameterPlots(paramId);
+            }}
+
             var target = $(e.target).attr('href');
             forcePlotlyAutosize($(target));
         }});
 
+        // ─────────────────────────────────────────────
+        // CAROUSEL CHANGE → reaplicar filtro + resize
+        // ─────────────────────────────────────────────
         $(document).on('slid.bs.carousel', '.carousel', function() {{
+            var carouselId = this.id || '';
+            if (carouselId.startsWith('carousel-')) {{
+                var paramId = carouselId.replace('carousel-', '');
+                updateParameterPlots(paramId);
+            }}
+
             forcePlotlyAutosize($(this));
         }});
 
+        // ─────────────────────────────────────────────
+        // Primer autosize global
+        // ─────────────────────────────────────────────
         forcePlotlyAutosize($(document));
     }});
 </script>
