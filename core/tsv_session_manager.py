@@ -151,13 +151,19 @@ def add_pending_selection(file_name: str, idx: int, action: str, group: Optional
     st.session_state.pending_selections[file_name] = pending
 
 def clear_pending_selections(file_name: str) -> int:
-    """
-    Limpia todas las selecciones pendientes de un archivo y devuelve cuántas se borraron.
-    """
     pending = st.session_state.pending_selections.get(file_name, [])
     n = len(pending) if pending else 0
+
     st.session_state.pending_selections[file_name] = []
+
+    # ✅ clave: reset dedupe
+    st.session_state.last_event_id[file_name] = {"spectra": "", "parity": ""}
+
+    # ✅ recomendable: fuerza rerender de tabla/plots
+    st.session_state.editor_version[file_name] = st.session_state.editor_version.get(file_name, 0) + 1
+
     return n
+
 
 
 def get_pending_selections(file_name: str) -> List[Dict]:
@@ -530,13 +536,3 @@ def get_group_options_display_with_none(group_keys: list, sample_groups_config: 
     """
     return ["Sin grupo"] + get_group_options_display(group_keys, sample_groups_config)
 
-def clear_last_event_ids(file_name: str):
-    """
-    Resetea los last_event_id para evitar que Streamlit/plotly_events
-    re-procese el mismo evento tras limpiar pendientes / rerun.
-    """
-    if file_name not in st.session_state.last_event_id:
-        st.session_state.last_event_id[file_name] = {"spectra": "", "parity": ""}
-    else:
-        st.session_state.last_event_id[file_name]["spectra"] = ""
-        st.session_state.last_event_id[file_name]["parity"] = ""
