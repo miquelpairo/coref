@@ -3,237 +3,250 @@ selection_utils.py
 ==================
 Utilidades para extracción de eventos de selección desde gráficos Plotly.
 Maneja clicks individuales y selecciones múltiples (lasso/box).
+
+FIXES (filtros + cloud + plotly_events):
+- create_event_id: soporta pointIndex (además de pointNumber) y añade x/y para evitar colisiones
+- extract_row_index_from_click: prioriza event["customdata"] y soporta pointIndex
+- extract_row_indices_*: fallback usa pointIndex si pointNumber no está
+- Todo defensivo y JSON-safe
 """
 
-from typing import List, Optional
+from __future__ import annotations
+
+from typing import List, Optional, Any, Tuple
+import json
+import hashlib
+
 import plotly.graph_objects as go
 
 
-def create_event_id(events: List[dict]) -> str:
-    """
-    Crea un ID único para un conjunto de eventos.
-    Útil para detectar si un evento ya fue procesado.
-    
-    Args:
-        events: Lista de eventos de Plotly
-        
-    Returns:
-        String hash único del conjunto de eventos
-    """
-    if not events:
-        return ""
-    
-    event_str = str([
-        (e.get("curveNumber"), e.get("pointNumber"), e.get("customdata"))
-        for e in events
-    ])
-    
-    return str(hash(event_str))
-
-
-def extract_row_index_from_click(fig: go.Figure, event: dict) -> Optional[int]:
-    """
-    Extrae el índice de fila desde un evento de click en gráfico de espectros.
-    
-    En espectros, customdata puede ser:
-    - Un int directo (pointNumber como ID)
-    - Una lista/tuple donde el primer elemento es el row_index
-    
-    Args:
-        fig: Figura de Plotly
-        event: Evento individual de click
-        
-    Returns:
-        Índice de fila o None si no se pudo extraer
-    """
-    if not event:
+# -----------------------------------------------------------------------------
+# Helpers
+# -----------------------------------------------------------------------------
+def _safe_int(x: Any) -> Optional[int]:
+    """Int robusto (acepta int/str/np types)."""
+    if x is None:
         return None
-    
-    curve_number = event.get("curveNumber", None)
-    point_number = event.get("pointNumber", None)
-    
-    if curve_number is None:
-        return None
-    
     try:
-        trace = fig.data[curve_number]
-        customdata = getattr(trace, "customdata", None)
-        
-        if customdata is None or len(customdata) == 0:
-            return None
-        
-        # Si viene pointNumber, usa el punto exacto
-        if point_number is not None:
-            cd = customdata[point_number]
-        else:
-            cd = customdata[0]
-        
-        # cd puede ser escalar (int) o lista/tuple
-        if isinstance(cd, (list, tuple)) and len(cd) > 0:
-            cd = cd[0]
-        
-        return int(cd)
-    
+        return int(x)
     except Exception:
         return None
 
 
-def extract_row_indices_from_spectra_events(fig: go.Figure, events: List[dict]) -> List[int]:
-    """
-    Extrae índices de fila desde eventos de espectros (lasso/box).
-    
-    En gráficos de espectros, customdata es típicamente un int directo
-    por punto, representando el row_index único del espectro.
-    
-    Args:
-        fig: Figura de Plotly
-        events: Lista de eventos de selección múltiple
-        
-    Returns:
-        Lista de índices únicos (sin duplicados, preservando orden)
-    """
-    if not events:
-        return []
-    
-    def _coerce_to_int(cd):
-        """Convierte customdata a int, manejando diferentes formatos."""
-        if cd is None:
-            return None
-        
-        # En espectros customdata es int directo
-        try:
-            return int(cd)
-        except Exception:
-            return None
-    
-    indices: List[int] = []
-    
-    for ev in events:
-        # Intentar extraer directamente de customdata
-        idx = _coerce_to_int(ev.get("customdata", None))
-        
-        if idx is not None:
-            indices.append(idx)
-            continue
-        
-        # Fallback: leer desde la traza usando curveNumber/pointNumber
-        try:
-            curve = ev.get("curveNumber", None)
-            point = ev.get("pointNumber", None)
-            
-            if curve is None or point is None:
-                continue
-            
-            trace_cd = getattr(fig.data[curve], "customdata", None)
-            if trace_cd is None:
-                continue
-            
-            idx = _coerce_to_int(trace_cd[point])
-            if idx is not None:
-                indices.append(idx)
-        
-        except Exception:
-            pass
-    
-    # Eliminar duplicados preservando orden
-    return _remove_duplicates_preserve_order(indices)
+def _first_if_seq(x: Any) -> Any:
+    """Si x es (list/tuple) devuelve primer elemento; si no, devuelve x."""
+    if isinstance(x, (list, tuple)) and len(x) > 0:
+        return x[0]
+    return x
 
 
-def extract_row_indices_from_parity_events(fig: go.Figure, events: List[dict]) -> List[int]:
+def _normalize_customdata_for_id(cd: Any) -> Any:
     """
-    Extrae índices de fila desde eventos de parity plots (lasso/box/click).
-    
-    En gráficos parity, customdata suele ser [row_id, date] o similar,
-    donde row_id (primer elemento) es el índice de fila.
-    
-    Args:
-        fig: Figura de Plotly
-        events: Lista de eventos de selección
-        
-    Returns:
-        Lista de índices únicos (sin duplicados, preservando orden)
+    Normaliza customdata para que sea estable en create_event_id.
+    - Parity: [row_id, date, ...] -> row_id
+    - Spectra markers: escalar row_id (pero por si llega lista)
     """
-    if not events:
-        return []
-    
-    def _coerce_to_int(cd):
-        """Convierte customdata a int, manejando listas/tuples."""
-        if cd is None:
-            return None
-        
-        # En parity customdata suele ser [row_id, date] => tomar primer elemento
-        if isinstance(cd, (list, tuple)) and len(cd) > 0:
-            cd = cd[0]
-        
-        try:
-            return int(cd)
-        except Exception:
-            return None
-    
-    indices: List[int] = []
-    
-    for ev in events:
-        # Intentar extraer de customdata
-        idx = _coerce_to_int(ev.get("customdata", None))
-        
-        if idx is not None:
-            indices.append(idx)
-            continue
-        
-        # Fallback: leer desde la traza
-        try:
-            curve = ev.get("curveNumber", None)
-            point = ev.get("pointNumber", None)
-            
-            if curve is None or point is None:
-                continue
-            
-            trace_cd = getattr(fig.data[curve], "customdata", None)
-            if trace_cd is None:
-                continue
-            
-            idx = _coerce_to_int(trace_cd[point])
-            if idx is not None:
-                indices.append(idx)
-        
-        except Exception:
-            pass
-    
-    # Eliminar duplicados preservando orden
-    return _remove_duplicates_preserve_order(indices)
+    return _first_if_seq(cd)
+
+
+def _event_point_number(e: dict) -> Any:
+    """Devuelve pointNumber o (fallback) pointIndex."""
+    return e.get("pointNumber", e.get("pointIndex"))
 
 
 def _remove_duplicates_preserve_order(items: List[int]) -> List[int]:
-    """
-    Elimina duplicados de una lista preservando el orden original.
-    
-    Args:
-        items: Lista con posibles duplicados
-        
-    Returns:
-        Lista sin duplicados
-    """
+    """Elimina duplicados preservando orden."""
     seen = set()
-    result: List[int] = []
-    
-    for item in items:
-        if item not in seen:
-            result.append(item)
-            seen.add(item)
-    
-    return result
+    out: List[int] = []
+    for it in items:
+        if it not in seen:
+            seen.add(it)
+            out.append(it)
+    return out
 
 
+# -----------------------------------------------------------------------------
+# Event ID / dedupe
+# -----------------------------------------------------------------------------
+def create_event_id(events: List[dict]) -> str:
+    """
+    Crea un ID único para un conjunto de eventos.
+    Útil para detectar si un evento ya fue procesado.
+
+    Nota: plotly_events a veces usa pointIndex en lugar de pointNumber
+    (especialmente en lasso/box). Incluimos x/y para evitar colisiones.
+
+    IMPORTANTE: usamos md5 (estable) en lugar de hash() de Python (no estable entre procesos).
+    """
+    if not events:
+        return ""
+
+    payload: List[Tuple[Any, Any, Any, Any, Any]] = []
+    for e in events:
+        payload.append(
+            (
+                e.get("curveNumber"),
+                _event_point_number(e),
+                _normalize_customdata_for_id(e.get("customdata")),
+                e.get("x"),
+                e.get("y"),
+            )
+        )
+
+    # Orden-independiente (por si Plotly devuelve eventos en distinto orden)
+    payload_sorted = sorted(payload, key=lambda t: (t[0], t[1], str(t[2]), str(t[3]), str(t[4])))
+
+    s = json.dumps(payload_sorted, ensure_ascii=True, sort_keys=False)
+    return hashlib.md5(s.encode("utf-8")).hexdigest()[:16]
+
+
+# -----------------------------------------------------------------------------
+# Click (spectra)
+# -----------------------------------------------------------------------------
+def extract_row_index_from_click(fig: go.Figure, event: dict) -> Optional[int]:
+    """
+    Extrae el índice de fila desde un evento de click.
+
+    Regla:
+    - Preferir event["customdata"] (más fiable, especialmente con trazas múltiples)
+    - Fallback: leer desde fig.data[curveNumber].customdata[pointNumber/pointIndex]
+    """
+    if not event:
+        return None
+
+    # 1) Preferir customdata del evento (típico en markers)
+    cd_ev = event.get("customdata", None)
+    if cd_ev is not None:
+        cd_ev = _first_if_seq(cd_ev)
+        rid = _safe_int(cd_ev)
+        if rid is not None:
+            return rid
+
+    curve_number = event.get("curveNumber", None)
+    if curve_number is None:
+        return None
+
+    point_number = _event_point_number(event)
+
+    try:
+        trace = fig.data[curve_number]
+        customdata = getattr(trace, "customdata", None)
+        if not customdata:
+            return None
+
+        if point_number is None:
+            cd = customdata[0]
+        else:
+            cd = customdata[int(point_number)]
+
+        cd = _first_if_seq(cd)
+        return _safe_int(cd)
+    except Exception:
+        return None
+
+
+# -----------------------------------------------------------------------------
+# Multi-select (spectra)
+# -----------------------------------------------------------------------------
+def extract_row_indices_from_spectra_events(fig: go.Figure, events: List[dict]) -> List[int]:
+    """
+    Extrae índices de fila desde eventos de espectros (lasso/box).
+
+    En tu plotting actual:
+    - En markers downsampled: event["customdata"] == row_index (int)
+    - Puede haber eventos sin customdata (p.ej. trazas de líneas) => ignorar
+    """
+    if not events:
+        return []
+
+    indices: List[int] = []
+
+    for ev in events:
+        # 1) Preferir customdata del evento
+        cd_ev = ev.get("customdata", None)
+        cd_ev = _first_if_seq(cd_ev)
+        rid = _safe_int(cd_ev)
+        if rid is not None:
+            indices.append(rid)
+            continue
+
+        # 2) Fallback: leer customdata desde la traza
+        try:
+            curve = ev.get("curveNumber", None)
+            point = _event_point_number(ev)
+
+            if curve is None or point is None:
+                continue
+
+            trace_cd = getattr(fig.data[curve], "customdata", None)
+            if not trace_cd:
+                continue
+
+            cd = trace_cd[int(point)]
+            cd = _first_if_seq(cd)
+            rid = _safe_int(cd)
+            if rid is not None:
+                indices.append(rid)
+        except Exception:
+            pass
+
+    return _remove_duplicates_preserve_order(indices)
+
+
+# -----------------------------------------------------------------------------
+# Multi-select / click (parity)
+# -----------------------------------------------------------------------------
+def extract_row_indices_from_parity_events(fig: go.Figure, events: List[dict]) -> List[int]:
+    """
+    Extrae índices de fila desde eventos de parity (lasso/box/click).
+
+    En tu plotting:
+    - customdata suele ser [row_id, date] => row_id = customdata[0]
+    - Puede haber trazas sin customdata (y=x, RMSE±) => ignorar / fallback
+    """
+    if not events:
+        return []
+
+    indices: List[int] = []
+
+    def _coerce_parity_cd(cd: Any) -> Optional[int]:
+        cd = _first_if_seq(cd)
+        return _safe_int(cd)
+
+    for ev in events:
+        # 1) Preferir customdata del evento
+        rid = _coerce_parity_cd(ev.get("customdata", None))
+        if rid is not None:
+            indices.append(rid)
+            continue
+
+        # 2) Fallback: leer desde la traza usando curve/point
+        try:
+            curve = ev.get("curveNumber", None)
+            point = _event_point_number(ev)
+
+            if curve is None or point is None:
+                continue
+
+            trace_cd = getattr(fig.data[curve], "customdata", None)
+            if not trace_cd:
+                continue
+
+            rid = _coerce_parity_cd(trace_cd[int(point)])
+            if rid is not None:
+                indices.append(rid)
+        except Exception:
+            pass
+
+    return _remove_duplicates_preserve_order(indices)
+
+
+# -----------------------------------------------------------------------------
+# Validation
+# -----------------------------------------------------------------------------
 def validate_indices_against_dataframe(indices: List[int], valid_indices: List[int]) -> List[int]:
     """
     Valida que los índices extraídos existan en el DataFrame actual.
-    
-    Args:
-        indices: Índices extraídos de eventos
-        valid_indices: Índices válidos del DataFrame actual
-        
-    Returns:
-        Lista de índices válidos
     """
     valid_set = set(valid_indices)
     return [idx for idx in indices if idx in valid_set]

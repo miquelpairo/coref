@@ -16,6 +16,9 @@ from __future__ import annotations
 import zipfile
 from io import BytesIO
 from typing import List
+import json
+import hashlib
+
 
 import pandas as pd
 import streamlit as st
@@ -120,14 +123,15 @@ def apply_visual_filter(df: pd.DataFrame, selected_file: str) -> pd.DataFrame:
             mask &= df_temp['Date'].dt.month.isin(filter_months)
     
     # ID filter
-    if filter_id and 'ID' in df.columns:
-        mask &= df['ID'].astype(str).str.contains(filter_id, case=False, na=False)
-    
+    if filter_id and "ID" in df_temp.columns:
+        mask &= df_temp["ID"].astype(str).str.contains(filter_id, case=False, na=False)
+
     # Note filter
-    if filter_note and 'Note' in df.columns:
-        mask &= df['Note'].astype(str).str.contains(filter_note, case=False, na=False)
+    if filter_note and "Note" in df_temp.columns:
+        mask &= df_temp["Note"].astype(str).str.contains(filter_note, case=False, na=False)
+
     
-    return df[mask]
+    return df_temp.loc[mask].copy()
 
 
 def get_filter_indicator(df_original: pd.DataFrame, df_filtered: pd.DataFrame) -> str:
@@ -141,6 +145,18 @@ def get_filter_indicator(df_original: pd.DataFrame, df_filtered: pd.DataFrame) -
         return f"📊 Mostrando {total} muestras"
     else:
         return f"📊 Mostrando {filtered}/{total} muestras (filtro activo)"
+
+
+def get_visual_filter_hash(selected_file: str) -> str:
+    payload = {
+        "years": st.session_state.visual_filter_years.get(selected_file, []),
+        "months": st.session_state.visual_filter_months.get(selected_file, []),
+        "id": st.session_state.visual_filter_id.get(selected_file, ""),
+        "note": st.session_state.visual_filter_note.get(selected_file, ""),
+    }
+    s = json.dumps(payload, sort_keys=True, ensure_ascii=True)
+    return hashlib.md5(s.encode("utf-8")).hexdigest()[:8]
+
 
 
 # =============================================================================
@@ -424,6 +440,7 @@ if has_processed_data():
                     st.session_state.visual_filter_months[selected_file] = []
                     st.session_state.visual_filter_id[selected_file] = ""
                     st.session_state.visual_filter_note[selected_file] = ""
+                    clear_last_event_ids(selected_file)
                     st.rerun()
             else:
                 st.info("No hay columna Date disponible")
@@ -431,6 +448,16 @@ if has_processed_data():
         # Apply visual filter
         df_filtered = apply_visual_filter(df_current, selected_file)
         filter_indicator = get_filter_indicator(df_current, df_filtered)
+
+        vf = get_visual_filter_hash(selected_file)
+
+        # Si cambia el filtro, resetea dedupe de eventos para que el siguiente click no se ignore
+        prev_vf = st.session_state.get(f"_vf_prev_{selected_file}")
+        if prev_vf != vf:
+            st.session_state[f"_vf_prev_{selected_file}"] = vf
+            clear_last_event_ids(selected_file)
+
+
 
         # Estadísticas (sobre datos ORIGINALES, no filtrados)
         stats = get_file_statistics(selected_file)
@@ -564,7 +591,7 @@ if has_processed_data():
                         select_event=spectra_multi,
                         hover_event=False,
                         override_height=700,
-                        key=f"spectra_{selected_file}_v{get_editor_version(selected_file)}",
+                        key=f"spectra_{selected_file}_v{get_editor_version(selected_file)}_f{vf}",
                     )
 
                     if events:
@@ -574,18 +601,13 @@ if has_processed_data():
                         if event_id != last_id:
                             update_last_event_id(selected_file, "spectra", event_id)
 
-                            if spectra_multi:
-                                clicked_indices = extract_row_indices_from_spectra_events(fig_spectra, events)
-                            else:
-                                single_idx = extract_row_index_from_click(fig_spectra, events[0])
-                                clicked_indices = [single_idx] if single_idx is not None else []
+                            # Con tu plotting, tanto click como lasso devuelven customdata en markers
+                            clicked_indices = extract_row_indices_from_spectra_events(fig_spectra, events)
+
 
                             # Map filtered indices back to original df_current indices
-                            original_clicked_indices = []
-                            for idx in clicked_indices:
-                                if idx < len(df_filtered):
-                                    original_idx = df_filtered.index[idx]
-                                    original_clicked_indices.append(original_idx)
+                            original_clicked_indices = clicked_indices
+
 
                             if original_clicked_indices:
                                 for clicked_idx in original_clicked_indices:
@@ -758,7 +780,7 @@ if has_processed_data():
                                 select_event=parity_multi,
                                 hover_event=False,
                                 override_height=600,
-                                key=f"parity_{selected_file}_{selected_param}_v{get_editor_version(selected_file)}",
+                                key=f"parity_{selected_file}_{selected_param}_v{get_editor_version(selected_file)}_f{vf}",
                             )
 
                             if events:
@@ -771,11 +793,7 @@ if has_processed_data():
                                     clicked_indices = extract_row_indices_from_parity_events(fig_parity, events)
                                     
                                     # Map filtered indices back to original df_current indices
-                                    original_clicked_indices = []
-                                    for idx in clicked_indices:
-                                        if idx < len(df_filtered):
-                                            original_idx = df_filtered.index[idx]
-                                            original_clicked_indices.append(original_idx)
+                                    original_clicked_indices = clicked_indices
                                     
                                     if original_clicked_indices:
                                         for clicked_idx in original_clicked_indices:
@@ -896,18 +914,25 @@ if has_processed_data():
 
         st.markdown("---")
 
-        # Use FILTERED data for table display
+        # Use FILTERED data for table display, pero con RowIndex real como índice
         df_for_edit = df_filtered.copy()
+
+        # RowIndex real: como df_filtered viene de df_current[mask], conserva el índice original
+        # Si por lo que sea tu apply_visual_filter devolviera vista, esto lo fuerza
+        df_for_edit = df_for_edit.copy()
+        df_for_edit.index = df_filtered.index  # explícito: RowIndex real
 
         df_for_edit.insert(0, "☑️ Seleccionar", False)
         df_for_edit.insert(1, "Estado Actual", "Normal")
 
-        for idx_ in df_for_edit.index:
-            if idx_ in removed_indices:
-                df_for_edit.at[idx_, "Estado Actual"] = "❌ Eliminar"
-            elif idx_ in sample_groups and sample_groups[idx_] != "none":
-                gk = sample_groups[idx_]
-                df_for_edit.at[idx_, "Estado Actual"] = get_group_display_name(gk, SAMPLE_GROUPS)
+        for rid in df_for_edit.index:
+            if rid in removed_indices:
+                df_for_edit.at[rid, "Estado Actual"] = "❌ Eliminar"
+            else:
+                gk = sample_groups.get(rid, "none")
+                if gk and gk != "none":
+                    df_for_edit.at[rid, "Estado Actual"] = get_group_display_name(gk, SAMPLE_GROUPS)
+
 
         display_cols = ["☑️ Seleccionar", "Estado Actual"]
         for col in ["ID", "Date", "Note"]:
@@ -935,7 +960,7 @@ if has_processed_data():
                 disabled=[c for c in display_cols if c != "☑️ Seleccionar"],
                 hide_index=False,
                 use_container_width=True,
-                key=f"editor_{selected_file}_v{get_editor_version(selected_file)}",
+                key=f"editor_{selected_file}_v{get_editor_version(selected_file)}_f{vf}",
             )
 
             st.markdown("---")
@@ -954,11 +979,8 @@ if has_processed_data():
                     disabled=(n_selected == 0),
                     help="Añade las muestras seleccionadas a la lista de acciones pendientes",
                 ):
-                    # Get selected indices (these are from df_filtered, need to map to df_current)
-                    selected_indices_filtered = edited_df.index[edited_df["☑️ Seleccionar"] == True].tolist()
-                    
-                    # Map back to original indices
-                    selected_indices = [df_filtered.index[i] for i in selected_indices_filtered if i < len(df_filtered)]
+                    selected_indices = edited_df.index[edited_df["☑️ Seleccionar"] == True].tolist()
+
 
                     for idx_ in selected_indices:
                         add_pending_selection(
