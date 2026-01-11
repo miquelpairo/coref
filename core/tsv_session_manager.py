@@ -112,35 +112,43 @@ def has_processed_data() -> bool:
 # GESTIÓN DE SELECCIONES PENDIENTES
 # =============================================================================
 
+
 def add_pending_selection(file_name: str, idx: int, action: str, group: Optional[str] = None):
     """
-    Añade una selección pendiente para un archivo.
+    Añade o actualiza una selección pendiente para un archivo.
 
-    Args:
-        file_name: Nombre del archivo
-        idx: Índice de la muestra
-        action: Acción a realizar ("Marcar para Eliminar" o "Asignar a Grupo")
-        group: Grupo destino (si action == "Asignar a Grupo")
+    Reglas:
+    - Solo puede existir 1 acción pendiente por idx (última gana).
+    - Si el usuario repite EXACTAMENTE la misma acción para el mismo idx,
+      se interpreta como "deshacer pendiente" (se elimina de pending).
+    - Si action != "Asignar a Grupo", group se fuerza a None.
     """
     pending = st.session_state.pending_selections.get(file_name, [])
 
-    new_item = {
-        "idx": idx,
-        "action": action,
-        "group": group,
-    }
+    if action != "Asignar a Grupo":
+        group = None
 
-    already_exists = any(
-        item.get("idx") == new_item["idx"]
-        and item.get("action") == new_item["action"]
-        and item.get("group") == new_item["group"]
-        for item in pending
-    )
+    # Buscar si ya existe ese idx en pendientes
+    for i, item in enumerate(pending):
+        if item.get("idx") == idx:
+            same_action = item.get("action") == action
+            same_group = item.get("group") == group
 
-    if not already_exists:
-        pending.append(new_item)
-        st.session_state.pending_selections[file_name] = pending
+            if same_action and same_group:
+                # "Undo": repetir la misma intención quita el pendiente
+                pending.pop(i)
+                st.session_state.pending_selections[file_name] = pending
+                return
 
+            # Overwrite: última intención gana
+            item["action"] = action
+            item["group"] = group
+            st.session_state.pending_selections[file_name] = pending
+            return
+
+    # No existía: añadir
+    pending.append({"idx": idx, "action": action, "group": group})
+    st.session_state.pending_selections[file_name] = pending
 
 def clear_pending_selections(file_name: str) -> int:
     """
@@ -177,30 +185,36 @@ def has_pending_selections(file_name: str) -> bool:
 def apply_pending_selections(file_name: str):
     """
     Aplica todas las selecciones pendientes de un archivo.
-    Actualiza samples_to_remove y sample_groups según las acciones pendientes.
+    Pendientes = intención final (NO toggle).
+    - "Marcar para Eliminar" => idx debe quedar en samples_to_remove y sin grupo
+    - "Asignar a Grupo"      => idx debe quedar en sample_groups y NO eliminado
     """
     pending = st.session_state.pending_selections.get(file_name, [])
-
     if not pending:
         return
+
+    # Consolidar por idx (por si acaso) => última acción gana
+    last_by_idx = {}
+    for item in pending:
+        idx = item.get("idx")
+        if idx is None:
+            continue
+        last_by_idx[idx] = item
 
     eliminar_count = 0
     grupos_count = 0
 
-    for item in pending:
-        idx = item["idx"]
-        action = item["action"]
+    # Asegurar estructuras
+    st.session_state.samples_to_remove.setdefault(file_name, set())
+    st.session_state.sample_groups.setdefault(file_name, {})
+
+    for idx, item in last_by_idx.items():
+        action = item.get("action")
 
         if action == "Marcar para Eliminar":
-            # Toggle: si ya está marcado, lo desmarca
-            if idx in st.session_state.samples_to_remove[file_name]:
-                st.session_state.samples_to_remove[file_name].remove(idx)
-            else:
-                st.session_state.samples_to_remove[file_name].add(idx)
-                eliminar_count += 1
-
-            # Limpiar grupo si existe
+            st.session_state.samples_to_remove[file_name].add(idx)
             st.session_state.sample_groups[file_name].pop(idx, None)
+            eliminar_count += 1
 
         elif action == "Asignar a Grupo":
             grp = item.get("group")
@@ -208,16 +222,22 @@ def apply_pending_selections(file_name: str):
                 st.session_state.sample_groups[file_name][idx] = grp
                 st.session_state.samples_to_remove[file_name].discard(idx)
                 grupos_count += 1
+            else:
+                # Si llega grupo inválido, no hacemos nada (defensivo)
+                pass
 
     st.session_state.last_apply_summary[file_name] = {
-        "count": len(pending),
+        "count": len(last_by_idx),
         "eliminar": eliminar_count,
         "grupos": grupos_count,
     }
 
+    # Reset
     st.session_state.pending_selections[file_name] = []
     st.session_state.last_event_id[file_name] = {"spectra": "", "parity": ""}
-    st.session_state.editor_version[file_name] += 1
+
+    # Esto es importante para "refrescar" el editor/plots sin efectos raros
+    st.session_state.editor_version[file_name] = st.session_state.editor_version.get(file_name, 0) + 1
 
 
 def get_apply_summary(file_name: str) -> Optional[Dict]:

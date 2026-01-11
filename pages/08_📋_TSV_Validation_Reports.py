@@ -595,7 +595,8 @@ if has_processed_data():
                     )
 
                     if events:
-                        event_id = create_event_id(events)
+                        context = f"{spectra_action}|{spectra_target if spectra_action=='Asignar a Grupo' else ''}"
+                        event_id = f"{create_event_id(events)}|{context}"
                         last_id = get_last_event_id(selected_file, "spectra")
 
                         if event_id != last_id:
@@ -663,6 +664,7 @@ if has_processed_data():
                 ):
                     n_cleared = clear_pending_selections(selected_file)
                     clear_last_event_ids(selected_file)
+                    increment_editor_version(selected_file)
                     st.toast(f"🧹 {n_cleared} acción(es) eliminada(s) de pendientes", icon="🗑️")
                     st.rerun()
 
@@ -784,8 +786,8 @@ if has_processed_data():
                             )
 
                             if events:
-                                event_id = create_event_id(events)
-                                last_id = get_last_event_id(selected_file, "parity")
+                                context = f"{parity_action}|{parity_target if parity_action=='Asignar a Grupo' else ''}|{selected_param}"
+                                event_id = f"{create_event_id(events)}|{context}"
 
                                 if event_id != last_id:
                                     update_last_event_id(selected_file, "parity", event_id)
@@ -852,6 +854,7 @@ if has_processed_data():
                     ):
                         n_cleared = clear_pending_selections(selected_file)
                         clear_last_event_ids(selected_file)
+                        increment_editor_version(selected_file)
                         st.toast(f"🧹 {n_cleared} acción(es) eliminada(s) de pendientes", icon="🗑️")
                         st.rerun()
 
@@ -1025,6 +1028,7 @@ if has_processed_data():
                 ):
                     n_cleared = clear_pending_selections(selected_file)
                     clear_last_event_ids(selected_file)
+                    increment_editor_version(selected_file)
                     st.toast(f"🧹 {n_cleared} acción(es) eliminada(s) de pendientes", icon="🗑️")
                     st.rerun()
 
