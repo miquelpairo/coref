@@ -788,6 +788,7 @@ if has_processed_data():
                             if events:
                                 context = f"{parity_action}|{parity_target if parity_action=='Asignar a Grupo' else ''}|{selected_param}"
                                 event_id = f"{create_event_id(events)}|{context}"
+                                last_id = get_last_event_id(selected_file, "parity")
 
                                 if event_id != last_id:
                                     update_last_event_id(selected_file, "parity", event_id)
